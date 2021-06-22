@@ -1,14 +1,19 @@
-# Project
+# AKS-Construction
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+This project provides a comprehensive, flexible templating approach to creating Azure Kubernetes Service clusters and related Azure services.
+It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
 
-As the maintainer of this project, please make a few updates:
+## Components
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+### Wizard experience
+
+### Bicep templates
+
+## Implementation Notes
+
+### Preview Features
+
+As a general rule, Preview Features will not be included in the Wizard.
 
 ## Contributing
 
