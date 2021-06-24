@@ -9,7 +9,7 @@ It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft
 
 ### Bicep templates
 
-Templates have been modularised into their component areas. Main.bicep references them and they are expected to be present in the same directory. The Wizard leverages a json compiled version of all bicep files.
+Templates have been modularised into their component areas. [Main.bicep](bicep/main.bicep) references them and they are expected to be present in the same directory. The Wizard leverages a json compiled version of all bicep files.
 
 ## Implementation Notes
 
