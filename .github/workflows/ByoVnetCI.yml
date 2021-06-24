@@ -99,7 +99,7 @@ jobs:
             echo $DEPSTATUS
             
             #outputs
-            AKSNAME=$(az deployment group show -n Dep42 -g Automation-Actions-AksDeployCI --query "properties.outputs.aksClusterName.value" -o tsv)
+            AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
             echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
             
       - name: AKS Workload
@@ -128,6 +128,7 @@ jobs:
       - name: Install Pwsh modules
         shell: pwsh
         run: |
+          Set-PSRepository -Name PSGallery -SourceLocation https://www.powershellgallery.com/api/v2/ -InstallationPolicy Trusted
           Install-Module -Name Az.Accounts
           Install-Module -Name Az.Resources
           
