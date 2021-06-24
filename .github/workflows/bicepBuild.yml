@@ -1,0 +1,53 @@
+# Builds a JSON file from the main.json bicep
+
+name: BicepBuild
+
+on:
+  push:
+    paths: 
+      - 'bicep/*'
+      - ".github/workflows/bicepBuild.yml"
+
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+  
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: ContextCheck
+        shell: pwsh
+        run: dir
+
+      - name: Install Bicep
+        shell: pwsh
+        run: |
+          az bicep install
+      - name: ChangeDir
+        shell: pwsh
+        run: cd bicep
+
+      - name: Bicep build
+        shell: pwsh
+        run: |
+          #write-output $pwd
+          $compiledir=Join-Path -Path $pwd -ChildPath "bicep/compiled"
+          
+          write-output $compiledir
+          If(!(test-path $compiledir))
+          {
+                New-Item -ItemType Directory -Force -Path $compiledir
+          }
+
+          /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
+
+      - name: ContextCheck
+        shell: pwsh
+        run: |
+          cd bicep/compiled
+          dir
+          
+      - name: push
+        uses: actions-x/commit@v2
