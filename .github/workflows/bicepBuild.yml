@@ -25,9 +25,6 @@ jobs:
         shell: pwsh
         run: |
           az bicep install
-      - name: ChangeDir
-        shell: pwsh
-        run: cd bicep
 
       - name: Bicep build
         shell: pwsh
@@ -49,5 +46,5 @@ jobs:
           cd bicep/compiled
           dir
           
-      - name: push
+      - name: GIT Push Json file
         uses: actions-x/commit@v2
