@@ -125,6 +125,12 @@ jobs:
             kubectl get svc
             kubectl get ingress
             
+      - name: Install Pwsh modules
+        shell: pwsh
+        run: |
+          Install-Module -Name Az.Accounts
+          Install-Module -Name Az.Resources
+          
       - name: Cleanup
         shell: pwsh
         run: |
