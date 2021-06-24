@@ -9,7 +9,17 @@ It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft
 
 ### Bicep templates
 
+Templates have been modularised into their component areas. Main.bicep references them and they are expected to be present in the same directory. The Wizard leverages a json compiled version of all bicep files.
+
 ## Implementation Notes
+
+### Configurations
+Whilst the Wizard lets you generate a flxeible deployment, before merging template changes we run CI on 2 key configuration presets.
+
+| Config | CI Status | Notes
+|--------|-----------|------|
+| [ESLZ Byo peered vnet](.github/workflows_dep/AksDeploy-ByoVnet.parameters.json) | [![ByoVnetCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml/badge.svg?branch=main)](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml) | Takes full resource id's as parameters for existing subnets |
+| ESLZ Sandbox | |
 
 ### Preview Features
 
