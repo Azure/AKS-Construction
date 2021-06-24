@@ -53,7 +53,7 @@ jobs:
         uses: Azure/login@v1
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: false
+          enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
           
@@ -124,3 +124,21 @@ jobs:
             kubectl get po
             kubectl get svc
             kubectl get ingress
+            
+      - name: Cleanup
+        shell: pwsh
+        run: |
+          $RG='${{ env.RG }}'
+          
+          # Get all ARM resources from all resource groups
+          $rgToPurge = Get-AzResourceGroup -Name Automation-Actions-AksDeployCI
+
+          #Remove all but public ip addresses
+          Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
+
+          #Remove public ip addresses
+          Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
+
+          #Final run to clean other dependant resources in parent-child graph
+          Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
+            
