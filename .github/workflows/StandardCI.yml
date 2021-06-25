@@ -76,6 +76,7 @@ jobs:
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
             
             if [ "$RUNCOUNT" -ne "0" ]
+            then
               exit 1
             fi
             
