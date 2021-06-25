@@ -6,7 +6,9 @@ name: AksStandardCI
 on:
   push:
     branches: [ action* ]
-  
+    paths: 
+      - ".github/workflows/StandardCI.yml"
+      
   pull_request:
     branches: [ master ]
   
