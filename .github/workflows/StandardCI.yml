@@ -152,7 +152,7 @@ jobs:
             #Final run to clean other dependant resources in parent-child graph
             Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
           }
-          Catch(error) #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
+          Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
           {
             write-output error
           }
