@@ -75,9 +75,12 @@ jobs:
             
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
             
+            if [ "$RUNCOUNT" -ne "0" ]
+              exit 1
+            fi
+            
       - name: Validate AKS
         uses: Azure/cli@1.0.4
-        #if: steps.activedeps.outputs.RUNCOUNT == 0
         with:
           inlineScript: |
             RG='${{ env.RG }}'
@@ -85,10 +88,18 @@ jobs:
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --verbose
             
+      - name: What If
+        uses: Azure/cli@1.0.4
+        with:
+          inlineScript: |
+            RG='${{ env.RG }}'
+            RESNAME='${{ env.RESNAME }}'
+            DEPNAME='Dep${{ github.run_number }}'
+            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --verbose
+            
       - name: Deploy AKS
         id:  deployAks
         uses: Azure/cli@1.0.4
-        if: steps.activedeps.outputs.RUNCOUNT == 0
         with:
           inlineScript: |
             RG='${{ env.RG }}'
