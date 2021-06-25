@@ -1,5 +1,5 @@
 param byoAKSSubnetId string
-param principalId string
+param user_identity_name string
 
 var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
 
@@ -15,12 +15,16 @@ resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01
   name: existingAksSubnetName
 }
 
+resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' existing = {
+  name: user_identity_name
+}
+
 resource existing_vnet_cont 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name:  '${guid(principalId, existingAksSubnetName)}'
+  name:  '${guid(user_identity_name, existingAksSubnetName)}'
   scope: existingAksSubnet 
   properties: {
     roleDefinitionId: networkContributorRole
-    principalId: principalId
+    principalId: uai.properties.principalId
     principalType: 'ServicePrincipal'
   }
 }
