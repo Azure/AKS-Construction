@@ -10,7 +10,7 @@ on:
       - ".github/workflows/ByoVnetCI.yml"
   
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   
   schedule:
     # At 11:00pm, every Wednesday week
