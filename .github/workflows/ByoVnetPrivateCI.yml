@@ -21,7 +21,9 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json"
   RESNAME: 'AksPriv'
   DEPNAME: 'DepPriv${{ github.run_number }}'
-  
+
+concurrency: ci-${{ github.ref }}
+
 jobs:
   Validation:
     runs-on: ubuntu-latest
