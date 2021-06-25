@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "12132369718244060263"
+      "templateHash": "14436180078163596048"
     }
   },
   "parameters": {
@@ -191,7 +191,7 @@
     "user_identity_name": "[format('id-{0}', parameters('resourceName'))]",
     "dnsZoneRg": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[4], '')]",
     "dnsZoneName": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[8], '')]",
-    "acrName": "[format('acr{0}', replace(parameters('resourceName'), '-', ''))]",
+    "acrName": "[format('acr{0}{1}', replace(parameters('resourceName'), '-', ''), uniqueString(resourceGroup().id, parameters('resourceName')))]",
     "AcrPullRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
     "existing_vnet": "[not(empty(parameters('byoAKSSubnetId')))]",
     "existingAksVnetRG": "[if(not(empty(parameters('byoAKSSubnetId'))), split(parameters('byoAKSSubnetId'), '/')[4], '')]",
