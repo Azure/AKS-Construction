@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  BYO-Verify:
+  Deployment:
     runs-on: ubuntu-latest
     env: 
       RG: 'Automation-Actions-AksDeployStanCI'
