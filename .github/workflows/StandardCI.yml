@@ -22,7 +22,7 @@ jobs:
   BYO-Verify:
     runs-on: ubuntu-latest
     env: 
-      RG: 'Automation-Actions-AksDeployCI'
+      RG: 'Automation-Actions-AksDeployStanCI'
       ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json"
       RESNAME: 'AksStan'
       DEPNAME: 'Dep${{ github.run_number }}'
