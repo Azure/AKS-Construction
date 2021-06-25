@@ -18,6 +18,8 @@ on:
     
   workflow_dispatch:
 
+concurrency: ci-${{ github.ref }}
+
 jobs:
   BYO-Verify:
     runs-on: ubuntu-latest
