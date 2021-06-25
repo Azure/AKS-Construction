@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "17731771634281684841"
+      "templateHash": "3466733008658118001"
     }
   },
   "parameters": {
@@ -691,6 +691,9 @@
           },
           "user_identity_name": {
             "value": "[variables('user_identity_name')]"
+          },
+          "user_identity_rg": {
+            "value": "[resourceGroup().name]"
           }
         },
         "template": {
@@ -700,7 +703,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.63.48766",
-              "templateHash": "14705712300427379088"
+              "templateHash": "17737256977201514591"
             }
           },
           "parameters": {
@@ -708,6 +711,9 @@
               "type": "string"
             },
             "user_identity_name": {
+              "type": "string"
+            },
+            "user_identity_rg": {
               "type": "string"
             }
           },
@@ -725,7 +731,7 @@
               "name": "[guid(parameters('user_identity_name'), variables('existingAksSubnetName'))]",
               "properties": {
                 "roleDefinitionId": "[variables('networkContributorRole')]",
-                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('user_identity_name')), '2018-11-30').principalId]",
+                "principalId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('user_identity_rg')), 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('user_identity_name')), '2018-11-30').principalId]",
                 "principalType": "ServicePrincipal"
               }
             }
