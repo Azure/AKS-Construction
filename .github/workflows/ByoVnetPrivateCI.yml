@@ -8,7 +8,7 @@ on:
     
   push:
     paths: 
-      - ".github/workflows/ByoVnetPrivateCI.yml.yml"
+      - ".github/workflows/ByoVnetPrivateCI.yml"
       
   pull_request:
     branches: [ main ]
