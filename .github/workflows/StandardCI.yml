@@ -17,16 +17,15 @@ on:
   schedule:
     # At 11:00pm, every Tuesday week
     - cron: '0 23 * * 2'
-
+env:
+  RG: 'Automation-Actions-AksDeployStanCI'
+  ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json"
+  RESNAME: 'AksStan'
+  DEPNAME: 'Dep${{ github.run_number }}'
+  
 jobs:
   Deployment:
     runs-on: ubuntu-latest
-    env: 
-      RG: 'Automation-Actions-AksDeployStanCI'
-      ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json"
-      RESNAME: 'AksStan'
-      DEPNAME: 'Dep${{ github.run_number }}'
-      
     steps:
       - uses: actions/checkout@v2
 
@@ -55,7 +54,7 @@ jobs:
         uses: Azure/login@v1
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
+          enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
           
@@ -126,7 +125,41 @@ jobs:
             kubectl get po
             kubectl get svc
             kubectl get ingress
-            
+
+  Cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      #- uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}
+          echo "Deployment name is ${{ env.DEPNAME }}
+
+      - name: Dependency check
+        shell: pwsh
+        run: |
+          Write-Output "Checking parameter file existance/contents"
+          $paramFilePath="${{ env.ParamFilePath }}"
+          Test-Path $paramFilePath
+          
+          if (Test-Path $paramFilePath) {
+            $paramFileContent=Get-Content $paramFilePath
+            Write-Output $paramFileContent
+          }
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+
       - name: Install Pwsh modules
         shell: pwsh
         run: |
@@ -138,7 +171,6 @@ jobs:
         shell: pwsh
         run: |
           $RG='${{ env.RG }}'
-          
 
           # Get all ARM resources from all resource groups
           $rgToPurge = Get-AzResourceGroup -Name $RG
