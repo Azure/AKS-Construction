@@ -1,4 +1,4 @@
-name: AksByoVNetPrivateCI
+name: ByoVNetPrivateCI
 # Credential prerequisites
 # 1. IAM Owner on the Resource Group you're deploying into (we're making role assignments)
 # 2. IAM Owner on the Vnet (we're making role assignments)
