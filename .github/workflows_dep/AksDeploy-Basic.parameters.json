@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location" : {
+            "value": "westeurope"
+        },
+        "resourceName": {
+            "value": "simplecluster"
+        },
+        "agentCount": {
+            "value": 1
+        },
+        "agentVMSize": {
+            "value": "Standard_DS3_v2"
+        },
+        "enable_aad": {
+            "value": true
+        },
+        "enableAzureRBAC" : {
+            "value": true
+        },
+        "omsagent": {
+            "value": true
+        },
+        "retentionInDays": {
+            "value": 30
+        },
+        "registries_sku": {
+            "value": "Standard"
+        },
+    }
+}
