@@ -4,6 +4,8 @@ name: AksStandardCI
 # 2. IAM Owner on the Vnet (we're making role assignments)
 
 on:
+  workflow_dispatch:
+    
   push:
     branches: [ action* ]
     paths: 
@@ -15,8 +17,6 @@ on:
   schedule:
     # At 11:00pm, every Tuesday week
     - cron: '0 23 * * 2'
-    
-  workflow_dispatch:
 
 jobs:
   Deployment:
