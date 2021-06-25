@@ -6,6 +6,8 @@ name: ByoVnetCI
 on:
   push:
     branches: [ action* ]
+    paths: 
+      - ".github/workflows/ByoVnetCI.yml"
   
   pull_request:
     branches: [ master ]
@@ -80,7 +82,7 @@ jobs:
         with:
           inlineScript: |
             RG='${{ env.RG }}'
-            RESNAME='AksByo'
+            RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json" -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --verbose
             
@@ -91,7 +93,7 @@ jobs:
         with:
           inlineScript: |
             RG='${{ env.RG }}'
-            RESNAME='AksByo'
+            RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group create -f bicep/main.bicep -g $RG -p ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json" -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --name $DEPNAME --verbose
             
