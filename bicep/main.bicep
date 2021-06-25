@@ -30,7 +30,7 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 param registries_sku string = ''
 param ACRserviceEndpointFW string = '' // either IP, or 'vnetonly'
 
-var acrName = 'acr${replace(resourceName, '-', '')}'
+var acrName = 'acr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
 resource acr 'Microsoft.ContainerRegistry/registries@2020-11-01-preview' = if (!empty(registries_sku)) {
   name: acrName
@@ -89,26 +89,25 @@ param vnetFirewallSubnetAddressPrefix string = '10.241.130.0/26'
 
 param byoAKSSubnetId string =''
 var existing_vnet = !empty(byoAKSSubnetId)
-var existingAksVnetRG = !empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/')[4] : ''
+var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/'))>9 ? split(byoAKSSubnetId, '/')[4] : '') : ''
 
 module aksnetcontrib './aksnetcontrib.bicep' = if (existing_vnet && user_identity) {
   name: 'addAksNetContributor'
   scope: resourceGroup(existingAksVnetRG)
   params: {
     byoAKSSubnetId: byoAKSSubnetId
-    //principalId:  aks.properties.identityProfile.kubeletidentity.objectId 
-    principalId:  uai.properties.principalId
+    //principalId:  uai.properties.principalId
+    user_identity_name: uai.name
   }
 }
-output uaiPrincipalId string = uai.properties.principalId
-output aksIdentityType string = aks.identity.type
-//output aksIdentityPrincipalId string = aks.identity.principalId
+
+
 output aksClusterName string = aks.name
 
 param byoAGWSubnetId string = ''
-var existingAGWSubnetName = !empty(byoAGWSubnetId) ? split(byoAGWSubnetId, '/')[10] : ''
-var existingAGWVnetName = !empty(byoAGWSubnetId) ? split(byoAGWSubnetId, '/')[8] : ''
-var existingAGWVnetRG = !empty(byoAGWSubnetId) ? split(byoAGWSubnetId, '/')[4] : ''
+var existingAGWSubnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/'))>10 ? split(byoAGWSubnetId, '/')[10] : '') : ''
+var existingAGWVnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/'))>9 ? split(byoAGWSubnetId, '/')[8] : '') : ''
+var existingAGWVnetRG = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/'))>9 ? split(byoAGWSubnetId, '/')[4] : '') : ''
 resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing =  {
   name: existingAGWVnetName
   scope : resourceGroup(existingAGWVnetRG)
@@ -467,6 +466,7 @@ var agentPoolProfiles = {
   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
 }
 
+
 var aks_properties_base = {
   kubernetesVersion: kubernetesVersion
   enableRBAC: true
@@ -578,6 +578,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-02-01' = {
     type: 'SystemAssigned'
   }
 }
+
 
 // https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json
 var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')

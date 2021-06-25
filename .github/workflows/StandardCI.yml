@@ -1,32 +1,31 @@
-name: ByoVnetCI
+name: AksStandardCI
 # Credential prerequisites
 # 1. IAM Owner on the Resource Group you're deploying into (we're making role assignments)
 # 2. IAM Owner on the Vnet (we're making role assignments)
 
 on:
+  workflow_dispatch:
+    
   push:
     branches: [ action* ]
     paths: 
-      - ".github/workflows/ByoVnetCI.yml"
-  
+      - ".github/workflows/StandardCI.yml"
+      
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   
   schedule:
-    # At 11:00pm, every Wednesday week
-    - cron: '0 23 * * 3'
-    
-  workflow_dispatch:
-
+    # At 11:00pm, every Tuesday week
+    - cron: '0 23 * * 2'
+env:
+  RG: 'Automation-Actions-AksDeployStanCI'
+  ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json"
+  RESNAME: 'AksStan'
+  DEPNAME: 'Dep${{ github.run_number }}'
+  
 jobs:
-  BYO-Verify:
+  Validation:
     runs-on: ubuntu-latest
-    env: 
-      RG: 'Automation-Actions-AksDeployCI'
-      ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
-      RESNAME: 'AksByo'
-      DEPNAME: 'Dep${{ github.run_number }}'
-      
     steps:
       - uses: actions/checkout@v2
 
@@ -55,7 +54,7 @@ jobs:
         uses: Azure/login@v1
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
+          enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
           
@@ -76,26 +75,74 @@ jobs:
             
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
             
+            if [ "$RUNCOUNT" -ne "0" ]
+            then
+              exit 1
+            fi
+            
       - name: Validate AKS
         uses: Azure/cli@1.0.4
-        #if: steps.activedeps.outputs.RUNCOUNT == 0
         with:
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
-            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --verbose
+            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --verbose
             
+      - name: What If
+        uses: Azure/cli@1.0.4
+        with:
+          inlineScript: |
+            RG='${{ env.RG }}'
+            RESNAME='${{ env.RESNAME }}'
+            DEPNAME='Dep${{ github.run_number }}'
+            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --verbose
+
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: [Validation]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}
+          echo "Deployment name is ${{ env.DEPNAME }}
+
+      - name: Dependency check
+        shell: pwsh
+        run: |
+          Write-Output "Checking parameter file existance/contents"
+          $paramFilePath="${{ env.ParamFilePath }}"
+          Test-Path $paramFilePath
+          
+          if (Test-Path $paramFilePath) {
+            $paramFileContent=Get-Content $paramFilePath
+            Write-Output $paramFileContent
+          }
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: false
+          environment: azurecloud
+          allow-no-subscriptions: false
+          
       - name: Deploy AKS
         id:  deployAks
         uses: Azure/cli@1.0.4
-        if: steps.activedeps.outputs.RUNCOUNT == 0
         with:
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
-            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --name $DEPNAME --verbose
+            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --name $DEPNAME --verbose
             
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
@@ -126,7 +173,42 @@ jobs:
             kubectl get po
             kubectl get svc
             kubectl get ingress
-            
+
+  Cleanup:
+    runs-on: ubuntu-latest
+    needs: [Validation, Deploy]
+    steps:
+      #- uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}
+          echo "Deployment name is ${{ env.DEPNAME }}
+
+      - name: Dependency check
+        shell: pwsh
+        run: |
+          Write-Output "Checking parameter file existance/contents"
+          $paramFilePath="${{ env.ParamFilePath }}"
+          Test-Path $paramFilePath
+          
+          if (Test-Path $paramFilePath) {
+            $paramFileContent=Get-Content $paramFilePath
+            Write-Output $paramFileContent
+          }
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+
       - name: Install Pwsh modules
         shell: pwsh
         run: |
@@ -138,16 +220,20 @@ jobs:
         shell: pwsh
         run: |
           $RG='${{ env.RG }}'
-          
+
           # Get all ARM resources from all resource groups
           $rgToPurge = Get-AzResourceGroup -Name $RG
+          try {
+            #Remove all but public ip addresses
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
 
-          #Remove all but public ip addresses
-          Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
+            #Remove public ip addresses
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
 
-          #Remove public ip addresses
-          Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-          #Final run to clean other dependant resources in parent-child graph
-          Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
-            
+            #Final run to clean other dependant resources in parent-child graph
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
+          }
+          Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
+          {
+            write-output error
+          }
