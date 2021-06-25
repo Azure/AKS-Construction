@@ -40,6 +40,7 @@ jobs:
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Ref is ${{ github.ref }}"
 
       - name: Dependency check
         shell: pwsh
