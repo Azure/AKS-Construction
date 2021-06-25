@@ -1,5 +1,6 @@
 param byoAKSSubnetId string
 param user_identity_name string
+param user_identity_rg string
 
 var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
 
@@ -17,6 +18,7 @@ resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' existing = {
   name: user_identity_name
+  scope: resourceGroup(user_identity_rg)
 }
 
 resource existing_vnet_cont 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {

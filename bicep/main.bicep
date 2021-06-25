@@ -98,9 +98,9 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (existing_vnet && user_identit
     byoAKSSubnetId: byoAKSSubnetId
     //principalId:  uai.properties.principalId
     user_identity_name: uai.name
+    user_identity_rg: resourceGroup().name
   }
 }
-
 
 output aksClusterName string = aks.name
 
@@ -189,6 +189,7 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
     //scope: '${vnet.id}/subnets/${aks_subnet_name}'
   }
 }
+
 
 //---------------------------------------------------------------------------------- Firewall
 var routeFwTableName = '${resourceName}-fw-udr'
