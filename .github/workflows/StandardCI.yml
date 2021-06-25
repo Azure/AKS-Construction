@@ -24,7 +24,7 @@ env:
   DEPNAME: 'Dep${{ github.run_number }}'
   
 jobs:
-  Deployment:
+  Validation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -97,7 +97,43 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --verbose
-            
+
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: [Validation]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}
+          echo "Deployment name is ${{ env.DEPNAME }}
+
+      - name: Dependency check
+        shell: pwsh
+        run: |
+          Write-Output "Checking parameter file existance/contents"
+          $paramFilePath="${{ env.ParamFilePath }}"
+          Test-Path $paramFilePath
+          
+          if (Test-Path $paramFilePath) {
+            $paramFileContent=Get-Content $paramFilePath
+            Write-Output $paramFileContent
+          }
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: false
+          environment: azurecloud
+          allow-no-subscriptions: false
+          
       - name: Deploy AKS
         id:  deployAks
         uses: Azure/cli@1.0.4
@@ -140,7 +176,7 @@ jobs:
 
   Cleanup:
     runs-on: ubuntu-latest
-    needs: [Deployment]
+    needs: [Validation, Deploy]
     steps:
       #- uses: actions/checkout@v2
 
