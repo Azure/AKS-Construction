@@ -84,7 +84,7 @@ jobs:
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
-            az deployment group validate -f bicep/main.bicep -g $RG -p ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json" -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --verbose
+            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --verbose
             
       - name: Deploy AKS
         id:  deployAks
@@ -95,7 +95,7 @@ jobs:
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
-            az deployment group create -f bicep/main.bicep -g $RG -p ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json" -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --name $DEPNAME --verbose
+            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --name $DEPNAME --verbose
             
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
