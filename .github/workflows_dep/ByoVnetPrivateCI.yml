@@ -1,0 +1,66 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location" : {
+            "value": "westeurope"
+        },
+        "resourceName": {
+            "value": "AksPriv"
+        },
+        "kubernetesVersion": {
+            "value": "1.21.1"
+        },
+        "agentCount": {
+            "value": 1
+        },
+        "agentVMSize": {
+            "value": "Standard_DS3_v2"
+        },
+        "agentCountMax": {
+            "value": 2
+        },
+        "enable_aad": {
+            "value": true
+        },
+        "enableAzureRBAC" : {
+            "value": true
+        },
+        "registries_sku": {
+            "value": "Premium"
+        },
+        "omsagent": {
+            "value": true
+        },
+        "retentionInDays": {
+            "value": 30
+        },
+        "networkPolicy": {
+            "value": "calico"
+        },
+        "azurepolicy": {
+            "value": "audit"
+        },
+        "availabilityZones": {
+            "value": ["1","2","3"]
+        },
+        "ingressApplicationGateway": {
+            "value": true
+        },
+        "enablePrivateCluster" : {
+            "value": true
+        },
+        "byoAKSSubnetId": {
+            "value": "subnetResourceId overriden from GitHub secrets"
+        },
+        "byoAGWSubnetId": {
+            "value": "subnetResourceId overriden from GitHub secrets"
+        },
+        "serviceCidr" : {
+            "value" : "172.10.0.0/16"
+        },
+        "dnsServiceIP" : {
+            "value" : "172.10.0.10"
+        }
+    }
+}
