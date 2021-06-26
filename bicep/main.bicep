@@ -96,7 +96,7 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (existing_vnet && user_identit
   scope: resourceGroup(existingAksVnetRG)
   params: {
     byoAKSSubnetId: byoAKSSubnetId
-    //principalId:  uai.properties.principalId
+    user_identity_principalId:  uai.properties.principalId
     user_identity_name: uai.name
     user_identity_rg: resourceGroup().name
   }
