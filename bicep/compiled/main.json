@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "3466733008658118001"
+      "templateHash": "16689799617229792998"
     }
   },
   "parameters": {
@@ -689,6 +689,9 @@
           "byoAKSSubnetId": {
             "value": "[parameters('byoAKSSubnetId')]"
           },
+          "user_identity_principalId": {
+            "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))).principalId]"
+          },
           "user_identity_name": {
             "value": "[variables('user_identity_name')]"
           },
@@ -703,7 +706,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.63.48766",
-              "templateHash": "17737256977201514591"
+              "templateHash": "17017049446633963820"
             }
           },
           "parameters": {
@@ -714,6 +717,9 @@
               "type": "string"
             },
             "user_identity_rg": {
+              "type": "string"
+            },
+            "user_identity_principalId": {
               "type": "string"
             }
           },
@@ -728,7 +734,7 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2020-04-01-preview",
               "scope": "[format('Microsoft.Network/virtualNetworks/{0}/subnets/{1}', variables('existingAksVnetName'), variables('existingAksSubnetName'))]",
-              "name": "[guid(parameters('user_identity_name'), variables('existingAksSubnetName'))]",
+              "name": "[guid(parameters('user_identity_principalId'), variables('existingAksSubnetName'))]",
               "properties": {
                 "roleDefinitionId": "[variables('networkContributorRole')]",
                 "principalId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('user_identity_rg')), 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('user_identity_name')), '2018-11-30').principalId]",
