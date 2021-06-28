@@ -5,7 +5,6 @@ name: ByoVnetCI
 
 on:
   push:
-    branches: [ action* ]
     paths: 
       - ".github/workflows/ByoVnetCI.yml"
   
