@@ -95,6 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Validation]
     environment: azurecirgs
+    if: github.event_name != 'push'
     steps:
       - uses: actions/checkout@v2
 
@@ -170,6 +171,7 @@ jobs:
             
   Cleanup:
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     needs: [Validation, Deploy]
     steps:
       #- uses: actions/checkout@v2
