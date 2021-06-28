@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "16689799617229792998"
+      "templateHash": "6379899044491181510"
     }
   },
   "parameters": {
@@ -15,6 +15,10 @@
     },
     "resourceName": {
       "type": "string"
+    },
+    "useAksUAI": {
+      "type": "bool",
+      "defaultValue": false
     },
     "dnsZoneId": {
       "type": "string",
@@ -187,7 +191,7 @@
   },
   "functions": [],
   "variables": {
-    "user_identity": "[or(variables('create_vnet'), variables('existing_vnet'))]",
+    "user_identity": "[or(or(variables('create_vnet'), variables('existing_vnet')), parameters('useAksUAI'))]",
     "user_identity_name": "[format('id-{0}', parameters('resourceName'))]",
     "dnsZoneRg": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[4], '')]",
     "dnsZoneName": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[8], '')]",
