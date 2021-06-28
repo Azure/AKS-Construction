@@ -2,7 +2,7 @@ param location string = resourceGroup().location
 param resourceName string
 
 //---------------------------------------------------------------------------------- User Identity
-param useAksUAI bool = false
+param useAksUAI bool = true
 
 var user_identity = create_vnet || existing_vnet || useAksUAI
 var user_identity_name = 'id-${resourceName}'
