@@ -22,7 +22,7 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: "true", ...(cluster.adminprincipleid && { adminprincipleid: cluster.adminprincipleid }) }),
     ...(addons.registry !== "none" && { registries_sku: addons.registry }),
     ...(net.afw && { azureFirewalls: "true" }),
-    ...(net.serviceEndpointsEnable && net.serviceEndpoints.size > 0 && { serviceEndpoints: net.serviceEndpoints.map(s => { return { service: s } }) }),
+    ...(net.serviceEndpointsEnable && net.serviceEndpoints.length > 0 && { serviceEndpoints: net.serviceEndpoints.map(s => { return { service: s } }) }),
     ...(addons.monitor === "aci" && { omsagent: "true", retentionInDays: addons.retentionInDays }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
