@@ -29,7 +29,8 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 }
 
 //---------------------------------------------------------------------------------- AKV
-param azureKeyvaultSecretsProvider bool = false #This is a preview feature
+
+param azureKeyvaultSecretsProvider bool = false //This is a preview feature
 
 param createKV bool = false
 param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
