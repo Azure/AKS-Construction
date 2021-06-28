@@ -2,7 +2,9 @@ param location string = resourceGroup().location
 param resourceName string
 
 //---------------------------------------------------------------------------------- User Identity
-var user_identity = create_vnet || existing_vnet
+param useAksUAI bool = false
+
+var user_identity = create_vnet || existing_vnet || useAksUAI
 var user_identity_name = 'id-${resourceName}'
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (user_identity) {
@@ -96,11 +98,11 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (existing_vnet && user_identit
   scope: resourceGroup(existingAksVnetRG)
   params: {
     byoAKSSubnetId: byoAKSSubnetId
-    //principalId:  uai.properties.principalId
+    user_identity_principalId:  uai.properties.principalId
     user_identity_name: uai.name
+    user_identity_rg: resourceGroup().name
   }
 }
-
 
 output aksClusterName string = aks.name
 
@@ -189,6 +191,7 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
     //scope: '${vnet.id}/subnets/${aks_subnet_name}'
   }
 }
+
 
 //---------------------------------------------------------------------------------- Firewall
 var routeFwTableName = '${resourceName}-fw-udr'

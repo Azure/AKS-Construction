@@ -1,35 +1,32 @@
-name: ByoVnetCI
+name: ByoVNetPrivateCI
 # Credential prerequisites
 # 1. IAM Owner on the Resource Group you're deploying into (we're making role assignments)
 # 2. IAM Owner on the Vnet (we're making role assignments)
 
 on:
+  workflow_dispatch:
+    
   push:
-    branches: [ action* ]
     paths: 
-      - ".github/workflows/ByoVnetCI.yml"
-  
+      - ".github/workflows/ByoVnetPrivateCI.yml"
+      
   pull_request:
     branches: [ main ]
   
   schedule:
-    # At 11:00pm, every Wednesday week
-    - cron: '0 23 * * 3'
-    
-  workflow_dispatch:
-
-concurrency: ci-${{ github.ref }}
-
+    # At 11:00pm, every Tuesday week
+    - cron: '0 23 * * 2'
 env:
   RG: 'Automation-Actions-AksDeployCI'
-  ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
-  RESNAME: 'AksByo'
-  DEPNAME: 'Dep${{ github.run_number }}'
+  ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json"
+  RESNAME: 'AksPriv'
+  DEPNAME: 'DepPriv${{ github.run_number }}'
+
+concurrency: ci-${{ github.ref }}
 
 jobs:
   Validation:
     runs-on: ubuntu-latest
-      
     steps:
       - uses: actions/checkout@v2
 
@@ -41,7 +38,6 @@ jobs:
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
-          echo "Ref is ${{ github.ref }}"
 
       - name: Dependency check
         shell: pwsh
@@ -80,16 +76,28 @@ jobs:
             
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
             
+            if [ "$RUNCOUNT" -ne "0" ]
+            then
+              exit 1
+            fi
+            
       - name: Validate AKS
         uses: Azure/cli@1.0.4
-        #if: steps.activedeps.outputs.RUNCOUNT == 0
         with:
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
-            DEPNAME='Dep${{ github.run_number }}'
-            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --verbose
+            DEPNAME='${{ env.DEPNAME }}'
+            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --verbose
             
+      - name: What If
+        uses: Azure/cli@1.0.4
+        with:
+          inlineScript: |
+            RG='${{ env.RG }}'
+            RESNAME='${{ env.RESNAME }}'
+            DEPNAME='${{ env.DEPNAME }}'
+            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --verbose
 
   Deploy:
     runs-on: ubuntu-latest
@@ -106,6 +114,7 @@ jobs:
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
+
       - name: Dependency check
         shell: pwsh
         run: |
@@ -129,14 +138,12 @@ jobs:
       - name: Deploy AKS
         id:  deployAks
         uses: Azure/cli@1.0.4
-        if: steps.activedeps.outputs.RUNCOUNT == 0
         with:
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
-            DEPNAME='Dep${{ github.run_number }}'
-            
-            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --name $DEPNAME --verbose
+            DEPNAME='${{ env.DEPNAME }}'
+            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --name $DEPNAME --verbose
             
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
@@ -145,32 +152,33 @@ jobs:
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
             echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
             
-      - name: AKS Workload
-        uses: Azure/cli@1.0.4
-        if: success()
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-        with:
-          inlineScript: |
-            RG='${{ env.RG }}'
-            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-            
-            echo $AKSNAME
-            az aks get-credentials -n $AKSNAME -g $RG --admin
-            
-            az aks install-cli
-            kubectl version
-            
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL
+#      - name: AKS Workload
+#        uses: Azure/cli@1.0.4
+#        if: success()
+#        env:
+#          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
+#        with:
+#          inlineScript: |
+#            RG='${{ env.RG }}'
+#            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+#            
+#            echo $AKSNAME
+#            az aks get-credentials -n $AKSNAME -g $RG --admin
+#            
+#            az aks install-cli
+#            kubectl version
+#            
+#            echo $MANIFESTTESTURL
+#            kubectl apply -f $MANIFESTTESTURL
+#
+#            kubectl get po
+#            kubectl get svc
+#            kubectl get ingress
 
-            kubectl get po
-            kubectl get svc
-            kubectl get ingress
-            
   Cleanup:
     runs-on: ubuntu-latest
     needs: [Validation, Deploy]
+    environment: azurecirgs
     steps:
       #- uses: actions/checkout@v2
 
@@ -182,7 +190,7 @@ jobs:
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
-          
+
       - name: Dependency check
         shell: pwsh
         run: |
@@ -214,27 +222,18 @@ jobs:
         shell: pwsh
         run: |
           $RG='${{ env.RG }}'
-          
+
           # Get all ARM resources from all resource groups
           $rgToPurge = Get-AzResourceGroup -Name $RG
-
-          Write-Output "Purging $rgToPurge"
-
-          $rgResources = Get-AzResource -ResourceGroupName $rgToPurge
-          Write-Output "$($rgResources.length) resources to remove from $rgToPurge"
-
           try {
             #Remove all but public ip addresses
-            $rgResources | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
 
             #Remove public ip addresses
-            $rgResources | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            $rgResources = Get-AzResource -ResourceGroupName $_.ResourceGroupName
-            Write-Output "Post check. $($rgResources.length) resources left to remove from $($_.ResourceGroupName)"
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
 
             #Final run to clean other dependant resources in parent-child graph
-            Get-AzResource -ResourceGroupName $rgToPurge | Remove-AzResource -Force
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
           }
           Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
           {

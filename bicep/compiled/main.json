@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "17731771634281684841"
+      "templateHash": "6379899044491181510"
     }
   },
   "parameters": {
@@ -15,6 +15,10 @@
     },
     "resourceName": {
       "type": "string"
+    },
+    "useAksUAI": {
+      "type": "bool",
+      "defaultValue": false
     },
     "dnsZoneId": {
       "type": "string",
@@ -187,7 +191,7 @@
   },
   "functions": [],
   "variables": {
-    "user_identity": "[or(variables('create_vnet'), variables('existing_vnet'))]",
+    "user_identity": "[or(or(variables('create_vnet'), variables('existing_vnet')), parameters('useAksUAI'))]",
     "user_identity_name": "[format('id-{0}', parameters('resourceName'))]",
     "dnsZoneRg": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[4], '')]",
     "dnsZoneName": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[8], '')]",
@@ -689,8 +693,14 @@
           "byoAKSSubnetId": {
             "value": "[parameters('byoAKSSubnetId')]"
           },
+          "user_identity_principalId": {
+            "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))).principalId]"
+          },
           "user_identity_name": {
             "value": "[variables('user_identity_name')]"
+          },
+          "user_identity_rg": {
+            "value": "[resourceGroup().name]"
           }
         },
         "template": {
@@ -700,7 +710,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.63.48766",
-              "templateHash": "14705712300427379088"
+              "templateHash": "17017049446633963820"
             }
           },
           "parameters": {
@@ -708,6 +718,12 @@
               "type": "string"
             },
             "user_identity_name": {
+              "type": "string"
+            },
+            "user_identity_rg": {
+              "type": "string"
+            },
+            "user_identity_principalId": {
               "type": "string"
             }
           },
@@ -722,10 +738,10 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2020-04-01-preview",
               "scope": "[format('Microsoft.Network/virtualNetworks/{0}/subnets/{1}', variables('existingAksVnetName'), variables('existingAksSubnetName'))]",
-              "name": "[guid(parameters('user_identity_name'), variables('existingAksSubnetName'))]",
+              "name": "[guid(parameters('user_identity_principalId'), variables('existingAksSubnetName'))]",
               "properties": {
                 "roleDefinitionId": "[variables('networkContributorRole')]",
-                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('user_identity_name')), '2018-11-30').principalId]",
+                "principalId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('user_identity_rg')), 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('user_identity_name')), '2018-11-30').principalId]",
                 "principalType": "ServicePrincipal"
               }
             }
