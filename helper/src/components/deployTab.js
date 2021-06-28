@@ -58,11 +58,14 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
   })
 
   const finalParams = { ...params, ...(!deploy.disablePreviews && preview_params) }
+  const rg = `${deploy.clusterName}-rg`
+  const aks = `aks-${deploy.clusterName}`
+  const agw = `agw-${deploy.clusterName}`
   const deploycmd =
     `# Create Resource Group \n` +
-    `az group create -l ${deploy.location} -n ${deploy.clusterName}-rg \n\n` +
+    `az group create -l ${deploy.location} -n ${rg} \n\n` +
     `# Deploy template with in-line paramters \n` +
-    `az deployment group create -g ${deploy.clusterName}-rg  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
+    `az deployment group create -g ${rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
   const promethous_namespace = 'monitoring'
@@ -73,15 +76,15 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
   const postscript =
     // App Gateway addon
     (net.vnet_opt === 'custom' && addons.ingress === 'appgw' ? `# Workaround to enabling the appgw addon with custom vnet (until supported by template)
-az aks enable-addons -n ${deploy.clusterName} -g ${deploy.clusterName}-rg -a ingress-appgw --appgw-id $(az network application-gateway show -g ${deploy.clusterName}-rg -n ${deploy.clusterName}-appgw --query id -o tsv)
+az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $(az network application-gateway show -g ${rg} -n ${agw} --query id -o tsv)
 ` : '') +
     // CSI-Secret KeyVault addon
     (addons.csisecret !== "none" ? `# Workaround to enabling the csisecret addon (in preview)
-az aks enable-addons -n ${deploy.clusterName} -g ${deploy.clusterName}-rg -a azure-keyvault-secrets-provider
+az aks enable-addons -n ${aks} -g ${rg} -a azure-keyvault-secrets-provider
 ` : '') +
     // Get Admin credentials
     `# Get admin credentials for your new AKS cluster
-az aks get-credentials -g ${deploy.clusterName}-rg -n ${deploy.clusterName} --admin ` +
+az aks get-credentials -g ${rg} -n ${aks} --admin ` +
     // Prometheus
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -113,7 +116,7 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
     (addons.dnsZoneId ? `\n\n# Install external-dns
 kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdin<<EOF
 {
-  "userAssignedIdentityID": "$(az aks show -g ${deploy.clusterName}-rg -n ${deploy.clusterName} --query identityProfile.kubeletidentity.clientId -o tsv)",
+  "userAssignedIdentityID": "$(az aks show -g ${rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)",
   "tenantId": "$(az account show --query tenantId -o tsv)",
   "useManagedIdentityExtension": true,
   "subscriptionId": "${addons.dnsZoneId.split('/')[2]}",
@@ -245,8 +248,8 @@ EOF
 
               <TextField readOnly={true} label="While Gitops is in preview, run this manually" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={6} value={`az k8sconfiguration create
         --name cluster-config 
-        --cluster-name ${deploy.clusterName}    
-        --resource-group ${deploy.clusterName}-rg     
+        --cluster-name ${aks}    
+        --resource-group ${rg}     
         --operator-instance-name flux     
         --operator-namespace cluster-config     
         --enable-helm-operator     
