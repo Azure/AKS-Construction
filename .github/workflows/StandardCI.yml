@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
     
   push:
-    branches: [ action* ]
     paths: 
       - ".github/workflows/StandardCI.yml"
       
