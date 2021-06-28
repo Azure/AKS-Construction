@@ -10,7 +10,10 @@ on:
   
   pull_request:
     branches: [ main ]
-  
+    paths: 
+      - 'bicep/*'
+      - ".github/workflows/ByoVnetCI.yml"
+      
   schedule:
     # At 11:00pm, every Wednesday week
     - cron: '0 23 * * 3'
