@@ -13,6 +13,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build
         run: |
+          cd helper
           npm install
           REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_K8S_VERSION="1.20.5" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://raw.githubusercontent.com/Azure/Aks-Construction/main/bicep/compiled/main.json" npm run build
 
@@ -21,6 +22,6 @@ jobs:
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: gh-pages
-          build_dir: build
+          build_dir: helper/build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
