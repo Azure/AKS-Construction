@@ -20,14 +20,15 @@ on:
 
 concurrency: ci-${{ github.ref }}
 
+env:
+  RG: 'Automation-Actions-AksDeployCI'
+  ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
+  RESNAME: 'AksByo'
+  DEPNAME: 'Dep${{ github.run_number }}'
+
 jobs:
   Validation:
     runs-on: ubuntu-latest
-    env: 
-      RG: 'Automation-Actions-AksDeployCI'
-      ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
-      RESNAME: 'AksByo'
-      DEPNAME: 'Dep${{ github.run_number }}'
       
     steps:
       - uses: actions/checkout@v2
@@ -134,6 +135,7 @@ jobs:
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
+            
             az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --name $DEPNAME --verbose
             
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
@@ -218,18 +220,23 @@ jobs:
 
           Write-Output "Purging $rgToPurge"
 
-          $rgResources = Get-AzResource -ResourceGroupName $_.ResourceGroupName
-          Write-Output "$($rgResources.length) resources to remove from $($_.ResourceGroupName)"
+          $rgResources = Get-AzResource -ResourceGroupName $rgToPurge
+          Write-Output "$($rgResources.length) resources to remove from $rgToPurge"
 
-          #Remove all but public ip addresses
-          $rgResources | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
+          try {
+            #Remove all but public ip addresses
+            $rgResources | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
 
-          #Remove public ip addresses
-          $rgResources | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
+            #Remove public ip addresses
+            $rgResources | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
 
-          $rgResources = Get-AzResource -ResourceGroupName $_.ResourceGroupName
-          Write-Output "Post check. $($rgResources.length) resources left to remove from $($_.ResourceGroupName)"
+            $rgResources = Get-AzResource -ResourceGroupName $_.ResourceGroupName
+            Write-Output "Post check. $($rgResources.length) resources left to remove from $($_.ResourceGroupName)"
 
-          #Final run to clean other dependant resources in parent-child graph
-          Get-AzResource -ResourceGroupName $_.ResourceGroupName | Remove-AzResource -Force
-            
+            #Final run to clean other dependant resources in parent-child graph
+            Get-AzResource -ResourceGroupName $rgToPurge | Remove-AzResource -Force
+          }
+          Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
+          {
+            write-output error
+          }
