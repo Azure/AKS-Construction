@@ -19,7 +19,9 @@ jobs:
 
       - name: ContextCheck
         shell: pwsh
-        run: dir
+        run: | 
+          echo '${{ GITHUB_EVENT_NAME }}'
+          dir
 
       - name: Install Bicep
         shell: pwsh
