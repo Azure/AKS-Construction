@@ -1,0 +1,241 @@
+
+import React, { useState, useEffect } from 'react';
+import { Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text } from '@fluentui/react';
+import Presents from './presets'
+
+import NetworkTab from './networkTab'
+import AddonsTab from './addonsTab'
+import ClusterTab, { VMs } from './clusterTab'
+import DeployTab from './deployTab'
+
+import { appInsights } from '../index.js'
+import { initializeIcons } from '@fluentui/react/lib/Icons';
+initializeIcons();
+
+
+function useAITracking(componentName, key) {
+
+  useEffect(() => {
+    const start = new Date(), pagename = `${componentName}.${key}`
+    appInsights.startTrackPage(pagename)
+    return () => {
+      console.log(`exit screen ${key} ${(new Date() - start) / 1000}`)
+      appInsights.stopTrackPage(pagename,
+        { 'Component Name': componentName, 'Navigation': key },
+        { mounttime: (new Date() - start) / 1000 })
+    };
+  }, [componentName, key])
+
+}
+
+
+function Header({ entScale, setEntScale, featureFlag }) {
+
+
+  return (
+    <Stack horizontal tokens={{ childrenGap: 10 }}>
+      <img src="aks.svg" alt="Kubernetes Service" style={{ width: "6%", height: "auto" }}></img>
+      <Stack tokens={{ padding: 10 }}>
+        <Text variant="xLarge">AKS Deploy helper</Text>
+        <Text >Tell us the requirements of your AKS deployment, and we will generate the configuration to create a full operational environment, incorporating best-practics guidence </Text>
+
+      </Stack>
+      <Stack.Item tokens={{ padding: 10 }}>
+        <Toggle
+          label={
+            <Text nowrap>
+              Enterprise Scale{' '}
+              <TooltipHost content="use if you are following Enterprise Scale">
+                <Icon iconName="Info" aria-label="Info tooltip" />
+              </TooltipHost>
+            </Text>
+          }
+          onText="Yes"
+          offText="No"
+          checked={entScale}
+          disabled={!featureFlag}
+          onChange={(ev, val) => setEntScale(val)}
+        />
+      </Stack.Item>
+    </Stack>
+  )
+}
+export default function PortalNav({ config }) {
+  const [entScale, setEntScale] = useState(false)
+  const [key, setKey] = useState("0")
+
+  const { tabLabels, defaults, entScaleOps, defaultOps } = config
+
+  useAITracking("PortalNav", tabLabels[key])
+  const [invalidArray, setInvalidArray] = useState(Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
+  const [featureFlag, setFeatureFlag] = useState(false)
+  const [tabValues, setTabValues] = useState(defaults)
+
+  useEffect(() => {
+
+    var queryString = window && window.location.search
+    if (queryString) {
+      var match = queryString.match('[?&]feature=([^&]+)')
+      if (match) {
+        setFeatureFlag(true)// = match[1]
+      }
+    }
+  }, [])
+
+
+  useEffect(() => {
+
+    setTabValues((p) => {
+      return {
+        ...p, deploy: {
+          ...p.deploy,
+          clusterName: `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`,
+          ...(process.env.REACT_APP_K8S_VERSION && { kubernetesVersion: process.env.REACT_APP_K8S_VERSION })
+        }
+      }
+    })
+    fetch('https://api.ipify.org?format=json').then(response => {
+      return response.json();
+    }).then((res) => {
+      setTabValues((p) => { return { ...p, deploy: { ...p.deploy, apiips: res.ip } } })
+
+    }).catch((err) => console.error('Problem fetching my IP', err))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+
+  function _handleLinkClick(item) {
+    setKey(item.props.itemKey)
+  }
+
+  function mergeState(tab, field, value) {
+    setTabValues((p) => {
+      return {
+        ...p, [tab]: {
+          ...p[tab],
+          [field]: value
+        }
+      }
+    })
+  }
+
+  function updateCardValues(sectionKey, cardKey) {
+    const ops = entScale ? entScaleOps : defaultOps
+    const section = ops.find(s => s.key === sectionKey)
+    const carvals = section.cards.find(c => c.key === cardKey).values
+
+
+    for (let t of Object.keys(carvals)) {
+      console.log(`updateCardValues(${sectionKey}, ${cardKey}) -> ${t}`)
+
+      setTabValues((p) => {
+        return {
+          ...p, [t]: {
+            ...p[t],
+            // resolve conditional params
+            ...Object.keys(carvals[t]).reduce((a, c) => {
+              const val = carvals[t][c]
+              // if value is array with at least 1 element with a object that has a propery 'set'
+              const targetVal = Array.isArray(val) && val.length > 0 && typeof val[0] === 'object' && val[0].hasOwnProperty("set") ?
+                val.reduce((a, c) => a === undefined ? (c.page && c.field ? (p[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
+                :
+                val
+              console.log(`updateCardValues: setting tab=${t}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
+              return { ...a, [c]: targetVal }
+            }, {})
+          }
+        }
+      })
+
+    }
+  }
+
+  function getError(page, field) {
+    return invalidArray[page].find(e => e.field === field)
+  }
+
+
+  function invalidFn(page, field, invalid, message) {
+    const e = getError(page, field)
+    if (!invalid && e) {
+      setInvalidArray((prev) => { return { ...prev, [page]: prev[page].filter((e) => e.field !== field) } })
+    } else if (invalid && !e) {
+      setInvalidArray((prev) => { return { ...prev, [page]: prev[page].concat({ field, message }) } })
+    }
+  }
+
+  const { deploy, cluster, net, addons } = tabValues
+  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null,
+    "Enter valid cluster name")
+  invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemperal' && !VMs.find(i => i.key === cluster.vmSize).eph,
+    "Youre selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache")
+  invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36,
+    "Enter Valid Directory ID")
+  invalidFn('addons', 'registry', (net.vnetprivateend || net.serviceEndpointsEnable) && (addons.registry !== 'Premium' && addons.registry !== 'none'),
+    "Premium Teir is required for Service Endpoints & Private Link, either select Premium, or disable Service Endpoints and Private Link")
+  invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
+    "Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab")
+  invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/dnszones/[^/ ]+$'),
+    "Enter valid Azure DNZ Zone resourceId")
+  invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'),
+    "Enter valid email for cerfificate generation")
+  invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'),
+    "Enter valid Azure DNZ Zone resourceId")
+  invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
+    "Enter a valid Subnet Id where AKS nodes will be installed")
+  invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
+    "Enter a valid Subnet Id where Application Gateway is installed")
+  invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.serviceEndpointsEnable || net.afw || net.vnetprivateend),
+    "Cannot use default networking of you select Firewall, Service Endpoints, or Private Link")
+  invalidFn('net', 'afw', net.afw && net.vnet_opt !== "custom",
+    net.vnet_opt === "byo" ?
+      "Please de-select, when using Bring your own NVET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)"
+      :
+      "Template can only deploy Azure Firewall in single VNET with Custom Networking")
+
+
+  function _customRenderer(page, link, defaultRenderer) {
+    return (
+      <span>
+        {invalidArray[page].length > 0 &&
+          <Icon iconName="Warning12" style={{ color: 'red' }} />
+        }
+        {defaultRenderer(link)}
+      </span>
+    );
+  }
+
+  return (
+    <main id="mainContent" className="wrapper">
+      <Header entScale={entScale} setEntScale={setEntScale} featureFlag={featureFlag} />
+
+
+      <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
+
+        <Presents sections={entScale ? entScaleOps : defaultOps} updateCardValues={updateCardValues} />
+
+        <Separator styles={{ root: { marginTop: "55px !important", marginBottom: "5px" } }}><b>Deploy</b> (optionally use 'Details' tabs for additional configuration)</Separator>
+
+        <Pivot selectedKey={key} onLinkClick={_handleLinkClick}>
+          <PivotItem headerText={tabLabels.deploy} itemKey="deploy" onRenderItemLink={(a, b) => _customRenderer('deploy', a, b)}>
+            <DeployTab tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} />
+          </PivotItem>
+          <PivotItem headerText={tabLabels.cluster} itemKey="cluster" onRenderItemLink={(a, b) => _customRenderer('cluster', a, b)} >
+            <ClusterTab tabValues={tabValues} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
+          </PivotItem>
+          <PivotItem headerText={tabLabels.addons} itemKey="addons" onRenderItemLink={(a, b) => _customRenderer('addons', a, b)} >
+            <AddonsTab tabValues={tabValues} updateFn={(field, value) => mergeState("addons", field, value)} invalidArray={invalidArray['addons']} />
+          </PivotItem>
+          <PivotItem headerText={tabLabels.net} itemKey="net" onRenderItemLink={(a, b) => _customRenderer('net', a, b)}>
+            <NetworkTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("net", field, value)} invalidArray={invalidArray['net']} />
+          </PivotItem>
+
+        </Pivot>
+
+      </Stack>
+    </main >
+  )
+}
+
+
+
