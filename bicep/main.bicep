@@ -2,7 +2,9 @@ param location string = resourceGroup().location
 param resourceName string
 
 //---------------------------------------------------------------------------------- User Identity
-var user_identity = create_vnet || existing_vnet
+param useAksUAI bool = false
+
+var user_identity = create_vnet || existing_vnet || useAksUAI
 var user_identity_name = 'id-${resourceName}'
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (user_identity) {

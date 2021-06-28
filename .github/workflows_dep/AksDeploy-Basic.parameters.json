@@ -20,6 +20,9 @@
         "enableAzureRBAC" : {
             "value": true
         },
+        "useAksUAI" : {
+            "value": true
+        },
         "omsagent": {
             "value": true
         },
