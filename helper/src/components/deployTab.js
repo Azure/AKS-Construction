@@ -22,30 +22,35 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: "true", ...(cluster.adminprincipleid && { adminprincipleid: cluster.adminprincipleid }) }),
     ...(addons.registry !== "none" && { registries_sku: addons.registry }),
     ...(net.afw && { azureFirewalls: "true" }),
-    ...(net.serviceEndpointsEnable && net.serviceEndpoints.size > 0 && { serviceEndpoints: JSON.stringify(Array.from(net.serviceEndpoints).map(s => { return { service: s } })).replaceAll('"', '\\"') }),
+    ...(net.serviceEndpointsEnable && net.serviceEndpoints.size > 0 && { serviceEndpoints: net.serviceEndpoints.map(s => { return { service: s } }) }),
     ...(addons.monitor === "aci" && { omsagent: "true", retentionInDays: addons.retentionInDays }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
     ...(net.networkPlugin !== "azure" && { networkPlugin: net.networkPlugin }),
-    ...(cluster.availabilityZones === "yes" && { availabilityZones: JSON.stringify(['1', '2', '3']).replaceAll(' ', '').replaceAll('"', '\\"') }),
-    ...(cluster.apisecurity === "whitelist" && apiips_array.length > 0 && { authorizedIPRanges: JSON.stringify(apiips_array).replaceAll(' ', '').replaceAll('"', '\\"') }),
+    ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
+    ...(cluster.apisecurity === "whitelist" && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: "true" }),
     ...(addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
     ...(addons.ingress === "appgw" && { ingressApplicationGateway: "true" }),
     ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel }),
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.KeyVault') && addons.csisecret === 'akvNew' && { AKVserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
+    ...(addons.csisecret === 'akvNew' && { createKV: "true" })
   }
-
 
   const preview_params = {
     // if selected service endpoints & Premium, setup ACR firewall : https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' && { ACRserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
     ...(addons.gitops !== "none" && { gitops: addons.gitops }),
     // azure-keyvault-secrets-provider
-    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true, ...(addons.csisecret === 'akvNew' && { createKV: "true" }) })
+    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true })
   }
 
-  const params2CLI = p => Object.keys(p).map(k => ` \\\n\t${k}=${p[k]}`).join('')
+  const params2CLI = p => Object.keys(p).map(k => {
+    const val = p[k]
+    const targetVal = Array.isArray(val) ? JSON.stringify(val).replaceAll(' ', '').replaceAll('"', '\\"') : val
+    return ` \\\n\t${k}=${targetVal}`
+  }).join('')
+
   const params2file = p => Object.keys(p).reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
@@ -58,7 +63,7 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
     `az group create -l ${deploy.location} -n ${deploy.clusterName}-rg \n\n` +
     `# Deploy template with in-line paramters \n` +
     `az deployment group create -g ${deploy.clusterName}-rg  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
-  const param_file = JSON.stringify(params2file(finalParams), null, 2)
+  const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
   const promethous_namespace = 'monitoring'
   const promethous_helm_release_name = 'monitoring'

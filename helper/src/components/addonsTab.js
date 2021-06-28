@@ -118,7 +118,12 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
                     {(addons.ingress === "nginx" || addons.ingress === "appgw") &&
                         <>
-                            <Checkbox checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={<Text>Create FQDN URLs for your applications using external-dns (Beta) (requires <Text style={{ fontWeight: "bold" }}>Azure DNS Zone</Text> - <Link href="https://docs.microsoft.com/en-us/azure/dns/dns-getstarted-portal#create-a-dns-zone" target="_t1">how to create</Link>)</Text>} />
+                            <Checkbox checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
+                                <Text>Create FQDN URLs for your applications using
+                                    <Link target="_t1" href="https://github.com/kubernetes-sigs/external-dns"> <b>external-dns</b> </Link>
+                                    (requires <Link href="https://docs.microsoft.com/en-us/azure/dns/dns-getstarted-portal#create-a-dns-zone" target="_t1"> <b>Azure DNS Zone</b> </Link>)
+                                </Text>} />
+                            <MessageBar messageBarType={MessageBarType.warning}>This feature requires you to own a custom domain, you can easily purchase a custom domain through Azure <Link target="_t1" href="https://docs.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain"> <b>details here</b></Link></MessageBar>
                             {addons.dns &&
                                 <>
                                     <TextField value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
@@ -199,6 +204,6 @@ export default function ({ tabValues, updateFn, invalidArray }) {
           onChange={(ev, { key }) => updateFn("gitops", key)}
         />
         */}
-        </Stack>
+        </Stack >
     )
 }
