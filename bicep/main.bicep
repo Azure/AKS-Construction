@@ -28,6 +28,34 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
   }
 }
 
+//---------------------------------------------------------------------------------- AKV
+param azureKeyvaultSecretsProvider bool = false #This is a preview feature
+
+param createKV bool = false
+param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
+var akvName = 'kv-${replace(resourceName, '-', '')}'
+resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
+  name: akvName
+  location: location
+  properties: !empty(AKVserviceEndpointFW) ? {
+    networkAcls: {
+      defaultAction: 'Deny'
+      virtualNetworkRules: [
+        {
+          action: 'Allow'
+          id: '${vnet.id}/subnets/${aks_subnet_name}'
+        }
+      ]
+      ipRules: AKVserviceEndpointFW != 'vnetonly' ? [
+        {
+          action: 'Allow'
+          value: AKVserviceEndpointFW
+        }
+      ] : null
+    }
+  } : {}
+}
+
 //---------------------------------------------------------------------------------- ACR
 param registries_sku string = ''
 param ACRserviceEndpointFW string = '' // either IP, or 'vnetonly'
