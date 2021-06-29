@@ -456,7 +456,6 @@ param kubernetesVersion string = '1.21.1'
 param enable_aad bool = false
 param aad_tenant_id string = ''
 param omsagent bool = false
-param privateCluster bool = false
 param ingressApplicationGateway bool = false
 param enableAzureRBAC bool = false
 param upgradeChannel string = ''
@@ -512,6 +511,8 @@ var aks_properties_base = {
     authorizedIPRanges: authorizedIPRanges
   } : {
     enablePrivateCluster: enablePrivateCluster
+    privateDNSZone: enablePrivateCluster ? 'none' : ''
+    enablePrivateClusterPublicFQDN: enablePrivateCluster
   }
   agentPoolProfiles: autoScale ? array(union(agentPoolProfiles, {
     minCount: agentCount
@@ -602,7 +603,7 @@ var aks_identity_user = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-02-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2021-03-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aks_properties2
