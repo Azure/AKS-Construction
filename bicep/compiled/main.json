@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "6379899044491181510"
+      "templateHash": "17040367504212470650"
     }
   },
   "parameters": {
@@ -18,9 +18,21 @@
     },
     "useAksUAI": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": true
     },
     "dnsZoneId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "azureKeyvaultSecretsProvider": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "createKV": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "AKVserviceEndpointFW": {
       "type": "string",
       "defaultValue": ""
     },
@@ -195,6 +207,7 @@
     "user_identity_name": "[format('id-{0}', parameters('resourceName'))]",
     "dnsZoneRg": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[4], '')]",
     "dnsZoneName": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[8], '')]",
+    "akvName": "[format('kv-{0}', replace(parameters('resourceName'), '-', ''))]",
     "acrName": "[format('acr{0}{1}', replace(parameters('resourceName'), '-', ''), uniqueString(resourceGroup().id, parameters('resourceName')))]",
     "AcrPullRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
     "existing_vnet": "[not(empty(parameters('byoAKSSubnetId')))]",
@@ -279,6 +292,17 @@
       "apiVersion": "2018-11-30",
       "name": "[variables('user_identity_name')]",
       "location": "[parameters('location')]"
+    },
+    {
+      "condition": "[parameters('createKV')]",
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2019-09-01",
+      "name": "[variables('akvName')]",
+      "location": "[parameters('location')]",
+      "properties": "[if(not(empty(parameters('AKVserviceEndpointFW'))), createObject('networkAcls', createObject('defaultAction', 'Deny', 'virtualNetworkRules', createArray(createObject('action', 'Allow', 'id', format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('aks_subnet_name')))), 'ipRules', if(not(equals(parameters('AKVserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('AKVserviceEndpointFW'))), null()))), createObject())]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+      ]
     },
     {
       "condition": "[not(empty(parameters('registries_sku')))]",

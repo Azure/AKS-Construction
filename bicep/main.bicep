@@ -2,7 +2,7 @@ param location string = resourceGroup().location
 param resourceName string
 
 //---------------------------------------------------------------------------------- User Identity
-param useAksUAI bool = false
+param useAksUAI bool = true
 
 var user_identity = create_vnet || existing_vnet || useAksUAI
 var user_identity_name = 'id-${resourceName}'
@@ -26,6 +26,35 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
     dnsZoneName: dnsZoneName
     principalId: aks.properties.identityProfile.kubeletidentity.objectId
   }
+}
+
+//---------------------------------------------------------------------------------- AKV
+
+param azureKeyvaultSecretsProvider bool = false //This is a preview feature
+
+param createKV bool = false
+param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
+var akvName = 'kv-${replace(resourceName, '-', '')}'
+resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
+  name: akvName
+  location: location
+  properties: !empty(AKVserviceEndpointFW) ? {
+    networkAcls: {
+      defaultAction: 'Deny'
+      virtualNetworkRules: [
+        {
+          action: 'Allow'
+          id: '${vnet.id}/subnets/${aks_subnet_name}'
+        }
+      ]
+      ipRules: AKVserviceEndpointFW != 'vnetonly' ? [
+        {
+          action: 'Allow'
+          value: AKVserviceEndpointFW
+        }
+      ] : null
+    }
+  } : {}
 }
 
 //---------------------------------------------------------------------------------- ACR

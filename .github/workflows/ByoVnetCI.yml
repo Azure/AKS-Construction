@@ -5,13 +5,15 @@ name: ByoVnetCI
 
 on:
   push:
-    branches: [ action* ]
     paths: 
       - ".github/workflows/ByoVnetCI.yml"
   
   pull_request:
     branches: [ main ]
-  
+    paths: 
+      - 'bicep/*'
+      - ".github/workflows/ByoVnetCI.yml"
+      
   schedule:
     # At 11:00pm, every Wednesday week
     - cron: '0 23 * * 3'
@@ -95,6 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Validation]
     environment: azurecirgs
+    if: github.event_name != 'push'
     steps:
       - uses: actions/checkout@v2
 
@@ -170,6 +173,7 @@ jobs:
             
   Cleanup:
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     needs: [Validation, Deploy]
     steps:
       #- uses: actions/checkout@v2

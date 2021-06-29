@@ -7,13 +7,15 @@ on:
   workflow_dispatch:
     
   push:
-    branches: [ action* ]
     paths: 
       - ".github/workflows/StandardCI.yml"
       
   pull_request:
     branches: [ main ]
-  
+    paths: 
+      - 'bicep/*'
+      - ".github/workflows/StandardCI.yml"
+      
   schedule:
     # At 11:00pm, every Tuesday week
     - cron: '0 23 * * 2'
@@ -101,6 +103,7 @@ jobs:
   Deploy:
     runs-on: ubuntu-latest
     needs: [Validation]
+    if: github.event_name != 'push'
     environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
@@ -177,6 +180,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     needs: [Validation, Deploy]
+    if: github.event_name != 'push'
     steps:
       #- uses: actions/checkout@v2
 
