@@ -9,6 +9,7 @@ on:
   push:
     paths: 
       - ".github/workflows/ByoVnetPrivateCI.yml"
+      - 'bicep/*'
       
   pull_request:
     branches: [ main ]
