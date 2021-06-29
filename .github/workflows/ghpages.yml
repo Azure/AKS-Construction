@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/ghpages.yml"
-      - "/helper/**"
+      - "helper/**"
 
 jobs:
   build:
