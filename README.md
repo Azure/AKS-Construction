@@ -10,20 +10,22 @@ It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft
 ### GUI experience
 
 To help guide your AKS configuraton, use the [Deployment Helper](https://azure.github.io/Aks-Construction/), which will provide a set of parameters and scripts to make deployment simple.
+
 [![preview screenshot of the helper wizard](helper_preview.png)](https://azure.github.io/Aks-Construction/)
 
 ### Bicep templates
 
-Templates have been modularised into their component areas. [Main.bicep](bicep/main.bicep) references them and they are expected to be present in the same directory. The Wizard leverages a json compiled version of all bicep files.
+Templates have been modularised into their component areas. [Main.bicep](bicep/main.bicep) references them and they are expected to be present in the same directory. The Deployment Helper leverages a json compiled version of all the bicep files.
 
 ## Implementation Notes
 
 ### Configurations
-Whilst the Wizard lets you generate a flxeible deployment, before merging template changes we run CI on 2 key configuration presets.
+Whilst the Deployment Helper lets you generate a fully flexible deployment, before merging template changes we run CI on several configuration presets.
 
 | Config | CI Status | Notes
 |--------|-----------|------|
 | [ESLZ Byo peered vnet](.github/workflows_dep/AksDeploy-ByoVnet.parameters.json) | [![ByoVnetCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml/badge.svg?branch=main)](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml) | Takes full resource id's as parameters for existing subnets |
+| [ESLZ Byo private vnet](.github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json) | [![ByoVNetPrivateCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml/badge.svg)](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml)| as per ByoVnet, but Private |
 | [ESLZ Sandbox](.github/workflows_dep/AksDeploy-Basic.parameters.json) | [![AksStandardCI](https://github.com/Azure/Aks-Construction/actions/workflows/StandardCI.yml/badge.svg)](https://github.com/Azure/Aks-Construction/actions/workflows/StandardCI.yml) | Deploys it's own network using default CIDRs |
 
 ### Preview Features
