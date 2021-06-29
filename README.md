@@ -7,7 +7,10 @@ It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft
 
 ## Components
 
-### Wizard experience
+### GUI experience
+
+To help guide your AKS configuraton, use the [Deployment Helper](https://azure.github.io/Aks-Construction/), which will provide a set of parameters and scripts to make deployment simple.
+[![preview screenshot of the helper wizard](helper_preview.png)](https://azure.github.io/Aks-Construction/)
 
 ### Bicep templates
 
