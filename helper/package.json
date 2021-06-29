@@ -3,11 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "/Aks-Construction/",
-  "dependencies": {
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0",
-    "react-scripts": "3.2.0"
-  },
+  "dependencies": {},
   "scripts": {
     "start": "react-scripts start",
     "build": "CI=false react-scripts build",
@@ -30,7 +26,10 @@
     ]
   },
   "devDependencies": {
-    "@fluentui/react": "^8.20.1",
-    "@microsoft/applicationinsights-web": "^2.6.3"
+    "@fluentui/react": "^8.21.1",
+    "@microsoft/applicationinsights-web": "^2.6.3",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "^4.0.3"
   }
 }
