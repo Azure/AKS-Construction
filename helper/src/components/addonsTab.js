@@ -161,7 +161,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'registry')}</MessageBar>
                 }
                 {net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' &&
-                    <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.warning}>As you have selected Container Registry in Networking Service Endpoint, the templte will only Allow traffic to your Registry from the AKS Subnet, and your specified IP addresses <b>{deploy.apiips.split(',')}</b> (<Link href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet">docs</Link>) *** Preview feature</MessageBar>
+                    <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.warning}>As you have selected Container Registry in Networking Service Endpoint, the templte will only Allow traffic to your Registry from the AKS Subnet, and your specified IP addresses <b>{deploy.apiips.split(',')}</b> (<Link target="_t2" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet">docs</Link>) *** Preview feature</MessageBar>
                 }
             </Stack.Item>
 
@@ -185,7 +185,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { minWidth: '700px', display: (addons.csisecret === "none" ? "none" : "block") } }} >
-                <MessageBar messageBarType={MessageBarType.warning}>Ensure you register for this preview feature <Link href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver#register-the-aks-azurekeyvaultsecretsprovider-preview-feature">here</Link></MessageBar>
+                <MessageBar messageBarType={MessageBarType.warning}>Ensure you register for this preview feature <Link target="_t2" href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver#register-the-aks-azurekeyvaultsecretsprovider-preview-feature">here</Link></MessageBar>
                 <Stack tokens={{ childrenGap: 15 }}>
                     {addons.csisecret === "akvExist" &&
                         <TextField value={addons.kvId} onChange={(ev, v) => updateFn("kvId", v)} errorMessage={getError(invalidArray, 'kvId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Azure Key Vault Resource Id</Text>} />

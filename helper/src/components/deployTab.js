@@ -79,9 +79,11 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
 az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $(az network application-gateway show -g ${rg} -n ${agw} --query id -o tsv)
 ` : '') +
     // CSI-Secret KeyVault addon
+    /*
     (addons.csisecret !== "none" ? `# Workaround to enabling the csisecret addon (in preview)
 az aks enable-addons -n ${aks} -g ${rg} -a azure-keyvault-secrets-provider
 ` : '') +
+*/
     // Get Admin credentials
     `# Get admin credentials for your new AKS cluster
 az aks get-credentials -g ${rg} -n ${aks} --admin ` +
