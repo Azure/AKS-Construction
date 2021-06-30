@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "12946059506882739196"
+      "templateHash": "1499915240024628590"
     }
   },
   "parameters": {
@@ -14,7 +14,12 @@
       "defaultValue": "[resourceGroup().location]"
     },
     "resourceName": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Used to name all resources"
+      },
+      "maxLength": 20,
+      "minLength": 3
     },
     "useAksUAI": {
       "type": "bool",
