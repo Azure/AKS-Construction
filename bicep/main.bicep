@@ -592,8 +592,17 @@ var aks_addons4 = !empty(azurepolicy) ? union(aks_addons3, {
   }
 }) : aks_addons3
 
-var aks_properties2 = !empty(aks_addons4) ? union(aks_properties1, {
-  addonProfiles: aks_addons4
+var aks_addons5 = azureKeyvaultSecretsProvider ? union(aks_addons4, {
+  azureKeyvaultSecretsProvider: {
+    config: {
+      enableSecretRotation: false
+    }
+    enabled: true
+  }
+}) : aks_addons4
+
+var aks_properties2 = !empty(aks_addons5) ? union(aks_properties1, {
+  addonProfiles: aks_addons5
 }) : aks_properties1
 
 var aks_identity_user = {
