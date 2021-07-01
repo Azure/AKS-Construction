@@ -40,9 +40,9 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
   const preview_params = {
     // if selected service endpoints & Premium, setup ACR firewall : https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' && { ACRserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
-    ...(addons.gitops !== "none" && { gitops: addons.gitops }),
-    // azure-keyvault-secrets-provider
-    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true })
+    ...(addons.gitops !== "none" && { gitops: addons.gitops })
+    // azure-keyvault-secrets-provider  - commenting out until supported by ARM template
+    //...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true })
   }
 
   const params2CLI = p => Object.keys(p).map(k => {
@@ -78,14 +78,13 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
     (net.vnet_opt === 'custom' && addons.ingress === 'appgw' ? `# Workaround to enabling the appgw addon with custom vnet (until supported by template)
 az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $(az network application-gateway show -g ${rg} -n ${agw} --query id -o tsv)
 ` : '') +
-    // CSI-Secret KeyVault addon
-    /*
-    (addons.csisecret !== "none" ? `# Workaround to enabling the csisecret addon (in preview)
+    // CSI-Secret KeyVault addon - using this method until supported by ARM template
+    (addons.csisecret !== "none" ? `\n# Workaround to enabling the csisecret addon (in preview)
 az aks enable-addons -n ${aks} -g ${rg} -a azure-keyvault-secrets-provider
 ` : '') +
-*/
+
     // Get Admin credentials
-    `# Get admin credentials for your new AKS cluster
+    `\n# Get admin credentials for your new AKS cluster
 az aks get-credentials -g ${rg} -n ${aks} --admin ` +
     // Prometheus
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack

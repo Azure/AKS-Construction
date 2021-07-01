@@ -42,7 +42,14 @@ var akvName = 'kv-${replace(resourceName, '-', '')}'
 resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
   name: akvName
   location: location
-  properties: !empty(AKVserviceEndpointFW) ? {
+  properties: union({
+    tenantId: subscription().tenantId
+    sku: {
+      family: 'A'
+      name: 'Standard'
+    }
+    accessPolicies: []
+  }, !empty(AKVserviceEndpointFW) ? {
     networkAcls: {
       defaultAction: 'Deny'
       virtualNetworkRules: [
@@ -58,7 +65,7 @@ resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
         }
       ] : null
     }
-  } : {}
+  } : {})
 }
 
 //---------------------------------------------------------------------------------- ACR
@@ -122,16 +129,16 @@ param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
 param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
 param vnetFirewallSubnetAddressPrefix string = '10.241.130.0/26'
 
-param byoAKSSubnetId string =''
+param byoAKSSubnetId string = ''
 var existing_vnet = !empty(byoAKSSubnetId)
-var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/'))>9 ? split(byoAKSSubnetId, '/')[4] : '') : ''
+var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 9 ? split(byoAKSSubnetId, '/')[4] : '') : ''
 
 module aksnetcontrib './aksnetcontrib.bicep' = if (existing_vnet && user_identity) {
   name: 'addAksNetContributor'
   scope: resourceGroup(existingAksVnetRG)
   params: {
     byoAKSSubnetId: byoAKSSubnetId
-    user_identity_principalId:  uai.properties.principalId
+    user_identity_principalId: uai.properties.principalId
     user_identity_name: uai.name
     user_identity_rg: resourceGroup().name
   }
@@ -140,19 +147,18 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (existing_vnet && user_identit
 output aksClusterName string = aks.name
 
 param byoAGWSubnetId string = ''
-var existingAGWSubnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/'))>10 ? split(byoAGWSubnetId, '/')[10] : '') : ''
-var existingAGWVnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/'))>9 ? split(byoAGWSubnetId, '/')[8] : '') : ''
-var existingAGWVnetRG = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/'))>9 ? split(byoAGWSubnetId, '/')[4] : '') : ''
-resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing =  {
+var existingAGWSubnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 10 ? split(byoAGWSubnetId, '/')[10] : '') : ''
+var existingAGWVnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[8] : '') : ''
+var existingAGWVnetRG = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[4] : '') : ''
+resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
   name: existingAGWVnetName
-  scope : resourceGroup(existingAGWVnetRG)
+  scope: resourceGroup(existingAGWVnetRG)
 }
 resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = {
   parent: existingAgwVnet
   name: existingAGWSubnetName
 }
-var existingAGWSubnetAddPrefix=existingAGWSubnet.properties.addressPrefix
-
+var existingAGWSubnetAddPrefix = existingAGWSubnet.properties.addressPrefix
 
 param serviceEndpoints array = []
 
@@ -224,7 +230,6 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
     //scope: '${vnet.id}/subnets/${aks_subnet_name}'
   }
 }
-
 
 //---------------------------------------------------------------------------------- Firewall
 var routeFwTableName = '${resourceName}-fw-udr'
@@ -443,9 +448,9 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) 
 }
 
 //---------------------------------------------------------------------------------- AppGateway - Only if Existing/Custom VNET, otherwise addon will auto-create
-var appgwSubnetId = !empty(byoAGWSubnetId) ? byoAGWSubnetId : (create_vnet ? '${vnet.id}/subnets/${appgw_subnet_name}' : '') 
+var appgwSubnetId = !empty(byoAGWSubnetId) ? byoAGWSubnetId : (create_vnet ? '${vnet.id}/subnets/${appgw_subnet_name}' : '')
 
-module appGw './appgw.bicep' = if ((create_vnet && ingressApplicationGateway) || (!empty(byoAGWSubnetId) && ingressApplicationGateway) ) {
+module appGw './appgw.bicep' = if ((create_vnet && ingressApplicationGateway) || (!empty(byoAGWSubnetId) && ingressApplicationGateway)) {
   name: 'addAppGw'
   params: {
     resourceName: resourceName
@@ -485,7 +490,7 @@ param dockerBridgeCidr string = '172.17.0.1/16'
 var appgw_name = 'agw-${resourceName}'
 
 var autoScale = agentCountMax > agentCount
-var aksSubnetId = existing_vnet ? byoAKSSubnetId : (create_vnet ? '${vnet.id}/subnets/${aks_subnet_name}' : null) 
+var aksSubnetId = existing_vnet ? byoAKSSubnetId : (create_vnet ? '${vnet.id}/subnets/${aks_subnet_name}' : null)
 var agentPoolProfiles = {
   name: 'nodepool1'
   mode: 'System'
@@ -500,7 +505,6 @@ var agentPoolProfiles = {
   enableAutoScaling: autoScale
   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
 }
-
 
 var aks_properties_base = {
   kubernetesVersion: kubernetesVersion
@@ -624,7 +628,6 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-03-01' = {
     type: 'SystemAssigned'
   }
 }
-
 
 // https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json
 var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
