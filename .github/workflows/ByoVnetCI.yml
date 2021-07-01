@@ -115,6 +115,7 @@ jobs:
           Write-Output "Bicep file [$bicepPath] exists $(Test-Path $bicepPath)]"
 
           echo $PWD
+          Get-Location
           
           ls
 
