@@ -117,12 +117,12 @@ jobs:
           $bicepFullPath=Join-Path -Path $(Get-Location).path -ChildPath $bicepPath
           Write-Output $bicepFullPath
           
-          echo $PWD
-          Get-Location
+          #echo $PWD
+          #Get-Location
           
           ls
 
-          $WHATIF=az deployment group what-if -f $bicepPath -g $RG -p $paramPath -p resourceName=$RESNAME byoAKSSubnetId=$akssubnet byoAGWSubnetId=$agsubnet --no-pretty-print
+          $WHATIF=az deployment group what-if -f $bicepFullPath -g $RG -p $paramPath -p resourceName=$RESNAME byoAKSSubnetId=$akssubnet byoAGWSubnetId=$agsubnet --no-pretty-print
           Write-Output $WHATIF
           
   Deploy:
