@@ -220,13 +220,11 @@ jobs:
         run: |
           $RG='${{ env.RG }}'
           
-          # Get all ARM resources from all resource groups
-          $rgToPurge = Get-AzResourceGroup -Name $RG
+         
+          Write-Output "Purging $RG"
 
-          Write-Output "Purging $rgToPurge"
-
-          $rgResources = Get-AzResource -ResourceGroupName $rgToPurge
-          Write-Output "$($rgResources.length) resources to remove from $rgToPurge"
+          $rgResources = Get-AzResource -ResourceGroupName $RG
+          Write-Output "$($rgResources.length) resources to remove from $RG"
 
           try {
             #Remove all but public ip addresses
@@ -239,7 +237,7 @@ jobs:
             Write-Output "Post check. $($rgResources.length) resources left to remove from $($_.ResourceGroupName)"
 
             #Final run to clean other dependant resources in parent-child graph
-            Get-AzResource -ResourceGroupName $rgToPurge | Remove-AzResource -Force
+            Get-AzResource -ResourceGroupName $RG | Remove-AzResource -Force
           }
           Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
           {
