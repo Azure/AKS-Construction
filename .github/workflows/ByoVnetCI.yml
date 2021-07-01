@@ -117,6 +117,8 @@ jobs:
           $bicepFullPath=Join-Path -Path $(Get-Location).path -ChildPath $bicepPath
           Write-Output "Bicep file [$bicepFullPath] exists $(Test-Path $bicepFullPath)]"
           Write-Output $bicepFullPath
+          
+          az bicep install
 
           $WHATIF=az deployment group what-if -f $bicepFullPath -g $RG -p $paramPath -p resourceName=$RESNAME byoAKSSubnetId=$akssubnet byoAGWSubnetId=$agsubnet --no-pretty-print
           Write-Output $WHATIF
