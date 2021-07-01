@@ -219,25 +219,15 @@ jobs:
         shell: pwsh
         run: |
           $RG='${{ env.RG }}'
-          
-         
-          Write-Output "Purging $RG"
-
-          $rgResources = Get-AzResource -ResourceGroupName $RG
-          Write-Output "$($rgResources.length) resources to remove from $RG"
-
+          # Get all ARM resources from all resource groups
+          $rgToPurge = Get-AzResourceGroup -Name $RG
           try {
             #Remove all but public ip addresses
-            $rgResources | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
             #Remove public ip addresses
-            $rgResources | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            $rgResources = Get-AzResource -ResourceGroupName $_.ResourceGroupName
-            Write-Output "Post check. $($rgResources.length) resources left to remove from $($_.ResourceGroupName)"
-
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
             #Final run to clean other dependant resources in parent-child graph
-            Get-AzResource -ResourceGroupName $RG | Remove-AzResource -Force
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
           }
           Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
           {
