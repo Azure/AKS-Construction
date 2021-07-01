@@ -107,7 +107,7 @@ jobs:
         shell: pwsh
         run: |
           $RG='${{ env.RG }}'
-          $bicepPath='bicep/main.bicep'
+          $bicepPath='./bicep/main.bicep'
           $paramPath='${{ env.ParamFilePath }}'
           $akssubnet="/subscriptions/2d5bb2c8-8be8-4539-b48f-fbfd86852fa9/resourceGroups/Automation-Actions-AksDeployVnet/providers/Microsoft.Network/virtualNetworks/aksdeployvnet1/subnets/aks"
           $agsubnet="/subscriptions/2d5bb2c8-8be8-4539-b48f-fbfd86852fa9/resourceGroups/Automation-Actions-AksDeployVnet/providers/Microsoft.Network/virtualNetworks/aksdeployvnet1/subnets/ag"
