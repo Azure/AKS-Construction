@@ -102,7 +102,7 @@ jobs:
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFRESULT=$(az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --no-pretty-print)
             echo $WHATIFRESULT
-            $WHATIFRESULT > /tmp/whatif.json
+            echo $WHATIFRESULT > '/tmp/whatif.json'
             
       - name: GetJson
         shell: pwsh
