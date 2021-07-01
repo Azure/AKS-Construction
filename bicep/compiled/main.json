@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "1499915240024628590"
+      "templateHash": "6332386096584816209"
     }
   },
   "parameters": {
@@ -300,7 +300,7 @@
       "apiVersion": "2019-09-01",
       "name": "[variables('akvName')]",
       "location": "[parameters('location')]",
-      "properties": "[if(not(empty(parameters('AKVserviceEndpointFW'))), createObject('networkAcls', createObject('defaultAction', 'Deny', 'virtualNetworkRules', createArray(createObject('action', 'Allow', 'id', format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('aks_subnet_name')))), 'ipRules', if(not(equals(parameters('AKVserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('AKVserviceEndpointFW'))), null()))), createObject())]",
+      "properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'Standard'), 'accessPolicies', createArray()), if(not(empty(parameters('AKVserviceEndpointFW'))), createObject('networkAcls', createObject('defaultAction', 'Deny', 'virtualNetworkRules', createArray(createObject('action', 'Allow', 'id', format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('aks_subnet_name')))), 'ipRules', if(not(equals(parameters('AKVserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('AKVserviceEndpointFW'))), null()))), createObject()))]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
       ]
