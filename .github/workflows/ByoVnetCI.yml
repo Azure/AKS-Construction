@@ -112,7 +112,10 @@ jobs:
           $akssubnet="/subscriptions/2d5bb2c8-8be8-4539-b48f-fbfd86852fa9/resourceGroups/Automation-Actions-AksDeployVnet/providers/Microsoft.Network/virtualNetworks/aksdeployvnet1/subnets/aks"
           $agsubnet="/subscriptions/2d5bb2c8-8be8-4539-b48f-fbfd86852fa9/resourceGroups/Automation-Actions-AksDeployVnet/providers/Microsoft.Network/virtualNetworks/aksdeployvnet1/subnets/ag"
 
+          Write-Output "Bicep file [$bicepPath] exists $(Test-Path $bicepPath)]"
+
           echo $PWD
+          
           ls
 
           $WHATIF=az deployment group what-if -f $bicepPath -g $RG -p $paramPath -p resourceName=$RESNAME byoAKSSubnetId=$akssubnet byoAGWSubnetId=$agsubnet --no-pretty-print
