@@ -57,6 +57,10 @@ jobs:
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
+            
+            //Pull a param
+            $params=$paramFileContent|ConvertFrom-Json
+            Write-Output $params.parameters.ingressApplicationGateway.value
           }
           
       - name: Azure Login
