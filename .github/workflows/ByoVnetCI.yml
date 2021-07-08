@@ -45,6 +45,7 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
           echo "Ref is ${{ github.ref }}"
+          echo "EventTrigger name is ${{github.event_name}}"
 
       - name: Dependency check
         shell: pwsh
@@ -98,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Validation]
     environment: azurecirgs
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'manual'
     steps:
       - uses: actions/checkout@v2
 
