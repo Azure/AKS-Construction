@@ -58,7 +58,7 @@ jobs:
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
             
-            //Pull a param
+            Write-Output "Test Pulling a param (ingressApplicationGateway)"
             $params=$paramFileContent|ConvertFrom-Json
             Write-Output $params.parameters.ingressApplicationGateway.value
           }
