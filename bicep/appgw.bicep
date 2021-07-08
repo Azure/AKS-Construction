@@ -1,6 +1,9 @@
 param resourceName string
 param location string
 param appgw_subnet_id string
+param appgw_privateIpAddress string = ''
+
+output ApplicationGatewayName string = appgw.name
 
 resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = {
   name: 'pip-agw-${resourceName}'
@@ -12,6 +15,7 @@ resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = {
     publicIPAllocationMethod: 'Static'
   }
 }
+
 
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = resourceId('Microsoft.Network/applicationGateways', '${appgwName}')
@@ -43,6 +47,16 @@ resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = {
           }
         }
         name: 'appGatewayFrontendIP'
+      }
+      {
+        properties: {
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: appgw_privateIpAddress
+          subnet: { 
+            id: appgw_subnet_id
+          }
+        }
+        name: 'appGatewayPrivateIP'
       }
     ]
     frontendPorts: [
