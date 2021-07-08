@@ -20,6 +20,26 @@ resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = {
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = resourceId('Microsoft.Network/applicationGateways', '${appgwName}')
 
+var frontendPublicIpConfig = {
+  properties: {
+    publicIPAddress: {
+      id: '${appgwpip.id}'
+    }
+  }
+  name: 'appGatewayFrontendIP'
+}
+
+var frontendPrivateIpConfig = {
+  properties: {
+    privateIPAllocationMethod: 'Static'
+    privateIPAddress: appgw_privateIpAddress
+    subnet: { 
+      id: appgw_subnet_id
+    }
+  }
+  name: 'appGatewayPrivateIP'
+}
+
 resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = {
   name: appgwName
   location: location
@@ -39,26 +59,7 @@ resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = {
         }
       }
     ]
-    frontendIPConfigurations: [
-      {
-        properties: {
-          publicIPAddress: {
-            id: '${appgwpip.id}'
-          }
-        }
-        name: 'appGatewayFrontendIP'
-      }
-      {
-        properties: {
-          privateIPAllocationMethod: 'Static'
-          privateIPAddress: appgw_privateIpAddress
-          subnet: { 
-            id: appgw_subnet_id
-          }
-        }
-        name: 'appGatewayPrivateIP'
-      }
-    ]
+    frontendIPConfigurations: empty(appgw_privateIpAddress) ? array(frontendPublicIpConfig) : concat(array(frontendPublicIpConfig), array(frontendPrivateIpConfig))
     frontendPorts: [
       {
         name: 'appGatewayFrontendPort'
