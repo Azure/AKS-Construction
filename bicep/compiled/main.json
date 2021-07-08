@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "6332386096584816209"
+      "templateHash": "6682602147568709358"
     }
   },
   "parameters": {
@@ -93,6 +93,14 @@
       "type": "string",
       "defaultValue": "aks-sn"
     },
+    "ingressApplicationGateway": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "privateIpApplicationGateway": {
+      "type": "string",
+      "defaultValue": ""
+    },
     "dnsPrefix": {
       "type": "string",
       "defaultValue": "[format('{0}-dns', parameters('resourceName'))]"
@@ -110,10 +118,6 @@
       "defaultValue": ""
     },
     "omsagent": {
-      "type": "bool",
-      "defaultValue": false
-    },
-    "ingressApplicationGateway": {
       "type": "bool",
       "defaultValue": false
     },
@@ -796,6 +800,9 @@
           },
           "appgw_subnet_id": {
             "value": "[variables('appgwSubnetId')]"
+          },
+          "appgw_privateIpAddress": {
+            "value": "[parameters('privateIpApplicationGateway')]"
           }
         },
         "template": {
@@ -805,7 +812,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.63.48766",
-              "templateHash": "8184333318131669848"
+              "templateHash": "12342329709904667184"
             }
           },
           "parameters": {
@@ -817,6 +824,10 @@
             },
             "appgw_subnet_id": {
               "type": "string"
+            },
+            "appgw_privateIpAddress": {
+              "type": "string",
+              "defaultValue": ""
             }
           },
           "functions": [],
@@ -866,6 +877,16 @@
                       }
                     },
                     "name": "appGatewayFrontendIP"
+                  },
+                  {
+                    "properties": {
+                      "privateIPAllocationMethod": "Static",
+                      "privateIPAddress": "[parameters('appgw_privateIpAddress')]",
+                      "subnet": {
+                        "id": "[parameters('appgw_subnet_id')]"
+                      }
+                    },
+                    "name": "appGatewayPrivateIP"
                   }
                 ],
                 "frontendPorts": [
@@ -929,7 +950,13 @@
                 "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-agw-{0}', parameters('resourceName')))]"
               ]
             }
-          ]
+          ],
+          "outputs": {
+            "ApplicationGatewayName": {
+              "type": "string",
+              "value": "[variables('appgwName')]"
+            }
+          }
         }
       },
       "dependsOn": [
@@ -941,6 +968,10 @@
     "aksClusterName": {
       "type": "string",
       "value": "[format('aks-{0}', parameters('resourceName'))]"
+    },
+    "ApplicationGatewayName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.ApplicationGatewayName.value]"
     }
   }
 }
