@@ -45,6 +45,7 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
           echo "Ref is ${{ github.ref }}"
+          echo "EventTrigger name is ${{github.event_name}}"
 
       - name: Dependency check
         shell: pwsh
@@ -56,6 +57,10 @@ jobs:
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
+            
+            Write-Output "Test Pulling a param (ingressApplicationGateway)"
+            $params=$paramFileContent|ConvertFrom-Json
+            Write-Output $params.parameters.ingressApplicationGateway.value
           }
           
       - name: Azure Login
@@ -98,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Validation]
     environment: azurecirgs
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v2
 
