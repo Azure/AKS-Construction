@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "6682602147568709358"
+      "templateHash": "11130139460903818616"
     }
   },
   "parameters": {
@@ -812,7 +812,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.63.48766",
-              "templateHash": "12342329709904667184"
+              "templateHash": "11041126736797413937"
             }
           },
           "parameters": {
@@ -833,7 +833,25 @@
           "functions": [],
           "variables": {
             "appgwName": "[format('agw-{0}', parameters('resourceName'))]",
-            "appgwResourceId": "[resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))]"
+            "appgwResourceId": "[resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))]",
+            "frontendPublicIpConfig": {
+              "properties": {
+                "publicIPAddress": {
+                  "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-agw-{0}', parameters('resourceName')))]"
+                }
+              },
+              "name": "appGatewayFrontendIP"
+            },
+            "frontendPrivateIpConfig": {
+              "properties": {
+                "privateIPAllocationMethod": "Static",
+                "privateIPAddress": "[parameters('appgw_privateIpAddress')]",
+                "subnet": {
+                  "id": "[parameters('appgw_subnet_id')]"
+                }
+              },
+              "name": "appGatewayPrivateIP"
+            }
           },
           "resources": [
             {
@@ -869,26 +887,7 @@
                     }
                   }
                 ],
-                "frontendIPConfigurations": [
-                  {
-                    "properties": {
-                      "publicIPAddress": {
-                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-agw-{0}', parameters('resourceName')))]"
-                      }
-                    },
-                    "name": "appGatewayFrontendIP"
-                  },
-                  {
-                    "properties": {
-                      "privateIPAllocationMethod": "Static",
-                      "privateIPAddress": "[parameters('appgw_privateIpAddress')]",
-                      "subnet": {
-                        "id": "[parameters('appgw_subnet_id')]"
-                      }
-                    },
-                    "name": "appGatewayPrivateIP"
-                  }
-                ],
+                "frontendIPConfigurations": "[if(empty(parameters('appgw_privateIpAddress')), array(variables('frontendPublicIpConfig')), concat(array(variables('frontendPublicIpConfig')), array(variables('frontendPrivateIpConfig'))))]",
                 "frontendPorts": [
                   {
                     "name": "appGatewayFrontendPort",
