@@ -214,7 +214,7 @@ jobs:
 
   Cleanup:
     runs-on: ubuntu-latest
-    needs: [Validation, Deploy]
+    needs: [Validation, Deploy, WorkloadTest]
     if: github.event_name == 'schedule'
     environment: azurecirgs
     steps:
