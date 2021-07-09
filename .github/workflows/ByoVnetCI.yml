@@ -102,8 +102,7 @@ jobs:
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
             
-            WHATIFRESULT=$(az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --no-pretty-print)
-            echo $WHATIFRESULT > $WHATIFPATH
+            az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
             
             if [[ -f $WHATIFPATH ]]
             then
@@ -122,8 +121,10 @@ jobs:
           Write-Output $whatifexists
           
           if ($whatifexists) {
-            $jsonFile=Get-Content $whatifpath
-            Write-Output $jsonFile
+            $jsonFileRaw=Get-Content $whatifpath
+            Write-Output $jsonFileRaw
+            
+            $whatIf=$jsonFileRaw | ConvertFrom-Json
           }
           
       - name: What If
