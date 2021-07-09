@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "1499915240024628590"
+      "templateHash": "11130139460903818616"
     }
   },
   "parameters": {
@@ -93,6 +93,14 @@
       "type": "string",
       "defaultValue": "aks-sn"
     },
+    "ingressApplicationGateway": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "privateIpApplicationGateway": {
+      "type": "string",
+      "defaultValue": ""
+    },
     "dnsPrefix": {
       "type": "string",
       "defaultValue": "[format('{0}-dns', parameters('resourceName'))]"
@@ -110,10 +118,6 @@
       "defaultValue": ""
     },
     "omsagent": {
-      "type": "bool",
-      "defaultValue": false
-    },
-    "ingressApplicationGateway": {
       "type": "bool",
       "defaultValue": false
     },
@@ -300,7 +304,7 @@
       "apiVersion": "2019-09-01",
       "name": "[variables('akvName')]",
       "location": "[parameters('location')]",
-      "properties": "[if(not(empty(parameters('AKVserviceEndpointFW'))), createObject('networkAcls', createObject('defaultAction', 'Deny', 'virtualNetworkRules', createArray(createObject('action', 'Allow', 'id', format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('aks_subnet_name')))), 'ipRules', if(not(equals(parameters('AKVserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('AKVserviceEndpointFW'))), null()))), createObject())]",
+      "properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'Standard'), 'accessPolicies', createArray()), if(not(empty(parameters('AKVserviceEndpointFW'))), createObject('networkAcls', createObject('defaultAction', 'Deny', 'virtualNetworkRules', createArray(createObject('action', 'Allow', 'id', format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('aks_subnet_name')))), 'ipRules', if(not(equals(parameters('AKVserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('AKVserviceEndpointFW'))), null()))), createObject()))]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
       ]
@@ -796,6 +800,9 @@
           },
           "appgw_subnet_id": {
             "value": "[variables('appgwSubnetId')]"
+          },
+          "appgw_privateIpAddress": {
+            "value": "[parameters('privateIpApplicationGateway')]"
           }
         },
         "template": {
@@ -805,7 +812,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.63.48766",
-              "templateHash": "8184333318131669848"
+              "templateHash": "11041126736797413937"
             }
           },
           "parameters": {
@@ -817,12 +824,34 @@
             },
             "appgw_subnet_id": {
               "type": "string"
+            },
+            "appgw_privateIpAddress": {
+              "type": "string",
+              "defaultValue": ""
             }
           },
           "functions": [],
           "variables": {
             "appgwName": "[format('agw-{0}', parameters('resourceName'))]",
-            "appgwResourceId": "[resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))]"
+            "appgwResourceId": "[resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))]",
+            "frontendPublicIpConfig": {
+              "properties": {
+                "publicIPAddress": {
+                  "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-agw-{0}', parameters('resourceName')))]"
+                }
+              },
+              "name": "appGatewayFrontendIP"
+            },
+            "frontendPrivateIpConfig": {
+              "properties": {
+                "privateIPAllocationMethod": "Static",
+                "privateIPAddress": "[parameters('appgw_privateIpAddress')]",
+                "subnet": {
+                  "id": "[parameters('appgw_subnet_id')]"
+                }
+              },
+              "name": "appGatewayPrivateIP"
+            }
           },
           "resources": [
             {
@@ -858,16 +887,7 @@
                     }
                   }
                 ],
-                "frontendIPConfigurations": [
-                  {
-                    "properties": {
-                      "publicIPAddress": {
-                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-agw-{0}', parameters('resourceName')))]"
-                      }
-                    },
-                    "name": "appGatewayFrontendIP"
-                  }
-                ],
+                "frontendIPConfigurations": "[if(empty(parameters('appgw_privateIpAddress')), array(variables('frontendPublicIpConfig')), concat(array(variables('frontendPublicIpConfig')), array(variables('frontendPrivateIpConfig'))))]",
                 "frontendPorts": [
                   {
                     "name": "appGatewayFrontendPort",
@@ -929,7 +949,13 @@
                 "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-agw-{0}', parameters('resourceName')))]"
               ]
             }
-          ]
+          ],
+          "outputs": {
+            "ApplicationGatewayName": {
+              "type": "string",
+              "value": "[variables('appgwName')]"
+            }
+          }
         }
       },
       "dependsOn": [
@@ -941,6 +967,10 @@
     "aksClusterName": {
       "type": "string",
       "value": "[format('aks-{0}', parameters('resourceName'))]"
+    },
+    "ApplicationGatewayName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.ApplicationGatewayName.value]"
     }
   }
 }
