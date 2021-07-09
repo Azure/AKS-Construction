@@ -47,6 +47,9 @@
         "ingressApplicationGateway": {
             "value": true
         },
+        "privateIpApplicationGateway": {
+            "value": "172.21.1.27"
+        },
         "byoAKSSubnetId": {
             "value": "subnetResourceId overriden from GitHub secrets"
         },
