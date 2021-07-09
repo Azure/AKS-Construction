@@ -101,7 +101,6 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFRESULT=$(az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --no-pretty-print)
-            echo $WHATIFRESULT
             echo $WHATIFRESULT > /tmp/whatif.json
             
             if [[ -f "/tmp/whatif.json" ]]
@@ -118,9 +117,12 @@ jobs:
           
           Write-Output "Checking for JSON What-If"
           $whatifexists=Test-Path -path $whatifpath
+          Write-Output $whatifexists
           
-          $jsonFile=Get-Content $whatifpath
-          Write-Output $jsonFile
+          if ($whatifexists) {
+            $jsonFile=Get-Content $whatifpath
+            Write-Output $jsonFile
+          }
           
       - name: What If
         shell: pwsh
