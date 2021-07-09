@@ -448,6 +448,9 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) 
 }
 
 //---------------------------------------------------------------------------------- AppGateway - Only if Existing/Custom VNET, otherwise addon will auto-create
+param ingressApplicationGateway bool = false
+param privateIpApplicationGateway string = ''
+
 var appgwSubnetId = !empty(byoAGWSubnetId) ? byoAGWSubnetId : (create_vnet ? '${vnet.id}/subnets/${appgw_subnet_name}' : '')
 
 module appGw './appgw.bicep' = if ((create_vnet && ingressApplicationGateway) || (!empty(byoAGWSubnetId) && ingressApplicationGateway)) {
@@ -456,8 +459,11 @@ module appGw './appgw.bicep' = if ((create_vnet && ingressApplicationGateway) ||
     resourceName: resourceName
     location: location
     appgw_subnet_id: appgwSubnetId
+    appgw_privateIpAddress: privateIpApplicationGateway
   }
 }
+
+output ApplicationGatewayName string = appGw.outputs.ApplicationGatewayName
 
 //---------------------------------------------------------------------------------- AKS
 param dnsPrefix string = '${resourceName}-dns'
@@ -465,7 +471,7 @@ param kubernetesVersion string = '1.21.1'
 param enable_aad bool = false
 param aad_tenant_id string = ''
 param omsagent bool = false
-param ingressApplicationGateway bool = false
+
 param enableAzureRBAC bool = false
 param upgradeChannel string = ''
 param osDiskType string = 'Epthemeral'
