@@ -192,6 +192,27 @@ jobs:
         run: |
           az login --identity
 
+      - name: AKS Connect
+        run: |
+          az aks get-credentials -n $AKSNAME -g $RG --admin
+          
+      - name: Kubectl
+        run: |
+          az aks install-cli
+          kubectl version
+          
+      - name: Deploy Workload
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
+        run: |
+          echo $MANIFESTTESTURL
+          kubectl apply -f $MANIFESTTESTURL
+
+          kubectl get po
+          kubectl get svc
+          kubectl get ingress
+      
+
       - name: AKS Workload
         uses: Azure/cli@1.0.4
         if: success()
@@ -203,19 +224,6 @@ jobs:
             AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
             
             whoami
-            
-            echo $AKSNAME
-            az aks get-credentials -n $AKSNAME -g $RG --admin
-            
-            az aks install-cli
-            kubectl version
-            
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL
-
-            kubectl get po
-            kubectl get svc
-            kubectl get ingress
 
   Cleanup:
     runs-on: ubuntu-latest
