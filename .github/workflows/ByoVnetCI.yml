@@ -100,20 +100,22 @@ jobs:
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
-            WHATIFRESULT=$(az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --no-pretty-print)
-            echo $WHATIFRESULT > /tmp/whatif.json
+            WHATIFPATH='whatif.json'
             
-            if [[ -f "/tmp/whatif.json" ]]
+            WHATIFRESULT=$(az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --no-pretty-print)
+            echo $WHATIFRESULT > $WHATIFPATH
+            
+            if [[ -f $WHATIFPATH ]]
             then
                 echo "The WhatIf json file was created"
             fi
             
-            cat /tmp/whatif.json
+            cat $WHATIFPATH
             
       - name: GetJson
         shell: pwsh
         run: |
-          $whatifpath='/tmp/whatif.json'
+          $whatifpath='whatif.json'
           
           Write-Output "Checking for JSON What-If"
           $whatifexists=Test-Path -path $whatifpath
