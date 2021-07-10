@@ -255,10 +255,10 @@ jobs:
           #Hit the load balancer ip
           #Hit the ingress ip
           
-          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
+          #pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+          #echo $pubIp
             
-          curl $pubIp       
+          #curl $pubIp       
           
       - name: Delete AGIC Public Facing Workload
         env:
