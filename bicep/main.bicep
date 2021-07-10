@@ -72,7 +72,7 @@ resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
 param registries_sku string = ''
 param ACRserviceEndpointFW string = '' // either IP, or 'vnetonly'
 
-var acrName = 'acr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
+var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
 resource acr 'Microsoft.ContainerRegistry/registries@2020-11-01-preview' = if (!empty(registries_sku)) {
   name: acrName
