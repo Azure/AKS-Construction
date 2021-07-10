@@ -172,7 +172,14 @@ jobs:
             echo "AKS $AKSNAME"
             echo "AG $AGNAME"
             
-            az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
+            AGICEnabled=$(az aks show -n $AKSNAME -g  $RG --query "addonProfiles.ingressApplicationGateway.enabled")
+            
+            if [ "$AGICEnabled" != "true" ];
+            then
+                az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
+            fi
+            
+            
             
 
       - name: Add simple AKS Workload
@@ -233,7 +240,7 @@ jobs:
             pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
             echo $pubIp
             
-            curl $pubIp > 
+            #curl $pubIp > 
             
             
 
