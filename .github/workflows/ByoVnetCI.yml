@@ -180,36 +180,36 @@ jobs:
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
 
-      - name: Add simple AKS Workload
-        uses: Azure/cli@1.0.4
-        if: success()
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-        with:
-          inlineScript: |    
-            RG='${{ env.RG }}'
-            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-            
-            echo $AKSNAME
-            az aks get-credentials -n $AKSNAME -g $RG --admin
-            
-            az aks install-cli
-            kubectl version
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL
-            
-            sleep 1m
-
-            kubectl get po
-            kubectl get svc
-            kubectl get ingress
+#      - name: Add simple AKS Workload
+#        uses: Azure/cli@1.0.4
+#        if: success()
+#        env:
+#          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
+#        with:
+#          inlineScript: |    
+#            RG='${{ env.RG }}'
+#            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+#            
+#            echo $AKSNAME
+#            az aks get-credentials -n $AKSNAME -g $RG --admin
+#            
+#            az aks install-cli
+#            kubectl version
+#            echo $MANIFESTTESTURL
+#            kubectl apply -f $MANIFESTTESTURL
+#            
+#            sleep 1m
+#
+#            kubectl get po
+#            kubectl get svc
+#            kubectl get ingress
 
       - name: Add AGIC AKS Workload
         uses: Azure/cli@1.0.4
         if: success()
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
-          NAMESP: "agicvote"
+          NAMESP: "default"
         with:
           inlineScript: |       
             RG='${{ env.RG }}'
