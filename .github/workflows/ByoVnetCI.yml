@@ -173,6 +173,7 @@ jobs:
             echo "AG $AGNAME"
             
             AGICEnabled=$(az aks show -n $AKSNAME -g  $RG --query "addonProfiles.ingressApplicationGateway.enabled")
+            echo "AGICEnabled $AGICEnabled"
             
             if [ "$AGICEnabled" != "true" ];
             then
