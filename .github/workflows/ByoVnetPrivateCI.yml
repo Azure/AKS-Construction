@@ -284,10 +284,11 @@ jobs:
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
           
+          echo "Getting private ip"
           privIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
+          echo "Private ip : $privIp"
             
-          curl $pubIp       
+          curl $privIp       
           
 #      - name: AKS Workload
 #        uses: Azure/cli@1.0.4
