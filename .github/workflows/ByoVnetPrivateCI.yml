@@ -209,7 +209,8 @@ jobs:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
           NAMESP: "votepub"
         run: |
-          kubectl create namespace $NAMESP
+          
+          kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
           
           echo $MANIFESTTESTURL
           kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
