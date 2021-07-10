@@ -214,7 +214,7 @@ jobs:
           NAMESP: "agicvote"
         with:
           inlineScript: |          
-            kubectl create namespace $NAMESP
+            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
           
             echo $MANIFESTTESTURL
             kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
