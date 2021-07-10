@@ -43,6 +43,7 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
           echo "EventTrigger name is ${{github.event_name}}"
+          echo "Actor name is ${{ github.actor}}"
 
       - name: Dependency check
         shell: pwsh
