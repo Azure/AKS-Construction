@@ -200,21 +200,29 @@ jobs:
           
       - name: Kubectl
         run: |
-          az aks install-cli
+          #sudo az aks install-cli
           kubectl version
           
-      - name: Deploy Workload
+      - name: Deploy AGIC Public Facing Workload
         env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
+          NAMESP: "votepub"
         run: |
+          kubectl create namespace $NAMESP
+          
           echo $MANIFESTTESTURL
-          kubectl apply -f $MANIFESTTESTURL
+          kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
 
-          kubectl get po
-          kubectl get svc
-          kubectl get ingress
-      
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+          #TODO
+          #Hit the load balancer ip
+          #Hit the ingress ip
+          
 
+          
       - name: AKS Workload
         uses: Azure/cli@1.0.4
         if: success()
@@ -226,6 +234,8 @@ jobs:
             AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
             
             whoami
+            
+            az account show
 
   Cleanup:
     runs-on: ubuntu-latest
