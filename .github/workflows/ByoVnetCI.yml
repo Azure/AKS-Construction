@@ -157,6 +157,22 @@ jobs:
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
             echo "::set-output name=AGNAME::$AGNAME" #outputting for conditon
             
+      - name: Enable AGIC Addon
+        uses: Azure/cli@1.0.4
+        if: success()
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
+          NAMESP: "agicvote"
+        with:
+          inlineScript: |          
+            RG='${{ env.RG }}'
+            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+            AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
+            
+            echo "AKS $AKSNAME"
+            echo "AG $AGNAME"
+            
+            az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             
 
       - name: Add simple AKS Workload
@@ -183,23 +199,6 @@ jobs:
             kubectl get svc
             kubectl get ingress
 
-      - name: Enable AGIC Addon
-        uses: Azure/cli@1.0.4
-        if: success()
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-          NAMESP: "agicvote"
-        with:
-          inlineScript: |          
-            RG='${{ env.RG }}'
-            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-            AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
-            
-            echo "AKS $AKSNAME"
-            echo "AG $AGNAME"
-            
-            az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
-            
       - name: Add AGIC AKS Workload
         uses: Azure/cli@1.0.4
         if: success()
@@ -227,12 +226,16 @@ jobs:
             
             sleep 1m
 
-            kubectl get po
-            kubectl get svc
-            kubectl get ingress
+            kubectl get po -n  $NAMESP
+            kubectl get svc -n  $NAMESP
+            kubectl get ingress -n  $NAMESP
+            
+            pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+            echo $pubIp
+            
+            curl $pubIp > 
             
             
-
 
   Cleanup:
     runs-on: ubuntu-latest
