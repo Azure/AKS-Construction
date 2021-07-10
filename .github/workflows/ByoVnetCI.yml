@@ -7,6 +7,7 @@ on:
   push:
     paths: 
       - ".github/workflows/ByoVnetCI.yml"
+      - ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
       - 'bicep/*'
       
   pull_request:
@@ -97,8 +98,49 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --verbose
+      
+      - name: What If
+        uses: Azure/cli@1.0.4
+        with:
+          inlineScript: |
+            RG='${{ env.RG }}'
+            RESNAME='${{ env.RESNAME }}'
+            DEPNAME='${{ env.DEPNAME }}'
+            WHATIFPATH='whatif.json'
             
-
+            az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
+            
+            if [[ -f $WHATIFPATH ]]
+            then
+                echo "The WhatIf json file was created"
+            fi
+            
+            cat $WHATIFPATH
+            
+      - name: What If Pwsh Parse
+        shell: pwsh
+        run: |
+          $whatifpath='whatif.json'
+          
+          Write-Output "Checking for JSON What-If"
+          $whatifexists=Test-Path -path $whatifpath
+          Write-Output $whatifexists
+          
+          if ($whatifexists) {
+            $jsonFileRaw=Get-Content $whatifpath
+            Write-Output $jsonFileRaw
+            
+            $whatIf=$jsonFileRaw | ConvertFrom-Json
+            
+            Write-Output $whatif.changes[0].after.type
+          }
+          
+      - name: What If PesterTests
+        shell: pwsh
+        run: |
+          Write-Output "TODO"
+          
+          
   Deploy:
     runs-on: ubuntu-latest
     needs: [Validation]
@@ -287,27 +329,15 @@ jobs:
         shell: pwsh
         run: |
           $RG='${{ env.RG }}'
-          
           # Get all ARM resources from all resource groups
           $rgToPurge = Get-AzResourceGroup -Name $RG
-
-          Write-Output "Purging $rgToPurge"
-
-          $rgResources = Get-AzResource -ResourceGroupName $rgToPurge
-          Write-Output "$($rgResources.length) resources to remove from $rgToPurge"
-
           try {
             #Remove all but public ip addresses
-            $rgResources | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
             #Remove public ip addresses
-            $rgResources | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            $rgResources = Get-AzResource -ResourceGroupName $_.ResourceGroupName
-            Write-Output "Post check. $($rgResources.length) resources left to remove from $($_.ResourceGroupName)"
-
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
             #Final run to clean other dependant resources in parent-child graph
-            Get-AzResource -ResourceGroupName $rgToPurge | Remove-AzResource -Force
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
           }
           Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
           {
