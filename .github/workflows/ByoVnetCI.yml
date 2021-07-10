@@ -159,10 +159,13 @@ jobs:
             
             
 
-      - name: Connect Kubectl
+      - name: Add simple AKS Workload
         uses: Azure/cli@1.0.4
+        if: success()
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
         with:
-          inlineScript: |
+          inlineScript: |    
             RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
             
@@ -171,15 +174,6 @@ jobs:
             
             az aks install-cli
             kubectl version
-            
-
-      - name: Add simple AKS Workload
-        uses: Azure/cli@1.0.4
-        if: success()
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-        with:
-          inlineScript: |          
             echo $MANIFESTTESTURL
             kubectl apply -f $MANIFESTTESTURL
             
@@ -213,7 +207,16 @@ jobs:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
           NAMESP: "agicvote"
         with:
-          inlineScript: |          
+          inlineScript: |       
+            RG='${{ env.RG }}'
+            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+            
+            echo $AKSNAME
+            az aks get-credentials -n $AKSNAME -g $RG --admin
+            
+            az aks install-cli
+            kubectl version
+            
             kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
           
             echo $MANIFESTTESTURL
