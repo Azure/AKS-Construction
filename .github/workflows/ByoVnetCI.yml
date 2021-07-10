@@ -162,7 +162,6 @@ jobs:
         if: success()
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-          NAMESP: "agicvote"
         with:
           inlineScript: |          
             RG='${{ env.RG }}'
@@ -180,9 +179,6 @@ jobs:
             then
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
-            
-            
-            
 
       - name: Add simple AKS Workload
         uses: Azure/cli@1.0.4
@@ -242,9 +238,7 @@ jobs:
             pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
             echo $pubIp
             
-            #curl $pubIp > 
-            
-            
+            curl $pubIp          
 
   Cleanup:
     runs-on: ubuntu-latest
