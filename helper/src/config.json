@@ -35,6 +35,8 @@
             "azurepolicy": "none",
             "ingress": "none",
             "ingressEveryNode": false,
+            "appgw_privateIp": false,
+            "appgw_privateIpAddress": "",
             "certMan": false,
             "certEmail": "",
             "dns": false,
@@ -57,14 +59,14 @@
             "vnet_opt": "default",
             "byoAKSSubnetId": "",
             "byoAGWSubnetId": "",
-            "vnet": "10.0.0.0/8",
-            "akssub": "10.240.0.0/16",
+            "vnetAddressPrefix": "10.0.0.0/8",
+            "vnetAksSubnetAddressPrefix": "10.240.0.0/16",
             "ilbsub": "10.241.0.0/24",
-            "afwsub": "10.241.0.0/24",
+            "vnetFirewallSubnetAddressPrefix": "10.241.0.0/24",
             "ersub": "10.242.0.0/24",
-            "agsub": "10.241.0.0/24",
+            "vnetAppGatewaySubnetAddressPrefix": "10.241.0.0/24",
             "podCidr": "10.244.0.0/16",
-            "service": "10.0.0.0/16"
+            "serviceCidr": "10.0.0.0/16"
         }
     },
     "defaultOps": [
