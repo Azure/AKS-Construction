@@ -116,6 +116,13 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                         <Checkbox checked={addons.ingressEveryNode} onChange={(ev, v) => updateFn("ingressEveryNode", v)} label={<Text>Run nginx on every node (deploy as Daemonset)</Text>} />
                     }
 
+                    {addons.ingress === "appgw" && <>
+                        <Checkbox checked={addons.appgw_privateIp} onChange={(ev, v) => updateFn("appgw_privateIp", v)} label={<Text>Use a Private Frontend IP for Ingress (<Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/application-gateway/ingress-controller-private-ip">docs</Link>)</Text>} />
+                        {addons.appgw_privateIp &&
+                            <TextField value={addons.appgw_privateIpAddress} onChange={(ev, v) => updateFn("appgw_privateIpAddress", v)} errorMessage={getError(invalidArray, 'appgw_privateIpAddress')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter Private IP address from the AppGW CIDR subnet range (<b>{net.vnetAppGatewaySubnetAddressPrefix}</b>)</Text>} />
+                        }
+                    </>}
+
                     {(addons.ingress === "nginx" || addons.ingress === "appgw") &&
                         <>
                             <Checkbox checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={

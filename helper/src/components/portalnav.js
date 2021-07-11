@@ -165,22 +165,23 @@ export default function PortalNav({ config }) {
   }
 
   const { deploy, cluster, net, addons } = tabValues
-  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null,
-    "Enter valid cluster name")
+
   invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemperal' && !VMs.find(i => i.key === cluster.vmSize).eph,
     "Youre selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache")
   invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36,
     "Enter Valid Directory ID")
+
   invalidFn('addons', 'registry', (net.vnetprivateend || net.serviceEndpointsEnable) && (addons.registry !== 'Premium' && addons.registry !== 'none'),
     "Premium Teir is required for Service Endpoints & Private Link, either select Premium, or disable Service Endpoints and Private Link")
-  invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
-    "Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab")
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/dnszones/[^/ ]+$'),
     "Enter valid Azure DNZ Zone resourceId")
   invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'),
     "Enter valid email for cerfificate generation")
   invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'),
     "Enter valid Azure KeyVault resourceId")
+  invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'),
+    "Enter valid IP address")
+
   invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
     "Enter a valid Subnet Id where AKS nodes will be installed")
   invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
@@ -192,6 +193,11 @@ export default function PortalNav({ config }) {
       "Please de-select, when using Bring your own NVET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)"
       :
       "Template can only deploy Azure Firewall in single VNET with Custom Networking")
+
+  invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
+    "Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab")
+  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null,
+    "Enter valid cluster name")
 
 
   function _customRenderer(page, link, defaultRenderer) {
