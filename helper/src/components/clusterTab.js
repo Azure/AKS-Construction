@@ -261,7 +261,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Cluster API Server Secuity
+                    Cluster API Server Security
                 </Label>
                 <ChoiceGroup
                     selectedKey={cluster.apisecurity}

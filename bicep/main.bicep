@@ -222,7 +222,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = if (create_vnet) 
 
 var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
 resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments@2020-04-01-preview' = if (create_vnet) {
-  name: '${vnet.name}/${aks_subnet_name}/Microsoft.Authorization/${guid(resourceGroup().id, aks_subnet_name)}'
+  name: '${vnet.name}/${aks_subnet_name}/Microsoft.Authorization/${guid(resourceGroup().id, vnetName, aks_subnet_name)}'
   properties: {
     roleDefinitionId: networkContributorRole
     principalId: user_identity ? uai.properties.principalId : null
@@ -233,7 +233,7 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
 
 //---------------------------------------------------------------------------------- Firewall
 var routeFwTableName = 'rt-afw-${resourceName}'
-resource vnet_udr 'Microsoft.Network/routeTables@2019-04-01' = if (azureFirewalls) {
+resource vnet_udr 'Microsoft.Network/routeTables@2021-02-01' = if (azureFirewalls) {
   name: routeFwTableName
   location: location
   properties: {
@@ -378,13 +378,14 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) 
   }
 }
 
-//---------------------------------------------------------------------------------- AppGateway - Only if Existing/Custom VNET, otherwise addon will auto-create
+//---------------------------------------------------------------------------------- AppGateway
 param ingressApplicationGateway bool = false
 param privateIpApplicationGateway string = ''
 
 var appgwSubnetId = !empty(byoAGWSubnetId) ? byoAGWSubnetId : (create_vnet ? '${vnet.id}/subnets/${appgw_subnet_name}' : '')
+var deployAppGw = ((create_vnet && ingressApplicationGateway) || (!empty(byoAGWSubnetId) && ingressApplicationGateway))
 
-module appGw './appgw.bicep' = if ((create_vnet && ingressApplicationGateway) || (!empty(byoAGWSubnetId) && ingressApplicationGateway)) {
+module appGw './appgw.bicep' = if (deployAppGw) {
   name: 'addAppGw'
   params: {
     resourceName: resourceName
@@ -394,7 +395,7 @@ module appGw './appgw.bicep' = if ((create_vnet && ingressApplicationGateway) ||
   }
 }
 
-output ApplicationGatewayName string = appGw.outputs.ApplicationGatewayName
+output ApplicationGatewayName string = deployAppGw ? appGw.outputs.ApplicationGatewayName : ''
 
 //---------------------------------------------------------------------------------- AKS
 param dnsPrefix string = '${resourceName}-dns'
@@ -405,7 +406,7 @@ param omsagent bool = false
 
 param enableAzureRBAC bool = false
 param upgradeChannel string = ''
-param osDiskType string = 'Epthemeral'
+param osDiskType string = 'Ephemeral'
 param agentVMSize string = 'Standard_DS2_v2'
 param osDiskSizeGB int = 0
 param agentCount int = 3

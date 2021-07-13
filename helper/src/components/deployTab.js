@@ -64,7 +64,7 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
   const deploycmd =
     `# Create Resource Group \n` +
     `az group create -l ${deploy.location} -n ${rg} \n\n` +
-    `# Deploy template with in-line paramters \n` +
+    `# Deploy template with in-line parameters \n` +
     `az deployment group create -g ${rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
@@ -159,7 +159,7 @@ EOF
     <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
       {!allok &&
         <MessageBar messageBarType={MessageBarType.severeWarning}>
-          <Text >Configration not complete, please correct the tabs with the warning symbol <b>({invalidTabs.join(' & ')})</b> before deploying</Text>
+          <Text >Configuration not complete, please correct the tabs with the warning symbol <b>({invalidTabs.join(' & ')})</b> before deploying</Text>
         </MessageBar>
       }
       <Stack horizontal styles={{ root: { width: "100%" } }} tokens={{ childrenGap: 150 }}>
