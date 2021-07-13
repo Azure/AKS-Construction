@@ -37,8 +37,7 @@ function Header({ entScale, setEntScale, featureFlag }) {
       <img src="aks.svg" alt="Kubernetes Service" style={{ width: "6%", height: "auto" }}></img>
       <Stack tokens={{ padding: 10 }}>
         <Text variant="xLarge">AKS Deploy helper</Text>
-        <Text >Tell us the requirements of your AKS deployment, and we will generate the configuration to create a full operational environment, incorporating best-practics guidence </Text>
-
+        <Text >Provide the requirements of your AKS deployment to generate the assets to create a full operational environment, incorporating best-practices guidance</Text>
       </Stack>
       <Stack.Item tokens={{ padding: 10 }}>
         <Toggle
@@ -167,18 +166,18 @@ export default function PortalNav({ config }) {
   const { deploy, cluster, net, addons } = tabValues
   invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null,
     "Enter valid cluster name")
-  invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemperal' && !VMs.find(i => i.key === cluster.vmSize).eph,
-    "Youre selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache")
+  invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph,
+    "Your selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache")
   invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36,
     "Enter Valid Directory ID")
   invalidFn('addons', 'registry', (net.vnetprivateend || net.serviceEndpointsEnable) && (addons.registry !== 'Premium' && addons.registry !== 'none'),
-    "Premium Teir is required for Service Endpoints & Private Link, either select Premium, or disable Service Endpoints and Private Link")
+    "Premium Tier is required for Service Endpoints & Private Link, either select Premium, or disable Service Endpoints and Private Link")
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
     "Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab")
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/dnszones/[^/ ]+$'),
     "Enter valid Azure DNZ Zone resourceId")
   invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'),
-    "Enter valid email for cerfificate generation")
+    "Enter valid email for certificate generation")
   invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'),
     "Enter valid Azure KeyVault resourceId")
   invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
@@ -189,7 +188,7 @@ export default function PortalNav({ config }) {
     "Cannot use default networking of you select Firewall, Service Endpoints, or Private Link")
   invalidFn('net', 'afw', net.afw && net.vnet_opt !== "custom",
     net.vnet_opt === "byo" ?
-      "Please de-select, when using Bring your own NVET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)"
+      "Please de-select, when using Bring your own VNET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)"
       :
       "Template can only deploy Azure Firewall in single VNET with Custom Networking")
 
@@ -229,7 +228,6 @@ export default function PortalNav({ config }) {
           <PivotItem headerText={tabLabels.net} itemKey="net" onRenderItemLink={(a, b) => _customRenderer('net', a, b)}>
             <NetworkTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("net", field, value)} invalidArray={invalidArray['net']} />
           </PivotItem>
-
         </Pivot>
 
       </Stack>

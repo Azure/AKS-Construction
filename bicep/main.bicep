@@ -28,7 +28,7 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
   scope: resourceGroup(dnsZoneRg)
   params: {
     dnsZoneName: dnsZoneName
-    principalId: aks.properties.identityProfile.kubeletidentity.objectId
+    principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
   }
 }
 
@@ -117,7 +117,7 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2020-04-01-previe
   properties: {
     roleDefinitionId: AcrPullRole
     principalType: 'ServicePrincipal'
-    principalId: aks.properties.identityProfile.kubeletidentity.objectId
+    principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
   }
 }
 
@@ -232,7 +232,7 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
 }
 
 //---------------------------------------------------------------------------------- Firewall
-var routeFwTableName = '${resourceName}-fw-udr'
+var routeFwTableName = 'rt-afw-${resourceName}'
 resource vnet_udr 'Microsoft.Network/routeTables@2019-04-01' = if (azureFirewalls) {
   name: routeFwTableName
   location: location
@@ -250,7 +250,7 @@ resource vnet_udr 'Microsoft.Network/routeTables@2019-04-01' = if (azureFirewall
   }
 }
 
-var firewallPublicIpName = '${resourceName}-fw-ip'
+var firewallPublicIpName = 'pip-afw-${resourceName}'
 resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = if (azureFirewalls) {
   name: firewallPublicIpName
   location: location
@@ -263,7 +263,7 @@ resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = if (azureFire
   }
 }
 
-var fw_name = '${resourceName}-fw'
+var fw_name = 'afw-${resourceName}'
 resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) {
   name: fw_name
   location: location
@@ -292,90 +292,21 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) 
           }
           rules: [
             {
-              name: 'MicrosoftServices'
+              name: 'aks'
               protocols: [
                 {
                   port: 443
                   protocolType: 'Https'
                 }
-              ]
-              targetFqdns: [
-                '*.hcp.${location}.azmk8s.io'
-                'mcr.microsoft.com'
-                '*.data.mcr.microsoft.com'
-                'management.azure.com'
-                'login.microsoftonline.com'
-                'packages.microsoft.com'
-                'acs-mirror.azureedge.net'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-            }
-            {
-              name: 'UbuntuOS'
-              protocols: [
                 {
                   port: 80
                   protocolType: 'Http'
                 }
               ]
               targetFqdns: [
-                'security.ubuntu.com'
-                'azure.archive.ubuntu.com'
-                'changelogs.ubuntu.com'
               ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-            }
-            {
-              name: 'NetworkTimeProtocol'
-              protocols: [
-                {
-                  port: 123
-                }
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-              targetFqdns: [
-                'ntp.ubuntu.com'
-              ]
-            }
-            {
-              name: 'Monitor'
-              protocols: [
-                {
-                  port: 443
-                  protocolType: 'Https'
-                }
-              ]
-              targetFqdns: [
-                'dc.services.visualstudio.com'
-                '*.ods.opinsights.azure.com'
-                '*.oms.opinsights.azure.com'
-                '*.monitoring.azure.com'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-            }
-            {
-              name: 'AzurePolicy'
-              protocols: [
-                {
-                  port: 443
-                  protocolType: 'Https'
-                }
-              ]
-              targetFqdns: [
-                //'data.policy.${environment().suffixes.storage}'
-                'data.policy.core.windows.net'
-                'store.policy.core.windows.net'
-                'gov-prod-policy-data.trafficmanager.net'
-                'raw.githubusercontent.com'
-                'dc.services.visualstudio.com'
+              fqdnTags: [
+                'AzureKubernetesService'
               ]
               sourceAddresses: [
                 vnetAksSubnetAddressPrefix

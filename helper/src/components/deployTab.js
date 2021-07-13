@@ -240,7 +240,7 @@ EOF
         <PivotItem headerText="Post Configuration">
           {addons.gitops === 'none' ?
             <Stack>
-              <Label>Run these commands to install the requeted kubernetes packages into your cluster</Label>
+              <Label>Run these commands to install the requested kubernetes packages into your cluster</Label>
               <MessageBar>Once available, we will switch to using the gitops addon here, to assure that your clusters get their source of truth from the defined git repo</MessageBar>
               <TextField readOnly={true} label="Commands (requires helm)" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={postscript.split(/\r\n|\r|\n/).length + 1} value={postscript} />
             </Stack>

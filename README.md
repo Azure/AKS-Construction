@@ -9,7 +9,7 @@ It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft
 
 ### GUI experience
 
-To help guide your AKS configuraton, use the [Deployment Helper](https://azure.github.io/Aks-Construction/), which will provide a set of parameters and scripts to make deployment simple.
+To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/Aks-Construction/), which will provide a set of parameters and scripts to make deployment simple.
 
 [![preview screenshot of the helper wizard](helper_preview.png)](https://azure.github.io/Aks-Construction/)
 
@@ -20,6 +20,7 @@ Templates have been modularised into their component areas. [Main.bicep](bicep/m
 ## Implementation Notes
 
 ### Configurations
+
 Whilst the Deployment Helper lets you generate a fully flexible deployment, before merging template changes we run CI on several configuration presets.
 
 | Config | CI Status | Notes

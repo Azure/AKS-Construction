@@ -10,14 +10,14 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label >Cluster Monitoring requirements</Label>
-                <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monior for Containers option, or the opensource CNCF Promethous/Grafana solution</MessageBar>
+                <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monitor for Containers option, or the opensource CNCF Prometheus/Grafana solution</MessageBar>
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.monitor}
                     options={[
                         { key: 'none', text: 'None' },
                         { key: 'aci', text: 'Azure Monitor for Containers (logs and metrics)' },
-                        { key: 'oss', text: 'Promethous / Grafana Helm Chart (metrics only)' }
+                        { key: 'oss', text: 'Prometheus / Grafana Helm Chart (metrics only)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("monitor", key)}
@@ -52,8 +52,8 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     selectedKey={addons.azurepolicy}
                     options={[
                         { key: 'none', text: 'No restrictions, users can deploy any kubernetes workloads' },
-                        { key: 'audit', text: 'AUDIT complience with the set of cluster pod security baseline standards for Linux-based workloads' },
-                        { key: 'deny', text: 'BLOCK and non-complient Linux-based workloads with the set of cluster pod security baseline standards' }
+                        { key: 'audit', text: 'AUDIT compliance with the set of cluster pod security baseline standards for Linux-based workloads' },
+                        { key: 'deny', text: 'BLOCK and non-compliant Linux-based workloads with the set of cluster pod security baseline standards' }
                     ]}
                     onChange={(ev, { key }) => updateFn("azurepolicy", key)}
                 />
@@ -79,8 +79,8 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     selectedKey={addons.networkPolicy}
                     options={[
                         { key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { key: 'calico', text: 'Use Network Pollicy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { key: 'azure', text: 'Use Network Pollicy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
+                        { key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
+                        { key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPolicy", key)}
@@ -95,7 +95,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.ingress}
                     options={[
-                        { key: 'none', text: 'No, I dont need a Layer7 proxy, or I will configure my own solution' },
+                        { key: 'none', text: 'No, I do not need a Layer7 proxy, or I will configure my own solution' },
                         { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' },
                         { key: 'appgw', text: 'Yes, I want a Azure Managed Application Gateway with WAF protection' }
                     ]}
@@ -150,7 +150,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.registry}
                     options={[
-                        { key: 'none', text: 'No, my application images will be on dockerhub or another registry' },
+                        { key: 'none', text: 'No, my application images will be on DockerHub or another registry' },
                         { key: 'Basic', text: 'Yes, setup Azure Container Registry "Basic" tier & authorise aks to pull images' },
                         { key: 'Standard', text: 'Yes, setup Azure Container Registry "Standard" tier (recommended for production)' },
                         { key: 'Premium', text: 'Yes, setup Azure Container Registry "Premium" tier (required for Service Endpoints & Private Link)' }
@@ -176,7 +176,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.csisecret}
                     options={[
-                        { key: 'none', text: 'No, I am happy to use the default kuberentes secret storage, or I will configure my own solution' },
+                        { key: 'none', text: 'No, I am happy to use the default Kubernetes secret storage, or I will configure my own solution' },
                         { key: 'akvExist', text: 'Yes, store secrets in an existing KeyVault & enable Secrets Store CSI Driver' },
                         { key: 'akvNew', text: 'Yes, provision a new Azure KeyVault & enable Secrets Store CSI Driver' }
                     ]}

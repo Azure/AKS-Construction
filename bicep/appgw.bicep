@@ -3,6 +3,9 @@ param location string
 param appgw_subnet_id string
 param appgw_privateIpAddress string = ''
 
+var appgwName = 'agw-${resourceName}'
+var appgwResourceId = resourceId('Microsoft.Network/applicationGateways', '${appgwName}')
+
 output ApplicationGatewayName string = appgw.name
 
 resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = {
@@ -15,10 +18,6 @@ resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = {
     publicIPAllocationMethod: 'Static'
   }
 }
-
-
-var appgwName = 'agw-${resourceName}'
-var appgwResourceId = resourceId('Microsoft.Network/applicationGateways', '${appgwName}')
 
 var frontendPublicIpConfig = {
   properties: {
