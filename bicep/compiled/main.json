@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "12013539760601034979"
+      "templateHash": "7044065396498393038"
     }
   },
   "parameters": {
@@ -131,7 +131,7 @@
     },
     "osDiskType": {
       "type": "string",
-      "defaultValue": "Epthemeral"
+      "defaultValue": "Ephemeral"
     },
     "agentVMSize": {
       "type": "string",
@@ -244,6 +244,7 @@
     "firewallPublicIpName": "[format('pip-afw-{0}', parameters('resourceName'))]",
     "fw_name": "[format('afw-{0}', parameters('resourceName'))]",
     "appgwSubnetId": "[if(not(empty(parameters('byoAGWSubnetId'))), parameters('byoAGWSubnetId'), if(variables('create_vnet'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), variables('appgw_subnet_name')), ''))]",
+    "deployAppGw": "[or(and(variables('create_vnet'), parameters('ingressApplicationGateway')), and(not(empty(parameters('byoAGWSubnetId'))), parameters('ingressApplicationGateway')))]",
     "appgw_name": "[format('agw-{0}', parameters('resourceName'))]",
     "autoScale": "[greater(parameters('agentCountMax'), parameters('agentCount'))]",
     "aksSubnetId": "[if(variables('existing_vnet'), parameters('byoAKSSubnetId'), if(variables('create_vnet'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('aks_subnet_name')), null()))]",
@@ -361,7 +362,7 @@
       "condition": "[variables('create_vnet')]",
       "type": "Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments",
       "apiVersion": "2020-04-01-preview",
-      "name": "[format('{0}/{1}/Microsoft.Authorization/{2}', parameters('vnetName'), parameters('aks_subnet_name'), guid(resourceGroup().id, parameters('aks_subnet_name')))]",
+      "name": "[format('{0}/{1}/Microsoft.Authorization/{2}', parameters('vnetName'), parameters('aks_subnet_name'), guid(resourceGroup().id, parameters('vnetName'), parameters('aks_subnet_name')))]",
       "properties": {
         "roleDefinitionId": "[variables('networkContributorRole')]",
         "principalId": "[if(variables('user_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))).principalId, null())]",
@@ -375,7 +376,7 @@
     {
       "condition": "[parameters('azureFirewalls')]",
       "type": "Microsoft.Network/routeTables",
-      "apiVersion": "2019-04-01",
+      "apiVersion": "2021-02-01",
       "name": "[variables('routeFwTableName')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -713,7 +714,7 @@
       ]
     },
     {
-      "condition": "[or(and(variables('create_vnet'), parameters('ingressApplicationGateway')), and(not(empty(parameters('byoAGWSubnetId'))), parameters('ingressApplicationGateway')))]",
+      "condition": "[variables('deployAppGw')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
       "name": "addAppGw",
@@ -901,7 +902,7 @@
     },
     "ApplicationGatewayName": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.ApplicationGatewayName.value]"
+      "value": "[if(variables('deployAppGw'), reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.ApplicationGatewayName.value, '')]"
     }
   }
 }
