@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "434386732948011700"
+      "templateHash": "12013539760601034979"
     }
   },
   "parameters": {
@@ -240,9 +240,9 @@
     "subnets_1": "[if(parameters('azureFirewalls'), concat(array(variables('aks_subnet')), array(variables('fw_subnet'))), array(variables('aks_subnet')))]",
     "final_subnets": "[if(parameters('ingressApplicationGateway'), concat(array(variables('subnets_1')), array(variables('appgw_subnet'))), array(variables('subnets_1')))]",
     "networkContributorRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
-    "routeFwTableName": "[format('{0}-fw-udr', parameters('resourceName'))]",
-    "firewallPublicIpName": "[format('{0}-fw-ip', parameters('resourceName'))]",
-    "fw_name": "[format('{0}-fw', parameters('resourceName'))]",
+    "routeFwTableName": "[format('rt-afw-{0}', parameters('resourceName'))]",
+    "firewallPublicIpName": "[format('pip-afw-{0}', parameters('resourceName'))]",
+    "fw_name": "[format('afw-{0}', parameters('resourceName'))]",
     "appgwSubnetId": "[if(not(empty(parameters('byoAGWSubnetId'))), parameters('byoAGWSubnetId'), if(variables('create_vnet'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), variables('appgw_subnet_name')), ''))]",
     "appgw_name": "[format('agw-{0}', parameters('resourceName'))]",
     "autoScale": "[greater(parameters('agentCountMax'), parameters('agentCount'))]",
@@ -436,89 +436,20 @@
               },
               "rules": [
                 {
-                  "name": "MicrosoftServices",
+                  "name": "aks",
                   "protocols": [
                     {
                       "port": 443,
                       "protocolType": "Https"
-                    }
-                  ],
-                  "targetFqdns": [
-                    "[format('*.hcp.{0}.azmk8s.io', parameters('location'))]",
-                    "mcr.microsoft.com",
-                    "*.data.mcr.microsoft.com",
-                    "management.azure.com",
-                    "login.microsoftonline.com",
-                    "packages.microsoft.com",
-                    "acs-mirror.azureedge.net"
-                  ],
-                  "sourceAddresses": [
-                    "[parameters('vnetAksSubnetAddressPrefix')]"
-                  ]
-                },
-                {
-                  "name": "UbuntuOS",
-                  "protocols": [
+                    },
                     {
                       "port": 80,
                       "protocolType": "Http"
                     }
                   ],
-                  "targetFqdns": [
-                    "security.ubuntu.com",
-                    "azure.archive.ubuntu.com",
-                    "changelogs.ubuntu.com"
-                  ],
-                  "sourceAddresses": [
-                    "[parameters('vnetAksSubnetAddressPrefix')]"
-                  ]
-                },
-                {
-                  "name": "NetworkTimeProtocol",
-                  "protocols": [
-                    {
-                      "port": 123
-                    }
-                  ],
-                  "sourceAddresses": [
-                    "[parameters('vnetAksSubnetAddressPrefix')]"
-                  ],
-                  "targetFqdns": [
-                    "ntp.ubuntu.com"
-                  ]
-                },
-                {
-                  "name": "Monitor",
-                  "protocols": [
-                    {
-                      "port": 443,
-                      "protocolType": "Https"
-                    }
-                  ],
-                  "targetFqdns": [
-                    "dc.services.visualstudio.com",
-                    "*.ods.opinsights.azure.com",
-                    "*.oms.opinsights.azure.com",
-                    "*.monitoring.azure.com"
-                  ],
-                  "sourceAddresses": [
-                    "[parameters('vnetAksSubnetAddressPrefix')]"
-                  ]
-                },
-                {
-                  "name": "AzurePolicy",
-                  "protocols": [
-                    {
-                      "port": 443,
-                      "protocolType": "Https"
-                    }
-                  ],
-                  "targetFqdns": [
-                    "data.policy.core.windows.net",
-                    "store.policy.core.windows.net",
-                    "gov-prod-policy-data.trafficmanager.net",
-                    "raw.githubusercontent.com",
-                    "dc.services.visualstudio.com"
+                  "targetFqdns": [],
+                  "fqdnTags": [
+                    "AzureKubernetesService"
                   ],
                   "sourceAddresses": [
                     "[parameters('vnetAksSubnetAddressPrefix')]"
