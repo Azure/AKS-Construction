@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "7044065396498393038"
+      "templateHash": "9590230906979467208"
     }
   },
   "parameters": {
@@ -220,7 +220,6 @@
     "existingAGWSubnetName": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 10), split(parameters('byoAGWSubnetId'), '/')[10], ''), '')]",
     "existingAGWVnetName": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 9), split(parameters('byoAGWSubnetId'), '/')[8], ''), '')]",
     "existingAGWVnetRG": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 9), split(parameters('byoAGWSubnetId'), '/')[4], ''), '')]",
-    "firewallIP": "10.241.130.4",
     "create_vnet": "[if(variables('existing_vnet'), false(), or(or(parameters('custom_vnet'), parameters('azureFirewalls')), not(empty(parameters('serviceEndpoints')))))]",
     "appgw_subnet_name": "appgw-sn",
     "appgw_subnet": {
@@ -386,11 +385,14 @@
             "properties": {
               "addressPrefix": "0.0.0.0/1",
               "nextHopType": "VirtualAppliance",
-              "nextHopIpAddress": "[variables('firewallIP')]"
+              "nextHopIpAddress": "[reference(resourceId('Microsoft.Resources/deployments', 'calcAzFwIp'), '2019-10-01').outputs.FirewallPrivateIp.value]"
             }
           }
         ]
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'calcAzFwIp')]"
+      ]
     },
     {
       "condition": "[parameters('azureFirewalls')]",
@@ -405,6 +407,48 @@
         "publicIPAllocationMethod": "Static",
         "publicIPAddressVersion": "IPv4"
       }
+    },
+    {
+      "condition": "[and(parameters('azureFirewalls'), parameters('omsagent'))]",
+      "type": "microsoft.insights/diagnosticSettings",
+      "apiVersion": "2017-05-01-preview",
+      "scope": "[format('Microsoft.Network/azureFirewalls/{0}', variables('fw_name'))]",
+      "name": "fwDiags",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
+        "logs": [
+          {
+            "category": "AzureFirewallApplicationRule",
+            "enabled": true,
+            "retentionPolicy": {
+              "days": 10,
+              "enabled": false
+            }
+          },
+          {
+            "category": "AzureFirewallNetworkRule",
+            "enabled": true,
+            "retentionPolicy": {
+              "days": 10,
+              "enabled": false
+            }
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
+        "[resourceId('Microsoft.Network/azureFirewalls', variables('fw_name'))]"
+      ]
     },
     {
       "condition": "[parameters('azureFirewalls')]",
@@ -712,6 +756,50 @@
       "dependsOn": [
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))]"
       ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "calcAzFwIp",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vnetFirewallSubnetAddressPrefix": {
+            "value": "[parameters('vnetFirewallSubnetAddressPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.63.48766",
+              "templateHash": "4677998899212714354"
+            }
+          },
+          "parameters": {
+            "vnetFirewallSubnetAddressPrefix": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "subnetOctets": "[split(parameters('vnetFirewallSubnetAddressPrefix'), '.')]",
+            "hostIdOctet": "4"
+          },
+          "resources": [],
+          "outputs": {
+            "FirewallPrivateIp": {
+              "type": "string",
+              "value": "[format('{0}.{1}.{2}.{3}', variables('subnetOctets')[0], variables('subnetOctets')[1], variables('subnetOctets')[2], variables('hostIdOctet'))]"
+            }
+          }
+        }
+      }
     },
     {
       "condition": "[variables('deployAppGw')]",
