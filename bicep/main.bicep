@@ -162,7 +162,14 @@ var existingAGWSubnetAddPrefix = existingAGWSubnet.properties.addressPrefix
 
 param serviceEndpoints array = []
 
-var firewallIP = '10.241.130.4' // always .4
+module calcAzFwIp './calcAzFwIp.bicep' = {
+  name: 'calcAzFwIp'
+  params: {
+    vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
+  }
+}
+
+var firewallIP = calcAzFwIp.outputs.FirewallPrivateIp
 
 var create_vnet = existing_vnet ? false : custom_vnet || azureFirewalls || !empty(serviceEndpoints)
 
@@ -260,6 +267,42 @@ resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = if (azureFire
   properties: {
     publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
+  }
+}
+
+resource fwDiags 'microsoft.insights/diagnosticSettings@2017-05-01-preview' = if (azureFirewalls && omsagent) {
+  scope: fw
+  name: 'fwDiags'
+  properties: {
+    workspaceId: aks_law.id
+    logs: [
+      {
+        category: 'AzureFirewallApplicationRule'
+        enabled: true
+        retentionPolicy: {
+          days: 10
+          enabled: false
+        }
+      }
+      {
+        category: 'AzureFirewallNetworkRule'
+        enabled: true
+        retentionPolicy: {
+          days: 10
+          enabled: false
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+    ]
   }
 }
 
