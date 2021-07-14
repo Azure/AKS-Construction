@@ -104,12 +104,12 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                 selectedKey={cluster.osDiskType}
                                 options={[
                                     {
-                                        key: 'Ephemperal',
-                                        text: 'Ephemperal (Requires Node with >137GiB of cache)'
+                                        key: 'Ephemeral',
+                                        text: 'Ephemeral (Requires Node with >137GiB of cache)'
                                     },
                                     {
                                         key: 'Managed',
-                                        text: 'Persistant in Storage Account',
+                                        text: 'Persistent in Storage Account',
                                     }
                                 ]} />
 
@@ -146,7 +146,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     styles={{ root: { marginLeft: '50px' } }}
                     options={[
                         { key: 'no', text: 'Deploy into single zone' },
-                        { key: 'yes', text: 'Deploy my control plane and nodes across all availiability zones (**storage)' }
+                        { key: 'yes', text: 'Deploy my control plane and nodes across all availability zones (**storage)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("availabilityZones", key)}
@@ -240,7 +240,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
                             {!cluster.enableAzureRBAC ?
                                 <>
-                                    <TextField label="AAD Group objectIDs that will have admin role of the cluster ',' seperated" onChange={(ev, val) => updateFn("aadgroupids", val)} value={cluster.aadgroupids} />
+                                    <TextField label="AAD Group objectIDs that will have admin role of the cluster ',' separated" onChange={(ev, val) => updateFn("aadgroupids", val)} value={cluster.aadgroupids} />
                                     {cluster.enable_aad && !cluster.aadgroupids &&
                                         <MessageBar messageBarType={MessageBarType.warning}>You will be forbidden to do any kubernetes options unless you add a AAD Groups here, or follow <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/azure-ad-rbac#create-the-aks-cluster-resources-for-app-devs'>this</Link> after the cluster is created</MessageBar>
                                     }
@@ -261,7 +261,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Cluster API Server Secuity
+                    Cluster API Server Security
                 </Label>
                 <ChoiceGroup
                     selectedKey={cluster.apisecurity}
@@ -269,7 +269,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     options={[
                         { key: 'none', text: 'Public IP with no IP restrictions' },
                         { key: 'whitelist', text: 'Create allowed IP ranges (defaults to IP address of machine running the script)' },
-                        { key: 'private', text: 'Private Cluster (WARNING: requires jummpbox to access)' }
+                        { key: 'private', text: 'Private Cluster (WARNING: requires jumpbox to access)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("apisecurity", key)}

@@ -28,7 +28,7 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
   scope: resourceGroup(dnsZoneRg)
   params: {
     dnsZoneName: dnsZoneName
-    principalId: aks.properties.identityProfile.kubeletidentity.objectId
+    principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
   }
 }
 
@@ -117,7 +117,7 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2020-04-01-previe
   properties: {
     roleDefinitionId: AcrPullRole
     principalType: 'ServicePrincipal'
-    principalId: aks.properties.identityProfile.kubeletidentity.objectId
+    principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
   }
 }
 
@@ -162,7 +162,14 @@ var existingAGWSubnetAddPrefix = existingAGWSubnet.properties.addressPrefix
 
 param serviceEndpoints array = []
 
-var firewallIP = '10.241.130.4' // always .4
+module calcAzFwIp './calcAzFwIp.bicep' = {
+  name: 'calcAzFwIp'
+  params: {
+    vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
+  }
+}
+
+var firewallIP = calcAzFwIp.outputs.FirewallPrivateIp
 
 var create_vnet = existing_vnet ? false : custom_vnet || azureFirewalls || !empty(serviceEndpoints)
 
@@ -222,7 +229,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = if (create_vnet) 
 
 var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
 resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments@2020-04-01-preview' = if (create_vnet) {
-  name: '${vnet.name}/${aks_subnet_name}/Microsoft.Authorization/${guid(resourceGroup().id, aks_subnet_name)}'
+  name: '${vnet.name}/${aks_subnet_name}/Microsoft.Authorization/${guid(resourceGroup().id, vnetName, aks_subnet_name)}'
   properties: {
     roleDefinitionId: networkContributorRole
     principalId: user_identity ? uai.properties.principalId : null
@@ -232,8 +239,8 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
 }
 
 //---------------------------------------------------------------------------------- Firewall
-var routeFwTableName = '${resourceName}-fw-udr'
-resource vnet_udr 'Microsoft.Network/routeTables@2019-04-01' = if (azureFirewalls) {
+var routeFwTableName = 'rt-afw-${resourceName}'
+resource vnet_udr 'Microsoft.Network/routeTables@2021-02-01' = if (azureFirewalls) {
   name: routeFwTableName
   location: location
   properties: {
@@ -250,7 +257,7 @@ resource vnet_udr 'Microsoft.Network/routeTables@2019-04-01' = if (azureFirewall
   }
 }
 
-var firewallPublicIpName = '${resourceName}-fw-ip'
+var firewallPublicIpName = 'pip-afw-${resourceName}'
 resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = if (azureFirewalls) {
   name: firewallPublicIpName
   location: location
@@ -263,7 +270,43 @@ resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = if (azureFire
   }
 }
 
-var fw_name = '${resourceName}-fw'
+resource fwDiags 'microsoft.insights/diagnosticSettings@2017-05-01-preview' = if (azureFirewalls && omsagent) {
+  scope: fw
+  name: 'fwDiags'
+  properties: {
+    workspaceId: aks_law.id
+    logs: [
+      {
+        category: 'AzureFirewallApplicationRule'
+        enabled: true
+        retentionPolicy: {
+          days: 10
+          enabled: false
+        }
+      }
+      {
+        category: 'AzureFirewallNetworkRule'
+        enabled: true
+        retentionPolicy: {
+          days: 10
+          enabled: false
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+    ]
+  }
+}
+
+var fw_name = 'afw-${resourceName}'
 resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) {
   name: fw_name
   location: location
@@ -292,90 +335,21 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) 
           }
           rules: [
             {
-              name: 'MicrosoftServices'
+              name: 'aks'
               protocols: [
                 {
                   port: 443
                   protocolType: 'Https'
                 }
-              ]
-              targetFqdns: [
-                '*.hcp.${location}.azmk8s.io'
-                'mcr.microsoft.com'
-                '*.data.mcr.microsoft.com'
-                'management.azure.com'
-                'login.microsoftonline.com'
-                'packages.microsoft.com'
-                'acs-mirror.azureedge.net'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-            }
-            {
-              name: 'UbuntuOS'
-              protocols: [
                 {
                   port: 80
                   protocolType: 'Http'
                 }
               ]
               targetFqdns: [
-                'security.ubuntu.com'
-                'azure.archive.ubuntu.com'
-                'changelogs.ubuntu.com'
               ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-            }
-            {
-              name: 'NetworkTimeProtocol'
-              protocols: [
-                {
-                  port: 123
-                }
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-              targetFqdns: [
-                'ntp.ubuntu.com'
-              ]
-            }
-            {
-              name: 'Monitor'
-              protocols: [
-                {
-                  port: 443
-                  protocolType: 'Https'
-                }
-              ]
-              targetFqdns: [
-                'dc.services.visualstudio.com'
-                '*.ods.opinsights.azure.com'
-                '*.oms.opinsights.azure.com'
-                '*.monitoring.azure.com'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-            }
-            {
-              name: 'AzurePolicy'
-              protocols: [
-                {
-                  port: 443
-                  protocolType: 'Https'
-                }
-              ]
-              targetFqdns: [
-                //'data.policy.${environment().suffixes.storage}'
-                'data.policy.core.windows.net'
-                'store.policy.core.windows.net'
-                'gov-prod-policy-data.trafficmanager.net'
-                'raw.githubusercontent.com'
-                'dc.services.visualstudio.com'
+              fqdnTags: [
+                'AzureKubernetesService'
               ]
               sourceAddresses: [
                 vnetAksSubnetAddressPrefix
@@ -447,13 +421,14 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) 
   }
 }
 
-//---------------------------------------------------------------------------------- AppGateway - Only if Existing/Custom VNET, otherwise addon will auto-create
+//---------------------------------------------------------------------------------- AppGateway
 param ingressApplicationGateway bool = false
 param privateIpApplicationGateway string = ''
 
 var appgwSubnetId = !empty(byoAGWSubnetId) ? byoAGWSubnetId : (create_vnet ? '${vnet.id}/subnets/${appgw_subnet_name}' : '')
+var deployAppGw = ((create_vnet && ingressApplicationGateway) || (!empty(byoAGWSubnetId) && ingressApplicationGateway))
 
-module appGw './appgw.bicep' = if ((create_vnet && ingressApplicationGateway) || (!empty(byoAGWSubnetId) && ingressApplicationGateway)) {
+module appGw './appgw.bicep' = if (deployAppGw) {
   name: 'addAppGw'
   params: {
     resourceName: resourceName
@@ -463,7 +438,7 @@ module appGw './appgw.bicep' = if ((create_vnet && ingressApplicationGateway) ||
   }
 }
 
-output ApplicationGatewayName string = appGw.outputs.ApplicationGatewayName
+output ApplicationGatewayName string = deployAppGw ? appGw.outputs.ApplicationGatewayName : ''
 
 //---------------------------------------------------------------------------------- AKS
 param dnsPrefix string = '${resourceName}-dns'
@@ -474,7 +449,7 @@ param omsagent bool = false
 
 param enableAzureRBAC bool = false
 param upgradeChannel string = ''
-param osDiskType string = 'Epthemeral'
+param osDiskType string = 'Ephemeral'
 param agentVMSize string = 'Standard_DS2_v2'
 param osDiskSizeGB int = 0
 param agentCount int = 3

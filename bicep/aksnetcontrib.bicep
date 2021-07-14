@@ -1,6 +1,6 @@
 //using a seperate module file as Byo subnet scenario caters from where the subnet is in the another resource group
-//we pass in the name/rg to new up an existing reference and form a dependency
-//we pass in the principalid as it needs to be used in the roleassignment name
+//name/rg required to new up an existing reference and form a dependency
+//principalid required as it needs to be used to establish a unique roleassignment name
 param byoAKSSubnetId string
 param user_identity_name string
 param user_identity_rg string
@@ -10,7 +10,6 @@ var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions
 
 var existingAksSubnetName = !empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/')[10] : ''
 var existingAksVnetName = !empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/')[8] : ''
-//var existingAksVnetRG = !empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/')[4] : ''
 
 resource existingvnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing =  {
   name: existingAksVnetName

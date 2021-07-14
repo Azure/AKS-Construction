@@ -21,7 +21,7 @@
             "maxCount": 20,
             "vmSize": "Standard_DS3_v2",
             "osDiskSizeGB": 0,
-            "osDiskType": "Ephemperal",
+            "osDiskType": "Ephemeral",
             "enable_aad": true,
             "use_alt_aad": false,
             "aad_tenant_id": "",

@@ -25,7 +25,7 @@ export default function ({ tabValues, updateFn, invalidArray, featureFlag }) {
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={net.networkPlugin}
                     options={[
-                        { key: 'kubenet', text: 'Use "kubenet" basic networkin, so your PODs DO NOT receive VNET IPs' },
+                        { key: 'kubenet', text: 'Use "kubenet" basic networking, so your PODs DO NOT receive VNET IPs' },
                         { key: 'azure', text: 'Use "CNI" for fastest container networking, but using more IPs' }
 
                     ]}
@@ -68,7 +68,7 @@ export default function ({ tabValues, updateFn, invalidArray, featureFlag }) {
                             options={[
                                 { key: 'Microsoft.AzureActiveDirectory', text: 'Microsoft.AzureActiveDirectory' },
                                 { key: 'Microsoft.AzureCosmosDB', text: 'Microsoft.AzureCosmosDB' },
-                                { key: 'Microsoft.CognativeServices', text: 'Microsoft.CognativeServices' },
+                                { key: 'Microsoft.CognitiveServices', text: 'Microsoft.CognitiveServices' },
                                 { key: 'Microsoft.ContainerRegistry', text: 'Microsoft.ContainerRegistry' },
                                 { key: 'Microsoft.EventHub', text: 'Microsoft.EventHub' },
                                 { key: 'Microsoft.KeyVault', text: 'Microsoft.KeyVault' },
@@ -170,7 +170,7 @@ export default function ({ tabValues, updateFn, invalidArray, featureFlag }) {
                                         Select this option if you will you would like the helper to create a new VNET with specific ranges, use this option if you need to:
                                         <ul>
                                             <li>Connect your AKS network with another networks</li>
-                                            <li>You will be VNET peering or using an Expressroute or VPN Gateway</li>
+                                            <li>You will be VNET peering or using an ExpressRoute or VPN Gateway</li>
                                         </ul>
                                     </Text>
                                 </div>
@@ -225,7 +225,7 @@ function PodServiceNetwork({ net, updateFn }) {
             </Stack.Item>
             <Stack.Item align="start">
                 <TextField prefix="Cidr" label="Service Network" onChange={(ev, val) => updateFn("service", val)} value={net.service} />
-                <MessageBar messageBarType={MessageBarType.warning}>Address space that isn't in use elsewhere in your network environment <a target="_targ" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
+                <MessageBar messageBarType={MessageBarType.warning}>Address space that isn't in use elsewhere in your network environment <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
             </Stack.Item>
 
         </Stack>
@@ -236,7 +236,7 @@ function BYOVNET({ net, addons, updateFn, invalidArray }) {
     return (
 
         <Stack styles={adv_stackstyle}>
-            <Label>Kubernetes Network Configration</Label>
+            <Label>Kubernetes Network Configuration</Label>
             <Stack horizontal tokens={{ childrenGap: 50 }} styles={{ root: { width: 650 } }}>
                 <Stack {...columnProps}></Stack>
                 <PodServiceNetwork net={net} updateFn={updateFn} />
@@ -260,7 +260,7 @@ function BYOVNET({ net, addons, updateFn, invalidArray }) {
 function CustomVNET({ net, addons, updateFn }) {
     return (
         <Stack styles={adv_stackstyle}>
-            <Label>Custom Network VENT & Kubernetes Network Configration</Label>
+            <Label>Custom Network VNET & Kubernetes Network Configuration</Label>
             <Stack horizontal tokens={{ childrenGap: 50 }} styles={{ root: { width: 650 } }}>
                 <Stack {...columnProps}>
 

@@ -64,7 +64,7 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
   const deploycmd =
     `# Create Resource Group \n` +
     `az group create -l ${deploy.location} -n ${rg} \n\n` +
-    `# Deploy template with in-line paramters \n` +
+    `# Deploy template with in-line parameters \n` +
     `az deployment group create -g ${rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
@@ -159,7 +159,7 @@ EOF
     <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
       {!allok &&
         <MessageBar messageBarType={MessageBarType.severeWarning}>
-          <Text >Configration not complete, please correct the tabs with the warning symbol <b>({invalidTabs.join(' & ')})</b> before deploying</Text>
+          <Text >Configuration not complete, please correct the tabs with the warning symbol <b>({invalidTabs.join(' & ')})</b> before deploying</Text>
         </MessageBar>
       }
       <Stack horizontal styles={{ root: { width: "100%" } }} tokens={{ childrenGap: 150 }}>
@@ -240,7 +240,7 @@ EOF
         <PivotItem headerText="Post Configuration">
           {addons.gitops === 'none' ?
             <Stack>
-              <Label>Run these commands to install the requeted kubernetes packages into your cluster</Label>
+              <Label>Run these commands to install the requested kubernetes packages into your cluster</Label>
               <MessageBar>Once available, we will switch to using the gitops addon here, to assure that your clusters get their source of truth from the defined git repo</MessageBar>
               <TextField readOnly={true} label="Commands (requires helm)" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={postscript.split(/\r\n|\r|\n/).length + 1} value={postscript} />
             </Stack>
