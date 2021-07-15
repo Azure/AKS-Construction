@@ -246,6 +246,25 @@ jobs:
 #            kubectl get svc
 #            kubectl get ingress
 
+      - name: Test Control Plane Config 
+        shell: pwsh
+        run: |
+          $RG='${{ env.RG }}'
+          $AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+          $paramFilePath="${{ env.ParamFilePath }}"
+          $params = Get-Content $paramFilePath | ConvertFrom-Json
+          
+          Write-Output "Checking for User Assigned Identity"
+          if($params.parameters.useAksUAI.value -eq $true) {
+            $aksId=az aks show -n $AKSNAME -g $RG --query "identity.type" -o tsv
+            write-output $aksId
+            
+            if($aksId -eq "UserAssigned"){
+              Write-Output "UAI set correctly"
+            } else {
+              Write-Error "UAI not set properly"}
+          }
+
       - name: Add AGIC AKS Workload
         uses: Azure/cli@1.0.4
         if: success()
