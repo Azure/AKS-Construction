@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.63.48766",
-      "templateHash": "9590230906979467208"
+      "version": "0.4.412.5873",
+      "templateHash": "2163985663435246409"
     }
   },
   "parameters": {
@@ -410,7 +410,7 @@
     },
     {
       "condition": "[and(parameters('azureFirewalls'), parameters('omsagent'))]",
-      "type": "microsoft.insights/diagnosticSettings",
+      "type": "Microsoft.Insights/diagnosticSettings",
       "apiVersion": "2017-05-01-preview",
       "scope": "[format('Microsoft.Network/azureFirewalls/{0}', variables('fw_name'))]",
       "name": "fwDiags",
@@ -648,8 +648,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.63.48766",
-              "templateHash": "288630892866763089"
+              "version": "0.4.412.5873",
+              "templateHash": "10533646359441572843"
             }
           },
           "parameters": {
@@ -714,8 +714,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.63.48766",
-              "templateHash": "17017049446633963820"
+              "version": "0.4.412.5873",
+              "templateHash": "9301802066416436980"
             }
           },
           "parameters": {
@@ -777,8 +777,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.63.48766",
-              "templateHash": "4677998899212714354"
+              "version": "0.4.412.5873",
+              "templateHash": "14864707907865820525"
             }
           },
           "parameters": {
@@ -831,8 +831,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.63.48766",
-              "templateHash": "11041126736797413937"
+              "version": "0.4.412.5873",
+              "templateHash": "422681224698870356"
             }
           },
           "parameters": {
