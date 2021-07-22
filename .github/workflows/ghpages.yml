@@ -1,7 +1,8 @@
-name: Node CI
+name: Publish Helper Gtihub Page
 
 on:
   push:
+    branches: [main]
     paths:
       - ".github/workflows/ghpages.yml"
       - "helper/**"
@@ -18,7 +19,7 @@ jobs:
           REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_K8S_VERSION="1.20.5" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://raw.githubusercontent.com/Azure/Aks-Construction/main/bicep/compiled/main.json" npm run build
 
       - name: Deploy to GitHub Pages
-        if: success()
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: gh-pages
