@@ -224,7 +224,7 @@ function PodServiceNetwork({ net, updateFn }) {
                 <TextField prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet'} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' ? net.podCidr : "IPs from subnet"} />
             </Stack.Item>
             <Stack.Item align="start">
-                <TextField prefix="Cidr" label="Service Network" onChange={(ev, val) => updateFn("service", val)} value={net.service} />
+                <TextField prefix="Cidr" label="Service Network" onChange={(ev, val) => updateFn("serviceCidr", val)} value={net.serviceCidr} />
                 <MessageBar messageBarType={MessageBarType.warning}>Address space that isn't in use elsewhere in your network environment <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
             </Stack.Item>
 
@@ -265,10 +265,10 @@ function CustomVNET({ net, addons, updateFn }) {
                 <Stack {...columnProps}>
 
                     <Stack.Item align="start">
-                        <TextField prefix="Cidr" label="VNET Address space" onChange={(ev, val) => updateFn("vnet", val)} value={net.vnet} />
+                        <TextField prefix="Cidr" label="VNET Address space" onChange={(ev, val) => updateFn("vnetAddressPrefix", val)} value={net.vnetAddressPrefix} />
                     </Stack.Item>
                     <Stack.Item align="center">
-                        <TextField prefix="Cidr" label="AKS Nodes subnet" onChange={(ev, val) => updateFn("akssub", val)} value={net.akssub} />
+                        <TextField prefix="Cidr" label="AKS Nodes subnet" onChange={(ev, val) => updateFn("vnetAksSubnetAddressPrefix", val)} value={net.vnetAksSubnetAddressPrefix} />
                     </Stack.Item>
                     {/*
                 <Stack.Item align="center">
@@ -276,11 +276,11 @@ function CustomVNET({ net, addons, updateFn }) {
                 </Stack.Item>
                 */}
                     <Stack.Item align="center">
-                        <TextField prefix="Cidr" disabled={!net.afw} label="Azure Firewall subnet" onChange={(ev, val) => updateFn("afwsub", val)} value={net.afw ? net.afwsub : "No Firewall requested"} />
+                        <TextField prefix="Cidr" disabled={!net.afw} label="Azure Firewall subnet" onChange={(ev, val) => updateFn("vnetFirewallSubnetAddressPrefix", val)} value={net.afw ? net.vnetFirewallSubnetAddressPrefix : "No Firewall requested"} />
                     </Stack.Item>
 
                     <Stack.Item align="center">
-                        <TextField prefix="Cidr" disabled={addons.ingress !== 'appgw'} label="Application Gateway subnet" onChange={(ev, val) => updateFn("agsub", val)} value={addons.ingress === 'appgw' ? net.agsub : "N/A"} />
+                        <TextField prefix="Cidr" disabled={addons.ingress !== 'appgw'} label="Application Gateway subnet" onChange={(ev, val) => updateFn("vnetAppGatewaySubnetAddressPrefix", val)} value={addons.ingress === 'appgw' ? net.vnetAppGatewaySubnetAddressPrefix : "N/A"} />
                     </Stack.Item>
                 </Stack>
 
