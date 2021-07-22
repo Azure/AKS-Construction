@@ -24,13 +24,14 @@ output name string = sql.name
 
 //---------Kubernetes Construction---------
 //ref: https://github.com/Azure/Aks-Construction
+param k8sVersion string = '1.21.1'
 
 module aksconst '../bicep/main.bicep' = {
   name: 'aksconstruction'
   params: {
-    location : 'uksouth'
+    location : location
     resourceName: fullnameseed
-    kubernetesVersion: '1.21.1'
+    kubernetesVersion: k8sVersion
     enablePrivateCluster : true
     agentCount: 1
     agentVMSize: 'Standard_DS3_v2'
