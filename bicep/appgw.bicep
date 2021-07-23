@@ -1,7 +1,12 @@
 param resourceName string
 param location string
 param appgw_subnet_id string
-param appgw_privateIpAddress string = ''
+param appgw_privateIpAddress string
+param availabilityZones array
+param userAssignedIdentity string
+param workspaceId string
+param appGWcount int
+param appGWmaxCount int
 
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = resourceId('Microsoft.Network/applicationGateways', '${appgwName}')
@@ -32,88 +37,135 @@ var frontendPrivateIpConfig = {
   properties: {
     privateIPAllocationMethod: 'Static'
     privateIPAddress: appgw_privateIpAddress
-    subnet: { 
+    subnet: {
       id: appgw_subnet_id
     }
   }
   name: 'appGatewayPrivateIP'
 }
 
-resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = {
+var tier = 'WAF_v2'
+var appGWsku = union({
+  name: tier
+  tier: tier
+}, appGWmaxCount == 0 ? {
+  capacity: appGWcount
+} : {})
+
+// ugh, need to create a variable with the app gateway properies, because of the conditional key 'autoscaleConfiguration'
+var appgwProperties = union({
+  sku: appGWsku
+  gatewayIPConfigurations: [
+    {
+      name: 'besubnet'
+      properties: {
+        subnet: {
+          id: appgw_subnet_id
+        }
+      }
+    }
+  ]
+  frontendIPConfigurations: empty(appgw_privateIpAddress) ? array(frontendPublicIpConfig) : concat(array(frontendPublicIpConfig), array(frontendPrivateIpConfig))
+  frontendPorts: [
+    {
+      name: 'appGatewayFrontendPort'
+      properties: {
+        port: 80
+      }
+    }
+  ]
+  backendAddressPools: [
+    {
+      name: 'defaultaddresspool'
+    }
+  ]
+  backendHttpSettingsCollection: [
+    {
+      name: 'defaulthttpsetting'
+      properties: {
+        port: 80
+        protocol: 'Http'
+        cookieBasedAffinity: 'Disabled'
+        requestTimeout: 30
+        pickHostNameFromBackendAddress: true
+      }
+    }
+  ]
+  httpListeners: [
+    {
+      name: 'hlisten'
+      properties: {
+        frontendIPConfiguration: {
+          id: '${appgwResourceId}/frontendIPConfigurations/appGatewayFrontendIP'
+        }
+        frontendPort: {
+          id: '${appgwResourceId}/frontendPorts/appGatewayFrontendPort'
+        }
+        protocol: 'Http'
+      }
+    }
+  ]
+  requestRoutingRules: [
+    {
+      name: 'appGwRoutingRuleName'
+      properties: {
+        ruleType: 'Basic'
+        httpListener: {
+          id: '${appgwResourceId}/httpListeners/hlisten'
+        }
+        backendAddressPool: {
+          id: '${appgwResourceId}/backendAddressPools/defaultaddresspool'
+        }
+        backendHttpSettings: {
+          id: '${appgwResourceId}/backendHttpSettingsCollection/defaulthttpsetting'
+        }
+      }
+    }
+  ]
+}, appGWmaxCount > 0 ? {
+  autoscaleConfiguration: {
+    minCapacity: appGWcount
+    maxCapacity: appGWmaxCount
+  }
+} : {})
+
+var appGwZones = !empty(availabilityZones) ? availabilityZones : []
+
+// 'identity' is always set until this is fixed: 
+// https://github.com/Azure/bicep/issues/387#issuecomment-885671296
+resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (!empty(userAssignedIdentity)) {
   name: appgwName
   location: location
-  properties: {
-    sku: {
-      name: 'WAF_v2'
-      tier: 'WAF_v2'
-      capacity: 1
+  zones: appGwZones
+  identity: /*!empty(userAssignedIdentity) ?*/ {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentity}': {}
     }
-    gatewayIPConfigurations: [
-      {
-        name: 'besubnet'
-        properties: {
-          subnet: {
-            id: appgw_subnet_id
-          }
-        }
-      }
-    ]
-    frontendIPConfigurations: empty(appgw_privateIpAddress) ? array(frontendPublicIpConfig) : concat(array(frontendPublicIpConfig), array(frontendPrivateIpConfig))
-    frontendPorts: [
-      {
-        name: 'appGatewayFrontendPort'
-        properties: {
-          port: 80
-        }
-      }
-    ]
-    backendAddressPools: [
-      {
-        name: 'defaultaddresspool'
-      }
-    ]
-    backendHttpSettingsCollection: [
-      {
-        name: 'defaulthttpsetting'
-        properties: {
-          port: 80
-          protocol: 'Http'
-          cookieBasedAffinity: 'Disabled'
-          requestTimeout: 30
-          pickHostNameFromBackendAddress: true
-        }
-      }
-    ]
-    httpListeners: [
-      {
-        name: 'hlisten'
-        properties: {
-          frontendIPConfiguration: {
-            id: '${appgwResourceId}/frontendIPConfigurations/appGatewayFrontendIP'            
-          }
-          frontendPort: {
-            id: '${appgwResourceId}/frontendPorts/appGatewayFrontendPort'
-          }
-          protocol: 'Http'
-        }
-      }
-    ]
-    requestRoutingRules: [
-      {
-        name: 'appGwRoutingRuleName'
-        properties: {
-          ruleType: 'Basic'
-          httpListener: {
-            id: '${appgwResourceId}/httpListeners/hlisten'
-          }
-          backendAddressPool: {
-            id: '${appgwResourceId}/backendAddressPools/defaultaddresspool'
-          }
-          backendHttpSettings: {
-            id: '${appgwResourceId}/backendHttpSettingsCollection/defaulthttpsetting'
-          }
-        }
-      }
-    ]
   }
+  properties: appgwProperties
+}
+
+// ------------------------------------------------------------------ AppGW Diagnostics
+var diagProperties = {
+  workspaceId: workspaceId
+  logs: [
+    {
+      category: 'ApplicationGatewayAccessLog'
+      enabled: true
+    }
+    {
+      category: 'ApplicationGatewayPerformanceLog'
+      enabled: true
+    }
+    {
+      category: 'ApplicationGatewayFirewallLog'
+      enabled: true
+    }
+  ]
+}
+resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2017-05-01-preview' = if (!empty(workspaceId)) {
+  scope: appgw
+  name: 'appgwDiag'
+  properties: diagProperties
 }

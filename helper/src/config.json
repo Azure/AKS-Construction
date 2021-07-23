@@ -37,6 +37,10 @@
             "ingressEveryNode": false,
             "appgw_privateIp": false,
             "appgw_privateIpAddress": "",
+            "appGWautoscale": true,
+            "appGWcount": 0,
+            "appGWmaxCount": 10,
+            "appgwKVIntegration": false,
             "certMan": false,
             "certEmail": "",
             "dns": false,
@@ -185,6 +189,17 @@
                                 }
                             ],
                             "ingress": "appgw",
+                            "appgwKVIntegration": [
+                                {
+                                    "page": "addons",
+                                    "field": "csisecret",
+                                    "value": "akvNew",
+                                    "set": true
+                                },
+                                {
+                                    "set": false
+                                }
+                            ],
                             "monitor": "aci"
                         }
                     }
@@ -227,9 +242,12 @@
                                     "set": "none"
                                 }
                             ],
-                            "azurepolicy": "none"
+                            "azurepolicy": "none",
+                            "appgwKVIntegration": false,
+                            "csisecret": "none"
                         },
                         "net": {
+                            "vnet_opt": "default",
                             "serviceEndpointsEnable": false,
                             "vnetprivateend": false,
                             "afw": false
@@ -296,13 +314,26 @@
                                     "set": "none"
                                 }
                             ],
-                            "azurepolicy": "audit"
+                            "azurepolicy": "audit",
+                            "appgwKVIntegration": [
+                                {
+                                    "page": "addons",
+                                    "field": "ingress",
+                                    "value": "appgw",
+                                    "set": true
+                                },
+                                {
+                                    "set": false
+                                }
+                            ],
+                            "csisecret": "akvNew"
                         },
                         "net": {
                             "vnet_opt": "custom",
                             "serviceEndpointsEnable": true,
                             "serviceEndpoints": [
-                                "Microsoft.ContainerRegistry"
+                                "Microsoft.ContainerRegistry",
+                                "Microsoft.KeyVault"
                             ],
                             "vnetprivateend": false,
                             "afw": false
@@ -380,10 +411,22 @@
                                     "set": "none"
                                 }
                             ],
+                            "appgwKVIntegration": [
+                                {
+                                    "page": "addons",
+                                    "field": "ingress",
+                                    "value": "appgw",
+                                    "set": true
+                                },
+                                {
+                                    "set": false
+                                }
+                            ],
                             "azurepolicy": "deny",
                             "csisecret": "akvNew"
                         },
                         "net": {
+                            "vnet_opt": "custom",
                             "serviceEndpointsEnable": false,
                             "vnetprivateend": true,
                             "afw": true

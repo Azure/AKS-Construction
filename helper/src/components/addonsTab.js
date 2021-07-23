@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, Link, Separator, Dropdown, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
+import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 
 
@@ -116,12 +116,53 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                         <Checkbox checked={addons.ingressEveryNode} onChange={(ev, v) => updateFn("ingressEveryNode", v)} label={<Text>Run nginx on every node (deploy as Daemonset)</Text>} />
                     }
 
-                    {addons.ingress === "appgw" && <>
-                        <Checkbox checked={addons.appgw_privateIp} onChange={(ev, v) => updateFn("appgw_privateIp", v)} label={<Text>Use a Private Frontend IP for Ingress (<Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/application-gateway/ingress-controller-private-ip">docs</Link>)</Text>} />
-                        {addons.appgw_privateIp &&
-                            <TextField value={addons.appgw_privateIpAddress} onChange={(ev, v) => updateFn("appgw_privateIpAddress", v)} errorMessage={getError(invalidArray, 'appgw_privateIpAddress')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter Private IP address from the AppGW CIDR subnet range (<b>{net.vnetAppGatewaySubnetAddressPrefix}</b>)</Text>} />
-                        }
-                    </>}
+                    {addons.ingress === "appgw" && (
+
+                        net.vnet_opt === 'default' ?
+                            <MessageBar messageBarType={MessageBarType.warning}>Using default networking, so addon will provision default Application Gateway instance, for more options, select custom networking in the network tab</MessageBar>
+                            :
+                            <>
+                                <MessageBar messageBarType={MessageBarType.warning}>Custom or BYO networking is requested, so template will provision a new Application Gateway</MessageBar>
+
+                                <Checkbox checked={addons.appgw_privateIp} onChange={(ev, v) => updateFn("appgw_privateIp", v)} label={<Text>Use a Private Frontend IP for Ingress (<Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/application-gateway/ingress-controller-private-ip">docs</Link>)</Text>} />
+                                {addons.appgw_privateIp &&
+                                    <TextField value={addons.appgw_privateIpAddress} onChange={(ev, v) => updateFn("appgw_privateIpAddress", v)} errorMessage={getError(invalidArray, 'appgw_privateIpAddress')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter Private IP address from the AppGW CIDR subnet range (<b>{net.vnetAppGatewaySubnetAddressPrefix}</b>)</Text>} />
+                                }
+
+
+                                <Checkbox checked={addons.appgwKVIntegration} onChange={(ev, v) => updateFn("appgwKVIntegration", v)} label={<Text>Enable KeyVault Integration for TLS Certificates (<Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs">docs</Link>) </Text>} />
+                                {hasError(invalidArray, 'appgwKVIntegration') &&
+                                    <MessageBar styles={{ root: { marginTop: '0px !important' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'appgwKVIntegration')}</MessageBar>
+                                }
+
+                                <Label style={{ marginBottom: "0px" }}>Capacity</Label>
+                                <Stack horizontal tokens={{ childrenGap: 150 }} styles={{ root: { marginTop: '0px !important' } }}>
+                                    <Stack.Item>
+                                        <ChoiceGroup selectedKey={addons.appGWautoscale} onChange={(ev, { key }) => updateFn("appGWautoscale", key)}
+                                            options={[
+                                                {
+                                                    key: false,
+                                                    text: 'Manual'
+                                                }, {
+                                                    key: true,
+                                                    text: 'Autoscale'
+                                                }
+                                            ]} />
+                                    </Stack.Item>
+                                    <Stack.Item>
+                                        <Stack tokens={{ childrenGap: 0 }} styles={{ root: { width: 450 } }}>
+                                            <Slider label={`${addons.appGWautoscale ? "Minimum instance count" : "Instance count"}`} min={addons.appGWautoscale ? 0 : 1} max={125} step={1} defaultValue={addons.appGWcount} showValue={true}
+                                                onChange={(v) => updateFn("appGWcount", v)} />
+                                            {addons.appGWautoscale && (
+                                                <Slider label="Maximum instance count" min={2} max={125} step={1} defaultValue={addons.appGWmaxCount} showValue={true}
+                                                    onChange={(v) => updateFn("appGWmaxCount", v)}
+                                                    snapToStep />
+                                            )}
+                                        </Stack>
+                                    </Stack.Item>
+                                </Stack>
+                            </>)
+                    }
 
                     {(addons.ingress === "nginx" || addons.ingress === "appgw") &&
                         <>
@@ -130,9 +171,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                     <Link target="_t1" href="https://github.com/kubernetes-sigs/external-dns"> <b>external-dns</b> </Link>
                                     (requires <Link href="https://docs.microsoft.com/en-us/azure/dns/dns-getstarted-portal#create-a-dns-zone" target="_t1"> <b>Azure DNS Zone</b> </Link>)
                                 </Text>} />
-                            <MessageBar messageBarType={MessageBarType.warning}>This feature requires you to own a custom domain, you can easily purchase a custom domain through Azure <Link target="_t1" href="https://docs.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain"> <b>details here</b></Link></MessageBar>
                             {addons.dns &&
                                 <>
+                                    <MessageBar messageBarType={MessageBarType.warning}>This feature requires you to own a custom domain, you can easily purchase a custom domain through Azure <Link target="_t1" href="https://docs.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain"> <b>details here</b></Link></MessageBar>
                                     <TextField value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
 
 
@@ -176,7 +217,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Store Kubernetes Secrets in Azure Keyvault, using AKS Managed Identity (**Preview)
+                    CSI Secrets : Store Kubernetes Secrets in Azure Keyvault, using AKS Managed Identity (**Preview)
                     (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver">docs</a>)
                 </Label>
                 <ChoiceGroup

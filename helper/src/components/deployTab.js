@@ -31,7 +31,7 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
     ...(cluster.apisecurity === "whitelist" && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: "true" }),
     ...(addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
-    ...(addons.ingress === "appgw" && { ingressApplicationGateway: "true", ...(net.vnet_opt === "custom" && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix, ...(addons.appgw_privateIp && { appgw_privateIpAddress: addons.appgw_privateIpAddress }) }) }),
+    ...(addons.ingress === "appgw" && { ingressApplicationGateway: "true", ...(net.vnet_opt === 'custom' && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && { appGWcount: addons.appGWcount, ...(addons.appGWautoscale && { appGWmaxCount: addons.appGWmaxCount }), ...(addons.appgw_privateIp && { appgw_privateIpAddress: addons.appgw_privateIpAddress }), ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true }) }) }),
     ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel }),
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.KeyVault') && addons.csisecret === 'akvNew' && { AKVserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
     ...(addons.csisecret === 'akvNew' && { createKV: "true" })
@@ -40,9 +40,9 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
   const preview_params = {
     // if selected service endpoints & Premium, setup ACR firewall : https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' && { ACRserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
-    ...(addons.gitops !== "none" && { gitops: addons.gitops })
+    ...(addons.gitops !== "none" && { gitops: addons.gitops }),
     // azure-keyvault-secrets-provider  - commenting out until supported by ARM template
-    //...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true })
+    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true })
   }
 
   const params2CLI = p => Object.keys(p).map(k => {
@@ -79,9 +79,9 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
 az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $(az network application-gateway show -g ${rg} -n ${agw} --query id -o tsv)
 ` : '') +
     // CSI-Secret KeyVault addon - using this method until supported by ARM template
-    (addons.csisecret !== "none" ? `\n# Workaround to enabling the csisecret addon (in preview)
-az aks enable-addons -n ${aks} -g ${rg} -a azure-keyvault-secrets-provider
-` : '') +
+    //    (addons.csisecret !== "none" ? `\n# Workaround to enabling the csisecret addon (in preview)
+    //az aks enable-addons -n ${aks} -g ${rg} -a azure-keyvault-secrets-provider
+    //` : '') +
 
     // Get Admin credentials
     `\n# Get admin credentials for your new AKS cluster
@@ -214,7 +214,7 @@ EOF
 
       {Object.keys(preview_params).length > 0 &&
         <MessageBar messageBarType={MessageBarType.warning}>
-          <Text >Your deployment contains Preview features: <b>{Object.keys(preview_params).join(',')}</b>, Ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b>  before running the script, <Link target="_pv" href="https://github.com/Azure/AKS/blob/master/previews.md">see here</Link>, or disable preview features here</Text>
+          <Text >Your deployment contains Preview features: <b>{Object.keys(preview_params).join(', ')}</b>, Ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b>  before running the script, <Link target="_pv" href="https://github.com/Azure/AKS/blob/master/previews.md">see here</Link>, or disable preview features here</Text>
           <Toggle styles={{ root: { marginTop: "10px" } }} onText='preview enabled' offText="preview disabled" checked={!deploy.disablePreviews} onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
         </MessageBar>
 
@@ -228,13 +228,6 @@ EOF
             <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
             <Text variant="medium" style={{ fontWeight: "bold" }}>Paste the commands</Text> into the shell
           </Text>
-        </PivotItem>
-        <PivotItem headerText="Provision Environment (CI/CD)">
-          <TextField value={"TBC"} rows={5} readOnly={true} label="Github action" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
-          </TextField>
-          <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
-          </TextField>
-
         </PivotItem>
 
         <PivotItem headerText="Post Configuration">
@@ -262,6 +255,13 @@ EOF
 
             </Stack>
           }
+        </PivotItem>
+
+        <PivotItem headerText="Template Parameters File (for CI/CD)">
+
+          <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
+          </TextField>
+
         </PivotItem>
       </Pivot>
     </Stack>

@@ -39,6 +39,7 @@ param azureKeyvaultSecretsProvider bool = false //This is a preview feature
 param createKV bool = false
 param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
 var akvName = 'kv-${replace(resourceName, '-', '')}'
+
 resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
   name: akvName
   location: location
@@ -48,16 +49,42 @@ resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
       family: 'A'
       name: 'Standard'
     }
-    accessPolicies: []
+    enabledForTemplateDeployment: true
+    accessPolicies: concat(azureKeyvaultSecretsProvider ? array({
+      tenantId: subscription().tenantId
+      objectId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.clientId
+      permissions: {
+        secrets: [
+          'get'
+          'list'
+        ]
+        certificates: [
+          'get'
+          'list'
+        ]
+      }
+    }) : [], appgwKVIntegration ? array({
+      tenantId: subscription().tenantId
+      objectId: appGwIdentity.properties.principalId
+      permissions: {
+        secrets: [
+          'get'
+          'set'
+          'delete'
+          'list'
+        ]
+      }
+    }) : [])
   }, !empty(AKVserviceEndpointFW) ? {
     networkAcls: {
       defaultAction: 'Deny'
-      virtualNetworkRules: [
-        {
-          action: 'Allow'
-          id: '${vnet.id}/subnets/${aks_subnet_name}'
-        }
-      ]
+      virtualNetworkRules: concat(array({
+        action: 'Allow'
+        id: '${vnet.id}/subnets/${aks_subnet_name}'
+      }), appgwKVIntegration ? array({
+        action: 'Allow'
+        id: '${vnet.id}/subnets/${appgw_subnet_name}'
+      }) : [])
       ipRules: AKVserviceEndpointFW != 'vnetonly' ? [
         {
           action: 'Allow'
@@ -150,15 +177,16 @@ param byoAGWSubnetId string = ''
 var existingAGWSubnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 10 ? split(byoAGWSubnetId, '/')[10] : '') : ''
 var existingAGWVnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[8] : '') : ''
 var existingAGWVnetRG = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[4] : '') : ''
-resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
+
+resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = if (!empty(byoAGWSubnetId)) {
   name: existingAGWVnetName
   scope: resourceGroup(existingAGWVnetRG)
 }
-resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = {
+resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = if (!empty(byoAGWSubnetId)) {
   parent: existingAgwVnet
   name: existingAGWSubnetName
 }
-var existingAGWSubnetAddPrefix = existingAGWSubnet.properties.addressPrefix
+var existingAGWSubnetAddPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : null
 
 param serviceEndpoints array = []
 
@@ -180,6 +208,7 @@ var appgw_subnet = {
   name: appgw_subnet_name
   properties: {
     addressPrefix: vnetAppGatewaySubnetAddressPrefix
+    serviceEndpoints: serviceEndpoints
   }
 }
 var fw_subnet_name = 'AzureFirewallSubnet' // Required by FW
@@ -346,8 +375,7 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) 
                   protocolType: 'Http'
                 }
               ]
-              targetFqdns: [
-              ]
+              targetFqdns: []
               fqdnTags: [
                 'AzureKubernetesService'
               ]
@@ -423,10 +451,22 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) 
 
 //---------------------------------------------------------------------------------- AppGateway
 param ingressApplicationGateway bool = false
+param appGWcount int = 2
+param appGWmaxCount int = 0
 param privateIpApplicationGateway string = ''
+param appgwKVIntegration bool = false
 
 var appgwSubnetId = !empty(byoAGWSubnetId) ? byoAGWSubnetId : (create_vnet ? '${vnet.id}/subnets/${appgw_subnet_name}' : '')
 var deployAppGw = ((create_vnet && ingressApplicationGateway) || (!empty(byoAGWSubnetId) && ingressApplicationGateway))
+
+// 'identity' is always created until this is fixed: 
+// https://github.com/Azure/bicep/issues/387#issuecomment-885671296
+
+// If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
+resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (appgwKVIntegration || true) {
+  name: 'id-appgw-${resourceName}'
+  location: location
+}
 
 module appGw './appgw.bicep' = if (deployAppGw) {
   name: 'addAppGw'
@@ -435,6 +475,11 @@ module appGw './appgw.bicep' = if (deployAppGw) {
     location: location
     appgw_subnet_id: appgwSubnetId
     appgw_privateIpAddress: privateIpApplicationGateway
+    availabilityZones: availabilityZones
+    userAssignedIdentity: (appgwKVIntegration || true) ? appGwIdentity.id : ''
+    workspaceId: aks_law.id
+    appGWcount: appGWcount
+    appGWmaxCount: appGWmaxCount
   }
 }
 
@@ -584,7 +629,7 @@ var aks_addons4 = !empty(azurepolicy) ? union(aks_addons3, {
 var aks_addons5 = azureKeyvaultSecretsProvider ? union(aks_addons4, {
   azureKeyvaultSecretsProvider: {
     config: {
-      enableSecretRotation: false
+      enableSecretRotation: 'false'
     }
     enabled: true
   }
@@ -655,7 +700,7 @@ resource gitops 'Microsoft.KubernetesConfiguration/sourceControlConfigurations@2
 
 param retentionInDays int = 30
 var aks_law_name = 'log-${resourceName}'
-resource aks_law 'Microsoft.OperationalInsights/workspaces@2020-08-01' = if (omsagent) {
+resource aks_law 'Microsoft.OperationalInsights/workspaces@2020-08-01' = if (omsagent || deployAppGw) {
   name: aks_law_name
   location: location
   properties: {
