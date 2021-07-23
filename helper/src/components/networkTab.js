@@ -116,7 +116,7 @@ export default function ({ tabValues, updateFn, invalidArray, featureFlag }) {
                                     },
                                     {
                                         key: 'byo',
-                                        disabled: !featureFlag,
+                                        disabled: false,
                                         iconProps: { iconName: 'WebAppBuilderFragment' }, // SplitObject
                                         text: 'BYO VNET (TBC)'
                                     }
