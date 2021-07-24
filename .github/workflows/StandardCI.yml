@@ -5,27 +5,27 @@ name: AksStandardCI
 
 on:
   workflow_dispatch:
-    
+
   push:
-    paths: 
+    paths:
       - ".github/workflows/StandardCI.yml"
-      - 'bicep/*'
-      
+      - "bicep/*"
+
   pull_request:
-    branches: [ main ]
-    paths: 
-      - 'bicep/*'
+    branches: [main]
+    paths:
+      - "bicep/*"
       - ".github/workflows/StandardCI.yml"
-      
+
   schedule:
     # At 11:00pm, every Tuesday week
-    - cron: '0 23 * * 2'
+    - cron: "0 23 * * 2"
 env:
-  RG: 'Automation-Actions-AksDeployStanCI'
+  RG: "Automation-Actions-AksDeployStanCI"
   ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json"
-  RESNAME: 'AksStan'
-  DEPNAME: 'Dep${{ github.run_number }}'
-  
+  RESNAME: "AksStan"
+  DEPNAME: "Dep${{ github.run_number }}"
+
 jobs:
   Validation:
     runs-on: ubuntu-latest
@@ -36,7 +36,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
@@ -47,20 +47,20 @@ jobs:
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
-          
+
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
-          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Verify Active Deployments
         id: activedeps
         uses: Azure/cli@1.0.4
@@ -69,20 +69,20 @@ jobs:
             RG='${{ env.RG }}'
             RUNCOUNT=$(az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name] | length(@)" -o tsv)
             echo "Active deployments : $RUNCOUNT"
-            
+
             echo 'Active deployment list'
             az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name]"
-            
+
             #echo 'Verbose deployment list'
             #az deployment group list -g $RG --query "[].[properties.provisioningState, name]"
-            
+
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
-            
+
             if [ "$RUNCOUNT" -ne "0" ]
             then
               exit 1
             fi
-            
+
       - name: Validate AKS
         uses: Azure/cli@1.0.4
         with:
@@ -91,7 +91,7 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --verbose
-            
+
       - name: What If
         uses: Azure/cli@1.0.4
         with:
@@ -113,7 +113,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
@@ -124,22 +124,22 @@ jobs:
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
-          
+
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
-          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Deploy AKS
-        id:  deployAks
+        id: deployAks
         uses: Azure/cli@1.0.4
         with:
           inlineScript: |
@@ -147,24 +147,24 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --name $DEPNAME --verbose
-            
+
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
-            
+
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
             echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
 
-      - name: Test Control Plane Config 
+      - name: Test Control Plane Config
         shell: pwsh
         run: |
           $RG='${{ env.RG }}'
           $AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
           $paramFilePath="${{ env.ParamFilePath }}"
           $params = Get-Content $paramFilePath | ConvertFrom-Json
-          
+
           Write-Output "Checking for User Assigned Identity"
-          if($params.parameters.useAksUAI.value -eq $true) {
+          if($params.parameters.custom_vnet.value -eq $true) {
             $aksId=az aks show -n $AKSNAME -g $RG --query "identity.type" -o tsv
             write-output $aksId
             
@@ -183,13 +183,13 @@ jobs:
           inlineScript: |
             RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-            
+
             echo $AKSNAME
             az aks get-credentials -n $AKSNAME -g $RG --admin
-            
+
             az aks install-cli
             kubectl version
-            
+
             echo $MANIFESTTESTURL
             kubectl apply -f $MANIFESTTESTURL
 
@@ -208,7 +208,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
@@ -219,16 +219,16 @@ jobs:
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
-          
+
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
-          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
@@ -239,7 +239,7 @@ jobs:
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Az.Accounts
           Install-Module -Name Az.Resources
-          
+
       - name: Cleanup
         shell: pwsh
         run: |
