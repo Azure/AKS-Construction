@@ -96,12 +96,24 @@ output fwSubnetId string = azureFirewalls ? '${vnet.id}/subnets/${fw_subnet_name
 output appGwSubnetId string = ingressApplicationGateway ? '${vnet.id}/subnets/${appgw_subnet_name}' : ''
 
 var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
+
 resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments@2020-04-01-preview' = if (!empty(aksPrincipleId)) {
   name: '${vnet.name}/${aks_subnet_name}/Microsoft.Authorization/${guid(resourceGroup().id, vnetName, aks_subnet_name)}'
   properties: {
     roleDefinitionId: networkContributorRole
     principalId: aksPrincipleId
     principalType: 'ServicePrincipal'
-    //scope: '${vnet.id}/subnets/${aks_subnet_name}'
   }
 }
+
+/*
+resource aks_vnet_cont 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (!empty(aksPrincipleId)) {
+  scope: existingAKSSubnet
+  name: guid(resourceGroup().id, aksPrincipleId)
+  properties: {
+    roleDefinitionId: networkContributorRole
+    principalId: aksPrincipleId
+    principalType: 'ServicePrincipal'
+  }
+}
+*/

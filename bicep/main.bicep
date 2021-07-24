@@ -26,7 +26,7 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId)) {
   scope: resourceGroup(existingAksVnetRG)
   params: {
     byoAKSSubnetId: byoAKSSubnetId
-    user_identity_principalId: uai.properties.principalId
+    user_identity_principalId: aks_byo_identity ? uai.properties.principalId : ''
     user_identity_name: uai.name
     user_identity_rg: resourceGroup().name
   }
@@ -58,7 +58,7 @@ module network './network.bicep' = if (custom_vnet) {
     location: location
     serviceEndpoints: serviceEndpoints
     vnetAddressPrefix: vnetAddressPrefix
-    aksPrincipleId: uai.properties.principalId
+    aksPrincipleId: aks_byo_identity ? uai.properties.principalId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     ingressApplicationGateway: ingressApplicationGateway
     vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
@@ -215,7 +215,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     resourceName: resourceName
     location: location
     workspaceDiagsId: aks_law.id
-    fwSubnetId: network.outputs.fwSubnetId
+    fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
   }
 }
@@ -229,11 +229,10 @@ param appgwKVIntegration bool = false
 
 var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubnetId))
 
-// 'identity' is always created until this is fixed: 
-// https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
-resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (appgwKVIntegration || true) {
+// 'identity' is always created (adding: "|| deployAppGw") until this is fixed: 
+// https://github.com/Azure/bicep/issues/387#issuecomment-885671296
+resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (appgwKVIntegration || deployAppGw) {
   name: 'id-appgw-${resourceName}'
   location: location
 }
@@ -246,7 +245,7 @@ module appGw './appgw.bicep' = if (deployAppGw) {
     appGwSubnetId: appGwSubnetId
     appgw_privateIpAddress: privateIpApplicationGateway
     availabilityZones: availabilityZones
-    userAssignedIdentity: (appgwKVIntegration || true) ? appGwIdentity.id : ''
+    userAssignedIdentity: (appgwKVIntegration || deployAppGw) ? appGwIdentity.id : ''
     workspaceId: aks_law.id
     appGWcount: appGWcount
     appGWmaxCount: appGWmaxCount

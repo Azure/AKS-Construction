@@ -277,7 +277,7 @@
       ]
     },
     {
-      "condition": "[or(parameters('appgwKVIntegration'), true())]",
+      "condition": "[or(parameters('appgwKVIntegration'), variables('deployAppGw'))]",
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
       "apiVersion": "2018-11-30",
       "name": "[format('id-appgw-{0}', parameters('resourceName'))]",
@@ -354,7 +354,7 @@
             "value": "[parameters('byoAKSSubnetId')]"
           },
           "user_identity_principalId": {
-            "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))).principalId]"
+            "value": "[if(variables('aks_byo_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))).principalId, '')]"
           },
           "user_identity_name": {
             "value": "[format('id-{0}', parameters('resourceName'))]"
@@ -430,7 +430,7 @@
             "value": "[parameters('vnetAddressPrefix')]"
           },
           "aksPrincipleId": {
-            "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))).principalId]"
+            "value": "[if(variables('aks_byo_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))).principalId, '')]"
           },
           "vnetAksSubnetAddressPrefix": {
             "value": "[parameters('vnetAksSubnetAddressPrefix')]"
@@ -705,7 +705,7 @@
             "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
           },
           "fwSubnetId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.fwSubnetId.value]"
+            "value": "[if(and(parameters('azureFirewalls'), parameters('custom_vnet')), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.fwSubnetId.value, '')]"
           },
           "vnetAksSubnetAddressPrefix": {
             "value": "[parameters('vnetAksSubnetAddressPrefix')]"
@@ -944,7 +944,7 @@
             "value": "[parameters('availabilityZones')]"
           },
           "userAssignedIdentity": {
-            "value": "[if(or(parameters('appgwKVIntegration'), true()), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))), '')]"
+            "value": "[if(or(parameters('appgwKVIntegration'), variables('deployAppGw')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))), '')]"
           },
           "workspaceId": {
             "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
@@ -1108,7 +1108,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.126.58533",
-      "templateHash": "7659348902348208298"
+      "templateHash": "3752963872702799854"
     }
   }
 }
