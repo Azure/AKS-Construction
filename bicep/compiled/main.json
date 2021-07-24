@@ -14,9 +14,37 @@
       "maxLength": 20,
       "minLength": 3
     },
-    "useAksUAI": {
+    "custom_vnet": {
       "type": "bool",
-      "defaultValue": true
+      "defaultValue": false
+    },
+    "byoAKSSubnetId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "byoAGWSubnetId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "vnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/8"
+    },
+    "serviceEndpoints": {
+      "type": "array",
+      "defaultValue": []
+    },
+    "vnetAksSubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.240.0.0/16"
+    },
+    "vnetFirewallSubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.241.130.0/26"
+    },
+    "vnetAppGatewaySubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.2.0.0/16"
     },
     "dnsZoneId": {
       "type": "string",
@@ -42,49 +70,9 @@
       "type": "string",
       "defaultValue": ""
     },
-    "custom_vnet": {
-      "type": "bool",
-      "defaultValue": false
-    },
-    "vnetAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.0.0.0/8"
-    },
-    "vnetAksSubnetAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.240.0.0/16"
-    },
-    "vnetAppGatewaySubnetAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.2.0.0/16"
-    },
-    "vnetFirewallSubnetAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.241.130.0/26"
-    },
-    "byoAKSSubnetId": {
-      "type": "string",
-      "defaultValue": ""
-    },
-    "byoAGWSubnetId": {
-      "type": "string",
-      "defaultValue": ""
-    },
-    "serviceEndpoints": {
-      "type": "array",
-      "defaultValue": []
-    },
-    "vnetName": {
-      "type": "string",
-      "defaultValue": "[format('vnet-{0}', parameters('resourceName'))]"
-    },
     "azureFirewalls": {
       "type": "bool",
       "defaultValue": false
-    },
-    "aks_subnet_name": {
-      "type": "string",
-      "defaultValue": "aks-sn"
     },
     "ingressApplicationGateway": {
       "type": "bool",
@@ -213,83 +201,24 @@
   },
   "functions": [],
   "variables": {
-    "user_identity": "[or(or(variables('create_vnet'), variables('existing_vnet')), parameters('useAksUAI'))]",
-    "user_identity_name": "[format('id-{0}', parameters('resourceName'))]",
+    "aks_byo_identity": "[or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId'))))]",
+    "existingAksVnetRG": "[if(not(empty(parameters('byoAKSSubnetId'))), if(greater(length(split(parameters('byoAKSSubnetId'), '/')), 9), split(parameters('byoAKSSubnetId'), '/')[4], ''), '')]",
+    "existingAGWSubnetName": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 10), split(parameters('byoAGWSubnetId'), '/')[10], ''), '')]",
+    "existingAGWVnetName": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 9), split(parameters('byoAGWSubnetId'), '/')[8], ''), '')]",
+    "existingAGWVnetRG": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 9), split(parameters('byoAGWSubnetId'), '/')[4], ''), '')]",
     "dnsZoneRg": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[4], '')]",
     "dnsZoneName": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[8], '')]",
     "akvName": "[format('kv-{0}', replace(parameters('resourceName'), '-', ''))]",
     "acrName": "[format('cr{0}{1}', replace(parameters('resourceName'), '-', ''), uniqueString(resourceGroup().id, parameters('resourceName')))]",
     "AcrPullRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
-    "existing_vnet": "[not(empty(parameters('byoAKSSubnetId')))]",
-    "existingAksVnetRG": "[if(not(empty(parameters('byoAKSSubnetId'))), if(greater(length(split(parameters('byoAKSSubnetId'), '/')), 9), split(parameters('byoAKSSubnetId'), '/')[4], ''), '')]",
-    "existingAGWSubnetName": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 10), split(parameters('byoAGWSubnetId'), '/')[10], ''), '')]",
-    "existingAGWVnetName": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 9), split(parameters('byoAGWSubnetId'), '/')[8], ''), '')]",
-    "existingAGWVnetRG": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 9), split(parameters('byoAGWSubnetId'), '/')[4], ''), '')]",
-    "create_vnet": "[if(variables('existing_vnet'), false(), or(or(parameters('custom_vnet'), parameters('azureFirewalls')), not(empty(parameters('serviceEndpoints')))))]",
-    "appgw_subnet_name": "appgw-sn",
-    "appgw_subnet": {
-      "name": "[variables('appgw_subnet_name')]",
-      "properties": {
-        "addressPrefix": "[parameters('vnetAppGatewaySubnetAddressPrefix')]",
-        "serviceEndpoints": "[parameters('serviceEndpoints')]"
-      }
-    },
-    "fw_subnet_name": "AzureFirewallSubnet",
-    "fw_subnet": {
-      "name": "[variables('fw_subnet_name')]",
-      "properties": {
-        "addressPrefix": "[parameters('vnetFirewallSubnetAddressPrefix')]"
-      }
-    },
-    "aks_subnet": "[if(parameters('azureFirewalls'), createObject('name', parameters('aks_subnet_name'), 'properties', createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix'), 'routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName'))))), createObject('name', parameters('aks_subnet_name'), 'properties', createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix'), 'serviceEndpoints', parameters('serviceEndpoints'))))]",
-    "subnets_1": "[if(parameters('azureFirewalls'), concat(array(variables('aks_subnet')), array(variables('fw_subnet'))), array(variables('aks_subnet')))]",
-    "final_subnets": "[if(parameters('ingressApplicationGateway'), concat(array(variables('subnets_1')), array(variables('appgw_subnet'))), array(variables('subnets_1')))]",
-    "networkContributorRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
-    "routeFwTableName": "[format('rt-afw-{0}', parameters('resourceName'))]",
-    "firewallPublicIpName": "[format('pip-afw-{0}', parameters('resourceName'))]",
-    "fw_name": "[format('afw-{0}', parameters('resourceName'))]",
-    "appgwSubnetId": "[if(not(empty(parameters('byoAGWSubnetId'))), parameters('byoAGWSubnetId'), if(variables('create_vnet'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), variables('appgw_subnet_name')), ''))]",
-    "deployAppGw": "[or(and(variables('create_vnet'), parameters('ingressApplicationGateway')), and(not(empty(parameters('byoAGWSubnetId'))), parameters('ingressApplicationGateway')))]",
+    "deployAppGw": "[and(parameters('ingressApplicationGateway'), or(parameters('custom_vnet'), not(empty(parameters('byoAGWSubnetId')))))]",
     "appgw_name": "[format('agw-{0}', parameters('resourceName'))]",
     "autoScale": "[greater(parameters('agentCountMax'), parameters('agentCount'))]",
-    "aksSubnetId": "[if(variables('existing_vnet'), parameters('byoAKSSubnetId'), if(variables('create_vnet'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('aks_subnet_name')), null()))]",
-    "agentPoolProfiles": {
-      "name": "nodepool1",
-      "mode": "System",
-      "osDiskType": "[parameters('osDiskType')]",
-      "osDiskSizeGB": "[parameters('osDiskSizeGB')]",
-      "count": "[parameters('agentCount')]",
-      "vmSize": "[parameters('agentVMSize')]",
-      "osType": "Linux",
-      "vnetSubnetID": "[variables('aksSubnetId')]",
-      "maxPods": "[parameters('maxPods')]",
-      "type": "VirtualMachineScaleSets",
-      "enableAutoScaling": "[variables('autoScale')]",
-      "availabilityZones": "[if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), null())]"
-    },
-    "aks_properties_base": {
-      "kubernetesVersion": "[parameters('kubernetesVersion')]",
-      "enableRBAC": true,
-      "dnsPrefix": "[parameters('dnsPrefix')]",
-      "aadProfile": "[if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null())]",
-      "apiServerAccessProfile": "[if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), 'none', ''), 'enablePrivateClusterPublicFQDN', parameters('enablePrivateCluster')))]",
-      "agentPoolProfiles": "[if(variables('autoScale'), array(union(variables('agentPoolProfiles'), createObject('minCount', parameters('agentCount'), 'maxCount', parameters('agentCountMax')))), array(variables('agentPoolProfiles')))]",
-      "networkProfile": {
-        "loadBalancerSku": "standard",
-        "networkPlugin": "[parameters('networkPlugin')]",
-        "networkPolicy": "[parameters('networkPolicy')]",
-        "podCidr": "[parameters('podCidr')]",
-        "serviceCidr": "[parameters('serviceCidr')]",
-        "dnsServiceIP": "[parameters('dnsServiceIP')]",
-        "dockerBridgeCidr": "[parameters('dockerBridgeCidr')]"
-      }
-    },
-    "aks_properties1": "[if(not(empty(parameters('upgradeChannel'))), union(variables('aks_properties_base'), createObject('autoUpgradeProfile', createObject('upgradeChannel', parameters('upgradeChannel')))), variables('aks_properties_base'))]",
     "aks_addons": {},
-    "aks_identity_user": {
+    "aks_identity": {
       "type": "UserAssigned",
       "userAssignedIdentities": {
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))]": {}
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))]": {}
       }
     },
     "policySetPodSecBaseline": "[resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')]",
@@ -298,10 +227,10 @@
   },
   "resources": [
     {
-      "condition": "[variables('user_identity')]",
+      "condition": "[variables('aks_byo_identity')]",
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
       "apiVersion": "2018-11-30",
-      "name": "[variables('user_identity_name')]",
+      "name": "[format('id-{0}', parameters('resourceName'))]",
       "location": "[parameters('location')]"
     },
     {
@@ -310,11 +239,11 @@
       "apiVersion": "2019-09-01",
       "name": "[variables('akvName')]",
       "location": "[parameters('location')]",
-      "properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'Standard'), 'enabledForTemplateDeployment', true(), 'accessPolicies', concat(if(parameters('azureKeyvaultSecretsProvider'), array(createObject('tenantId', subscription().tenantId, 'objectId', reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.azureKeyvaultSecretsProvider.identity.clientId, 'permissions', createObject('secrets', createArray('get', 'list'), 'certificates', createArray('get', 'list')))), createArray()), if(parameters('appgwKVIntegration'), array(createObject('tenantId', subscription().tenantId, 'objectId', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))).principalId, 'permissions', createObject('secrets', createArray('get', 'set', 'delete', 'list')))), createArray()))), if(not(empty(parameters('AKVserviceEndpointFW'))), createObject('networkAcls', createObject('defaultAction', 'Deny', 'virtualNetworkRules', concat(array(createObject('action', 'Allow', 'id', format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('aks_subnet_name')))), if(parameters('appgwKVIntegration'), array(createObject('action', 'Allow', 'id', format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), variables('appgw_subnet_name')))), createArray())), 'ipRules', if(not(equals(parameters('AKVserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('AKVserviceEndpointFW'))), null()))), createObject()))]",
+      "properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'Standard'), 'enabledForTemplateDeployment', true(), 'accessPolicies', concat(if(parameters('azureKeyvaultSecretsProvider'), array(createObject('tenantId', subscription().tenantId, 'objectId', reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.azureKeyvaultSecretsProvider.identity.clientId, 'permissions', createObject('keys', createArray('get', 'list'), 'secrets', createArray('get', 'list'), 'certificates', createArray('get', 'list')))), createArray()), if(parameters('appgwKVIntegration'), array(createObject('tenantId', subscription().tenantId, 'objectId', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))).principalId, 'permissions', createObject('secrets', createArray('get', 'set', 'delete', 'list')))), createArray()))), if(not(empty(parameters('AKVserviceEndpointFW'))), createObject('networkAcls', createObject('defaultAction', 'Deny', 'virtualNetworkRules', concat(array(createObject('action', 'Allow', 'id', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())))), if(parameters('appgwKVIntegration'), array(createObject('action', 'Allow', 'id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.appGwSubnetId.value, if(not(empty(parameters('byoAGWSubnetId'))), parameters('byoAGWSubnetId'), '')), ''))), createArray())), 'ipRules', if(not(equals(parameters('AKVserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('AKVserviceEndpointFW'))), null()))), createObject()))]",
       "dependsOn": [
         "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+        "[resourceId('Microsoft.Resources/deployments', 'network')]"
       ]
     },
     {
@@ -326,9 +255,9 @@
       "sku": {
         "name": "[parameters('registries_sku')]"
       },
-      "properties": "[if(not(empty(parameters('ACRserviceEndpointFW'))), createObject('networkRuleSet', createObject('defaultAction', 'Deny', 'virtualNetworkRules', createArray(createObject('action', 'Allow', 'id', format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('aks_subnet_name')))), 'ipRules', if(not(equals(parameters('ACRserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('ACRserviceEndpointFW'))), null()))), createObject())]",
+      "properties": "[if(not(empty(parameters('ACRserviceEndpointFW'))), createObject('networkRuleSet', createObject('defaultAction', 'Deny', 'virtualNetworkRules', createArray(createObject('action', 'Allow', 'id', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())))), 'ipRules', if(not(equals(parameters('ACRserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('ACRserviceEndpointFW'))), null()))), createObject())]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+        "[resourceId('Microsoft.Resources/deployments', 'network')]"
       ]
     },
     {
@@ -348,237 +277,7 @@
       ]
     },
     {
-      "condition": "[variables('create_vnet')]",
-      "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "2020-07-01",
-      "name": "[parameters('vnetName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[parameters('vnetAddressPrefix')]"
-          ]
-        },
-        "subnets": "[variables('final_subnets')]"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/routeTables', variables('routeFwTableName'))]"
-      ]
-    },
-    {
-      "condition": "[variables('create_vnet')]",
-      "type": "Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments",
-      "apiVersion": "2020-04-01-preview",
-      "name": "[format('{0}/{1}/Microsoft.Authorization/{2}', parameters('vnetName'), parameters('aks_subnet_name'), guid(resourceGroup().id, parameters('vnetName'), parameters('aks_subnet_name')))]",
-      "properties": {
-        "roleDefinitionId": "[variables('networkContributorRole')]",
-        "principalId": "[if(variables('user_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))).principalId, null())]",
-        "principalType": "ServicePrincipal"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
-      ]
-    },
-    {
-      "condition": "[parameters('azureFirewalls')]",
-      "type": "Microsoft.Network/routeTables",
-      "apiVersion": "2021-02-01",
-      "name": "[variables('routeFwTableName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "routes": [
-          {
-            "name": "AKSNodesEgress",
-            "properties": {
-              "addressPrefix": "0.0.0.0/1",
-              "nextHopType": "VirtualAppliance",
-              "nextHopIpAddress": "[reference(resourceId('Microsoft.Resources/deployments', 'calcAzFwIp'), '2019-10-01').outputs.FirewallPrivateIp.value]"
-            }
-          }
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'calcAzFwIp')]"
-      ]
-    },
-    {
-      "condition": "[parameters('azureFirewalls')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2018-08-01",
-      "name": "[variables('firewallPublicIpName')]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "Standard"
-      },
-      "properties": {
-        "publicIPAllocationMethod": "Static",
-        "publicIPAddressVersion": "IPv4"
-      }
-    },
-    {
-      "condition": "[and(parameters('azureFirewalls'), parameters('omsagent'))]",
-      "type": "microsoft.insights/diagnosticSettings",
-      "apiVersion": "2017-05-01-preview",
-      "scope": "[format('Microsoft.Network/azureFirewalls/{0}', variables('fw_name'))]",
-      "name": "fwDiags",
-      "properties": {
-        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
-        "logs": [
-          {
-            "category": "AzureFirewallApplicationRule",
-            "enabled": true,
-            "retentionPolicy": {
-              "days": 10,
-              "enabled": false
-            }
-          },
-          {
-            "category": "AzureFirewallNetworkRule",
-            "enabled": true,
-            "retentionPolicy": {
-              "days": 10,
-              "enabled": false
-            }
-          }
-        ],
-        "metrics": [
-          {
-            "category": "AllMetrics",
-            "enabled": true,
-            "retentionPolicy": {
-              "enabled": false,
-              "days": 0
-            }
-          }
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
-        "[resourceId('Microsoft.Network/azureFirewalls', variables('fw_name'))]"
-      ]
-    },
-    {
-      "condition": "[parameters('azureFirewalls')]",
-      "type": "Microsoft.Network/azureFirewalls",
-      "apiVersion": "2019-04-01",
-      "name": "[variables('fw_name')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "IpConf1",
-            "properties": {
-              "subnet": {
-                "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), variables('fw_subnet_name'))]"
-              },
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('firewallPublicIpName'))]"
-              }
-            }
-          }
-        ],
-        "threatIntelMode": "Alert",
-        "applicationRuleCollections": [
-          {
-            "name": "clusterRc1",
-            "properties": {
-              "priority": 101,
-              "action": {
-                "type": "Allow"
-              },
-              "rules": [
-                {
-                  "name": "aks",
-                  "protocols": [
-                    {
-                      "port": 443,
-                      "protocolType": "Https"
-                    },
-                    {
-                      "port": 80,
-                      "protocolType": "Http"
-                    }
-                  ],
-                  "targetFqdns": [],
-                  "fqdnTags": [
-                    "AzureKubernetesService"
-                  ],
-                  "sourceAddresses": [
-                    "[parameters('vnetAksSubnetAddressPrefix')]"
-                  ]
-                }
-              ]
-            }
-          }
-        ],
-        "networkRuleCollections": [
-          {
-            "name": "netRc1",
-            "properties": {
-              "priority": 100,
-              "action": {
-                "type": "Allow"
-              },
-              "rules": [
-                {
-                  "name": "ControlPlaneTCP",
-                  "protocols": [
-                    "TCP"
-                  ],
-                  "sourceAddresses": [
-                    "[parameters('vnetAksSubnetAddressPrefix')]"
-                  ],
-                  "destinationAddresses": [
-                    "[format('AzureCloud.{0}', parameters('location'))]"
-                  ],
-                  "destinationPorts": [
-                    "9000",
-                    "22"
-                  ]
-                },
-                {
-                  "name": "ControlPlaneUDP",
-                  "protocols": [
-                    "UDP"
-                  ],
-                  "sourceAddresses": [
-                    "[parameters('vnetAksSubnetAddressPrefix')]"
-                  ],
-                  "destinationAddresses": [
-                    "[format('AzureCloud.{0}', parameters('location'))]"
-                  ],
-                  "destinationPorts": [
-                    "1194"
-                  ]
-                },
-                {
-                  "name": "AzureMonitorForContainers",
-                  "protocols": [
-                    "TCP"
-                  ],
-                  "sourceAddresses": [
-                    "[parameters('vnetAksSubnetAddressPrefix')]"
-                  ],
-                  "destinationAddresses": [
-                    "AzureMonitor"
-                  ],
-                  "destinationPorts": [
-                    "443"
-                  ]
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('firewallPublicIpName'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
-      ]
-    },
-    {
-      "condition": "[or(parameters('appgwKVIntegration'), true())]",
+      "condition": "[or(parameters('appgwKVIntegration'), variables('deployAppGw'))]",
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
       "apiVersion": "2018-11-30",
       "name": "[format('id-appgw-{0}', parameters('resourceName'))]",
@@ -589,12 +288,13 @@
       "apiVersion": "2021-03-01",
       "name": "[format('aks-{0}', parameters('resourceName'))]",
       "location": "[parameters('location')]",
-      "properties": "[if(not(empty(if(parameters('azureKeyvaultSecretsProvider'), union(if(not(empty(parameters('azurepolicy'))), union(if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), createObject('azurepolicy', createObject('config', createObject('version', 'v2'), 'enabled', true()))), if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))))), createObject('azureKeyvaultSecretsProvider', createObject('config', createObject('enableSecretRotation', 'false'), 'enabled', true()))), if(not(empty(parameters('azurepolicy'))), union(if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), createObject('azurepolicy', createObject('config', createObject('version', 'v2'), 'enabled', true()))), if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))))))), union(variables('aks_properties1'), createObject('addonProfiles', if(parameters('azureKeyvaultSecretsProvider'), union(if(not(empty(parameters('azurepolicy'))), union(if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), createObject('azurepolicy', createObject('config', createObject('version', 'v2'), 'enabled', true()))), if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))))), createObject('azureKeyvaultSecretsProvider', createObject('config', createObject('enableSecretRotation', 'false'), 'enabled', true()))), if(not(empty(parameters('azurepolicy'))), union(if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), createObject('azurepolicy', createObject('config', createObject('version', 'v2'), 'enabled', true()))), if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(variables('create_vnet'), variables('existing_vnet')), createObject(), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()))), if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, null()), parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))))))), variables('aks_properties1'))]",
-      "identity": "[if(variables('user_identity'), variables('aks_identity_user'), createObject('type', 'SystemAssigned'))]",
+      "properties": "[if(not(empty(if(parameters('azureKeyvaultSecretsProvider'), union(if(not(empty(parameters('azurepolicy'))), union(if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), createObject('azurepolicy', createObject('config', createObject('version', 'v2'), 'enabled', true()))), if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))))), createObject('azureKeyvaultSecretsProvider', createObject('config', createObject('enableSecretRotation', 'false'), 'enabled', true()))), if(not(empty(parameters('azurepolicy'))), union(if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), createObject('azurepolicy', createObject('config', createObject('version', 'v2'), 'enabled', true()))), if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))))))), union(if(not(empty(parameters('upgradeChannel'))), union(createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), 'none', ''), 'enablePrivateClusterPublicFQDN', parameters('enablePrivateCluster'))), 'agentPoolProfiles', if(variables('autoScale'), array(union(createObject('name', 'nodepool1', 'mode', 'System', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'count', parameters('agentCount'), 'vmSize', parameters('agentVMSize'), 'osType', 'Linux', 'vnetSubnetID', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())), 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'enableAutoScaling', variables('autoScale'), 'availabilityZones', if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), null())), createObject('minCount', parameters('agentCount'), 'maxCount', parameters('agentCountMax')))), array(createObject('name', 'nodepool1', 'mode', 'System', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'count', parameters('agentCount'), 'vmSize', parameters('agentVMSize'), 'osType', 'Linux', 'vnetSubnetID', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())), 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'enableAutoScaling', variables('autoScale'), 'availabilityZones', if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), null())))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'podCidr', parameters('podCidr'), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'dockerBridgeCidr', parameters('dockerBridgeCidr'))), createObject('autoUpgradeProfile', createObject('upgradeChannel', parameters('upgradeChannel')))), createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), 'none', ''), 'enablePrivateClusterPublicFQDN', parameters('enablePrivateCluster'))), 'agentPoolProfiles', if(variables('autoScale'), array(union(createObject('name', 'nodepool1', 'mode', 'System', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'count', parameters('agentCount'), 'vmSize', parameters('agentVMSize'), 'osType', 'Linux', 'vnetSubnetID', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())), 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'enableAutoScaling', variables('autoScale'), 'availabilityZones', if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), null())), createObject('minCount', parameters('agentCount'), 'maxCount', parameters('agentCountMax')))), array(createObject('name', 'nodepool1', 'mode', 'System', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'count', parameters('agentCount'), 'vmSize', parameters('agentVMSize'), 'osType', 'Linux', 'vnetSubnetID', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())), 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'enableAutoScaling', variables('autoScale'), 'availabilityZones', if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), null())))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'podCidr', parameters('podCidr'), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'dockerBridgeCidr', parameters('dockerBridgeCidr')))), createObject('addonProfiles', if(parameters('azureKeyvaultSecretsProvider'), union(if(not(empty(parameters('azurepolicy'))), union(if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), createObject('azurepolicy', createObject('config', createObject('version', 'v2'), 'enabled', true()))), if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))))), createObject('azureKeyvaultSecretsProvider', createObject('config', createObject('enableSecretRotation', 'false'), 'enabled', true()))), if(not(empty(parameters('azurepolicy'))), union(if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), createObject('azurepolicy', createObject('config', createObject('version', 'v2'), 'enabled', true()))), if(not(empty(parameters('gitops'))), union(if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons'))), createObject('gitops', createObject('enabled', true()))), if(parameters('omsagent'), union(if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), createObject('omsagent', createObject('enabled', true(), 'config', createObject('logAnalyticsWorkspaceResourceID', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')))))), if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId')))), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.appgwId.value), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgw_name'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-08-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))))))), if(not(empty(parameters('upgradeChannel'))), union(createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), 'none', ''), 'enablePrivateClusterPublicFQDN', parameters('enablePrivateCluster'))), 'agentPoolProfiles', if(variables('autoScale'), array(union(createObject('name', 'nodepool1', 'mode', 'System', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'count', parameters('agentCount'), 'vmSize', parameters('agentVMSize'), 'osType', 'Linux', 'vnetSubnetID', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())), 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'enableAutoScaling', variables('autoScale'), 'availabilityZones', if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), null())), createObject('minCount', parameters('agentCount'), 'maxCount', parameters('agentCountMax')))), array(createObject('name', 'nodepool1', 'mode', 'System', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'count', parameters('agentCount'), 'vmSize', parameters('agentVMSize'), 'osType', 'Linux', 'vnetSubnetID', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())), 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'enableAutoScaling', variables('autoScale'), 'availabilityZones', if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), null())))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'podCidr', parameters('podCidr'), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'dockerBridgeCidr', parameters('dockerBridgeCidr'))), createObject('autoUpgradeProfile', createObject('upgradeChannel', parameters('upgradeChannel')))), createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), 'none', ''), 'enablePrivateClusterPublicFQDN', parameters('enablePrivateCluster'))), 'agentPoolProfiles', if(variables('autoScale'), array(union(createObject('name', 'nodepool1', 'mode', 'System', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'count', parameters('agentCount'), 'vmSize', parameters('agentVMSize'), 'osType', 'Linux', 'vnetSubnetID', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())), 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'enableAutoScaling', variables('autoScale'), 'availabilityZones', if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), null())), createObject('minCount', parameters('agentCount'), 'maxCount', parameters('agentCountMax')))), array(createObject('name', 'nodepool1', 'mode', 'System', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'count', parameters('agentCount'), 'vmSize', parameters('agentVMSize'), 'osType', 'Linux', 'vnetSubnetID', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, if(not(empty(parameters('byoAKSSubnetId'))), parameters('byoAKSSubnetId'), null())), 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'enableAutoScaling', variables('autoScale'), 'availabilityZones', if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), null())))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'podCidr', parameters('podCidr'), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'dockerBridgeCidr', parameters('dockerBridgeCidr')))))]",
+      "identity": "[if(variables('aks_byo_identity'), variables('aks_identity'), createObject('type', 'SystemAssigned'))]",
       "dependsOn": [
         "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+        "[resourceId('Microsoft.Resources/deployments', 'addAppGw')]",
+        "[resourceId('Microsoft.Resources/deployments', 'network')]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))]"
       ]
     },
     {
@@ -629,7 +329,7 @@
       ]
     },
     {
-      "condition": "[or(parameters('omsagent'), variables('deployAppGw'))]",
+      "condition": "[or(or(parameters('omsagent'), variables('deployAppGw')), parameters('azureFirewalls'))]",
       "type": "Microsoft.OperationalInsights/workspaces",
       "apiVersion": "2020-08-01",
       "name": "[variables('aks_law_name')]",
@@ -639,61 +339,7 @@
       }
     },
     {
-      "condition": "[not(empty(parameters('dnsZoneId')))]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
-      "name": "addDnsContributor",
-      "resourceGroup": "[variables('dnsZoneRg')]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "dnsZoneName": {
-            "value": "[variables('dnsZoneName')]"
-          },
-          "principalId": {
-            "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).identityProfile.kubeletidentity.objectId]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "parameters": {
-            "dnsZoneName": {
-              "type": "string"
-            },
-            "principalId": {
-              "type": "string"
-            }
-          },
-          "functions": [],
-          "variables": {
-            "DNSZoneContributor": "[resourceId('Microsoft.Authorization/roleDefinitions', 'befefa01-2a29-4197-83a8-272ff33ce314')]"
-          },
-          "resources": [
-            {
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2020-04-01-preview",
-              "scope": "[format('Microsoft.Network/dnsZones/{0}', parameters('dnsZoneName'))]",
-              "name": "[guid(resourceGroup().id, 'dnszone')]",
-              "properties": {
-                "roleDefinitionId": "[variables('DNSZoneContributor')]",
-                "principalType": "ServicePrincipal",
-                "principalId": "[parameters('principalId')]"
-              },
-              "dependsOn": []
-            }
-          ]
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
-      ]
-    },
-    {
-      "condition": "[and(variables('existing_vnet'), variables('user_identity'))]",
+      "condition": "[not(empty(parameters('byoAKSSubnetId')))]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
       "name": "addAksNetContributor",
@@ -708,10 +354,10 @@
             "value": "[parameters('byoAKSSubnetId')]"
           },
           "user_identity_principalId": {
-            "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))).principalId]"
+            "value": "[if(variables('aks_byo_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))).principalId, '')]"
           },
           "user_identity_name": {
-            "value": "[variables('user_identity_name')]"
+            "value": "[format('id-{0}', parameters('resourceName'))]"
           },
           "user_identity_rg": {
             "value": "[resourceGroup().name]"
@@ -757,19 +403,47 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('user_identity_name'))]"
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))]"
       ]
     },
     {
+      "condition": "[parameters('custom_vnet')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
-      "name": "calcAzFwIp",
+      "name": "network",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
         },
         "mode": "Incremental",
         "parameters": {
+          "resourceName": {
+            "value": "[parameters('resourceName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "serviceEndpoints": {
+            "value": "[parameters('serviceEndpoints')]"
+          },
+          "vnetAddressPrefix": {
+            "value": "[parameters('vnetAddressPrefix')]"
+          },
+          "aksPrincipleId": {
+            "value": "[if(variables('aks_byo_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))).principalId, '')]"
+          },
+          "vnetAksSubnetAddressPrefix": {
+            "value": "[parameters('vnetAksSubnetAddressPrefix')]"
+          },
+          "ingressApplicationGateway": {
+            "value": "[parameters('ingressApplicationGateway')]"
+          },
+          "vnetAppGatewaySubnetAddressPrefix": {
+            "value": "[parameters('vnetAppGatewaySubnetAddressPrefix')]"
+          },
+          "azureFirewalls": {
+            "value": "[parameters('azureFirewalls')]"
+          },
           "vnetFirewallSubnetAddressPrefix": {
             "value": "[parameters('vnetFirewallSubnetAddressPrefix')]"
           }
@@ -778,24 +452,470 @@
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
           "parameters": {
+            "resourceName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "vnetAddressPrefix": {
+              "type": "string"
+            },
             "vnetFirewallSubnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "serviceEndpoints": {
+              "type": "array",
+              "defaultValue": []
+            },
+            "ingressApplicationGateway": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "azureFirewalls": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "vnetAksSubnetAddressPrefix": {
+              "type": "string"
+            },
+            "vnetAppGatewaySubnetAddressPrefix": {
+              "type": "string"
+            },
+            "aksPrincipleId": {
+              "type": "string",
+              "defaultValue": ""
+            }
+          },
+          "functions": [],
+          "variables": {
+            "appgw_subnet_name": "appgw-sn",
+            "appgw_subnet": {
+              "name": "[variables('appgw_subnet_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('vnetAppGatewaySubnetAddressPrefix')]",
+                "serviceEndpoints": "[parameters('serviceEndpoints')]"
+              }
+            },
+            "fw_subnet_name": "AzureFirewallSubnet",
+            "fw_subnet": {
+              "name": "[variables('fw_subnet_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('vnetFirewallSubnetAddressPrefix')]"
+              }
+            },
+            "routeFwTableName": "[format('rt-afw-{0}', parameters('resourceName'))]",
+            "aks_subnet_name": "aks-sn",
+            "aks_subnet": "[if(parameters('azureFirewalls'), createObject('name', variables('aks_subnet_name'), 'properties', createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix'), 'routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName'))))), createObject('name', variables('aks_subnet_name'), 'properties', createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix'), 'serviceEndpoints', parameters('serviceEndpoints'))))]",
+            "subnets_1": "[if(parameters('azureFirewalls'), concat(array(variables('aks_subnet')), array(variables('fw_subnet'))), array(variables('aks_subnet')))]",
+            "final_subnets": "[if(parameters('ingressApplicationGateway'), concat(array(variables('subnets_1')), array(variables('appgw_subnet'))), array(variables('subnets_1')))]",
+            "vnetName": "[format('vnet-{0}', parameters('resourceName'))]",
+            "networkContributorRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')]"
+          },
+          "resources": [
+            {
+              "condition": "[parameters('azureFirewalls')]",
+              "type": "Microsoft.Network/routeTables",
+              "apiVersion": "2021-02-01",
+              "name": "[variables('routeFwTableName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "routes": [
+                  {
+                    "name": "AKSNodesEgress",
+                    "properties": {
+                      "addressPrefix": "0.0.0.0/1",
+                      "nextHopType": "VirtualAppliance",
+                      "nextHopIpAddress": "[if(parameters('azureFirewalls'), reference(resourceId('Microsoft.Resources/deployments', 'calcAzFwIp'), '2019-10-01').outputs.FirewallPrivateIp.value, null())]"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'calcAzFwIp')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2020-07-01",
+              "name": "[variables('vnetName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressPrefix')]"
+                  ]
+                },
+                "subnets": "[variables('final_subnets')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', variables('routeFwTableName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('aksPrincipleId')))]",
+              "type": "Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "name": "[format('{0}/{1}/Microsoft.Authorization/{2}', variables('vnetName'), variables('aks_subnet_name'), guid(resourceGroup().id, variables('vnetName'), variables('aks_subnet_name')))]",
+              "properties": {
+                "roleDefinitionId": "[variables('networkContributorRole')]",
+                "principalId": "[parameters('aksPrincipleId')]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+              ]
+            },
+            {
+              "condition": "[parameters('azureFirewalls')]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2019-10-01",
+              "name": "calcAzFwIp",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "vnetFirewallSubnetAddressPrefix": {
+                    "value": "[parameters('vnetFirewallSubnetAddressPrefix')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "vnetFirewallSubnetAddressPrefix": {
+                      "type": "string"
+                    }
+                  },
+                  "functions": [],
+                  "variables": {
+                    "subnetOctets": "[split(parameters('vnetFirewallSubnetAddressPrefix'), '.')]",
+                    "hostIdOctet": "4"
+                  },
+                  "resources": [],
+                  "outputs": {
+                    "FirewallPrivateIp": {
+                      "type": "string",
+                      "value": "[format('{0}.{1}.{2}.{3}', variables('subnetOctets')[0], variables('subnetOctets')[1], variables('subnetOctets')[2], variables('hostIdOctet'))]"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "vnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            },
+            "aksSubnetId": {
+              "type": "string",
+              "value": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('aks_subnet_name'))]"
+            },
+            "fwSubnetId": {
+              "type": "string",
+              "value": "[if(parameters('azureFirewalls'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('fw_subnet_name')), '')]"
+            },
+            "appGwSubnetId": {
+              "type": "string",
+              "value": "[if(parameters('ingressApplicationGateway'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('appgw_subnet_name')), '')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))]"
+      ]
+    },
+    {
+      "condition": "[not(empty(parameters('dnsZoneId')))]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "addDnsContributor",
+      "resourceGroup": "[variables('dnsZoneRg')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "dnsZoneName": {
+            "value": "[variables('dnsZoneName')]"
+          },
+          "principalId": {
+            "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).identityProfile.kubeletidentity.objectId]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "dnsZoneName": {
+              "type": "string"
+            },
+            "principalId": {
               "type": "string"
             }
           },
           "functions": [],
           "variables": {
-            "subnetOctets": "[split(parameters('vnetFirewallSubnetAddressPrefix'), '.')]",
-            "hostIdOctet": "4"
+            "DNSZoneContributor": "[resourceId('Microsoft.Authorization/roleDefinitions', 'befefa01-2a29-4197-83a8-272ff33ce314')]"
           },
-          "resources": [],
-          "outputs": {
-            "FirewallPrivateIp": {
-              "type": "string",
-              "value": "[format('{0}.{1}.{2}.{3}', variables('subnetOctets')[0], variables('subnetOctets')[1], variables('subnetOctets')[2], variables('hostIdOctet'))]"
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "scope": "[format('Microsoft.Network/dnsZones/{0}', parameters('dnsZoneName'))]",
+              "name": "[guid(resourceGroup().id, parameters('principalId'))]",
+              "properties": {
+                "roleDefinitionId": "[variables('DNSZoneContributor')]",
+                "principalType": "ServicePrincipal",
+                "principalId": "[parameters('principalId')]"
+              },
+              "dependsOn": []
             }
-          }
+          ]
         }
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+      ]
+    },
+    {
+      "condition": "[and(parameters('azureFirewalls'), parameters('custom_vnet'))]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "firewall",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "resourceName": {
+            "value": "[parameters('resourceName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "workspaceDiagsId": {
+            "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
+          },
+          "fwSubnetId": {
+            "value": "[if(and(parameters('azureFirewalls'), parameters('custom_vnet')), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.fwSubnetId.value, '')]"
+          },
+          "vnetAksSubnetAddressPrefix": {
+            "value": "[parameters('vnetAksSubnetAddressPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "resourceName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "workspaceDiagsId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "fwSubnetId": {
+              "type": "string"
+            },
+            "vnetAksSubnetAddressPrefix": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "firewallPublicIpName": "[format('pip-afw-{0}', parameters('resourceName'))]",
+            "fw_name": "[format('afw-{0}', parameters('resourceName'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2018-08-01",
+              "name": "[variables('firewallPublicIpName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4"
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('workspaceDiagsId')))]",
+              "type": "microsoft.insights/diagnosticSettings",
+              "apiVersion": "2017-05-01-preview",
+              "scope": "[format('Microsoft.Network/azureFirewalls/{0}', variables('fw_name'))]",
+              "name": "fwDiags",
+              "properties": {
+                "workspaceId": "[parameters('workspaceDiagsId')]",
+                "logs": [
+                  {
+                    "category": "AzureFirewallApplicationRule",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "days": 10,
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "category": "AzureFirewallNetworkRule",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "days": 10,
+                      "enabled": false
+                    }
+                  }
+                ],
+                "metrics": [
+                  {
+                    "category": "AllMetrics",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": false,
+                      "days": 0
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/azureFirewalls', variables('fw_name'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/azureFirewalls",
+              "apiVersion": "2019-04-01",
+              "name": "[variables('fw_name')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "IpConf1",
+                    "properties": {
+                      "subnet": {
+                        "id": "[parameters('fwSubnetId')]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('firewallPublicIpName'))]"
+                      }
+                    }
+                  }
+                ],
+                "threatIntelMode": "Alert",
+                "applicationRuleCollections": [
+                  {
+                    "name": "clusterRc1",
+                    "properties": {
+                      "priority": 101,
+                      "action": {
+                        "type": "Allow"
+                      },
+                      "rules": [
+                        {
+                          "name": "aks",
+                          "protocols": [
+                            {
+                              "port": 443,
+                              "protocolType": "Https"
+                            },
+                            {
+                              "port": 80,
+                              "protocolType": "Http"
+                            }
+                          ],
+                          "targetFqdns": [],
+                          "fqdnTags": [
+                            "AzureKubernetesService"
+                          ],
+                          "sourceAddresses": [
+                            "[parameters('vnetAksSubnetAddressPrefix')]"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "networkRuleCollections": [
+                  {
+                    "name": "netRc1",
+                    "properties": {
+                      "priority": 100,
+                      "action": {
+                        "type": "Allow"
+                      },
+                      "rules": [
+                        {
+                          "name": "ControlPlaneTCP",
+                          "protocols": [
+                            "TCP"
+                          ],
+                          "sourceAddresses": [
+                            "[parameters('vnetAksSubnetAddressPrefix')]"
+                          ],
+                          "destinationAddresses": [
+                            "[format('AzureCloud.{0}', parameters('location'))]"
+                          ],
+                          "destinationPorts": [
+                            "9000",
+                            "22"
+                          ]
+                        },
+                        {
+                          "name": "ControlPlaneUDP",
+                          "protocols": [
+                            "UDP"
+                          ],
+                          "sourceAddresses": [
+                            "[parameters('vnetAksSubnetAddressPrefix')]"
+                          ],
+                          "destinationAddresses": [
+                            "[format('AzureCloud.{0}', parameters('location'))]"
+                          ],
+                          "destinationPorts": [
+                            "1194"
+                          ]
+                        },
+                        {
+                          "name": "AzureMonitorForContainers",
+                          "protocols": [
+                            "TCP"
+                          ],
+                          "sourceAddresses": [
+                            "[parameters('vnetAksSubnetAddressPrefix')]"
+                          ],
+                          "destinationAddresses": [
+                            "AzureMonitor"
+                          ],
+                          "destinationPorts": [
+                            "443"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('firewallPublicIpName'))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'network')]"
+      ]
     },
     {
       "condition": "[variables('deployAppGw')]",
@@ -814,8 +934,8 @@
           "location": {
             "value": "[parameters('location')]"
           },
-          "appgw_subnet_id": {
-            "value": "[variables('appgwSubnetId')]"
+          "appGwSubnetId": {
+            "value": "[if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.appGwSubnetId.value, if(not(empty(parameters('byoAGWSubnetId'))), parameters('byoAGWSubnetId'), '')), '')]"
           },
           "appgw_privateIpAddress": {
             "value": "[parameters('privateIpApplicationGateway')]"
@@ -824,7 +944,7 @@
             "value": "[parameters('availabilityZones')]"
           },
           "userAssignedIdentity": {
-            "value": "[if(or(parameters('appgwKVIntegration'), true()), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))), '')]"
+            "value": "[if(or(parameters('appgwKVIntegration'), variables('deployAppGw')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))), '')]"
           },
           "workspaceId": {
             "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
@@ -846,7 +966,7 @@
             "location": {
               "type": "string"
             },
-            "appgw_subnet_id": {
+            "appGwSubnetId": {
               "type": "string"
             },
             "appgw_privateIpAddress": {
@@ -885,14 +1005,14 @@
                 "privateIPAllocationMethod": "Static",
                 "privateIPAddress": "[parameters('appgw_privateIpAddress')]",
                 "subnet": {
-                  "id": "[parameters('appgw_subnet_id')]"
+                  "id": "[parameters('appGwSubnetId')]"
                 }
               },
               "name": "appGatewayPrivateIP"
             },
             "tier": "WAF_v2",
             "appGWsku": "[union(createObject('name', variables('tier'), 'tier', variables('tier')), if(equals(parameters('appGWmaxCount'), 0), createObject('capacity', parameters('appGWcount')), createObject()))]",
-            "appgwProperties": "[union(createObject('sku', variables('appGWsku'), 'gatewayIPConfigurations', createArray(createObject('name', 'besubnet', 'properties', createObject('subnet', createObject('id', parameters('appgw_subnet_id'))))), 'frontendIPConfigurations', if(empty(parameters('appgw_privateIpAddress')), array(variables('frontendPublicIpConfig')), concat(array(variables('frontendPublicIpConfig')), array(variables('frontendPrivateIpConfig')))), 'frontendPorts', createArray(createObject('name', 'appGatewayFrontendPort', 'properties', createObject('port', 80))), 'backendAddressPools', createArray(createObject('name', 'defaultaddresspool')), 'backendHttpSettingsCollection', createArray(createObject('name', 'defaulthttpsetting', 'properties', createObject('port', 80, 'protocol', 'Http', 'cookieBasedAffinity', 'Disabled', 'requestTimeout', 30, 'pickHostNameFromBackendAddress', true()))), 'httpListeners', createArray(createObject('name', 'hlisten', 'properties', createObject('frontendIPConfiguration', createObject('id', format('{0}/frontendIPConfigurations/appGatewayFrontendIP', variables('appgwResourceId'))), 'frontendPort', createObject('id', format('{0}/frontendPorts/appGatewayFrontendPort', variables('appgwResourceId'))), 'protocol', 'Http'))), 'requestRoutingRules', createArray(createObject('name', 'appGwRoutingRuleName', 'properties', createObject('ruleType', 'Basic', 'httpListener', createObject('id', format('{0}/httpListeners/hlisten', variables('appgwResourceId'))), 'backendAddressPool', createObject('id', format('{0}/backendAddressPools/defaultaddresspool', variables('appgwResourceId'))), 'backendHttpSettings', createObject('id', format('{0}/backendHttpSettingsCollection/defaulthttpsetting', variables('appgwResourceId'))))))), if(greater(parameters('appGWmaxCount'), 0), createObject('autoscaleConfiguration', createObject('minCapacity', parameters('appGWcount'), 'maxCapacity', parameters('appGWmaxCount'))), createObject()))]",
+            "appgwProperties": "[union(createObject('sku', variables('appGWsku'), 'gatewayIPConfigurations', createArray(createObject('name', 'besubnet', 'properties', createObject('subnet', createObject('id', parameters('appGwSubnetId'))))), 'frontendIPConfigurations', if(empty(parameters('appgw_privateIpAddress')), array(variables('frontendPublicIpConfig')), concat(array(variables('frontendPublicIpConfig')), array(variables('frontendPrivateIpConfig')))), 'frontendPorts', createArray(createObject('name', 'appGatewayFrontendPort', 'properties', createObject('port', 80))), 'backendAddressPools', createArray(createObject('name', 'defaultaddresspool')), 'backendHttpSettingsCollection', createArray(createObject('name', 'defaulthttpsetting', 'properties', createObject('port', 80, 'protocol', 'Http', 'cookieBasedAffinity', 'Disabled', 'requestTimeout', 30, 'pickHostNameFromBackendAddress', true()))), 'httpListeners', createArray(createObject('name', 'hlisten', 'properties', createObject('frontendIPConfiguration', createObject('id', format('{0}/frontendIPConfigurations/appGatewayFrontendIP', variables('appgwResourceId'))), 'frontendPort', createObject('id', format('{0}/frontendPorts/appGatewayFrontendPort', variables('appgwResourceId'))), 'protocol', 'Http'))), 'requestRoutingRules', createArray(createObject('name', 'appGwRoutingRuleName', 'properties', createObject('ruleType', 'Basic', 'httpListener', createObject('id', format('{0}/httpListeners/hlisten', variables('appgwResourceId'))), 'backendAddressPool', createObject('id', format('{0}/backendAddressPools/defaultaddresspool', variables('appgwResourceId'))), 'backendHttpSettings', createObject('id', format('{0}/backendHttpSettingsCollection/defaulthttpsetting', variables('appgwResourceId'))))))), if(greater(parameters('appGWmaxCount'), 0), createObject('autoscaleConfiguration', createObject('minCapacity', parameters('appGWcount'), 'maxCapacity', parameters('appGWmaxCount'))), createObject()))]",
             "appGwZones": "[if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), createArray())]",
             "diagProperties": {
               "workspaceId": "[parameters('workspaceId')]",
@@ -956,6 +1076,10 @@
             }
           ],
           "outputs": {
+            "appgwId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))]"
+            },
             "ApplicationGatewayName": {
               "type": "string",
               "value": "[variables('appgwName')]"
@@ -966,25 +1090,25 @@
       "dependsOn": [
         "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+        "[resourceId('Microsoft.Resources/deployments', 'network')]"
       ]
     }
   ],
   "outputs": {
-    "aksClusterName": {
-      "type": "string",
-      "value": "[format('aks-{0}', parameters('resourceName'))]"
-    },
     "ApplicationGatewayName": {
       "type": "string",
       "value": "[if(variables('deployAppGw'), reference(resourceId('Microsoft.Resources/deployments', 'addAppGw'), '2019-10-01').outputs.ApplicationGatewayName.value, '')]"
+    },
+    "aksClusterName": {
+      "type": "string",
+      "value": "[format('aks-{0}', parameters('resourceName'))]"
     }
   },
   "metadata": {
     "_generator": {
       "name": "bicep",
       "version": "0.3.126.58533",
-      "templateHash": "14140211210869829801"
+      "templateHash": "3752963872702799854"
     }
   }
 }

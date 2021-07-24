@@ -269,13 +269,35 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     options={[
                         { key: 'none', text: 'Public IP with no IP restrictions' },
                         { key: 'whitelist', text: 'Create allowed IP ranges (defaults to IP address of machine running the script)' },
-                        { key: 'private', text: 'Private Cluster (WARNING: requires jumpbox to access)' }
+                        { key: 'private', text: 'Private Cluster (WARNING: most complex to operate)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("apisecurity", key)}
                 />
             </Stack.Item>
 
+            <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
+                <Label style={{ marginBottom: "0px" }}>Private dns zone mode for private cluster.</Label>
+                <Stack tokens={{ childrenGap: 15 }}>
+                    {cluster.apisecurity === "private" &&
+                        <ChoiceGroup selectedKey={cluster.privateDNSZone} onChange={(ev, { key }) => updateFn("privateDNSZone", key)}
+                            options={[
+                                {
+                                    key: 'none',
+                                    text: 'None: Defaults to public DNS (AKS will not create a Private DNS Zone)'
+                                }, {
+                                    key: 'system',
+                                    disabled: true,
+                                    text: 'System: AKS will create a Private DNS Zone in the Node Resource Group'
+                                }, {
+                                    key: 'custom',
+                                    disabled: true,
+                                    text: 'Custom: BYO Private DNS Zone (provide ResourceId)'
+                                }
+                            ]} />
+                    }
+                </Stack>
+            </Stack.Item>
         </Stack>
 
     )

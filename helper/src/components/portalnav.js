@@ -52,7 +52,7 @@ function Header({ entScale, setEntScale, featureFlag }) {
           onText="Yes"
           offText="No"
           checked={entScale}
-          disabled={!featureFlag}
+          disabled={false}
           onChange={(ev, val) => setEntScale(val)}
         />
       </Stack.Item>
