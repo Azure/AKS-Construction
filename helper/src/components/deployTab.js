@@ -75,9 +75,10 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
 
   const postscript =
     // App Gateway addon
-    (net.vnet_opt === 'custom' && addons.ingress === 'appgw' ? `# Workaround to enabling the appgw addon with custom vnet (until supported by template)
-az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $(az network application-gateway show -g ${rg} -n ${agw} --query id -o tsv)
-` : '') +
+    //(net.vnet_opt === 'custom' && addons.ingress === 'appgw' ? `# Workaround to enabling the appgw addon with custom vnet (until supported by template)
+    //az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $(az network application-gateway show -g ${rg} -n ${agw} --query id -o tsv)
+    //` : '') +
+
     // CSI-Secret KeyVault addon - using this method until supported by ARM template
     //    (addons.csisecret !== "none" ? `\n# Workaround to enabling the csisecret addon (in preview)
     //az aks enable-addons -n ${aks} -g ${rg} -a azure-keyvault-secrets-provider

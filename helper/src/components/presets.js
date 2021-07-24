@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageBar, DocumentCardActivity, DocumentCardImage, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit } from '@fluentui/react';
+import { MessageBar, DocumentCardActivity, DocumentCardImage, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType } from '@fluentui/react';
 
 const iconClass = mergeStyles({
     fontSize: 80,
@@ -33,7 +33,11 @@ export default function ({ sections, updateCardValues }) {
 
 
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
-
+        <>
+            {s.sectionWarning &&
+                <MessageBar messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
+            }
+        </>,
         <Stack key={`stack${s.key}`} horizontal tokens={{ childrenGap: 30 }}>
             {s.cards.map((c, i) =>
                 <DocumentCard

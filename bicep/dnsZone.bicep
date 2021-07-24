@@ -9,7 +9,7 @@ var DNSZoneContributor = resourceId('Microsoft.Authorization/roleDefinitions', '
 
 resource dns_zone_cont 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
   scope: dns
-  name: guid(resourceGroup().id, 'dnszone')
+  name: guid(resourceGroup().id, principalId)
   properties: {
     roleDefinitionId: DNSZoneContributor
     principalType: 'ServicePrincipal'

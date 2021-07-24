@@ -1,6 +1,6 @@
 param resourceName string
 param location string
-param appgw_subnet_id string
+param appGwSubnetId string
 param appgw_privateIpAddress string
 param availabilityZones array
 param userAssignedIdentity string
@@ -10,8 +10,6 @@ param appGWmaxCount int
 
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = resourceId('Microsoft.Network/applicationGateways', '${appgwName}')
-
-output ApplicationGatewayName string = appgw.name
 
 resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = {
   name: 'pip-agw-${resourceName}'
@@ -38,7 +36,7 @@ var frontendPrivateIpConfig = {
     privateIPAllocationMethod: 'Static'
     privateIPAddress: appgw_privateIpAddress
     subnet: {
-      id: appgw_subnet_id
+      id: appGwSubnetId
     }
   }
   name: 'appGatewayPrivateIP'
@@ -60,7 +58,7 @@ var appgwProperties = union({
       name: 'besubnet'
       properties: {
         subnet: {
-          id: appgw_subnet_id
+          id: appGwSubnetId
         }
       }
     }
@@ -145,6 +143,8 @@ resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (!empty(u
   }
   properties: appgwProperties
 }
+output appgwId string = appgw.id
+output ApplicationGatewayName string = appgw.name
 
 // ------------------------------------------------------------------ AppGW Diagnostics
 var diagProperties = {

@@ -5,18 +5,73 @@ param location string = resourceGroup().location
 @description('Used to name all resources')
 param resourceName string
 
-//---------------------------------------------------------------------------------- User Identity
-param useAksUAI bool = true
+//------------------------------------------------------------------------------------------------- Network
+param custom_vnet bool = false
+param byoAKSSubnetId string = ''
+param byoAGWSubnetId string = ''
 
-var user_identity = create_vnet || existing_vnet || useAksUAI
-var user_identity_name = 'id-${resourceName}'
-
-resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (user_identity) {
-  name: user_identity_name
+//--- Custom or BYO networking requires BYO AKS User Identity
+//--------------------------------------------- User Identity
+var aks_byo_identity = custom_vnet || !empty(byoAKSSubnetId)
+resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (aks_byo_identity) {
+  name: 'id-${resourceName}'
   location: location
 }
 
-// ------------------------------------------------------- If DNS Zone
+//----------------------------------------------------- BYO
+var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 9 ? split(byoAKSSubnetId, '/')[4] : '') : ''
+
+module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId)) {
+  name: 'addAksNetContributor'
+  scope: resourceGroup(existingAksVnetRG)
+  params: {
+    byoAKSSubnetId: byoAKSSubnetId
+    user_identity_principalId: uai.properties.principalId
+    user_identity_name: uai.name
+    user_identity_rg: resourceGroup().name
+  }
+}
+
+var existingAGWSubnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 10 ? split(byoAGWSubnetId, '/')[10] : '') : ''
+var existingAGWVnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[8] : '') : ''
+var existingAGWVnetRG = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[4] : '') : ''
+
+resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = if (!empty(byoAGWSubnetId)) {
+  name: existingAGWVnetName
+  scope: resourceGroup(existingAGWVnetRG)
+}
+resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = if (!empty(byoAGWSubnetId)) {
+  parent: existingAgwVnet
+  name: existingAGWSubnetName
+}
+//------------------------------------------------------ Create
+param vnetAddressPrefix string = '10.0.0.0/8'
+param serviceEndpoints array = []
+param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
+param vnetFirewallSubnetAddressPrefix string = '10.241.130.0/26'
+param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
+
+module network './network.bicep' = if (custom_vnet) {
+  name: 'network'
+  params: {
+    resourceName: resourceName
+    location: location
+    serviceEndpoints: serviceEndpoints
+    vnetAddressPrefix: vnetAddressPrefix
+    aksPrincipleId: uai.properties.principalId
+    vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
+    ingressApplicationGateway: ingressApplicationGateway
+    vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
+    azureFirewalls: azureFirewalls
+    vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
+  }
+}
+
+var appGatewaySubnetAddressPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : vnetAppGatewaySubnetAddressPrefix
+var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : (!empty(byoAKSSubnetId) ? byoAKSSubnetId : null)
+var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : (!empty(byoAGWSubnetId) ? byoAGWSubnetId : '')) : ''
+
+// ----------------------------------------------------------------------- If DNS Zone
 // will be solved with 'existing' https://github.com/Azure/bicep/issues/258
 
 param dnsZoneId string = ''
@@ -54,6 +109,10 @@ resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
       tenantId: subscription().tenantId
       objectId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.clientId
       permissions: {
+        keys: [
+          'get'
+          'list'
+        ]
         secrets: [
           'get'
           'list'
@@ -80,10 +139,10 @@ resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
       defaultAction: 'Deny'
       virtualNetworkRules: concat(array({
         action: 'Allow'
-        id: '${vnet.id}/subnets/${aks_subnet_name}'
+        id: aksSubnetId
       }), appgwKVIntegration ? array({
         action: 'Allow'
-        id: '${vnet.id}/subnets/${appgw_subnet_name}'
+        id: appGwSubnetId
       }) : [])
       ipRules: AKVserviceEndpointFW != 'vnetonly' ? [
         {
@@ -113,7 +172,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2020-11-01-preview' = if (!
       virtualNetworkRules: [
         {
           action: 'Allow'
-          id: '${vnet.id}/subnets/${aks_subnet_name}'
+          id: aksSubnetId
         }
       ]
       ipRules: ACRserviceEndpointFW != 'vnetonly' ? [
@@ -148,304 +207,16 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2020-04-01-previe
   }
 }
 
-//---------------------------------------------------------------------------------- VNET
-param custom_vnet bool = false
-param vnetAddressPrefix string = '10.0.0.0/8'
-param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
-//param vnetInternalLBSubnetAddressPrefix string = '10.241.128.0/24'
-param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
-param vnetFirewallSubnetAddressPrefix string = '10.241.130.0/26'
-
-param byoAKSSubnetId string = ''
-var existing_vnet = !empty(byoAKSSubnetId)
-var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 9 ? split(byoAKSSubnetId, '/')[4] : '') : ''
-
-module aksnetcontrib './aksnetcontrib.bicep' = if (existing_vnet && user_identity) {
-  name: 'addAksNetContributor'
-  scope: resourceGroup(existingAksVnetRG)
-  params: {
-    byoAKSSubnetId: byoAKSSubnetId
-    user_identity_principalId: uai.properties.principalId
-    user_identity_name: uai.name
-    user_identity_rg: resourceGroup().name
-  }
-}
-
-output aksClusterName string = aks.name
-
-param byoAGWSubnetId string = ''
-var existingAGWSubnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 10 ? split(byoAGWSubnetId, '/')[10] : '') : ''
-var existingAGWVnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[8] : '') : ''
-var existingAGWVnetRG = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[4] : '') : ''
-
-resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = if (!empty(byoAGWSubnetId)) {
-  name: existingAGWVnetName
-  scope: resourceGroup(existingAGWVnetRG)
-}
-resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = if (!empty(byoAGWSubnetId)) {
-  parent: existingAgwVnet
-  name: existingAGWSubnetName
-}
-var existingAGWSubnetAddPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : null
-
-param serviceEndpoints array = []
-
-module calcAzFwIp './calcAzFwIp.bicep' = {
-  name: 'calcAzFwIp'
-  params: {
-    vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
-  }
-}
-
-var firewallIP = calcAzFwIp.outputs.FirewallPrivateIp
-
-var create_vnet = existing_vnet ? false : custom_vnet || azureFirewalls || !empty(serviceEndpoints)
-
-param vnetName string = 'vnet-${resourceName}'
-
-var appgw_subnet_name = 'appgw-sn'
-var appgw_subnet = {
-  name: appgw_subnet_name
-  properties: {
-    addressPrefix: vnetAppGatewaySubnetAddressPrefix
-    serviceEndpoints: serviceEndpoints
-  }
-}
-var fw_subnet_name = 'AzureFirewallSubnet' // Required by FW
-var fw_subnet = {
-  name: fw_subnet_name
-  properties: {
-    addressPrefix: vnetFirewallSubnetAddressPrefix
-  }
-}
-
-param azureFirewalls bool = false
-
-param aks_subnet_name string = 'aks-sn'
-var aks_subnet = azureFirewalls ? {
-  name: aks_subnet_name
-  properties: {
-    addressPrefix: vnetAksSubnetAddressPrefix
-    routeTable: {
-      id: vnet_udr.id //resourceId('Microsoft.Network/routeTables', routeFwTableName)
-    }
-  }
-} : {
-  name: aks_subnet_name
-  properties: {
-    addressPrefix: vnetAksSubnetAddressPrefix
-    serviceEndpoints: serviceEndpoints
-  }
-}
-
-var subnets_1 = azureFirewalls ? concat(array(aks_subnet), array(fw_subnet)) : array(aks_subnet)
-
-// DONT create appgw subnet, the addon will create it for us
-var final_subnets = ingressApplicationGateway ? concat(array(subnets_1), array(appgw_subnet)) : array(subnets_1)
-
-resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = if (create_vnet) {
-  name: vnetName
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        vnetAddressPrefix
-      ]
-    }
-    subnets: final_subnets
-  }
-}
-
-var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
-resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments@2020-04-01-preview' = if (create_vnet) {
-  name: '${vnet.name}/${aks_subnet_name}/Microsoft.Authorization/${guid(resourceGroup().id, vnetName, aks_subnet_name)}'
-  properties: {
-    roleDefinitionId: networkContributorRole
-    principalId: user_identity ? uai.properties.principalId : null
-    principalType: 'ServicePrincipal'
-    //scope: '${vnet.id}/subnets/${aks_subnet_name}'
-  }
-}
-
 //---------------------------------------------------------------------------------- Firewall
-var routeFwTableName = 'rt-afw-${resourceName}'
-resource vnet_udr 'Microsoft.Network/routeTables@2021-02-01' = if (azureFirewalls) {
-  name: routeFwTableName
-  location: location
-  properties: {
-    routes: [
-      {
-        name: 'AKSNodesEgress'
-        properties: {
-          addressPrefix: '0.0.0.0/1'
-          nextHopType: 'VirtualAppliance'
-          nextHopIpAddress: firewallIP
-        }
-      }
-    ]
-  }
-}
-
-var firewallPublicIpName = 'pip-afw-${resourceName}'
-resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = if (azureFirewalls) {
-  name: firewallPublicIpName
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAllocationMethod: 'Static'
-    publicIPAddressVersion: 'IPv4'
-  }
-}
-
-resource fwDiags 'microsoft.insights/diagnosticSettings@2017-05-01-preview' = if (azureFirewalls && omsagent) {
-  scope: fw
-  name: 'fwDiags'
-  properties: {
-    workspaceId: aks_law.id
-    logs: [
-      {
-        category: 'AzureFirewallApplicationRule'
-        enabled: true
-        retentionPolicy: {
-          days: 10
-          enabled: false
-        }
-      }
-      {
-        category: 'AzureFirewallNetworkRule'
-        enabled: true
-        retentionPolicy: {
-          days: 10
-          enabled: false
-        }
-      }
-    ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-    ]
-  }
-}
-
-var fw_name = 'afw-${resourceName}'
-resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = if (azureFirewalls) {
-  name: fw_name
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'IpConf1'
-        properties: {
-          subnet: {
-            id: '${vnet.id}/subnets/${fw_subnet_name}'
-          }
-          publicIPAddress: {
-            id: fw_pip.id
-          }
-        }
-      }
-    ]
-    threatIntelMode: 'Alert'
-    applicationRuleCollections: [
-      {
-        name: 'clusterRc1'
-        properties: {
-          priority: 101
-          action: {
-            type: 'Allow'
-          }
-          rules: [
-            {
-              name: 'aks'
-              protocols: [
-                {
-                  port: 443
-                  protocolType: 'Https'
-                }
-                {
-                  port: 80
-                  protocolType: 'Http'
-                }
-              ]
-              targetFqdns: []
-              fqdnTags: [
-                'AzureKubernetesService'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-            }
-          ]
-        }
-      }
-    ]
-    networkRuleCollections: [
-      {
-        name: 'netRc1'
-        properties: {
-          priority: 100
-          action: {
-            type: 'Allow'
-          }
-          rules: [
-            {
-              name: 'ControlPlaneTCP'
-              protocols: [
-                'TCP'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-              destinationAddresses: [
-                'AzureCloud.${location}'
-              ]
-              destinationPorts: [
-                '9000' /* For tunneled secure communication between the nodes and the control plane. */
-                '22'
-              ]
-            }
-            {
-              name: 'ControlPlaneUDP'
-              protocols: [
-                'UDP'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-              destinationAddresses: [
-                'AzureCloud.${location}'
-              ]
-              destinationPorts: [
-                '1194' /* For tunneled secure communication between the nodes and the control plane. */
-              ]
-            }
-            {
-              name: 'AzureMonitorForContainers'
-              protocols: [
-                'TCP'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-              destinationAddresses: [
-                'AzureMonitor'
-              ]
-              destinationPorts: [
-                '443'
-              ]
-            }
-          ]
-        }
-      }
-    ]
+param azureFirewalls bool = false
+module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
+  name: 'firewall'
+  params: {
+    resourceName: resourceName
+    location: location
+    workspaceDiagsId: aks_law.id
+    fwSubnetId: network.outputs.fwSubnetId
+    vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
   }
 }
 
@@ -456,8 +227,7 @@ param appGWmaxCount int = 0
 param privateIpApplicationGateway string = ''
 param appgwKVIntegration bool = false
 
-var appgwSubnetId = !empty(byoAGWSubnetId) ? byoAGWSubnetId : (create_vnet ? '${vnet.id}/subnets/${appgw_subnet_name}' : '')
-var deployAppGw = ((create_vnet && ingressApplicationGateway) || (!empty(byoAGWSubnetId) && ingressApplicationGateway))
+var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubnetId))
 
 // 'identity' is always created until this is fixed: 
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
@@ -473,7 +243,7 @@ module appGw './appgw.bicep' = if (deployAppGw) {
   params: {
     resourceName: resourceName
     location: location
-    appgw_subnet_id: appgwSubnetId
+    appGwSubnetId: appGwSubnetId
     appgw_privateIpAddress: privateIpApplicationGateway
     availabilityZones: availabilityZones
     userAssignedIdentity: (appgwKVIntegration || true) ? appGwIdentity.id : ''
@@ -516,7 +286,7 @@ param dockerBridgeCidr string = '172.17.0.1/16'
 var appgw_name = 'agw-${resourceName}'
 
 var autoScale = agentCountMax > agentCount
-var aksSubnetId = existing_vnet ? byoAKSSubnetId : (create_vnet ? '${vnet.id}/subnets/${aks_subnet_name}' : null)
+
 var agentPoolProfiles = {
   name: 'nodepool1'
   mode: 'System'
@@ -570,28 +340,28 @@ var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
 }) : aks_properties_base
 
 var aks_addons = {}
-var aks_addons1 = ingressApplicationGateway ? union(aks_addons, create_vnet || existing_vnet ? {
+var aks_addons1 = ingressApplicationGateway ? union(aks_addons, custom_vnet || !empty(byoAKSSubnetId) ? {
   /*
   
   COMMENTED OUT UNTIL addon supports creating Appgw in custom vnet.  Workaround is a follow up az cli command
-
+  */
   ingressApplicationGateway: {
     config: {
       //applicationGatewayName: appgw_name
       // 121011521000988: This doesn't work, bug : "code":"InvalidTemplateDeployment", IngressApplicationGateway addon cannot find subnet
-      //subnetID: '${vnet.id}/subnets/${appgw_subnet_name}'
+      //subnetID: appGwSubnetId
       //subnetCIDR: vnetAppGatewaySubnetAddressPrefix
-      applicationGatewayId: '${appgw.id}'
+      applicationGatewayId: appGw.outputs.appgwId
     }
     enabled: true
   }
-  */
+  /* */
 } : {
   ingressApplicationGateway: {
     enabled: true
     config: {
       applicationGatewayName: appgw_name
-      subnetCIDR: !empty(existingAGWSubnetAddPrefix) ? existingAGWSubnetAddPrefix : vnetAppGatewaySubnetAddressPrefix
+      subnetCIDR: appGatewaySubnetAddressPrefix
     }
   }
 }) : aks_addons
@@ -639,7 +409,7 @@ var aks_properties2 = !empty(aks_addons5) ? union(aks_properties1, {
   addonProfiles: aks_addons5
 }) : aks_properties1
 
-var aks_identity_user = {
+var aks_identity = {
   type: 'UserAssigned'
   userAssignedIdentities: {
     '${uai.id}': {}
@@ -650,10 +420,11 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-03-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aks_properties2
-  identity: user_identity ? aks_identity_user : {
+  identity: aks_byo_identity ? aks_identity : {
     type: 'SystemAssigned'
   }
 }
+output aksClusterName string = aks.name
 
 // https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json
 var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
@@ -700,7 +471,7 @@ resource gitops 'Microsoft.KubernetesConfiguration/sourceControlConfigurations@2
 
 param retentionInDays int = 30
 var aks_law_name = 'log-${resourceName}'
-resource aks_law 'Microsoft.OperationalInsights/workspaces@2020-08-01' = if (omsagent || deployAppGw) {
+resource aks_law 'Microsoft.OperationalInsights/workspaces@2020-08-01' = if (omsagent || deployAppGw || azureFirewalls) {
   name: aks_law_name
   location: location
   properties: {
