@@ -77,12 +77,16 @@ var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.a
 param dnsZoneId string = ''
 var dnsZoneRg = !empty(dnsZoneId) ? split(dnsZoneId, '/')[4] : ''
 var dnsZoneName = !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''
+var isPrivate = !empty(dnsZoneId) ? split(dnsZoneId, '/')[7] == 'privateDnsZones' : false
 
 module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
   name: 'addDnsContributor'
   scope: resourceGroup(dnsZoneRg)
   params: {
+    location: location
     dnsZoneName: dnsZoneName
+    isPrivate: isPrivate
+    vnetId: isPrivate ? (!empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/subnets')[0] : (custom_vnet ? network.outputs.vnetId : '')) : ''
     principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
   }
 }

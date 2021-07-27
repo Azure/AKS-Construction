@@ -135,12 +135,12 @@ resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (!empty(u
   name: appgwName
   location: location
   zones: appGwZones
-  identity: /*!empty(userAssignedIdentity) ?*/ {
+  identity: !empty(userAssignedIdentity) ? {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${userAssignedIdentity}': {}
     }
-  }
+  } : {}
   properties: appgwProperties
 }
 output appgwId string = appgw.id

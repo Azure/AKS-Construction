@@ -208,6 +208,7 @@
     "existingAGWVnetRG": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 9), split(parameters('byoAGWSubnetId'), '/')[4], ''), '')]",
     "dnsZoneRg": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[4], '')]",
     "dnsZoneName": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[8], '')]",
+    "isPrivate": "[if(not(empty(parameters('dnsZoneId'))), equals(split(parameters('dnsZoneId'), '/')[7], 'privateDnsZones'), false())]",
     "akvName": "[format('kv-{0}', replace(parameters('resourceName'), '-', ''))]",
     "acrName": "[format('cr{0}{1}', replace(parameters('resourceName'), '-', ''), uniqueString(resourceGroup().id, parameters('resourceName')))]",
     "AcrPullRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
@@ -642,8 +643,17 @@
         },
         "mode": "Incremental",
         "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
           "dnsZoneName": {
             "value": "[variables('dnsZoneName')]"
+          },
+          "isPrivate": {
+            "value": "[variables('isPrivate')]"
+          },
+          "vnetId": {
+            "value": "[if(variables('isPrivate'), if(not(empty(parameters('byoAKSSubnetId'))), split(parameters('byoAKSSubnetId'), '/subnets')[0], if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.vnetId.value, '')), '')]"
           },
           "principalId": {
             "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).identityProfile.kubeletidentity.objectId]"
@@ -658,14 +668,26 @@
             },
             "principalId": {
               "type": "string"
+            },
+            "isPrivate": {
+              "type": "bool"
+            },
+            "vnetId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "location": {
+              "type": "string"
             }
           },
           "functions": [],
           "variables": {
-            "DNSZoneContributor": "[resourceId('Microsoft.Authorization/roleDefinitions', 'befefa01-2a29-4197-83a8-272ff33ce314')]"
+            "DNSZoneContributor": "[resourceId('Microsoft.Authorization/roleDefinitions', 'befefa01-2a29-4197-83a8-272ff33ce314')]",
+            "PrivateDNSZoneContributor": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b12aa53e-6015-4669-85d0-8515ebb3ae7f')]"
           },
           "resources": [
             {
+              "condition": "[not(parameters('isPrivate'))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2020-04-01-preview",
               "scope": "[format('Microsoft.Network/dnsZones/{0}', parameters('dnsZoneName'))]",
@@ -676,12 +698,41 @@
                 "principalId": "[parameters('principalId')]"
               },
               "dependsOn": []
+            },
+            {
+              "condition": "[parameters('isPrivate')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "scope": "[format('Microsoft.Network/privateDnsZones/{0}', parameters('dnsZoneName'))]",
+              "name": "[guid(resourceGroup().id, parameters('principalId'))]",
+              "properties": {
+                "roleDefinitionId": "[variables('PrivateDNSZoneContributor')]",
+                "principalType": "ServicePrincipal",
+                "principalId": "[parameters('principalId')]"
+              },
+              "dependsOn": []
+            },
+            {
+              "condition": "[and(parameters('isPrivate'), not(empty(parameters('vnetId'))))]",
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', parameters('dnsZoneName'), 'privatedns')]",
+              "tags": {},
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[parameters('vnetId')]"
+                },
+                "registrationEnabled": false
+              },
+              "dependsOn": []
             }
           ]
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.Resources/deployments', 'network')]"
       ]
     },
     {
@@ -1052,12 +1103,7 @@
               "name": "[variables('appgwName')]",
               "location": "[parameters('location')]",
               "zones": "[variables('appGwZones')]",
-              "identity": {
-                "type": "UserAssigned",
-                "userAssignedIdentities": {
-                  "[parameters('userAssignedIdentity')]": {}
-                }
-              },
+              "identity": "[if(not(empty(parameters('userAssignedIdentity'))), createObject('type', 'UserAssigned', 'userAssignedIdentities', createObject(parameters('userAssignedIdentity'), createObject())), createObject())]",
               "properties": "[variables('appgwProperties')]",
               "dependsOn": [
                 "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-agw-{0}', parameters('resourceName')))]"
@@ -1108,7 +1154,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.126.58533",
-      "templateHash": "3752963872702799854"
+      "templateHash": "13394195990395050775"
     }
   }
 }

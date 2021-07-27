@@ -3,11 +3,19 @@ import { Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemTy
 
 import { adv_stackstyle, getError } from './common'
 
-export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
+export default function ({ defaults, updateFn, tabValues, invalidArray, invalidTabs }) {
   const { net, addons, cluster, deploy } = tabValues
   const allok = !(invalidTabs && invalidTabs.length > 0)
   const apiips_array = deploy.apiips.split(',').filter(x => x.trim())
 
+  const aksvnetparams = {
+    ...(net.vnetAddressPrefix !== defaults.net.vnetAddressPrefix && { vnetAddressPrefix: net.vnetAddressPrefix }),
+    ...(net.vnetAksSubnetAddressPrefix !== defaults.net.vnetAksSubnetAddressPrefix && { vnetAksSubnetAddressPrefix: net.vnetAksSubnetAddressPrefix })
+  }
+  const sericeparams = {
+    ...(net.serviceCidr !== defaults.net.serviceCidr && { serviceCidr: net.serviceCidr }),
+    ...(net.dnsServiceIP !== defaults.net.dnsServiceIP && { dnsServiceIP: net.dnsServiceIP })
+  }
   const params = {
     resourceName: deploy.clusterName,
     kubernetesVersion: deploy.kubernetesVersion,
@@ -15,24 +23,23 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
     ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
-    ...(net.vnet_opt === "custom" && { custom_vnet: true, serviceCidr: net.serviceCidr, vnetAddressPrefix: net.vnetAddressPrefix, vnetAksSubnetAddressPrefix: net.vnetAksSubnetAddressPrefix }),
-    ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, serviceCidr: net.serviceCidr }),
+    ...(net.vnet_opt === "custom" && { custom_vnet: true, ...sericeparams, ...aksvnetparams }),
+    ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...sericeparams }),
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(cluster.adminprincipleid && { adminprincipleid: cluster.adminprincipleid }) }),
     ...(addons.registry !== "none" && { registries_sku: addons.registry }),
-    ...(net.afw && { azureFirewalls: true, ...(net.vnet_opt === "custom" && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
+    ...(net.afw && { azureFirewalls: true, ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.length > 0 && { serviceEndpoints: net.serviceEndpoints.map(s => { return { service: s } }) }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
-    networkPlugin: net.networkPlugin, ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && { podCidr: net.podCidr }),
+    networkPlugin: net.networkPlugin, ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
     ...(addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
-    ...(addons.ingress === "appgw" && { ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && { appGWcount: addons.appGWcount, ...(addons.appGWautoscale && { appGWmaxCount: addons.appGWmaxCount }), ...(addons.appgw_privateIp && { privateIpApplicationGateway: addons.appgw_privateIpAddress }), ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true }) }) }),
-    ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel }),
+    ...(addons.ingress === "appgw" && { ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && { appGWcount: addons.appGWcount, ...(addons.appGWautoscale && { appGWmaxCount: addons.appGWmaxCount }), ...(addons.appgw_privateIp && { privateIpApplicationGateway: addons.appgw_privateIpAddress }), ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true }) }) }),
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.KeyVault') && addons.csisecret === 'akvNew' && { AKVserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
     ...(addons.csisecret === 'akvNew' && { createKV: true })
   }
@@ -42,7 +49,8 @@ export default function ({ updateFn, tabValues, invalidArray, invalidTabs }) {
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' && { ACRserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
     ...(addons.gitops !== "none" && { gitops: addons.gitops }),
     // azure-keyvault-secrets-provider  - commenting out until supported by ARM template
-    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true })
+    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
+    ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel })
   }
 
   const params2CLI = p => Object.keys(p).map(k => {
@@ -126,7 +134,7 @@ kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdi
 }
 EOF
 
-curl https://raw.githubusercontent.com/khowling/aks-deploy-arm/master/cluster-config/external-dns.yml | sed '/- --provider=azure/a\\            - --domain-filter=${addons.dnsZoneId.split('/')[8]}' | kubectl apply -f -` : '') +
+curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  | kubectl apply -f -` : '') +
     // Cert-Manager
     (addons.certEmail ? `\n\n# Install cert-manager
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.1.0/cert-manager.yaml

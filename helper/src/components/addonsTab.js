@@ -124,12 +124,6 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                             <>
                                 <MessageBar messageBarType={MessageBarType.warning}>Custom or BYO networking is requested, so template will provision a new Application Gateway</MessageBar>
 
-                                <Checkbox checked={addons.appgw_privateIp} onChange={(ev, v) => updateFn("appgw_privateIp", v)} label={<Text>Use a Private Frontend IP for Ingress (<Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/application-gateway/ingress-controller-private-ip">docs</Link>)</Text>} />
-                                {addons.appgw_privateIp &&
-                                    <TextField value={addons.appgw_privateIpAddress} onChange={(ev, v) => updateFn("appgw_privateIpAddress", v)} errorMessage={getError(invalidArray, 'appgw_privateIpAddress')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter Private IP address from the AppGW CIDR subnet range (<b>{net.vnet_opt === 'custom' ? net.vnetAppGatewaySubnetAddressPrefix : 'examine BYO subnet range'}</b>)</Text>} />
-                                }
-
-
                                 <Checkbox checked={addons.appgwKVIntegration} onChange={(ev, v) => updateFn("appgwKVIntegration", v)} label={<Text>Enable KeyVault Integration for TLS Certificates (<Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs">docs</Link>) </Text>} />
                                 {hasError(invalidArray, 'appgwKVIntegration') &&
                                     <MessageBar styles={{ root: { marginTop: '0px !important' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'appgwKVIntegration')}</MessageBar>
@@ -161,6 +155,11 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                         </Stack>
                                     </Stack.Item>
                                 </Stack>
+
+                                <Checkbox checked={addons.appgw_privateIp} onChange={(ev, v) => updateFn("appgw_privateIp", v)} label={<Text>Use a Private Frontend IP for Ingress (<Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/application-gateway/ingress-controller-private-ip">docs</Link>)</Text>} />
+                                {addons.appgw_privateIp &&
+                                    <TextField value={addons.appgw_privateIpAddress} onChange={(ev, v) => updateFn("appgw_privateIpAddress", v)} errorMessage={getError(invalidArray, 'appgw_privateIpAddress')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter Private IP address from the AppGW CIDR subnet range (<b>{net.vnet_opt === 'custom' ? net.vnetAppGatewaySubnetAddressPrefix : 'examine BYO subnet range'}</b>)</Text>} />
+                                }
                             </>)
                     }
 
@@ -169,12 +168,12 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                             <Checkbox checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
                                 <Text>Create FQDN URLs for your applications using
                                     <Link target="_t1" href="https://github.com/kubernetes-sigs/external-dns"> <b>external-dns</b> </Link>
-                                    (requires <Link href="https://docs.microsoft.com/en-us/azure/dns/dns-getstarted-portal#create-a-dns-zone" target="_t1"> <b>Azure DNS Zone</b> </Link>)
+                                    (requires Azure <Link href="https://docs.microsoft.com/en-us/azure/dns/dns-getstarted-portal#create-a-dns-zone" target="_t1"> <b>Public</b> </Link> or <Link href="https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal" target="_t1"> <b>Private</b> </Link> DNS Zone)
                                 </Text>} />
                             {addons.dns &&
                                 <>
-                                    <MessageBar messageBarType={MessageBarType.warning}>This feature requires you to own a custom domain, you can easily purchase a custom domain through Azure <Link target="_t1" href="https://docs.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain"> <b>details here</b></Link></MessageBar>
-                                    <TextField value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
+                                    <MessageBar messageBarType={MessageBarType.warning}>If using a Public DNS Zone, you need to own a custom domain, you can easily purchase a custom domain through Azure <Link target="_t1" href="https://docs.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain"> <b>details here</b></Link></MessageBar>
+                                    <TextField value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Public or Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
 
 
                                     <Checkbox disabled={hasError(invalidArray, 'dnsZoneId')} checked={addons.certMan} onChange={(ev, v) => updateFn("certMan", v)} label="Automatically Issue Certificates for HTTPS using cert-manager (with Lets Encrypt - requires email" />
