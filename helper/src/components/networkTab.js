@@ -227,6 +227,10 @@ function PodServiceNetwork({ net, updateFn }) {
                 <TextField prefix="Cidr" label="Service Network" onChange={(ev, val) => updateFn("serviceCidr", val)} value={net.serviceCidr} />
                 <MessageBar messageBarType={MessageBarType.warning}>Address space that isn't in use elsewhere in your network environment <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
             </Stack.Item>
+            <Stack.Item align="start">
+                <TextField prefix="IP" label="Service Network" onChange={(ev, val) => updateFn("dnsServiceIP", val)} value={net.dnsServiceIP} />
+                <MessageBar messageBarType={MessageBarType.warning}>Ensure its an address within the Service CIDR above <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
+            </Stack.Item>
 
         </Stack>
     )
@@ -281,6 +285,7 @@ function CustomVNET({ net, addons, updateFn }) {
 
                     <Stack.Item align="center">
                         <TextField prefix="Cidr" disabled={addons.ingress !== 'appgw'} label="Application Gateway subnet" onChange={(ev, val) => updateFn("vnetAppGatewaySubnetAddressPrefix", val)} value={addons.ingress === 'appgw' ? net.vnetAppGatewaySubnetAddressPrefix : "N/A"} />
+                        <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets these requirements <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">here</Link></MessageBar>
                     </Stack.Item>
                 </Stack>
 
