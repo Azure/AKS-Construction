@@ -115,15 +115,16 @@ resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
       permissions: {
         keys: [
           'get'
-          'list'
+          'decrypt'
+          'unwrapKey'
+          'verify'
         ]
         secrets: [
           'get'
-          'list'
         ]
         certificates: [
           'get'
-          'list'
+          'getissuers'
         ]
       }
     }) : [], appgwKVIntegration ? array({
