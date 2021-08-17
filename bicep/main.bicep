@@ -242,22 +242,221 @@ resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11
   location: location
 }
 
-module appGw './appgw.bicep' = if (deployAppGw) {
-  name: 'addAppGw'
-  params: {
-    resourceName: resourceName
-    location: location
-    appGwSubnetId: appGwSubnetId
-    appgw_privateIpAddress: privateIpApplicationGateway
-    availabilityZones: availabilityZones
-    userAssignedIdentity: (appgwKVIntegration || deployAppGw) ? appGwIdentity.id : ''
-    workspaceId: aks_law.id
-    appGWcount: appGWcount
-    appGWmaxCount: appGWmaxCount
+// BYO AGIC identity to fix : AGIC Identity needs atleast has 'Contributor' access to Application Gateway 'xx' and 'Reader' access to Application Gateway's Resource Group
+//resource agicIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (deployAppGw) {
+//  name: 'id-agic-${resourceName}'
+//  location: location
+//}
+
+//module appGw './appgw.bicep' = if (deployAppGw) {
+//  name: 'addAppGw'
+//  params: {
+//    resourceName: resourceName
+//    agicPrincipleId: agicIdentity.properties.principalId // aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
+//    location: location
+//    appGwSubnetId: appGwSubnetId
+//    privateIpApplicationGateway: privateIpApplicationGateway
+//    availabilityZones: availabilityZones
+//    userAssignedIdentity: (appgwKVIntegration || deployAppGw) ? appGwIdentity.id : ''
+//    workspaceId: aks_law.id
+//    appGWcount: appGWcount
+//    appGWmaxCount: appGWmaxCount
+//  }
+//}
+
+// ================== AppGW Module - in-lined ======
+var userAssignedIdentity = (appgwKVIntegration || deployAppGw) ? appGwIdentity.id : ''
+var workspaceId = aks_law.id
+
+var appgwName = 'agw-${resourceName}'
+var appgwResourceId = resourceId('Microsoft.Network/applicationGateways', '${appgwName}')
+
+resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = if (deployAppGw) {
+  name: 'pip-agw-${resourceName}'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
   }
 }
 
-output ApplicationGatewayName string = deployAppGw ? appGw.outputs.ApplicationGatewayName : ''
+var frontendPublicIpConfig = {
+  properties: {
+    publicIPAddress: {
+      id: '${appgwpip.id}'
+    }
+  }
+  name: 'appGatewayFrontendIP'
+}
+
+var frontendPrivateIpConfig = {
+  properties: {
+    privateIPAllocationMethod: 'Static'
+    privateIPAddress: privateIpApplicationGateway
+    subnet: {
+      id: appGwSubnetId
+    }
+  }
+  name: 'appGatewayPrivateIP'
+}
+
+var tier = 'WAF_v2'
+var appGWsku = union({
+  name: tier
+  tier: tier
+}, appGWmaxCount == 0 ? {
+  capacity: appGWcount
+} : {})
+
+// ugh, need to create a variable with the app gateway properies, because of the conditional key 'autoscaleConfiguration'
+var appgwProperties = union({
+  sku: appGWsku
+  gatewayIPConfigurations: [
+    {
+      name: 'besubnet'
+      properties: {
+        subnet: {
+          id: appGwSubnetId
+        }
+      }
+    }
+  ]
+  frontendIPConfigurations: empty(privateIpApplicationGateway) ? array(frontendPublicIpConfig) : concat(array(frontendPublicIpConfig), array(frontendPrivateIpConfig))
+  frontendPorts: [
+    {
+      name: 'appGatewayFrontendPort'
+      properties: {
+        port: 80
+      }
+    }
+  ]
+  backendAddressPools: [
+    {
+      name: 'defaultaddresspool'
+    }
+  ]
+  backendHttpSettingsCollection: [
+    {
+      name: 'defaulthttpsetting'
+      properties: {
+        port: 80
+        protocol: 'Http'
+        cookieBasedAffinity: 'Disabled'
+        requestTimeout: 30
+        pickHostNameFromBackendAddress: true
+      }
+    }
+  ]
+  httpListeners: [
+    {
+      name: 'hlisten'
+      properties: {
+        frontendIPConfiguration: {
+          id: '${appgwResourceId}/frontendIPConfigurations/appGatewayFrontendIP'
+        }
+        frontendPort: {
+          id: '${appgwResourceId}/frontendPorts/appGatewayFrontendPort'
+        }
+        protocol: 'Http'
+      }
+    }
+  ]
+  requestRoutingRules: [
+    {
+      name: 'appGwRoutingRuleName'
+      properties: {
+        ruleType: 'Basic'
+        httpListener: {
+          id: '${appgwResourceId}/httpListeners/hlisten'
+        }
+        backendAddressPool: {
+          id: '${appgwResourceId}/backendAddressPools/defaultaddresspool'
+        }
+        backendHttpSettings: {
+          id: '${appgwResourceId}/backendHttpSettingsCollection/defaulthttpsetting'
+        }
+      }
+    }
+  ]
+}, appGWmaxCount > 0 ? {
+  autoscaleConfiguration: {
+    minCapacity: appGWcount
+    maxCapacity: appGWmaxCount
+  }
+} : {})
+
+var appGwZones = !empty(availabilityZones) ? availabilityZones : []
+
+// 'identity' is always set until this is fixed: 
+// https://github.com/Azure/bicep/issues/387#issuecomment-885671296
+resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (deployAppGw && !empty(userAssignedIdentity)) {
+  name: appgwName
+  location: location
+  zones: appGwZones
+  identity: !empty(userAssignedIdentity) ? {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentity}': {}
+    }
+  } : {}
+  properties: appgwProperties
+}
+
+var agicPrincipleId = aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
+var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+// https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
+resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (deployAppGw) {
+  scope: appgw
+  name: guid(resourceGroup().id, appgwName, 'appgwcont')
+  properties: {
+    roleDefinitionId: contributor
+    principalType: 'ServicePrincipal'
+    principalId: agicPrincipleId
+  }
+}
+
+var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
+resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (deployAppGw) {
+  scope: resourceGroup()
+  name: guid(resourceGroup().id, appgwName, 'rgread')
+  properties: {
+    roleDefinitionId: reader
+    principalType: 'ServicePrincipal'
+    principalId: agicPrincipleId
+  }
+}
+
+// ------------------------------------------------------------------ AppGW Diagnostics
+var diagProperties = {
+  workspaceId: workspaceId
+  logs: [
+    {
+      category: 'ApplicationGatewayAccessLog'
+      enabled: true
+    }
+    {
+      category: 'ApplicationGatewayPerformanceLog'
+      enabled: true
+    }
+    {
+      category: 'ApplicationGatewayFirewallLog'
+      enabled: true
+    }
+  ]
+}
+resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2017-05-01-preview' = if (deployAppGw && !empty(workspaceId)) {
+  scope: appgw
+  name: 'appgwDiag'
+  properties: diagProperties
+}
+
+// =================================================
+
+// Prevent error: AGIC Identity needs atleast has 'Contributor' access to Application Gateway and 'Reader' access to Application Gateway's Resource Group
+
+output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 
 //---------------------------------------------------------------------------------- AKS
 param dnsPrefix string = '${resourceName}-dns'
@@ -345,19 +544,16 @@ var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
 
 var aks_addons = {}
 var aks_addons1 = ingressApplicationGateway ? union(aks_addons, custom_vnet || !empty(byoAKSSubnetId) ? {
-  /*
-  
-  COMMENTED OUT UNTIL addon supports creating Appgw in custom vnet.  Workaround is a follow up az cli command
-  */
   ingressApplicationGateway: {
     config: {
-      //applicationGatewayName: appgw_name
-      // 121011521000988: This doesn't work, bug : "code":"InvalidTemplateDeployment", IngressApplicationGateway addon cannot find subnet
-      //subnetID: appGwSubnetId
-      //subnetCIDR: vnetAppGatewaySubnetAddressPrefix
-      applicationGatewayId: appGw.outputs.appgwId
+      applicationGatewayId: appgw.id
     }
     enabled: true
+    //identity: {
+    //  clientId: agicIdentity.properties.clientId
+    //  objectId: agicIdentity.properties.principalId
+    //  resourceId: agicIdentity.id
+    //}
   }
   /* */
 } : {
