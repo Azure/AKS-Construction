@@ -19,7 +19,22 @@ resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if 
 }
 
 //----------------------------------------------------- BYO
-var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 9 ? split(byoAKSSubnetId, '/')[4] : '') : ''
+/*
+var existingAksSubnetName = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 10 ? split(byoAKSSubnetId, '/')[10] : '') : ''
+var existingAksVnetName = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 9 ? split(byoAKSSubnetId, '/')[8] : '') : ''
+*/
+var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 4 ? split(byoAKSSubnetId, '/')[4] : '') : ''
+
+/*
+resource existingAksVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = if (!empty(byoAKSSubnetId)) {
+  name: existingAksVnetName
+  scope: resourceGroup(existingAksVnetRG)
+}
+resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = if (!empty(byoAKSSubnetId)) {
+  parent: existingAksVnet
+  name: existingAksSubnetName
+}
+*/
 
 module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId)) {
   name: 'addAksNetContributor'
@@ -69,7 +84,7 @@ module network './network.bicep' = if (custom_vnet) {
 
 var appGatewaySubnetAddressPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : vnetAppGatewaySubnetAddressPrefix
 var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : (!empty(byoAKSSubnetId) ? byoAKSSubnetId : null)
-var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : (!empty(byoAGWSubnetId) ? byoAGWSubnetId : '')) : ''
+var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
 
 // ----------------------------------------------------------------------- If DNS Zone
 // will be solved with 'existing' https://github.com/Azure/bicep/issues/258
@@ -237,7 +252,7 @@ var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubn
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed: 
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (appgwKVIntegration || deployAppGw) {
+resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if ( /*appgwKVIntegration*/deployAppGw) {
   name: 'id-appgw-${resourceName}'
   location: location
 }
@@ -265,11 +280,10 @@ resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11
 //}
 
 // ================== AppGW Module - in-lined ======
-var userAssignedIdentity = (appgwKVIntegration || deployAppGw) ? appGwIdentity.id : ''
 var workspaceId = aks_law.id
 
 var appgwName = 'agw-${resourceName}'
-var appgwResourceId = resourceId('Microsoft.Network/applicationGateways', '${appgwName}')
+var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
 resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = if (deployAppGw) {
   name: 'pip-agw-${resourceName}'
@@ -391,23 +405,26 @@ var appGwZones = !empty(availabilityZones) ? availabilityZones : []
 
 // 'identity' is always set until this is fixed: 
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (deployAppGw && !empty(userAssignedIdentity)) {
+resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (deployAppGw) {
   name: appgwName
   location: location
   zones: appGwZones
-  identity: !empty(userAssignedIdentity) ? {
+  identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${userAssignedIdentity}': {}
+      '${appGwIdentity.id}': {}
     }
-  } : {}
+  }
   properties: appgwProperties
 }
 
-var agicPrincipleId = aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
+// DEPLOY_APPGW_ADDON This is a curcuit breaker to NOT deploy the appgw addon due to the error: IngressApplicationGateway addon cannot find Application Gateway
+var DEPLOY_APPGW_ADDON = false
+
+var agicPrincipleId = DEPLOY_APPGW_ADDON ? aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId : ''
 var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
 // https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
-resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (deployAppGw) {
+resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: appgw
   name: guid(resourceGroup().id, appgwName, 'appgwcont')
   properties: {
@@ -418,7 +435,7 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2020-04-01-pr
 }
 
 var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
-resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (deployAppGw) {
+resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: resourceGroup()
   name: guid(resourceGroup().id, appgwName, 'rgread')
   properties: {
@@ -460,7 +477,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 
 //---------------------------------------------------------------------------------- AKS
 param dnsPrefix string = '${resourceName}-dns'
-param kubernetesVersion string = '1.21.1'
+param kubernetesVersion string = '1.20.7'
 param enable_aad bool = false
 param aad_tenant_id string = ''
 param omsagent bool = false
@@ -485,8 +502,6 @@ param podCidr string = '10.244.0.0/16'
 param serviceCidr string = '10.0.0.0/16'
 param dnsServiceIP string = '10.0.0.10'
 param dockerBridgeCidr string = '172.17.0.1/16'
-
-var appgw_name = 'agw-${resourceName}'
 
 var autoScale = agentCountMax > agentCount
 
@@ -543,24 +558,18 @@ var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
 }) : aks_properties_base
 
 var aks_addons = {}
-var aks_addons1 = ingressApplicationGateway ? union(aks_addons, custom_vnet || !empty(byoAKSSubnetId) ? {
+var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   ingressApplicationGateway: {
     config: {
       applicationGatewayId: appgw.id
     }
     enabled: true
-    //identity: {
-    //  clientId: agicIdentity.properties.clientId
-    //  objectId: agicIdentity.properties.principalId
-    //  resourceId: agicIdentity.id
-    //}
   }
-  /* */
 } : {
   ingressApplicationGateway: {
     enabled: true
     config: {
-      applicationGatewayName: appgw_name
+      applicationGatewayName: appgwName
       subnetCIDR: appGatewaySubnetAddressPrefix
     }
   }

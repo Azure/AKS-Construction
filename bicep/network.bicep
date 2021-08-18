@@ -78,7 +78,7 @@ var subnets_1 = azureFirewalls ? concat(array(aks_subnet), array(fw_subnet)) : a
 var final_subnets = ingressApplicationGateway ? concat(array(subnets_1), array(appgw_subnet)) : array(subnets_1)
 
 var vnetName = 'vnet-${resourceName}'
-resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = {
+resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   name: vnetName
   location: location
   properties: {
@@ -91,9 +91,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' = {
   }
 }
 output vnetId string = vnet.id
-output aksSubnetId string = '${vnet.id}/subnets/${aks_subnet_name}'
+output aksSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, aks_subnet_name)
 output fwSubnetId string = azureFirewalls ? '${vnet.id}/subnets/${fw_subnet_name}' : ''
-output appGwSubnetId string = ingressApplicationGateway ? '${vnet.id}/subnets/${appgw_subnet_name}' : ''
+output appGwSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, appgw_subnet_name)
 
 var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
 
