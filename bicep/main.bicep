@@ -19,7 +19,22 @@ resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if 
 }
 
 //----------------------------------------------------- BYO
-var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 9 ? split(byoAKSSubnetId, '/')[4] : '') : ''
+/*
+var existingAksSubnetName = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 10 ? split(byoAKSSubnetId, '/')[10] : '') : ''
+var existingAksVnetName = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 9 ? split(byoAKSSubnetId, '/')[8] : '') : ''
+*/
+var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 4 ? split(byoAKSSubnetId, '/')[4] : '') : ''
+
+/*
+resource existingAksVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = if (!empty(byoAKSSubnetId)) {
+  name: existingAksVnetName
+  scope: resourceGroup(existingAksVnetRG)
+}
+resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = if (!empty(byoAKSSubnetId)) {
+  parent: existingAksVnet
+  name: existingAksSubnetName
+}
+*/
 
 module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId)) {
   name: 'addAksNetContributor'
@@ -40,7 +55,7 @@ resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing
   name: existingAGWVnetName
   scope: resourceGroup(existingAGWVnetRG)
 }
-resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = if (!empty(byoAGWSubnetId)) {
+resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' existing = if (!empty(byoAGWSubnetId)) {
   parent: existingAgwVnet
   name: existingAGWSubnetName
 }
@@ -68,8 +83,8 @@ module network './network.bicep' = if (custom_vnet) {
 }
 
 var appGatewaySubnetAddressPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : vnetAppGatewaySubnetAddressPrefix
-var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : (!empty(byoAKSSubnetId) ? byoAKSSubnetId : null)
-var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : (!empty(byoAGWSubnetId) ? byoAGWSubnetId : '')) : ''
+var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
+var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
 
 // ----------------------------------------------------------------------- If DNS Zone
 // will be solved with 'existing' https://github.com/Azure/bicep/issues/258
@@ -99,7 +114,7 @@ param createKV bool = false
 param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
 var akvName = 'kv-${replace(resourceName, '-', '')}'
 
-resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
+resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
   name: akvName
   location: location
   properties: union({
@@ -115,15 +130,16 @@ resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
       permissions: {
         keys: [
           'get'
-          'list'
+          'decrypt'
+          'unwrapKey'
+          'verify'
         ]
         secrets: [
           'get'
-          'list'
         ]
         certificates: [
           'get'
-          'list'
+          'getissuers'
         ]
       }
     }) : [], appgwKVIntegration ? array({
@@ -164,7 +180,7 @@ param ACRserviceEndpointFW string = '' // either IP, or 'vnetonly'
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
-resource acr 'Microsoft.ContainerRegistry/registries@2020-11-01-preview' = if (!empty(registries_sku)) {
+resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!empty(registries_sku)) {
   name: acrName
   location: location
   sku: {
@@ -201,7 +217,7 @@ resource aks_acr_pull 'Microsoft.ContainerRegistry/registries/providers/roleAssi
 }
 */
 // New way of setting scope https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/scope-extension-resources
-resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (!empty(registries_sku)) {
+resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
   name: guid(resourceGroup().id, acrName)
   properties: {
@@ -236,31 +252,229 @@ var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubn
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed: 
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (appgwKVIntegration || deployAppGw) {
+resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if ( /*appgwKVIntegration*/deployAppGw) {
   name: 'id-appgw-${resourceName}'
   location: location
 }
 
-module appGw './appgw.bicep' = if (deployAppGw) {
-  name: 'addAppGw'
-  params: {
-    resourceName: resourceName
-    location: location
-    appGwSubnetId: appGwSubnetId
-    appgw_privateIpAddress: privateIpApplicationGateway
-    availabilityZones: availabilityZones
-    userAssignedIdentity: (appgwKVIntegration || deployAppGw) ? appGwIdentity.id : ''
-    workspaceId: aks_law.id
-    appGWcount: appGWcount
-    appGWmaxCount: appGWmaxCount
+// BYO AGIC identity to fix : AGIC Identity needs atleast has 'Contributor' access to Application Gateway 'xx' and 'Reader' access to Application Gateway's Resource Group
+//resource agicIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (deployAppGw) {
+//  name: 'id-agic-${resourceName}'
+//  location: location
+//}
+
+//module appGw './appgw.bicep' = if (deployAppGw) {
+//  name: 'addAppGw'
+//  params: {
+//    resourceName: resourceName
+//    agicPrincipleId: agicIdentity.properties.principalId // aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
+//    location: location
+//    appGwSubnetId: appGwSubnetId
+//    privateIpApplicationGateway: privateIpApplicationGateway
+//    availabilityZones: availabilityZones
+//    userAssignedIdentity: (appgwKVIntegration || deployAppGw) ? appGwIdentity.id : ''
+//    workspaceId: aks_law.id
+//    appGWcount: appGWcount
+//    appGWmaxCount: appGWmaxCount
+//  }
+//}
+
+// ================== AppGW Module - in-lined ======
+var workspaceId = aks_law.id
+
+var appgwName = 'agw-${resourceName}'
+var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
+
+resource appgwpip 'Microsoft.Network/publicIPAddresses@2021-02-01' = if (deployAppGw) {
+  name: 'pip-agw-${resourceName}'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  zones: !empty(availabilityZones) ? availabilityZones : []
+  properties: {
+    publicIPAllocationMethod: 'Static'
   }
 }
 
-output ApplicationGatewayName string = deployAppGw ? appGw.outputs.ApplicationGatewayName : ''
+var frontendPublicIpConfig = {
+  properties: {
+    publicIPAddress: {
+      id: '${appgwpip.id}'
+    }
+  }
+  name: 'appGatewayFrontendIP'
+}
+
+var frontendPrivateIpConfig = {
+  properties: {
+    privateIPAllocationMethod: 'Static'
+    privateIPAddress: privateIpApplicationGateway
+    subnet: {
+      id: appGwSubnetId
+    }
+  }
+  name: 'appGatewayPrivateIP'
+}
+
+var tier = 'WAF_v2'
+var appGWsku = union({
+  name: tier
+  tier: tier
+}, appGWmaxCount == 0 ? {
+  capacity: appGWcount
+} : {})
+
+// ugh, need to create a variable with the app gateway properies, because of the conditional key 'autoscaleConfiguration'
+var appgwProperties = union({
+  sku: appGWsku
+  gatewayIPConfigurations: [
+    {
+      name: 'besubnet'
+      properties: {
+        subnet: {
+          id: appGwSubnetId
+        }
+      }
+    }
+  ]
+  frontendIPConfigurations: empty(privateIpApplicationGateway) ? array(frontendPublicIpConfig) : concat(array(frontendPublicIpConfig), array(frontendPrivateIpConfig))
+  frontendPorts: [
+    {
+      name: 'appGatewayFrontendPort'
+      properties: {
+        port: 80
+      }
+    }
+  ]
+  backendAddressPools: [
+    {
+      name: 'defaultaddresspool'
+    }
+  ]
+  backendHttpSettingsCollection: [
+    {
+      name: 'defaulthttpsetting'
+      properties: {
+        port: 80
+        protocol: 'Http'
+        cookieBasedAffinity: 'Disabled'
+        requestTimeout: 30
+        pickHostNameFromBackendAddress: true
+      }
+    }
+  ]
+  httpListeners: [
+    {
+      name: 'hlisten'
+      properties: {
+        frontendIPConfiguration: {
+          id: '${appgwResourceId}/frontendIPConfigurations/appGatewayFrontendIP'
+        }
+        frontendPort: {
+          id: '${appgwResourceId}/frontendPorts/appGatewayFrontendPort'
+        }
+        protocol: 'Http'
+      }
+    }
+  ]
+  requestRoutingRules: [
+    {
+      name: 'appGwRoutingRuleName'
+      properties: {
+        ruleType: 'Basic'
+        httpListener: {
+          id: '${appgwResourceId}/httpListeners/hlisten'
+        }
+        backendAddressPool: {
+          id: '${appgwResourceId}/backendAddressPools/defaultaddresspool'
+        }
+        backendHttpSettings: {
+          id: '${appgwResourceId}/backendHttpSettingsCollection/defaulthttpsetting'
+        }
+      }
+    }
+  ]
+}, appGWmaxCount > 0 ? {
+  autoscaleConfiguration: {
+    minCapacity: appGWcount
+    maxCapacity: appGWmaxCount
+  }
+} : {})
+
+// 'identity' is always set until this is fixed: 
+// https://github.com/Azure/bicep/issues/387#issuecomment-885671296
+resource appgw 'Microsoft.Network/applicationGateways@2021-02-01' = if (deployAppGw) {
+  name: appgwName
+  location: location
+  zones: !empty(availabilityZones) ? availabilityZones : []
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${appGwIdentity.id}': {}
+    }
+  }
+  properties: appgwProperties
+}
+
+// DEPLOY_APPGW_ADDON This is a curcuit breaker to NOT deploy the appgw addon for BYO subnet, due to the error: IngressApplicationGateway addon cannot find Application Gateway
+var DEPLOY_APPGW_ADDON = ingressApplicationGateway && empty(byoAGWSubnetId)
+var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+// https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
+resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
+  scope: appgw
+  name: guid(resourceGroup().id, appgwName, 'appgwcont')
+  properties: {
+    roleDefinitionId: contributor
+    principalType: 'ServicePrincipal'
+    principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
+  }
+}
+
+var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
+resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
+  scope: resourceGroup()
+  name: guid(resourceGroup().id, appgwName, 'rgread')
+  properties: {
+    roleDefinitionId: reader
+    principalType: 'ServicePrincipal'
+    principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
+  }
+}
+
+// ------------------------------------------------------------------ AppGW Diagnostics
+var diagProperties = {
+  workspaceId: workspaceId
+  logs: [
+    {
+      category: 'ApplicationGatewayAccessLog'
+      enabled: true
+    }
+    {
+      category: 'ApplicationGatewayPerformanceLog'
+      enabled: true
+    }
+    {
+      category: 'ApplicationGatewayFirewallLog'
+      enabled: true
+    }
+  ]
+}
+resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (deployAppGw && !empty(workspaceId)) {
+  scope: appgw
+  name: 'appgwDiag'
+  properties: diagProperties
+}
+
+// =================================================
+
+// Prevent error: AGIC Identity needs atleast has 'Contributor' access to Application Gateway and 'Reader' access to Application Gateway's Resource Group
+
+output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 
 //---------------------------------------------------------------------------------- AKS
 param dnsPrefix string = '${resourceName}-dns'
-param kubernetesVersion string = '1.21.1'
+param kubernetesVersion string = '1.20.7'
 param enable_aad bool = false
 param aad_tenant_id string = ''
 param omsagent bool = false
@@ -286,11 +500,9 @@ param serviceCidr string = '10.0.0.0/16'
 param dnsServiceIP string = '10.0.0.10'
 param dockerBridgeCidr string = '172.17.0.1/16'
 
-var appgw_name = 'agw-${resourceName}'
-
 var autoScale = agentCountMax > agentCount
 
-var agentPoolProfiles = {
+var agentPoolProfiles = union({
   name: 'nodepool1'
   mode: 'System'
   osDiskType: osDiskType
@@ -298,12 +510,13 @@ var agentPoolProfiles = {
   count: agentCount
   vmSize: agentVMSize
   osType: 'Linux'
-  vnetSubnetID: aksSubnetId
   maxPods: maxPods
   type: 'VirtualMachineScaleSets'
   enableAutoScaling: autoScale
   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
-}
+}, !empty(aksSubnetId) ? {
+  vnetSubnetID: aksSubnetId
+} : {})
 
 var aks_properties_base = {
   kubernetesVersion: kubernetesVersion
@@ -343,27 +556,18 @@ var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
 }) : aks_properties_base
 
 var aks_addons = {}
-var aks_addons1 = ingressApplicationGateway ? union(aks_addons, custom_vnet || !empty(byoAKSSubnetId) ? {
-  /*
-  
-  COMMENTED OUT UNTIL addon supports creating Appgw in custom vnet.  Workaround is a follow up az cli command
-  */
+var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   ingressApplicationGateway: {
     config: {
-      //applicationGatewayName: appgw_name
-      // 121011521000988: This doesn't work, bug : "code":"InvalidTemplateDeployment", IngressApplicationGateway addon cannot find subnet
-      //subnetID: appGwSubnetId
-      //subnetCIDR: vnetAppGatewaySubnetAddressPrefix
-      applicationGatewayId: appGw.outputs.appgwId
+      applicationGatewayId: appgw.id
     }
     enabled: true
   }
-  /* */
 } : {
   ingressApplicationGateway: {
     enabled: true
     config: {
-      applicationGatewayName: appgw_name
+      applicationGatewayName: appgwName
       subnetCIDR: appGatewaySubnetAddressPrefix
     }
   }
@@ -419,7 +623,7 @@ var aks_identity = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-03-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2021-07-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aks_properties2
@@ -431,7 +635,7 @@ output aksClusterName string = aks.name
 
 // https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json
 var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
-resource aks_policies 'Microsoft.Authorization/policyAssignments@2019-09-01' = if (!empty(azurepolicy)) {
+resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
   name: '${resourceName}-baseline'
   location: location
   properties: {
@@ -450,7 +654,7 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2019-09-01' = i
 param adminprincipleid string = ''
 // for AAD Integrated Cluster wusing 'enableAzureRBAC', add Cluster admin to the current user!
 var buildInAKSRBACClusterAdmin = resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
-resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (enableAzureRBAC && !empty(adminprincipleid)) {
+resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (enableAzureRBAC && !empty(adminprincipleid)) {
   scope: aks // Use when specifying a scope that is different than the deployment scope
   name: guid(resourceGroup().id, 'aks_admin_role_assignment')
   properties: {
@@ -474,7 +678,7 @@ resource gitops 'Microsoft.KubernetesConfiguration/sourceControlConfigurations@2
 
 param retentionInDays int = 30
 var aks_law_name = 'log-${resourceName}'
-resource aks_law 'Microsoft.OperationalInsights/workspaces@2020-08-01' = if (omsagent || deployAppGw || azureFirewalls) {
+resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (omsagent || deployAppGw || azureFirewalls) {
   name: aks_law_name
   location: location
   properties: {

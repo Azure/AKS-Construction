@@ -1,7 +1,7 @@
 param resourceName string
 param location string
 param appGwSubnetId string
-param appgw_privateIpAddress string
+param privateIpApplicationGateway string
 param availabilityZones array
 param userAssignedIdentity string
 param workspaceId string
@@ -34,7 +34,7 @@ var frontendPublicIpConfig = {
 var frontendPrivateIpConfig = {
   properties: {
     privateIPAllocationMethod: 'Static'
-    privateIPAddress: appgw_privateIpAddress
+    privateIPAddress: privateIpApplicationGateway
     subnet: {
       id: appGwSubnetId
     }
@@ -63,7 +63,7 @@ var appgwProperties = union({
       }
     }
   ]
-  frontendIPConfigurations: empty(appgw_privateIpAddress) ? array(frontendPublicIpConfig) : concat(array(frontendPublicIpConfig), array(frontendPrivateIpConfig))
+  frontendIPConfigurations: empty(privateIpApplicationGateway) ? array(frontendPublicIpConfig) : concat(array(frontendPublicIpConfig), array(frontendPrivateIpConfig))
   frontendPorts: [
     {
       name: 'appGatewayFrontendPort'
@@ -143,6 +143,31 @@ resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (!empty(u
   } : {}
   properties: appgwProperties
 }
+
+param agicPrincipleId string
+var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+// https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
+resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  scope: appgw
+  name: guid(resourceGroup().id, appgwName, 'appgwcont')
+  properties: {
+    roleDefinitionId: contributor
+    principalType: 'ServicePrincipal'
+    principalId: agicPrincipleId
+  }
+}
+
+var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
+resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  scope: resourceGroup()
+  name: guid(resourceGroup().id, appgwName, 'rgread')
+  properties: {
+    roleDefinitionId: reader
+    principalType: 'ServicePrincipal'
+    principalId: agicPrincipleId
+  }
+}
+
 output appgwId string = appgw.id
 output ApplicationGatewayName string = appgw.name
 
