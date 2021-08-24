@@ -55,7 +55,7 @@ resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing
   name: existingAGWVnetName
   scope: resourceGroup(existingAGWVnetRG)
 }
-resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = if (!empty(byoAGWSubnetId)) {
+resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' existing = if (!empty(byoAGWSubnetId)) {
   parent: existingAgwVnet
   name: existingAGWSubnetName
 }
@@ -83,7 +83,7 @@ module network './network.bicep' = if (custom_vnet) {
 }
 
 var appGatewaySubnetAddressPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : vnetAppGatewaySubnetAddressPrefix
-var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : (!empty(byoAKSSubnetId) ? byoAKSSubnetId : null)
+var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
 var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
 
 // ----------------------------------------------------------------------- If DNS Zone
@@ -114,7 +114,7 @@ param createKV bool = false
 param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
 var akvName = 'kv-${replace(resourceName, '-', '')}'
 
-resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = if (createKV) {
+resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
   name: akvName
   location: location
   properties: union({
@@ -180,7 +180,7 @@ param ACRserviceEndpointFW string = '' // either IP, or 'vnetonly'
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
-resource acr 'Microsoft.ContainerRegistry/registries@2020-11-01-preview' = if (!empty(registries_sku)) {
+resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!empty(registries_sku)) {
   name: acrName
   location: location
   sku: {
@@ -217,7 +217,7 @@ resource aks_acr_pull 'Microsoft.ContainerRegistry/registries/providers/roleAssi
 }
 */
 // New way of setting scope https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/scope-extension-resources
-resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (!empty(registries_sku)) {
+resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
   name: guid(resourceGroup().id, acrName)
   properties: {
@@ -285,12 +285,13 @@ var workspaceId = aks_law.id
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
-resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = if (deployAppGw) {
+resource appgwpip 'Microsoft.Network/publicIPAddresses@2021-02-01' = if (deployAppGw) {
   name: 'pip-agw-${resourceName}'
   location: location
   sku: {
     name: 'Standard'
   }
+  zones: !empty(availabilityZones) ? availabilityZones : []
   properties: {
     publicIPAllocationMethod: 'Static'
   }
@@ -401,14 +402,12 @@ var appgwProperties = union({
   }
 } : {})
 
-var appGwZones = !empty(availabilityZones) ? availabilityZones : []
-
 // 'identity' is always set until this is fixed: 
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (deployAppGw) {
+resource appgw 'Microsoft.Network/applicationGateways@2021-02-01' = if (deployAppGw) {
   name: appgwName
   location: location
-  zones: appGwZones
+  zones: !empty(availabilityZones) ? availabilityZones : []
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -418,30 +417,28 @@ resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (deployAp
   properties: appgwProperties
 }
 
-// DEPLOY_APPGW_ADDON This is a curcuit breaker to NOT deploy the appgw addon due to the error: IngressApplicationGateway addon cannot find Application Gateway
-var DEPLOY_APPGW_ADDON = false
-
-var agicPrincipleId = DEPLOY_APPGW_ADDON ? aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId : ''
+// DEPLOY_APPGW_ADDON This is a curcuit breaker to NOT deploy the appgw addon for BYO subnet, due to the error: IngressApplicationGateway addon cannot find Application Gateway
+var DEPLOY_APPGW_ADDON = ingressApplicationGateway && empty(byoAGWSubnetId)
 var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
 // https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
-resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
+resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: appgw
   name: guid(resourceGroup().id, appgwName, 'appgwcont')
   properties: {
     roleDefinitionId: contributor
     principalType: 'ServicePrincipal'
-    principalId: agicPrincipleId
+    principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
   }
 }
 
 var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
-resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
+resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: resourceGroup()
   name: guid(resourceGroup().id, appgwName, 'rgread')
   properties: {
     roleDefinitionId: reader
     principalType: 'ServicePrincipal'
-    principalId: agicPrincipleId
+    principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
   }
 }
 
@@ -463,7 +460,7 @@ var diagProperties = {
     }
   ]
 }
-resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2017-05-01-preview' = if (deployAppGw && !empty(workspaceId)) {
+resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (deployAppGw && !empty(workspaceId)) {
   scope: appgw
   name: 'appgwDiag'
   properties: diagProperties
@@ -505,7 +502,7 @@ param dockerBridgeCidr string = '172.17.0.1/16'
 
 var autoScale = agentCountMax > agentCount
 
-var agentPoolProfiles = {
+var agentPoolProfiles = union({
   name: 'nodepool1'
   mode: 'System'
   osDiskType: osDiskType
@@ -513,12 +510,13 @@ var agentPoolProfiles = {
   count: agentCount
   vmSize: agentVMSize
   osType: 'Linux'
-  vnetSubnetID: aksSubnetId
   maxPods: maxPods
   type: 'VirtualMachineScaleSets'
   enableAutoScaling: autoScale
   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
-}
+}, !empty(aksSubnetId) ? {
+  vnetSubnetID: aksSubnetId
+} : {})
 
 var aks_properties_base = {
   kubernetesVersion: kubernetesVersion
@@ -625,7 +623,7 @@ var aks_identity = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-03-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2021-07-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aks_properties2
@@ -637,7 +635,7 @@ output aksClusterName string = aks.name
 
 // https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json
 var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
-resource aks_policies 'Microsoft.Authorization/policyAssignments@2019-09-01' = if (!empty(azurepolicy)) {
+resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
   name: '${resourceName}-baseline'
   location: location
   properties: {
@@ -656,7 +654,7 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2019-09-01' = i
 param adminprincipleid string = ''
 // for AAD Integrated Cluster wusing 'enableAzureRBAC', add Cluster admin to the current user!
 var buildInAKSRBACClusterAdmin = resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
-resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (enableAzureRBAC && !empty(adminprincipleid)) {
+resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (enableAzureRBAC && !empty(adminprincipleid)) {
   scope: aks // Use when specifying a scope that is different than the deployment scope
   name: guid(resourceGroup().id, 'aks_admin_role_assignment')
   properties: {
@@ -680,7 +678,7 @@ resource gitops 'Microsoft.KubernetesConfiguration/sourceControlConfigurations@2
 
 param retentionInDays int = 30
 var aks_law_name = 'log-${resourceName}'
-resource aks_law 'Microsoft.OperationalInsights/workspaces@2020-08-01' = if (omsagent || deployAppGw || azureFirewalls) {
+resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (omsagent || deployAppGw || azureFirewalls) {
   name: aks_law_name
   location: location
   properties: {
