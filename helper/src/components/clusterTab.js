@@ -139,14 +139,14 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             <Separator className="notopmargin" />
 
             <Stack.Item align="start">
-                <Label required={true}>Zone Support - Do you want to deploy your nodes across Availability Zones
+                <Label required={true}>Zone Support - AKS clusters deployed with multiple availability zones configured across a cluster provide a higher level of availability to protect against a hardware failure or a planned maintenance event. See <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/availability-zones#limitations-and-region-availability'>limits</Link> before selecting
                 </Label>
                 <ChoiceGroup
                     selectedKey={cluster.availabilityZones}
                     styles={{ root: { marginLeft: '50px' } }}
                     options={[
                         { key: 'no', text: 'Deploy into single zone' },
-                        { key: 'yes', text: 'Deploy my control plane and nodes across all availability zones (**storage)' }
+                        { key: 'yes', text: 'Deploy my control plane and nodes across zones 1,2,3' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("availabilityZones", key)}
