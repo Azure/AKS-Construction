@@ -128,7 +128,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     publicNetworkAccess: 'enabled'
     accessPolicies: concat(azureKeyvaultSecretsProvider ? array({
       tenantId: subscription().tenantId
-      objectId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.clientId
+      objectId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.objectId
       permissions: {
         keys: [
           'get'
@@ -429,7 +429,7 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-pr
   properties: {
     roleDefinitionId: contributor
     principalType: 'ServicePrincipal'
-    principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
+    principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.objectId
   }
 }
 
@@ -440,7 +440,7 @@ resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-p
   properties: {
     roleDefinitionId: reader
     principalType: 'ServicePrincipal'
-    principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
+    principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.objectId
   }
 }
 

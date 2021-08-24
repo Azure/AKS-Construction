@@ -163,13 +163,13 @@ spec:
       name: letsencrypt-prod
     # Enable the HTTP-01 challenge provider
     solvers:
-    - dns01:
+    #- dns01:
         # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
-        azureDNS:
-          clientID: $(az aks show -g ${rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
-          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
-          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
-          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
+        #azureDNS:
+        #  clientID: $(az aks show -g ${rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
+        #  subscriptionID: ${addons.dnsZoneId.split('/')[2]}
+        #  resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
+        #  hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
     - http01:
         ingress:
           class: ${(addons.ingress === 'nginx' ? "nginx" : "azure/application-gateway")}
