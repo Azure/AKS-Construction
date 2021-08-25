@@ -92,15 +92,18 @@ az role assignment create --role "Contributor" --assignee-principal-type Service
 az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
 #------- END Workaround
 ` : '') +
-
+    (net.vnet_opt === "byo" && addons.ingress === 'appgw' /* && appgwKVIntegration */ ? `
+APPGW_IDENTITY="$(az network application-gateway show -g ${rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
+az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
+` : '') +
     // CSI-Secret KeyVault addon - using this method until supported by ARM template
     //    (addons.csisecret !== "none" ? `\n# Workaround to enabling the csisecret addon (in preview)
     //az aks enable-addons -n ${aks} -g ${rg} -a azure-keyvault-secrets-provider
     //` : '') +
 
-    // Get Admin credentials
-    `\n# Get admin credentials for your new AKS cluster
-az aks get-credentials -g ${rg} -n ${aks} --admin ` +
+    // Get credentials
+    `\n# Get credentials for your new AKS cluster
+az aks get-credentials -g ${rg} -n ${aks} ` +
     // Prometheus
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts

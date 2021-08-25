@@ -254,7 +254,7 @@ var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubn
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed: 
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if ( /*appgwKVIntegration*/deployAppGw) {
+resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if ( /* appgwKVIntegration && */deployAppGw) {
   name: 'id-appgw-${resourceName}'
   location: location
 }
@@ -423,6 +423,7 @@ resource appgw 'Microsoft.Network/applicationGateways@2021-02-01' = if (deployAp
 var DEPLOY_APPGW_ADDON = ingressApplicationGateway && empty(byoAGWSubnetId)
 var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
 // https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
+// AGIC's identity requires "Contributor" permission over Application Gateway.
 resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: appgw
   name: guid(resourceGroup().id, appgwName, 'appgwcont')
@@ -433,12 +434,25 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-pr
   }
 }
 
+// AGIC's identity requires "Reader" permission over Application Gateway's resource group.
 var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
 resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: resourceGroup()
   name: guid(resourceGroup().id, appgwName, 'rgread')
   properties: {
     roleDefinitionId: reader
+    principalType: 'ServicePrincipal'
+    principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.objectId
+  }
+}
+
+// AGIC's identity requires "Managed Identity Operator" permission over the user assigned identity of Application Gateway.
+var managedIdentityOperator = resourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830')
+resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && /* appgwKVIntegration && */ deployAppGw) {
+  scope: appGwIdentity
+  name: guid(resourceGroup().id, appgwName, 'apidentityoperator')
+  properties: {
+    roleDefinitionId: managedIdentityOperator
     principalType: 'ServicePrincipal'
     principalId: aks.properties.addonProfiles.ingressApplicationGateway.identity.objectId
   }

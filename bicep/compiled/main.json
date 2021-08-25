@@ -229,6 +229,7 @@
     "DEPLOY_APPGW_ADDON": "[and(parameters('ingressApplicationGateway'), empty(parameters('byoAGWSubnetId')))]",
     "contributor": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
     "reader": "[resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
+    "managedIdentityOperator": "[resourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830')]",
     "diagProperties": {
       "workspaceId": "[variables('workspaceId')]",
       "logs": [
@@ -272,7 +273,7 @@
       "apiVersion": "2021-06-01-preview",
       "name": "[variables('akvName')]",
       "location": "[parameters('location')]",
-      "properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'Standard'), 'enabledForTemplateDeployment', true(), 'accessPolicies', concat(if(parameters('azureKeyvaultSecretsProvider'), array(createObject('tenantId', subscription().tenantId, 'objectId', reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.azureKeyvaultSecretsProvider.identity.clientId, 'permissions', createObject('keys', createArray('get', 'decrypt', 'unwrapKey', 'verify'), 'secrets', createArray('get'), 'certificates', createArray('get', 'getissuers')))), createArray()), if(parameters('appgwKVIntegration'), array(createObject('tenantId', subscription().tenantId, 'objectId', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))).principalId, 'permissions', createObject('secrets', createArray('get', 'set', 'delete', 'list')))), createArray()))), if(not(empty(parameters('AKVserviceEndpointFW'))), createObject('networkAcls', createObject('defaultAction', 'Deny', 'virtualNetworkRules', concat(array(createObject('action', 'Allow', 'id', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('appgwKVIntegration'), array(createObject('action', 'Allow', 'id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))), createArray())), 'ipRules', if(not(equals(parameters('AKVserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('AKVserviceEndpointFW'))), null()))), createObject()))]",
+      "properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'Standard'), 'enabledForTemplateDeployment', true(), 'publicNetworkAccess', 'enabled', 'accessPolicies', concat(if(parameters('azureKeyvaultSecretsProvider'), array(createObject('tenantId', subscription().tenantId, 'objectId', reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.azureKeyvaultSecretsProvider.identity.objectId, 'permissions', createObject('keys', createArray('get', 'decrypt', 'unwrapKey', 'verify'), 'secrets', createArray('get'), 'certificates', createArray('get', 'getissuers')))), createArray()), if(parameters('appgwKVIntegration'), array(createObject('tenantId', subscription().tenantId, 'objectId', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))).principalId, 'permissions', createObject('secrets', createArray('get', 'set', 'delete', 'list')))), createArray()))), if(not(empty(parameters('AKVserviceEndpointFW'))), createObject('networkAcls', createObject('defaultAction', 'Deny', 'virtualNetworkRules', concat(array(createObject('action', 'Allow', 'id', if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('appgwKVIntegration'), array(createObject('action', 'Allow', 'id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))), createArray())), 'ipRules', if(not(equals(parameters('AKVserviceEndpointFW'), 'vnetonly')), createArray(createObject('action', 'Allow', 'value', parameters('AKVserviceEndpointFW'))), null()))), createObject()))]",
       "dependsOn": [
         "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))]",
@@ -359,7 +360,7 @@
       "properties": {
         "roleDefinitionId": "[variables('contributor')]",
         "principalType": "ServicePrincipal",
-        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.ingressApplicationGateway.identity.clientId]"
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.ingressApplicationGateway.identity.objectId]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
@@ -374,10 +375,26 @@
       "properties": {
         "roleDefinitionId": "[variables('reader')]",
         "principalType": "ServicePrincipal",
-        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.ingressApplicationGateway.identity.clientId]"
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.ingressApplicationGateway.identity.objectId]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+      ]
+    },
+    {
+      "condition": "[and(variables('DEPLOY_APPGW_ADDON'), variables('deployAppGw'))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2021-04-01-preview",
+      "scope": "[format('Microsoft.ManagedIdentity/userAssignedIdentities/{0}', format('id-appgw-{0}', parameters('resourceName')))]",
+      "name": "[guid(resourceGroup().id, variables('appgwName'), 'apidentityoperator')]",
+      "properties": {
+        "roleDefinitionId": "[variables('managedIdentityOperator')]",
+        "principalType": "ServicePrincipal",
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.ingressApplicationGateway.identity.objectId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))]"
       ]
     },
     {
@@ -1091,7 +1108,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.126.58533",
-      "templateHash": "7379087891921921572"
+      "templateHash": "13364905346399954379"
     }
   }
 }
