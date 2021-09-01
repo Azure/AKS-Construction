@@ -449,7 +449,7 @@
                     "default": true,
                     "title": "Sandbox",
                     "description": {
-                        "title": "Sandbox Subscriptions are for experiment and validation only. Sandbox Subscriptions will not typically be allowed connectivity to Production and Policy will prevent the connectivity to on-premises Resources.",
+                        "title": "For dev/test applications, and other experimental purposes. Sandbox Subscriptions will not typically be allowed connectivity to Production and Policy will prevent the connectivity to on-premises Resources.",
                         "bulets": [
                             {
                                 "description": "Cluster auto-scaler (2-4 nodes)",
