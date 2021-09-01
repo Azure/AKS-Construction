@@ -35,10 +35,10 @@ export default function ({ sections, updateCardValues }) {
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
         <>
             {s.sectionWarning &&
-                <MessageBar messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
+                <MessageBar styles={{ root: { marginBottom: "15px", fontSize: "15px" } }} messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
             }
         </>,
-        <Stack key={`stack${s.key}`} horizontal tokens={{ childrenGap: 30 }}>
+        <Stack key={`stack${s.key}`} horizontal tokens={{ childrenGap: 15 }}>
             {s.cards.map((c, i) =>
                 <DocumentCard
                     key={c.key}
@@ -51,7 +51,7 @@ export default function ({ sections, updateCardValues }) {
                     </DocumentCardDetails>
 
                     {c.imageSrc &&
-                        <DocumentCardImage imageSrc={c.imageSrc} height={150} imageFit={ImageFit.centerContain} />
+                        <DocumentCardImage styles={{ root: { backgroundColor: "white" } }} imageSrc={c.imageSrc} height={150} imageFit={ImageFit.centerContain} />
                     }
                     {c.icon &&
                         <DocumentCardPreview styles={{ root: { backgroundColor: 'white', borderBottom: '0' } }} previewImages={[{
@@ -70,7 +70,7 @@ export default function ({ sections, updateCardValues }) {
 
                             }
                             <Text variant="smallPlus" >
-                                <ul>
+                                <ul style={{ paddingInlineStart: "20px" }}>
                                     {c.description.bulets.map((b, i) =>
                                         <li key={i}>
                                             {b.description}
