@@ -35,7 +35,7 @@ export default function ({ sections, updateCardValues }) {
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
         <>
             {s.sectionWarning &&
-                <MessageBar messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
+                <MessageBar styles={{ root: { marginBottom: "15px", fontSize: "15px" } }} messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
             }
         </>,
         <Stack key={`stack${s.key}`} horizontal tokens={{ childrenGap: 30 }}>

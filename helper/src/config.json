@@ -441,13 +441,72 @@
     "entScaleOps": [
         {
             "key": "entscale",
-            "sectionTitle": "Enterprise Scale Environment Type",
-            "sectionWarning": "Before you continue, These options all assume you have _already_ implemented the Enterprise Scale subscription and Hub model, with all required networks, subnets, netowkring policies and Firewalls already configured",
+            "sectionTitle": "Enterprise Scale Management Group",
+            "sectionWarning": "Before you continue, Ensure you have deployed the Enterprise Scale reference implementation",
             "cards": [
                 {
-                    "key": "connected",
+                    "key": "sandbox",
                     "default": true,
-                    "title": "Connected Sandbox",
+                    "title": "Sandbox",
+                    "description": {
+                        "title": "Provision a enterprise scale complient sandbox enviroment into an EXISTING VNET, re-created with Firewall egress. Suitable for non-production workloads",
+                        "bulets": [
+                            {
+                                "description": "Cluster auto-scaller (2-4 nodes)",
+                                "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
+                            },
+                            {
+                                "description": "Azure Monitor for Containers",
+                                "linksrc": "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview"
+                            },
+                            {
+                                "description": "Azure Container Registry (public)"
+                            },
+                            {
+                                "description": "AAD Integration",
+                                "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                            },
+                            {
+                                "description": "Audit Pod security baseline standards",
+                                "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
+                            }
+                        ]
+                    },
+                    "imageSrc": "./secure-baseline-architecture.svg",
+                    "author": {
+                        "name": "Gordon Byers",
+                        "initials": "GB",
+                        "status": "Updated March, 2021"
+                    },
+                    "values": {
+                        "cluster": {
+                            "enable_aad": true,
+                            "apisecurity": "none",
+                            "autoscale": true,
+                            "count": 2,
+                            "maxCount": 4,
+                            "upgradeChannel": "none"
+                        },
+                        "addons": {
+                            "networkPolicy": "none",
+                            "registry": "Basic",
+                            "azurepolicy": "audit",
+                            "ingress": "none",
+                            "monitor": "aci",
+                            "csisecret": "none"
+                        },
+                        "net": {
+                            "serviceEndpointsEnable": false,
+                            "vnetprivateend": false,
+                            "vnet_opt": "default",
+                            "afw": false
+                        }
+                    }
+                },
+                {
+                    "key": "corp",
+                    "default": true,
+                    "title": "Corp (Connnected existing Hub)",
                     "description": {
                         "title": "Provision a enterprise scale complient sandbox enviroment into an EXISTING VNET, re-created with Firewall egress. Suitable for non-production workloads",
                         "titleWarning": {
@@ -475,7 +534,84 @@
                                 "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
                             },
                             {
-                                "description": "ENFORCE Pod security baseline standards",
+                                "description": "Audit Pod security baseline standards",
+                                "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
+                            },
+                            {
+                                "description": "East-West traffic control",
+                                "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/use-network-policies"
+                            },
+                            {
+                                "description": "Private Cluster",
+                                "linksrc": "https://docs.microsoft.com/en-us/azure/aks/private-clusters"
+                            },
+                            {
+                                "description": "Restrict dependencies with Private Link",
+                                "linksrc": "https://docs.microsoft.com/en-us/azure/private-link/private-link-overview"
+                            },
+                            {
+                                "description": "Store Kubernetes Secrets in Azure Keyvault,",
+                                "linksrc": "https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+                            }
+                        ]
+                    },
+                    "imageSrc": "./secure-baseline-architecture.svg",
+                    "author": {
+                        "name": "Gordon Byers",
+                        "initials": "GB",
+                        "status": "Updated March, 2021"
+                    },
+                    "values": {
+                        "cluster": {
+                            "enable_aad": true,
+                            "apisecurity": "private",
+                            "autoscale": true,
+                            "upgradeChannel": "none"
+                        },
+                        "addons": {
+                            "networkPolicy": "calico",
+                            "registry": "Premium",
+                            "azurepolicy": "audit",
+                            "ingress": "appgw",
+                            "monitor": "aci",
+                            "csisecret": "akvNew"
+                        },
+                        "net": {
+                            "serviceEndpointsEnable": false,
+                            "vnetprivateend": true,
+                            "vnet_opt": "byo",
+                            "afw": false
+                        }
+                    }
+                },
+                {
+                    "key": "online",
+                    "default": true,
+                    "title": "Online (Internet facing)",
+                    "description": {
+                        "title": "Provision a enterprise scale complient sandbox enviroment into an EXISTING VNET, re-created with Firewall egress. Suitable for non-production workloads",
+                        "bulets": [
+                            {
+                                "description": "Cluster auto-scaller",
+                                "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
+                            },
+                            {
+                                "description": "Azure Monitor for Containers",
+                                "linksrc": "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview"
+                            },
+                            {
+                                "description": "Azure Container Registry (with Private Link)"
+                            },
+                            {
+                                "description": "Azure AppGateway Ingress",
+                                "linksrc": "https://docs.microsoft.com/en-gb/azure/application-gateway/ingress-controller-overview"
+                            },
+                            {
+                                "description": "AAD Integration",
+                                "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                            },
+                            {
+                                "description": "Audit Pod security baseline standards",
                                 "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
                             },
                             {
@@ -516,7 +652,7 @@
                         "addons": {
                             "networkPolicy": "calico",
                             "registry": "Premium",
-                            "azurepolicy": "deny",
+                            "azurepolicy": "audit",
                             "ingress": "appgw",
                             "monitor": "aci",
                             "csisecret": "akvNew"
@@ -524,8 +660,8 @@
                         "net": {
                             "serviceEndpointsEnable": false,
                             "vnetprivateend": true,
-                            "vnet_opt": "byo",
-                            "afw": false
+                            "vnet_opt": "custom",
+                            "afw": true
                         }
                     }
                 }
