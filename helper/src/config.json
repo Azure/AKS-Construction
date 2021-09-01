@@ -472,7 +472,7 @@
                             }
                         ]
                     },
-                    "imageSrc": "./secure-baseline-architecture.svg",
+                    "imageSrc": "./Entscale-sandbox.png",
                     "author": {
                         "name": "Gordon Byers",
                         "initials": "GB",
@@ -555,7 +555,7 @@
                             }
                         ]
                     },
-                    "imageSrc": "./secure-baseline-architecture.svg",
+                    "imageSrc": "./Entscale-corp.png",
                     "author": {
                         "name": "Gordon Byers",
                         "initials": "GB",
@@ -636,7 +636,7 @@
                             }
                         ]
                     },
-                    "imageSrc": "./secure-baseline-architecture.svg",
+                    "imageSrc": "./Entscale-online.png",
                     "author": {
                         "name": "Gordon Byers",
                         "initials": "GB",
