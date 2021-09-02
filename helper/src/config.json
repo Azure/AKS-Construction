@@ -492,6 +492,7 @@
                             "registry": "Basic",
                             "azurepolicy": "audit",
                             "ingress": "none",
+                            "appgwKVIntegration": false,
                             "monitor": "aci",
                             "csisecret": "none"
                         },
@@ -574,7 +575,8 @@
                             "azurepolicy": "audit",
                             "ingress": "appgw",
                             "monitor": "aci",
-                            "csisecret": "akvNew"
+                            "csisecret": "akvNew",
+                            "appgwKVIntegration": true
                         },
                         "net": {
                             "serviceEndpointsEnable": false,
@@ -655,7 +657,8 @@
                             "azurepolicy": "audit",
                             "ingress": "appgw",
                             "monitor": "aci",
-                            "csisecret": "akvNew"
+                            "csisecret": "akvNew",
+                            "appgwKVIntegration": true
                         },
                         "net": {
                             "serviceEndpointsEnable": false,

@@ -90,12 +90,13 @@ az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $APPGW_ID
 AKS_AGIC_IDENTITY_ID="$(az aks show -g ${rg} -n ${aks} --query addonProfiles.ingressApplicationGateway.identity.clientId -o tsv)"
 az role assignment create --role "Contributor" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_ID
 az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
-#------- END Workaround
 ` : '') +
     (net.vnet_opt === "byo" && addons.ingress === 'appgw' /* && appgwKVIntegration */ ? `
 APPGW_IDENTITY="$(az network application-gateway show -g ${rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
 az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
 ` : '') +
+    (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `#------- END Workaround
+  ` : '') +
     // CSI-Secret KeyVault addon - using this method until supported by ARM template
     //    (addons.csisecret !== "none" ? `\n# Workaround to enabling the csisecret addon (in preview)
     //az aks enable-addons -n ${aks} -g ${rg} -a azure-keyvault-secrets-provider
