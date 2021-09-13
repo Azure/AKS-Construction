@@ -175,7 +175,7 @@ jobs:
           }
 
   WorkloadAdd:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     needs: [Deploy]
     environment: azurecirgs
     steps:
@@ -258,9 +258,21 @@ jobs:
             
           curl $pubIp    
 
+  WorkloadTests:
+    runs-on: ubuntu-latest
+    needs: [WorkloadAdd]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Install ZAP Toolkit
+        run: |
+          echo "Zap"
+          
+
   Cleanup:
     runs-on: ubuntu-latest
-    needs: [Validation, Deploy]
+    needs: [Validation, Deploy, WorkloadAdd]
     if: github.event_name == 'schedule'
     steps:
       #- uses: actions/checkout@v2
