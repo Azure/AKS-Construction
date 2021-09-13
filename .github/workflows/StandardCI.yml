@@ -153,6 +153,7 @@ jobs:
 
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
+            echo "AKSName returned from az deployment = $AKSNAME"
             echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
             
 
@@ -164,7 +165,7 @@ jobs:
           $paramFilePath="${{ env.ParamFilePath }}"
           $params = Get-Content $paramFilePath | ConvertFrom-Json
 
-          Write-Output "Checking for User Assigned Identity"
+          Write-Output "Checking for User Assigned Identity in $AKSNAME"
           if($params.parameters.custom_vnet.value -eq $true) {
             $aksId=az aks show -n $AKSNAME -g $RG --query "identity.type" -o tsv
             write-output $aksId
