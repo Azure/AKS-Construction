@@ -154,6 +154,7 @@ jobs:
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
             echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
+            
 
       - name: Test Control Plane Config
         shell: pwsh
@@ -181,6 +182,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}
+          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          
       - name: AKS Connect
         run: |
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
