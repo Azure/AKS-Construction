@@ -174,28 +174,89 @@ jobs:
               Write-Error "UAI not set properly"}
           }
 
-      - name: AKS Workload
-        uses: Azure/cli@1.0.4
-        if: success()
+  WorkloadAdd:
+    runs-on: [self-hosted, linux]
+    needs: [Deploy]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Deploy Simple Workload
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-        with:
-          inlineScript: |
-            RG='${{ env.RG }}'
-            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-
-            echo $AKSNAME
-            az aks get-credentials -n $AKSNAME -g $RG --admin
-
-            az aks install-cli
-            kubectl version
-
+          NAMESP: "votey"
+        run: |
+            echo "Creating namespace $NAMESP"
+            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
+          
             echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL
+            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
+            
+      - name: Verify Simple Workload
+        env:
+          NAMESP: "votey"
+        run: |
+          #sleep 2m #Give everything a chance to work
+        
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+                    
+          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+          echo $pubIp
+            
+          curl $pubIp   
+          
+#      - name: Delete Simple Workload
+#        env:
+#          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
+#          NAMESP: "votey"
+#        run: |
+#          kubectl delete -f $MANIFESTTESTURL -n  $NAMESP
 
-            kubectl get po
-            kubectl get svc
-            kubectl get ingress
+      - name: Deploy AGIC Public Facing Workload
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
+          NAMESP: "default"
+        run: |
+          kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
+          
+          echo $MANIFESTTESTURL
+          kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
+
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+      - name: Verify AGIC Public Facing Workload
+        env:
+          NAMESP: "default"
+        run: |
+          sleep 2m #Give everything a chance to work
+        
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+          #TODO
+          #Hit the load balancer ip
+          #Hit the ingress ip
+          
+          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+          echo $pubIp
+            
+          curl $pubIp    
 
   Cleanup:
     runs-on: ubuntu-latest
