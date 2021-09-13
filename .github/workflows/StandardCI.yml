@@ -106,6 +106,8 @@ jobs:
     needs: [Validation]
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     environment: azurecirgs
+    outputs:
+      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
     steps:
       - uses: actions/checkout@v2
 
