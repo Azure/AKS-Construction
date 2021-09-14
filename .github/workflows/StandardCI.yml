@@ -231,11 +231,9 @@ jobs:
           #sleep 2m #Give everything a chance to work
         
           kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-          
+          kubectl get svc -n  $NAMESP       
                     
-          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+          pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
           echo $pubIp
             
           curl $pubIp   
@@ -246,39 +244,6 @@ jobs:
 #          NAMESP: "votey"
 #        run: |
 #          kubectl delete -f $MANIFESTTESTURL -n  $NAMESP
-
-      - name: Deploy AGIC Public Facing Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
-          NAMESP: "default"
-        run: |
-          kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-          
-          echo $MANIFESTTESTURL
-          kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-          
-      - name: Verify AGIC Public Facing Workload
-        env:
-          NAMESP: "default"
-        run: |
-          sleep 2m #Give everything a chance to work
-        
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-          
-          #TODO
-          #Hit the load balancer ip
-          #Hit the ingress ip
-          
-          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
-            
-          curl $pubIp    
 
   WorkloadTests:
     runs-on: ubuntu-latest
