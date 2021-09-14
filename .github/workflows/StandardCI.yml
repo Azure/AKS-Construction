@@ -195,6 +195,14 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
           
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+          
       - name: AKS Connect
         run: |
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
