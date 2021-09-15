@@ -271,6 +271,12 @@ jobs:
         with:
           target: 'http://${{ needs.WorkloadAdd.outputs.SIMWORKLOADIP}}'
           
+      - uses: actions/download-artifact@v2
+        with:
+          name: zap-scan
+
+      - name: Display structure of downloaded files
+        run: ls -R
 
   Cleanup:
     runs-on: ubuntu-latest
