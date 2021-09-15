@@ -10,6 +10,7 @@ The guiding principal we have with this project is to focus on the the *downstre
 1. The number of "manual" steps will always be low, if it can go in the bicep code - it should. Seperate cli commands & manual steps whilst good for readability are not optimal for a reliable, automated deployment in your CI/CD.
 1. Use *parameters* in the template to augment capability for different environment deployments
 1. Test quality through CI/CD pipelines that also serve as samples/docs
+1. Focus on AKS and supporting services, drawing the line at solving the problems of Developer workstations / Jumpboxes / CI Build Agents / Certificate Authorities / Etc
 
 ## Components
 
