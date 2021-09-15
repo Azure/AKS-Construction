@@ -273,7 +273,8 @@ jobs:
           
       - uses: actions/download-artifact@v2
         with:
-          name: zap-scan
+          #name: zap-scan
+          path: zap
 
       - name: Display structure of downloaded files
         run: ls -R
