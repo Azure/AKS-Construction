@@ -272,7 +272,7 @@ jobs:
           target: 'http://${{ needs.WorkloadAdd.outputs.SIMWORKLOADIP}}'
 
 
-      - name: Check for Zap file
+      - name: Check for High Priority Zap Alerts
         shell: pwsh
         run: |
           Write-Output "Check for Zap Json file"
