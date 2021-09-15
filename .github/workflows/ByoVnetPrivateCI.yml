@@ -255,10 +255,11 @@ jobs:
           #Hit the load balancer ip
           #Hit the ingress ip
           
-          #pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          #echo $pubIp
-            
-          #curl $pubIp       
+          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+          echo $pubIp
+          
+          curl -o /dev/null -s -w "%{http_code}\n" $pubIp
+          curl $pubIp       
           
       - name: Delete AGIC Public Facing Workload
         env:
@@ -287,8 +288,20 @@ jobs:
           echo "Getting private ip"
           privIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
           echo "Private ip : $privIp"
-            
-          curl $privIp       
+          
+          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
+          echo $respcode   
+          
+          if [ "$respcode" != "200" ];
+          then
+              echo "going to need to wait longer i guess?"
+              sleep 3m
+              
+              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
+              echo $respcode     
+          fi
+          
+          curl $privIp
           
 #      - name: AKS Workload
 #        uses: Azure/cli@1.0.4
