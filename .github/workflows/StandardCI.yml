@@ -253,8 +253,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Deploy,WorkloadAdd]
     environment: azurecirgs
-#    env: 
-#      SIMWORKLOADIP='${{ needs.WorkloadAdd.outputs.SIMWORKLOADIP}}'
     steps:
       - uses: actions/checkout@v2
       
@@ -271,7 +269,7 @@ jobs:
       - name: ZAP Scan
         uses: zaproxy/action-full-scan@v0.3.0
         with:
-          target: '${{ env.SIMWORKLOADIP }}'
+          target: '${{ needs.WorkloadAdd.outputs.SIMWORKLOADIP}}'
           
 
   Cleanup:
