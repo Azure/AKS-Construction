@@ -298,7 +298,13 @@ jobs:
               sleep 3m
               
               respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
-              echo $respcode     
+              echo $respcode    
+              
+              if [ "$respcode" != "200" ];
+              then
+                echo "Non 200 response code from app - Raising error"
+                exit 1
+              fi
           fi
           
           curl $privIp
