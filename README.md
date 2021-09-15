@@ -23,7 +23,7 @@ To help guide your AKS configuration, use the [Deployment Helper](https://azure.
 
 IaC (Infrastructure as Code) code files have been modularised into their component areas. [Main.bicep](bicep/main.bicep) references them and they are expected to be present in the same directory. The Deployment Helper leverages an Arm json compiled version of all the bicep files.
 
-## DevOps - GitHub Actions
+### DevOps - GitHub Actions
 
 A number of [GitHub actions](https://github.com/Azure/Aks-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. 
 ![preview screenshot of the helper wizard](ghastages.png)
