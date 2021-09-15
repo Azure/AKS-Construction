@@ -301,7 +301,7 @@ jobs:
             Write-Output "Medium Alerts Found"
             $highAlerts | Where-Object { Write-Output $_.alert }
             throw "Medium Alerts Found"
-        }
+          }
 
 
 #      - uses: actions/download-artifact@v2
