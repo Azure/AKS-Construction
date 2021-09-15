@@ -182,6 +182,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Deploy]
     environment: azurecirgs
+    outputs:
+      SIMWORKLOADIP: ${{ steps.simpleworkloadverify.outputs.SIMWORKLOADIP}}
     steps:
       - uses: actions/checkout@v2
       
@@ -225,16 +227,18 @@ jobs:
             kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
             
       - name: Verify Simple Workload
+        id: simpleworkloadverify
         env:
           NAMESP: "votey"
         run: |
-          #sleep 2m #Give everything a chance to work
+          sleep 2m #Give public ip a chance to be allocated
         
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP       
                     
           pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
           echo $pubIp
+          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
             
           curl $pubIp   
           
@@ -247,14 +251,26 @@ jobs:
 
   WorkloadTests:
     runs-on: ubuntu-latest
-    needs: [WorkloadAdd]
+    needs: [Deploy,WorkloadAdd]
     environment: azurecirgs
+    env: 
+      SIMWORKLOADIP='${{ needs.WorkloadAdd.outputs.SIMWORKLOADIP}}'
     steps:
       - uses: actions/checkout@v2
       
-      - name: Install ZAP Toolkit
+      - name: Param check
         run: |
-          echo "Zap"
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "SIMWORKLOADIP name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          
+      
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.3.0
+        with:
+          target: '${{ env.SIMWORKLOADIP }}'
           
 
   Cleanup:
