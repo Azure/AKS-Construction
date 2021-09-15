@@ -25,7 +25,9 @@ IaC (Infrastructure as Code) code files have been modularised into their compone
 
 ## DevOps - GitHub Actions
 
-A number of GitHub actions are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. Different action workflow files showcase different complexities of CI/CD practices which are summarised below.
+A number of [GitHub actions](https://github.com/Azure/Aks-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. 
+![preview screenshot of the helper wizard](ghastages.png)
+Different action workflow files showcase different complexities of CI/CD practices which are summarised below.
 
 1. [Deployment Verification](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L100)
 1. [Deployment What-If](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L111)
