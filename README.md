@@ -39,21 +39,33 @@ Different action workflow files showcase different complexities of CI/CD practic
 1. [Verify Test workload](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetPrivateCI.yml#L278)
 1. [Run App Security Scan](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/StandardCI.yml#L269)
 
-## Implementation Notes
-
-### Configurations
-
-Whilst the Deployment Helper lets you generate a fully flexible deployment, before merging template changes we run CI on several configuration presets.
-
 | Config | CI Status | Notes
 |--------|-----------|------|
 | [ESLZ Byo peered vnet](.github/workflows_dep/AksDeploy-ByoVnet.parameters.json) | [![ByoVnetCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml/badge.svg?branch=main)](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml) | Takes full resource id's as parameters for existing subnets |
 | [ESLZ Byo private vnet](.github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json) | [![ByoVNetPrivateCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml/badge.svg)](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml)| as per ByoVnet, but Private |
 | [ESLZ Sandbox](.github/workflows_dep/AksDeploy-Basic.parameters.json) | [![AksStandardCI](https://github.com/Azure/Aks-Construction/actions/workflows/StandardCI.yml/badge.svg)](https://github.com/Azure/Aks-Construction/actions/workflows/StandardCI.yml) | Deploys it's own network using default CIDRs |
 
-### Preview Features
+## Getting Started
 
-As a general rule, Preview Features will not be included in the Wizard.
+### Basic
+
+If this is the first time you're using the project, follow these steps.
+
+1. Use the [Deployment Helper](https://azure.github.io/Aks-Construction/) to guide your AKS configuration. 
+1. Run the commands in the *Provision Environment* tab to create your AKS Environment in your Azure subscription
+1. Run the commands in the *Post Configuration* tab to complete your implementation
+1. [Connect to your AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster), and deploy your applications as you see fit.
+
+### Mature
+
+If you're looking to use this project as part of your deployments, follow these steps.
+
+1. Use the [Deployment Helper](https://azure.github.io/Aks-Construction/) to guide your AKS configuration. 
+1. Capture the parameters on the *Template Parameters File* tab to a file - this is your configuration
+1. Check the *Post Configuration* tab for any commands and save them to a file
+1. Grab the [latest release](https://github.com/Azure/Aks-Construction/releases) of the bicep code
+1. In your CI/CD system, either using one of the GitHub Action Workflow files as a base, or by coding it yourself - initiate a deployment of the bicep code, using your parameter file
+1. In your CI/CD system, deploy your application(s) to the AKS cluster
 
 ## Contributing
 
