@@ -220,7 +220,7 @@ resource aks_acr_pull 'Microsoft.ContainerRegistry/registries/providers/roleAssi
 // New way of setting scope https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/scope-extension-resources
 resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
-  name: guid(any(aks.properties.identityProfile.kubeletidentity).objectId, acrName)
+  name: guid(resourceGroup().id, acrName)
   properties: {
     roleDefinitionId: AcrPullRole
     principalType: 'ServicePrincipal'
@@ -430,7 +430,7 @@ var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988a
 // AGIC's identity requires "Contributor" permission over Application Gateway.
 resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: appgw
-  name: guid(aks.properties.addonProfiles.ingressApplicationGateway.identity.objectId, appgwName, 'appgwcont')
+  name: guid(resourceGroup().id, appgwName, 'appgwcont')
   properties: {
     roleDefinitionId: contributor
     principalType: 'ServicePrincipal'
@@ -442,7 +442,7 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-pr
 var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
 resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: resourceGroup()
-  name: guid(aks.properties.addonProfiles.ingressApplicationGateway.identity.objectId, appgwName, 'rgread')
+  name: guid(resourceGroup().id, appgwName, 'rgread')
   properties: {
     roleDefinitionId: reader
     principalType: 'ServicePrincipal'
@@ -454,7 +454,7 @@ resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-p
 var managedIdentityOperator = resourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830')
 resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && /* appgwKVIntegration && */ deployAppGw) {
   scope: appGwIdentity
-  name: guid(aks.properties.addonProfiles.ingressApplicationGateway.identity.objectId, appgwName, 'apidentityoperator')
+  name: guid(resourceGroup().id, appgwName, 'apidentityoperator')
   properties: {
     roleDefinitionId: managedIdentityOperator
     principalType: 'ServicePrincipal'
@@ -746,4 +746,3 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (oms
     retentionInDays: retentionInDays
   }
 }
-
