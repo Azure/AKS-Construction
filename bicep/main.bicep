@@ -98,7 +98,6 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
   name: 'addDnsContributor'
   scope: resourceGroup(dnsZoneRg)
   params: {
-    location: location
     dnsZoneName: dnsZoneName
     isPrivate: isPrivate
     vnetId: isPrivate ? (!empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/subnets')[0] : (custom_vnet ? network.outputs.vnetId : '')) : ''
@@ -248,6 +247,8 @@ param appGWcount int = 2
 param appGWmaxCount int = 0
 param privateIpApplicationGateway string = ''
 param appgwKVIntegration bool = false
+param appGWsku string = 'WAF_v2'
+
 
 var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubnetId))
 
@@ -319,17 +320,20 @@ var frontendPrivateIpConfig = {
   name: 'appGatewayPrivateIP'
 }
 
-var tier = 'WAF_v2'
-var appGWsku = union({
-  name: tier
-  tier: tier
+var appGWskuObj = union({
+  name: appGWsku
+  tier: appGWsku
 }, appGWmaxCount == 0 ? {
   capacity: appGWcount
 } : {})
 
 // ugh, need to create a variable with the app gateway properies, because of the conditional key 'autoscaleConfiguration'
 var appgwProperties = union({
-  sku: appGWsku
+  sku: appGWskuObj
+  sslPolicy: {
+    policyType: 'Predefined'
+    policyName: 'AppGwSslPolicy20170401S'
+  }
   gatewayIPConfigurations: [
     {
       name: 'besubnet'
@@ -490,7 +494,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 
 //---------------------------------------------------------------------------------- AKS
 param dnsPrefix string = '${resourceName}-dns'
-param kubernetesVersion string = '1.20.7'
+param kubernetesVersion string = '1.20.9'
 param enable_aad bool = false
 param aad_tenant_id string = ''
 param omsagent bool = false
@@ -518,8 +522,8 @@ param dockerBridgeCidr string = '172.17.0.1/16'
 
 var autoScale = agentCountMax > agentCount
 
-var agentPoolProfiles = union({
-  name: 'nodepool1'
+var agentPoolProfileSystem = {
+  name: 'npsystem'
   mode: 'System'
   osDiskType: osDiskType
   osDiskSizeGB: osDiskSizeGB
@@ -530,9 +534,36 @@ var agentPoolProfiles = union({
   type: 'VirtualMachineScaleSets'
   enableAutoScaling: autoScale
   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
-}, !empty(aksSubnetId) ? {
-  vnetSubnetID: aksSubnetId
-} : {})
+  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
+  minCount: autoScale ? agentCount : json('null')
+  maxCount: autoScale ? agentCountMax : json('null')
+}
+
+var agentPoolProfileUser = {
+  name: 'npuser01'
+  mode: 'User'
+  osDiskType: osDiskType
+  osDiskSizeGB: osDiskSizeGB
+  count: agentCount
+  vmSize: agentVMSize
+  osType: 'Linux'
+  maxPods: maxPods
+  type: 'VirtualMachineScaleSets'
+  enableAutoScaling: autoScale
+  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
+  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
+  minCount: autoScale ? agentCount : json('null')
+  maxCount: autoScale ? agentCountMax : json('null')
+}
+
+
+// var agentPoolProfiles = autoScale ? array(union(agentPoolProfileSystem, {
+//   minCount: agentCount
+//   maxCount: agentCountMax
+// })) : array(agentPoolProfileSystem)
+
+var agentPoolProfiles = concat(array(agentPoolProfileSystem), array(agentPoolProfileUser))
+
 
 var aks_properties_base = {
   kubernetesVersion: kubernetesVersion
@@ -550,10 +581,7 @@ var aks_properties_base = {
     privateDNSZone: enablePrivateCluster ? 'none' : ''
     enablePrivateClusterPublicFQDN: enablePrivateCluster
   }
-  agentPoolProfiles: autoScale ? array(union(agentPoolProfiles, {
-    minCount: agentCount
-    maxCount: agentCountMax
-  })) : array(agentPoolProfiles)
+  agentPoolProfiles: agentPoolProfiles
   networkProfile: {
     loadBalancerSku: 'standard'
     networkPlugin: networkPlugin
@@ -701,31 +729,3 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (oms
     retentionInDays: retentionInDays
   }
 }
-
-/* ------ NOTES 
-output of AKS - runtime -- properties of created resources (aks.properties.<>) (instead of ARM function reference(...) )
-  provisioningState, 
-  powerState, 
-  kubernetesVersion, 
-  dnsPrefix, 
-  fqdn, 
-  agentPoolProfiles, 
-  windowsProfile, 
-  servicePrincipalProfile.clientId 
-  addonProfiles, 
-  nodeResourceGroup, 
-  enableRBAC, 
-  networkProfile, 
-  aadProfile, 
-  maxAgentPools, 
-  apiServerAccessProfile, 
-  identityProfile.
-  autoScalerProfile
-
- 
-compipetime --- Instead of using the resourceId(), .ids will compile to [resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]
-  output blobid string = aks.id
-  output blobid string = aks.name
-  output blobid string = aks.apiVersion
-  output blobid string = aks.type
-*/
