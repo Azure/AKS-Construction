@@ -1,5 +1,12 @@
 # Contribution Guide
 
+A few important factoids to consume about the Repo, before you contribute.
+
+## Action Workflows
+
+Various workflows run on Push / PR / Schedule.
+Each has a *Validate stage*, that is required to pass before merging to main.
+
 ## Branches
 
 ### Feature Branch
