@@ -2,13 +2,12 @@ param dnsZoneName string
 param principalId string
 param isPrivate bool
 param vnetId string = ''
-param location string
 
 resource dns 'Microsoft.Network/dnsZones@2018-05-01' existing = if (!isPrivate) {
   name: dnsZoneName
 }
 
-resource privateDns 'Microsoft.Network/privateDnsZones@2018-05-01' existing = if (isPrivate) {
+resource privateDns 'Microsoft.Network/privateDnsZones@2020-06-01' existing = if (isPrivate) {
   name: dnsZoneName
 }
 
