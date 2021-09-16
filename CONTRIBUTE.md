@@ -27,6 +27,8 @@ Branch Policies require the Validation stage of our GitHub Action Workflows to s
 ### The Develop Branch
 
 Where there have been significant changes and we want the full gammit of CI testing to be run on real Azure Infrastucture - then the Develop branch is used.
+It gives us the nice warm fuzzy feeling before merging into Main. 
+We anticipate the use of the Develop branch is temporary.
 
 ```
 ┌─────────────────┐         ┌─────────────┐       ┌────────────┐
