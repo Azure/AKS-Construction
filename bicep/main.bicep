@@ -522,22 +522,45 @@ param dockerBridgeCidr string = '172.17.0.1/16'
 
 var autoScale = agentCountMax > agentCount
 
-var agentPoolProfileSystem = {
+param JustUseSystemPool bool = false
+
+@allowed([
+  'Cost-Optimised'
+  'Standard'
+])
+@description('The System Pool Preset sizing')
+param SystemPoolType string = 'Cost-Optimised'
+
+var systemPoolPresets = {
+  'Cost-Optimised' : {
+    vmSize: 'Standard_B4ms'
+    count: 1
+    minCount: 1
+    maxCount: 3
+    enableAutoScaling: true
+    //osDiskType: 'Ephemeral' //default
+  }
+  'Standard' : {
+    vmSize: 'Standard_D4s_v3'
+    count: 2
+    minCount: 2
+    maxCount: 3
+    enableAutoScaling: true
+    //osDiskType: 'Ephemeral' //default
+  }
+}
+
+var systemPoolBase = {
   name: 'npsystem'
   mode: 'System'
-  osDiskType: osDiskType
-  osDiskSizeGB: osDiskSizeGB
-  count: agentCount
-  vmSize: agentVMSize
   osType: 'Linux'
-  maxPods: maxPods
+  maxPods: 30
   type: 'VirtualMachineScaleSets'
-  enableAutoScaling: autoScale
   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
-  minCount: autoScale ? agentCount : json('null')
-  maxCount: autoScale ? agentCountMax : json('null')
 }
+
+var agentPoolProfileSystem = union(systemPoolBase, systemPoolPresets[SystemPoolType])
 
 var agentPoolProfileUser = {
   name: 'npuser01'
@@ -556,13 +579,7 @@ var agentPoolProfileUser = {
   maxCount: autoScale ? agentCountMax : json('null')
 }
 
-
-// var agentPoolProfiles = autoScale ? array(union(agentPoolProfileSystem, {
-//   minCount: agentCount
-//   maxCount: agentCountMax
-// })) : array(agentPoolProfileSystem)
-
-var agentPoolProfiles = concat(array(agentPoolProfileSystem), array(agentPoolProfileUser))
+var agentPoolProfiles = JustUseSystemPool ? array(agentPoolProfileSystem) : concat(array(agentPoolProfileSystem), array(agentPoolProfileUser))
 
 
 var aks_properties_base = {
@@ -683,7 +700,7 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
   name: '${resourceName}-baseline'
   location: location
   properties: {
-    scope: resourceGroup().id
+    //scope: resourceGroup().id
     policyDefinitionId: policySetPodSecBaseline
     parameters: {
       // Gives error: "The request content was invalid and could not be deserialized"
@@ -729,3 +746,4 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (oms
     retentionInDays: retentionInDays
   }
 }
+
