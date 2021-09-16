@@ -34,5 +34,12 @@ Where there have been significant changes and we want the full gammit of CI test
 │ Feature Branch  ├────────►│   Develop   ├──────►│    Main    │
 │                 │         │             │       │            │
 └─────────────────┘         └─────────────┘       └────────────┘
-
+                                  ▲
+┌─────────────────┐               │
+│                 │               │
+│ Feature Branch  ├───────────────┘
+│                 │
+│                 │                           
+└─────────────────┘     
+                            
 ```
