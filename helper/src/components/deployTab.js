@@ -7,7 +7,6 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
   const { net, addons, cluster, deploy } = tabValues
   const allok = !(invalidTabs && invalidTabs.length > 0)
   const apiips_array = deploy.apiips.split(',').filter(x => x.trim())
-
   const aksvnetparams = {
     ...(net.vnetAddressPrefix !== defaults.net.vnetAddressPrefix && { vnetAddressPrefix: net.vnetAddressPrefix }),
     ...(net.vnetAksSubnetAddressPrefix !== defaults.net.vnetAksSubnetAddressPrefix && { vnetAksSubnetAddressPrefix: net.vnetAksSubnetAddressPrefix })
@@ -20,6 +19,7 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
     resourceName: deploy.clusterName,
     kubernetesVersion: deploy.kubernetesVersion,
     agentCount: cluster.count,
+    ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
@@ -39,7 +39,15 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
     ...(cluster.apisecurity === "whitelist" && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
     ...(addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
-    ...(addons.ingress === "appgw" && { ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && { appGWcount: addons.appGWcount, ...(addons.appGWautoscale && { appGWmaxCount: addons.appGWmaxCount }), ...(addons.appgw_privateIp && { privateIpApplicationGateway: addons.appgw_privateIpAddress }), ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true }) }) }),
+    ...(addons.ingress === "appgw" && {
+      ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
+        appGWcount: addons.appGWcount,
+        appGWsku: addons.appGWsku,
+        ...(addons.appGWautoscale && { appGWmaxCount: addons.appGWmaxCount }),
+        ...(addons.appgw_privateIp && { privateIpApplicationGateway: addons.appgw_privateIpAddress }),
+        ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
+      })
+    }),
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.KeyVault') && addons.csisecret === 'akvNew' && { AKVserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
     ...(addons.csisecret === 'akvNew' && { createKV: true })
   }
@@ -66,14 +74,13 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
   })
 
   const finalParams = { ...params, ...(!deploy.disablePreviews && preview_params) }
-  const rg = `${deploy.clusterName}-rg`
   const aks = `aks-${deploy.clusterName}`
   const agw = `agw-${deploy.clusterName}`
   const deploycmd =
     `# Create Resource Group \n` +
-    `az group create -l ${deploy.location} -n ${rg} \n\n` +
+    `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
-    `az deployment group create -g ${rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
+    `az deployment group create -g ${deploy.rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
   const promethous_namespace = 'monitoring'
@@ -84,27 +91,27 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
   const postscript =
     // App Gateway addon: see main.bicep DEPLOY_APPGW_ADDON
     (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `#------- START Workaround to enable AGIC with BYO VNET (until supported by template)
-APPGW_RG_ID="$(az group show -n ${rg} --query id -o tsv)"
-APPGW_ID="$(az network application-gateway show -g ${rg} -n ${agw} --query id -o tsv)"
-az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $APPGW_ID
-AKS_AGIC_IDENTITY_ID="$(az aks show -g ${rg} -n ${aks} --query addonProfiles.ingressApplicationGateway.identity.clientId -o tsv)"
+APPGW_RG_ID="$(az group show -n ${deploy.rg} --query id -o tsv)"
+APPGW_ID="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query id -o tsv)"
+az aks enable-addons -n ${aks} -g ${deploy.rg} -a ingress-appgw --appgw-id $APPGW_ID
+AKS_AGIC_IDENTITY_ID="$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.ingressApplicationGateway.identity.clientId -o tsv)"
 az role assignment create --role "Contributor" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_ID
 az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
 ` : '') +
     (net.vnet_opt === "byo" && addons.ingress === 'appgw' /* && appgwKVIntegration */ ? `
-APPGW_IDENTITY="$(az network application-gateway show -g ${rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
+APPGW_IDENTITY="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
 az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
 ` : '') +
     (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `#------- END Workaround
   ` : '') +
     // CSI-Secret KeyVault addon - using this method until supported by ARM template
     //    (addons.csisecret !== "none" ? `\n# Workaround to enabling the csisecret addon (in preview)
-    //az aks enable-addons -n ${aks} -g ${rg} -a azure-keyvault-secrets-provider
+    //az aks enable-addons -n ${aks} -g ${deploy.rg} -a azure-keyvault-secrets-provider
     //` : '') +
 
     // Get credentials
     `\n# Get credentials for your new AKS cluster
-az aks get-credentials -g ${rg} -n ${aks} ` +
+az aks get-credentials -g ${deploy.rg} -n ${aks} ` +
     // Prometheus
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -132,11 +139,14 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
   --set controller.metrics.serviceMonitor.additionalLabels.release=${promethous_helm_release_name} \\
 ` : '') +
       `  --namespace ${nginx_namespace}` : '') +
+    (addons.ingress === 'contour' ? `\n\n# Install Contour Ingress Controller
+kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+` : '') +
     // External DNS
     (addons.dnsZoneId ? `\n\n# Install external-dns
 kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdin<<EOF
 {
-  "userAssignedIdentityID": "$(az aks show -g ${rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)",
+  "userAssignedIdentityID": "$(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)",
   "tenantId": "$(az account show --query tenantId -o tsv)",
   "useManagedIdentityExtension": true,
   "subscriptionId": "${addons.dnsZoneId.split('/')[2]}",
@@ -147,7 +157,7 @@ EOF
 curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  | kubectl apply -f -` : '') +
     // Cert-Manager
     (addons.certEmail ? `\n\n# Install cert-manager
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.1.0/cert-manager.yaml
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml
 
 sleep 30s
 
@@ -170,13 +180,13 @@ spec:
     #- dns01:
         # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
         #azureDNS:
-        #  clientID: $(az aks show -g ${rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
+        #  clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
         #  subscriptionID: ${addons.dnsZoneId.split('/')[2]}
         #  resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
         #  hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
     - http01:
         ingress:
-          class: ${(addons.ingress === 'nginx' ? "nginx" : "azure/application-gateway")}
+          class: ${(addons.ingress === 'contour' ? 'contour' : (addons.ingress === 'nginx' ? "nginx" : "azure/application-gateway"))}
 EOF
 ` : '')
 
@@ -190,7 +200,7 @@ EOF
       }
       <Stack horizontal styles={{ root: { width: "100%" } }} tokens={{ childrenGap: 150 }}>
         <Stack styles={{ root: { width: "300px" } }}>
-
+          <TextField label="Resource Group" onChange={(ev, val) => updateFn('rg', val)} required errorMessage={getError(invalidArray, 'rg')} value={deploy.rg} />
           <TextField label="Cluster Name" onChange={(ev, val) => updateFn('clusterName', val)} required errorMessage={getError(invalidArray, 'clusterName')} value={deploy.clusterName} />
           <Dropdown
             label="Location"
@@ -269,7 +279,7 @@ EOF
               <TextField readOnly={true} label="While Gitops is in preview, run this manually" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={6} value={`az k8sconfiguration create
         --name cluster-config 
         --cluster-name ${aks}    
-        --resource-group ${rg}     
+        --resource-group ${deploy.rg}     
         --operator-instance-name flux     
         --operator-namespace cluster-config     
         --enable-helm-operator     
