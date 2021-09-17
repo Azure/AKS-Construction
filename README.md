@@ -1,7 +1,5 @@
 # AKS-Construction
 
-`Status: This project is currently a Work in Progress.`
-
 This project provides a comprehensive, flexible templating approach to creating Azure Kubernetes Service clusters and related Azure services.
 It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
 
@@ -58,7 +56,7 @@ If you're looking to use this project as part of your deployments, follow these 
 1. Capture the parameters on the *Template Parameters File* tab to a file - this is your configuration
 1. Check the *Post Configuration* tab for any commands and save them to a file
 1. Grab the [latest release](https://github.com/Azure/Aks-Construction/releases) of the bicep code
-1. (optionally) Author a an Application Main bicep to represent *your application* (see [here](https://github.com/Azure/Aks-Construction/blob/main/samples/SampleAppMain.bicep) for an example)
+1. (optionally) Author an Application Main bicep to represent *your application* (see [here](https://github.com/Azure/Aks-Construction/blob/main/samples/SampleAppMain.bicep) for an example)
 1. In your CI/CD system, either using one of the GitHub Action Workflow files as a base, or by coding it yourself - initiate a deployment of the bicep code, using your parameter file
 1. In your CI/CD system, deploy your application(s) to the AKS cluster
 
