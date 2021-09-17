@@ -78,6 +78,10 @@ export default function PortalNav({ config }) {
       if (match) {
         setFeatureFlag(true)// = match[1]
       }
+      var match = queryString.match('[?&]default=es')
+      if (match) {
+        setEntScale(true)// = match[1]
+      }
     }
   }, [])
 
@@ -85,10 +89,12 @@ export default function PortalNav({ config }) {
   useEffect(() => {
 
     setTabValues((p) => {
+      let name = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
       return {
         ...p, deploy: {
           ...p.deploy,
-          clusterName: `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`,
+          clusterName: name,
+          rg: `${name}-rg`,
           ...(process.env.REACT_APP_K8S_VERSION && { kubernetesVersion: process.env.REACT_APP_K8S_VERSION })
         }
       }

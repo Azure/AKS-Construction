@@ -18,6 +18,7 @@
             "privateDNSZone": "none",
             "autoscale": false,
             "upgradeChannel": "none",
+            "SystemPoolType": "Cost-Optimised",
             "count": 2,
             "maxCount": 20,
             "vmSize": "Standard_DS3_v2",
@@ -41,6 +42,7 @@
             "appGWautoscale": true,
             "appGWcount": 0,
             "appGWmaxCount": 10,
+            "appGWsku": "WAF_v2",
             "appgwKVIntegration": false,
             "certMan": false,
             "certEmail": "",
@@ -113,8 +115,8 @@
                                 "description": "Manual Scalling"
                             },
                             {
-                                "description": "Nginx Ingress",
-                                "linksrc": "https://kubernetes.github.io/ingress-nginx/"
+                                "description": "Contour Ingress",
+                                "linksrc": "https://projectcontour.io/"
                             },
                             {
                                 "description": "Promethous/Grahana Monitoring",
@@ -133,7 +135,7 @@
                         },
                         "addons": {
                             "registry": "none",
-                            "ingress": "nginx",
+                            "ingress": "contour",
                             "monitor": "oss"
                         }
                     }

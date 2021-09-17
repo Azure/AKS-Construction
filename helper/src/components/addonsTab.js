@@ -96,8 +96,10 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     selectedKey={addons.ingress}
                     options={[
                         { key: 'none', text: 'No, I do not need a Layer7 proxy, or I will configure my own solution' },
-                        { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' },
-                        { key: 'appgw', text: 'Yes, I want a Azure Managed Application Gateway with WAF protection' }
+                        { key: 'appgw', text: 'Yes, I want a Azure Managed Application Gateway with WAF protection' },
+                        { key: 'contour', text: 'Yes, deploy contour in the cluster to expose my apps to the internet (https://projectcontour.io/)' },
+                        { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' }
+
                     ]}
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
@@ -128,6 +130,18 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                 {hasError(invalidArray, 'appgwKVIntegration') &&
                                     <MessageBar styles={{ root: { marginTop: '0px !important' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'appgwKVIntegration')}</MessageBar>
                                 }
+
+                                <Stack.Item>
+                                    <Label style={{ marginBottom: "0px" }}>Application Gateway Type</Label>
+                                    <ChoiceGroup
+                                        selectedKey={addons.appGWsku}
+                                        options={[
+                                            { key: 'Standard_v2', text: 'Standard Application Gateway' },
+                                            { key: 'WAF_v2', text: 'Web Application Firewall (WAF) on Application Gateway' }
+                                        ]}
+                                        onChange={(ev, { key }) => updateFn("appGWsku", key)}
+                                    />
+                                </Stack.Item>
 
                                 <Label style={{ marginBottom: "0px" }}>Capacity</Label>
                                 <Stack horizontal tokens={{ childrenGap: 150 }} styles={{ root: { marginTop: '0px !important' } }}>
@@ -163,7 +177,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                             </>)
                     }
 
-                    {(addons.ingress === "nginx" || addons.ingress === "appgw") &&
+                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") &&
                         <>
                             <Checkbox checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
                                 <Text>Create FQDN URLs for your applications using

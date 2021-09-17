@@ -26,11 +26,27 @@ export default function ({ tabValues, updateFn, invalidArray }) {
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
-            <Label style={{ marginBottom: "10px" }}>Cluster Performance & Scale Requirements (system nodepool)</Label>
+            <Label style={{ marginBottom: "10px" }}>Cluster Performance & Scale Requirements</Label>
             <Stack vertical tokens={{ childrenGap: 15 }} style={{ marginTop: 0, marginLeft: '50px' }} >
+
+                <Stack horizontal tokens={{ childrenGap: 55 }}>
+                    <Stack.Item>
+                        <Label >System Pool Type <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/use-system-pools#system-and-user-node-pools'>docs</Link></Label>
+                        <ChoiceGroup
+                            selectedKey={cluster.SystemPoolType}
+                            options={[
+                                { key: 'none', text: 'No seperate system pool: Use a single pool for System and User workloads' },
+                                { key: 'Cost-Optimised', text: 'Cost-Optimised: use low-cost Burstable VMs, with 1-3 node autoscale' },
+                                { key: 'Standard', text: 'Standard: use standard 4-core VMs, with 2-3 node autoscale' }
+                            ]}
+                            onChange={(ev, { key }) => updateFn("SystemPoolType", key)}
+                        />
+                    </Stack.Item>
+                </Stack>
 
                 <Stack horizontal tokens={{ childrenGap: 150 }}>
                     <Stack.Item>
+                        <Label >Scale Type</Label>
                         <ChoiceGroup selectedKey={cluster.autoscale} onChange={(ev, { key }) => updateFn("autoscale", key)}
                             options={[
                                 {
@@ -45,6 +61,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                             ]} />
                     </Stack.Item>
                     <Stack.Item>
+                        <Label >Scale Values</Label>
                         <Stack tokens={{ childrenGap: 0 }} styles={{ root: { width: 450 } }}>
                             <Slider label={`Initial ${cluster.autoscale ? "(& Autoscaler Min nodes)" : "nodes"}`} min={1} max={10} step={1} defaultValue={cluster.count} showValue={true}
                                 onChange={(v) => updateFn("count", v)} />
