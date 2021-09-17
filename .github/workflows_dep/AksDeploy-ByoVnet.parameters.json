@@ -61,6 +61,12 @@
         },
         "dnsServiceIP" : {
             "value" : "172.10.0.10"
+        },
+        "appGWsku" : {
+            "value" : "Standard_v2"
+        },
+        "SystemPoolType" : { 
+            "value" : "Standard"
         }
     }
 }
