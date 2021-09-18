@@ -405,7 +405,10 @@ jobs:
           
           $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
           Write-Output $KubeNode
-    
+          
+          $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
+          Write-Output $containers
+          
   Cleanup:
     runs-on: ubuntu-latest
     needs: [Validation, Deploy, WorkloadAdd, InfraTests, AppTests]
