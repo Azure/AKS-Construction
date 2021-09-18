@@ -216,8 +216,8 @@ jobs:
             
             if [ "true" == "true" ];
             then
-                $AKSRESID=$(az aks show -g $RG  -n $AKSNAME --query id -o tsv)
-                $LAID=$(az aks show -g $RG -n $AKSNAME --query "[addonProfiles.omsagent.identity.clientId]" -o tsv)
+                AKSRESID=$(az aks show -g $RG  -n $AKSNAME --query id -o tsv)
+                LAID=$(az aks show -g $RG -n $AKSNAME --query "[addonProfiles.omsagent.identity.clientId]" -o tsv)
                 az role assignment create --assignee $LAID --scope $AKSRESID --role "Monitoring Metrics Publisher"
             fi
 
