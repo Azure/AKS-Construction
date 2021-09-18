@@ -202,6 +202,26 @@ jobs:
             then
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
+            
+      - name: Fast alerting experience
+        uses: Azure/cli@1.0.4
+        with:
+          inlineScript: |          
+            RG='${{ env.RG }}'
+            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+            LANAME='${{ steps.deployAks.outputs.AGNAME}}'
+            
+            echo "AKS $AKSNAME"
+            echo "LA $LANAME"
+            
+            if [ "true" == "true" ];
+            then
+                az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
+                $AKSRESID=$(az aks show -g $RG  -n $AKSNAME --query id -o tsv)
+                $LAID=$(az aks show -g $RG -n $AKSNAME --query "[addonProfiles.omsagent.identity.clientId]" -o tsv)
+                az role assignment create --assignee $LAID --scope $AKSRESID --role "Monitoring Metrics Publisher"
+            fi
+
 
   WorkloadAdd:
     runs-on: [self-hosted, linux]
