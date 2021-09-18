@@ -395,6 +395,14 @@ jobs:
         run: |
           az extension add -n log-analytics -y
 
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+          
       - name: Log Analytics log verification
         shell: pwsh
         run: |
