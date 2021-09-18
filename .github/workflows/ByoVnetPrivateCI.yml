@@ -40,8 +40,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
           echo "EventTrigger name is ${{github.event_name}}"
           echo "Actor name is ${{ github.actor}}"
 
@@ -123,8 +123,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Dependency check
         shell: pwsh
@@ -216,8 +216,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
           
           whoami
@@ -342,9 +342,9 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
-          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}'
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
 
       - name: Application Insights log verification
         shell: pwsh
@@ -366,10 +366,10 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
-          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}'
-          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}'
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
+          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}"
 
       - name: Log Analytics log verification
         shell: pwsh
@@ -396,8 +396,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Dependency check
         shell: pwsh
