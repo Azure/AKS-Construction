@@ -391,6 +391,11 @@ jobs:
           echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
           echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}"
 
+      - name: Allow Monitoring extension
+        shell: pwsh
+        run: |
+          az extension add -n log-analytics -y
+
       - name: Log Analytics log verification
         shell: pwsh
         run: |
