@@ -328,7 +328,31 @@ jobs:
 #            
 #            az account show
 
-  Tests:
+  AppTests:
+    runs-on: ubuntu-latest
+    needs: [Deploy]
+    steps:
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}
+          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}'
+
+      - name: Application Insights log verification
+        shell: pwsh
+        run: |
+          Write-Output "Check for Logs in the Log Analytics Workspace"
+          $LANAME='${{ needs.Deploy.outputs.LANAME}}'
+          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          
+          #if LANAME != null
+    
+
+  InfraTests:
     runs-on: ubuntu-latest
     needs: [Deploy]
     steps:
@@ -353,7 +377,7 @@ jobs:
     
   Cleanup:
     runs-on: ubuntu-latest
-    needs: [Validation, Deploy, WorkloadAdd]
+    needs: [Validation, Deploy, WorkloadAdd, InfraTests, AppTests]
     if: github.event_name == 'schedule'
     environment: azurecirgs
     steps:
