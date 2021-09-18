@@ -40,8 +40,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
           echo "EventTrigger name is ${{github.event_name}}"
           echo "Actor name is ${{ github.actor}}"
 
@@ -123,8 +123,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Dependency check
         shell: pwsh
@@ -202,6 +202,25 @@ jobs:
             then
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
+            
+      - name: Fast alerting experience
+        uses: Azure/cli@1.0.4
+        with:
+          inlineScript: |          
+            RG='${{ env.RG }}'
+            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+            LANAME='${{ steps.deployAks.outputs.AGNAME}}'
+            
+            echo "AKS $AKSNAME"
+            echo "LA $LANAME"
+            
+            if [ "true" == "true" ];
+            then
+                AKSRESID=$(az aks show -g $RG  -n $AKSNAME --query id -o tsv)
+                LAID=$(az aks show -g $RG -n $AKSNAME --query "[addonProfiles.omsagent.identity.clientId]" -o tsv)
+                az role assignment create  --assignee-object-id $LAID --assignee-principal-type "ServicePrincipal" --scope $AKSRESID --role "Monitoring Metrics Publisher"
+            fi
+
 
   WorkloadAdd:
     runs-on: [self-hosted, linux]
@@ -216,8 +235,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
           
           whoami
@@ -342,9 +361,9 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
-          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}'
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
 
       - name: Application Insights log verification
         shell: pwsh
@@ -366,10 +385,15 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
-          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}'
-          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}'
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
+          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}"
+
+      - name: Allow Monitoring extension
+        shell: pwsh
+        run: |
+          az extension add -n log-analytics -y
 
       - name: Log Analytics log verification
         shell: pwsh
@@ -379,7 +403,7 @@ jobs:
           $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
           $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
           
-          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by bin(timestamp, 1m)"
+          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
           Write-Output $KubeNode
     
   Cleanup:
@@ -396,8 +420,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Dependency check
         shell: pwsh
