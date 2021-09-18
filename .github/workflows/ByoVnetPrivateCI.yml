@@ -218,7 +218,7 @@ jobs:
             then
                 AKSRESID=$(az aks show -g $RG  -n $AKSNAME --query id -o tsv)
                 LAID=$(az aks show -g $RG -n $AKSNAME --query "[addonProfiles.omsagent.identity.clientId]" -o tsv)
-                az role assignment create --assignee $LAID --scope $AKSRESID --role "Monitoring Metrics Publisher"
+                az role assignment create  --assignee-object-id $LAID --assignee-principal-type "ServicePrincipal" --scope $AKSRESID --role "Monitoring Metrics Publisher"
             fi
 
 
