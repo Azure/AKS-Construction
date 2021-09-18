@@ -113,6 +113,7 @@ jobs:
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
       LANAME : ${{ steps.deployAks.outputs.LANAME}}
+      LAWGUID : ${{ steps.deployAks.outputs.LAWGUID}}
     steps:
       - uses: actions/checkout@v2
 
@@ -177,6 +178,9 @@ jobs:
             
             LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
             echo "::set-output name=LANAME::$LANAME" #outputting for conditon
+            
+            LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
+            echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
             
             
       - name: Enable AGIC Addon
@@ -365,15 +369,18 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
           echo "LA name is ${{ needs.Deploy.outputs.LANAME}}'
+          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}'
 
       - name: Log Analytics log verification
         shell: pwsh
         run: |
           Write-Output "Check for Logs in the Log Analytics Workspace"
           $LANAME='${{ needs.Deploy.outputs.LANAME}}'
+          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
           $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
           
-          #if LANAME != null
+          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by bin(timestamp, 1m)"
+          Write-Output $KubeNode
     
   Cleanup:
     runs-on: ubuntu-latest
