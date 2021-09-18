@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "10963652015951655356"
+      "templateHash": "2019382473616223826"
     }
   },
   "parameters": {
@@ -1171,6 +1171,10 @@
     "LogAnalyticsName": {
       "type": "string",
       "value": "[if(or(or(parameters('omsagent'), variables('deployAppGw')), parameters('azureFirewalls')), variables('aks_law_name'), '')]"
+    },
+    "LogAnalyticsGuid": {
+      "type": "string",
+      "value": "[if(or(or(parameters('omsagent'), variables('deployAppGw')), parameters('azureFirewalls')), reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))).customerId, '')]"
     }
   }
 }
