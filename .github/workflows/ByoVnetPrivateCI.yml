@@ -216,7 +216,6 @@ jobs:
             
             if [ "true" == "true" ];
             then
-                az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
                 $AKSRESID=$(az aks show -g $RG  -n $AKSNAME --query id -o tsv)
                 $LAID=$(az aks show -g $RG -n $AKSNAME --query "[addonProfiles.omsagent.identity.clientId]" -o tsv)
                 az role assignment create --assignee $LAID --scope $AKSRESID --role "Monitoring Metrics Publisher"
