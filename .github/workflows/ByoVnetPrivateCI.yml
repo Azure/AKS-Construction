@@ -330,7 +330,7 @@ jobs:
 
   AppTests:
     runs-on: ubuntu-latest
-    needs: [Deploy]
+    needs: [Deploy, WorkloadAdd]
     steps:
       - name: Param check
         run: |
