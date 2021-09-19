@@ -19,23 +19,14 @@ IaC (Infrastructure as Code) code files have been modularised into their compone
 
 A number of [GitHub actions](https://github.com/Azure/Aks-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. 
 ![preview screenshot of the helper wizard](ghastages.png)
-Different action workflow files showcase different complexities of CI/CD practices which are summarised below.
-
-1. [Deployment Verification](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L100)
-1. [Deployment What-If](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L111)
-1. [Deployment What-If Pester Testing](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L141)
-1. [Bicep Deployment](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L189)
-1. [Post Deployment AddOns](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetPrivateCI.yml#L194)
-1. [Verify Deployment Configuration](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L261)
-1. [Deploy Test workload](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetPrivateCI.yml#L230)
-1. [Verify Test workload](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetPrivateCI.yml#L278)
-1. [Run App Security Scan](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/StandardCI.yml#L269)
 
 CI Name | Parameter file | CI Status | Notes
 |--------|--------|-----------|------|
 | BYO Vnet | [ESLZ Byo peered vnet](.github/workflows_dep/AksDeploy-ByoVnet.parameters.json) | [![ByoVnetCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml/badge.svg?branch=main)](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml) | Takes full resource id's as parameters for existing subnets |
 | Private cluster | [ESLZ Byo private vnet](.github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json) | [![ByoVNetPrivateCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml/badge.svg)](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml)| as per ByoVnet, but Private |
 | Basic cluster | [ESLZ Sandbox](.github/workflows_dep/AksDeploy-Basic.parameters.json) | [![AksStandardCI](https://github.com/Azure/Aks-Construction/actions/workflows/StandardCI.yml/badge.svg)](https://github.com/Azure/Aks-Construction/actions/workflows/StandardCI.yml) | Deploys it's own network using default CIDRs |
+
+For a more in depth look at the GitHub Actions used in this project, which steps are performed and the different CI practices they demostrate, please refer to [this page](GhActions.md).
 
 ## Getting Started
 
