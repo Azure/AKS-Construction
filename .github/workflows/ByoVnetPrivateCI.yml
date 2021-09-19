@@ -423,9 +423,6 @@ jobs:
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
           
-          $testmissingtable = az monitor log-analytics query -w $LAWGUID --analytics-query "DuffTable"
-          Write-Output $testmissingtable
-          
       - name: Test hitting missing table
         shell: pwsh
         run: |
