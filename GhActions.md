@@ -22,7 +22,7 @@ This stage provides the opportunity for configuration to be checked. An example 
 
 ### WorkloadAdd
 
-A great smoke test of fresh infrastructure is deploying a known good static application. This is especially true when using Ingress controllers that require specific configuration. The Private CI action deploys both a public facing and private facing workload onto AKS using the Application Gateway Ingress Controller. After adding the workload, and integration test is performed by sending an http request to the frontend ip address on the Application Gateway and checking for the http response code.
+A great smoke test of fresh infrastructure is deploying a known good static application. This is especially true when using Ingress controllers that require specific configuration. The Private CI action deploys both a public facing and private facing workload onto AKS using the [Application Gateway Ingress Controller](https://docs.microsoft.com/en-us/azure/application-gateway/ingress-controller-overview). After adding the workload, and integration test is performed by sending an http request to the frontend ip address on the Application Gateway and checking for the http response code.
 
 ### Application Tests
 
