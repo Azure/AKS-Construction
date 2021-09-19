@@ -5,7 +5,7 @@ It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft
 
 ## The 3 Components
 
-### GUI experience
+### Wizard experience
 
 To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/Aks-Construction/), which will provide a set of parameters and scripts to make deployment simple. The deployment helper provides links to the official Microsoft documentation to help provide additional context for each feature.
 
