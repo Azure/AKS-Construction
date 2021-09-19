@@ -44,3 +44,7 @@ We anticipate the use of the Develop branch is temporary.
 └─────────────────┘     
                             
 ```
+
+## Releases
+
+Releases are used to capture a tested release (all stages, not just Validation), where there are significant new features or bugfixes. The release does not include CI Action files, just the Bicep code.
