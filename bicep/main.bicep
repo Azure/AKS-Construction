@@ -746,3 +746,5 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (oms
     retentionInDays: retentionInDays
   }
 }
+output LogAnalyticsName string = (omsagent || deployAppGw || azureFirewalls) ? aks_law.name : ''
+output LogAnalyticsGuid string = (omsagent || deployAppGw || azureFirewalls) ? aks_law.properties.customerId : ''

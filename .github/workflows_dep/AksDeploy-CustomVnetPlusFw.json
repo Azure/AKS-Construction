@@ -6,7 +6,7 @@
 			"value": "customvnet"
 		},
 		"kubernetesVersion": {
-			"value": "1.20.5"
+			"value": "1.20.9"
 		},
 		"agentCount": {
 			"value": 1

@@ -40,8 +40,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
           echo "EventTrigger name is ${{github.event_name}}"
           echo "Actor name is ${{ github.actor}}"
 
@@ -112,6 +112,8 @@ jobs:
     environment: azurecirgs
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
+      LANAME : ${{ steps.deployAks.outputs.LANAME}}
+      LAWGUID : ${{ steps.deployAks.outputs.LAWGUID}}
     steps:
       - uses: actions/checkout@v2
 
@@ -121,8 +123,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Dependency check
         shell: pwsh
@@ -174,6 +176,13 @@ jobs:
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
             echo "::set-output name=AGNAME::$AGNAME" #outputting for conditon
             
+            LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
+            echo "::set-output name=LANAME::$LANAME" #outputting for conditon
+            
+            LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
+            echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
+            
+            
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
         with:
@@ -193,6 +202,25 @@ jobs:
             then
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
+            
+      - name: Fast alerting experience
+        uses: Azure/cli@1.0.4
+        with:
+          inlineScript: |          
+            RG='${{ env.RG }}'
+            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+            LANAME='${{ steps.deployAks.outputs.AGNAME}}'
+            
+            echo "AKS $AKSNAME"
+            echo "LA $LANAME"
+            
+            if [ "true" == "true" ];
+            then
+                AKSRESID=$(az aks show -g $RG  -n $AKSNAME --query id -o tsv)
+                LAID=$(az aks show -g $RG -n $AKSNAME --query "[addonProfiles.omsagent.identity.clientId]" -o tsv)
+                az role assignment create  --assignee-object-id $LAID --assignee-principal-type "ServicePrincipal" --scope $AKSRESID --role "Monitoring Metrics Publisher"
+            fi
+
 
   WorkloadAdd:
     runs-on: [self-hosted, linux]
@@ -207,8 +235,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
           
           whoami
@@ -323,9 +351,92 @@ jobs:
 #            
 #            az account show
 
+  AppTests:
+    runs-on: ubuntu-latest
+    needs: [Deploy, WorkloadAdd]
+    steps:
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
+
+      - name: Application Insights log verification
+        shell: pwsh
+        run: |
+          Write-Output "Check for Logs in the Log Analytics Workspace"
+          $LANAME='${{ needs.Deploy.outputs.LANAME}}'
+          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          
+          #if LANAME != null
+    
+
+  InfraTests:
+    runs-on: ubuntu-latest
+    needs: [Deploy]
+    steps:
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
+          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}"
+
+      - name: Allow Monitoring extension
+        shell: pwsh
+        run: |
+          az extension add -n log-analytics -y
+
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+          
+      - name: Log Analytics log table verification
+        shell: pwsh
+        run: |
+          Write-Output "Check for Logs in the Log Analytics Workspace"
+          $LANAME='${{ needs.Deploy.outputs.LANAME}}'
+          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
+          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          
+          #$KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
+          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
+          Write-Output $KubeNode
+          Write-Output $KubeNode[0].Count
+          
+          if ($KubeNode[0].Count -eq 0) {
+            throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
+          }
+          
+          $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
+          Write-Output $containers
+          
+#      - name: Test hitting missing table
+#        shell: pwsh
+#        run: |
+#          Write-Output "Check for Logs in the Log Analytics Workspace"
+#          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
+#        
+#          $testmissingtable = az monitor log-analytics query -w $LAWGUID --analytics-query "DuffTable"
+#          Write-Output $testmissingtable
+#          
+#          if($null -eq $testmissingtable) {throw "Test Table not found"}
+          
   Cleanup:
     runs-on: ubuntu-latest
-    needs: [Validation, Deploy, WorkloadAdd]
+    needs: [Validation, Deploy, WorkloadAdd, InfraTests, AppTests]
     if: github.event_name == 'schedule'
     environment: azurecirgs
     steps:
@@ -337,8 +448,8 @@ jobs:
           echo "RG is: $RG"
           
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Dependency check
         shell: pwsh
