@@ -9,12 +9,12 @@ The CI Actions leveraged have a certain amount of commonality, they primarily va
 ### Validation stage
 
 The validation stage of the pipelines do not deploy any resource to Azure, but they do talk to the Azure Controlplane. 
-1. Validation. Template validation is the first activity of the deployment pipelines. It ensures the template compiles, that there are no errors in the bicep code, that the parameter file provides all mandatory parameters and that the ARM Controlplane will accept the deployment.
-1. What-If. The what-if operation lets you see how resources will change if you deploy the template. The output of the What-If is captured as JSON, and you can write code to assert expected configuration against the prediction from Azure. Eg. If your parameter specification defined a certain number of AKS nodes, or a particular IP Whitelist for the API Server then you can test for this.
+1. [Validation](https://docs.microsoft.com/en-us/cli/azure/deployment/group?view=azure-cli-latest#az_deployment_group_validate). Template validation is the first activity of the deployment pipelines. It ensures the template compiles, that there are no errors in the bicep code, that the parameter file provides all mandatory parameters and that the ARM Controlplane will accept the deployment.
+1. [What-If](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/deploy-what-if). The what-if operation lets you see how resources will change if you deploy the template. The output of the What-If is captured as JSON, and you can write code to assert expected configuration against the prediction from Azure. Eg. If your parameter specification defined a certain number of AKS nodes, or a particular IP Whitelist for the API Server then you can test for this.
 
 ### Deployment stage
 
-This stage captures all of the deployment and post deployment configuration activities and actually deploys the resources to an Azure subscription. There are often configuration tasks that need to be done after AKS is installed, such as the Log Analytics Fast Alerting Experience being enabled or a different ingress controller installed.
+This stage captures all of the deployment and post deployment configuration activities and actually deploys the resources to an Azure subscription. There are often configuration tasks that need to be done after AKS is installed, such as the [Log Analytics Fast Alerting Experience](https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-enable-new-cluster) being enabled or a different ingress controller installed.
 
 ### Infrastructure tests
 
