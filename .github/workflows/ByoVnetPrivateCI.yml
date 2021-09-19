@@ -403,7 +403,7 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-      - name: Log Analytics log verification
+      - name: Log Analytics log table verification
         shell: pwsh
         run: |
           Write-Output "Check for Logs in the Log Analytics Workspace"
@@ -411,11 +411,29 @@ jobs:
           $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
           $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
           
-          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
+          #$KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
+          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
           Write-Output $KubeNode
+          Write-Output $KubeNode[0].Count
+          
+          if ($KubeNode[0].Count -eq 0) {
+            throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
+          }
           
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
+          
+          $testmissingtable = az monitor log-analytics query -w $LAWGUID --analytics-query "DuffTable"
+          Write-Output $testmissingtable
+          
+      - name: Test hitting missing table
+        shell: pwsh
+        run: |
+          Write-Output "Check for Logs in the Log Analytics Workspace"
+          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
+        
+          $testmissingtable = az monitor log-analytics query -w $LAWGUID --analytics-query "DuffTable"
+          Write-Output $testmissingtable
           
   Cleanup:
     runs-on: ubuntu-latest
