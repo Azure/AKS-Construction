@@ -423,16 +423,16 @@ jobs:
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
           
-      - name: Test hitting missing table
-        shell: pwsh
-        run: |
-          Write-Output "Check for Logs in the Log Analytics Workspace"
-          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
-        
-          $testmissingtable = az monitor log-analytics query -w $LAWGUID --analytics-query "DuffTable"
-          Write-Output $testmissingtable
-          
-          if($null -eq $testmissingtable) {throw "Test Table not found"}
+#      - name: Test hitting missing table
+#        shell: pwsh
+#        run: |
+#          Write-Output "Check for Logs in the Log Analytics Workspace"
+#          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
+#        
+#          $testmissingtable = az monitor log-analytics query -w $LAWGUID --analytics-query "DuffTable"
+#          Write-Output $testmissingtable
+#          
+#          if($null -eq $testmissingtable) {throw "Test Table not found"}
           
   Cleanup:
     runs-on: ubuntu-latest
