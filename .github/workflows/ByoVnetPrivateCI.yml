@@ -432,7 +432,7 @@ jobs:
           $testmissingtable = az monitor log-analytics query -w $LAWGUID --analytics-query "DuffTable"
           Write-Output $testmissingtable
           
-          if($null -eq $testmissingtable) {throw "Test Table not found")
+          if($null -eq $testmissingtable) {throw "Test Table not found"}
           
   Cleanup:
     runs-on: ubuntu-latest
