@@ -4,7 +4,35 @@ A number of CI workflows are leveraged in this repo to test the bicep files from
 
 ## CI breakdown
 
-TODO
+The CI Actions leveraged have a certain amount of commonality, they primarily vary by the parameter configuration of the resources they are deploying. As an example, the CI Actions that deploy an Application Gateway Ingress Controller deploy a specific workload onto AKS and then check that the Gateway is directing traffic properly.
+
+### Validation stage
+
+The validation stage of the pipelines do not deploy any resource to Azure, but they do talk to the Azure Controlplane. 
+1. Validation. Template validation is the first activity of the deployment pipelines. It ensures the template compiles, that there are no errors in the bicep code, that the parameter file provides all mandatory parameters and that the ARM Controlplane will accept the deployment.
+1. What-If. The what-if operation lets you see how resources will change if you deploy the template. The output of the What-If is captured as JSON, and you can write code to assert expected configuration against the prediction from Azure. Eg. If your parameter specification defined a certain number of AKS nodes, or a particular IP Whitelist for the API Server then you can test for this.
+
+### Deployment stage
+
+This stage captures all of the deployment and post deployment configuration activities and actually deploys the resources to an Azure subscription. There are often configuration tasks that need to be done after AKS is installed, such as the Log Analytics Fast Alerting Experience being enabled or a different ingress controller installed.
+
+### Infrastructure tests
+
+This stage provides the opportunity for configuration to be checked. An example from the Private CI action is ensuring that the Cluster is able to provide logs to Log Analytics.
+
+### WorkloadAdd
+
+A great smoke test of fresh infrastructure is deploying a known good static application. This is especially true when using Ingress controllers that require specific configuration. The Private CI action deploys both a public facing and private facing workload onto AKS using the Application Gateway Ingress Controller. After adding the workload, and integration test is performed by sending an http request to the frontend ip address on the Application Gateway and checking for the http response code.
+
+### Application Tests
+
+This stage shows some of the tests you might want to leverage in your pipeline for ensuring Application quality. ZAP provides a recognised baseline security scan.
+
+### Cleanup
+
+This stage will delete the resources created in Azure in order to keep costs optimised.
+
+###
 
 ## CI Step Highlight
 
