@@ -207,16 +207,6 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
 }
 
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
-/*
-resource aks_acr_pull 'Microsoft.ContainerRegistry/registries/providers/roleAssignments@2017-05-01' = if (!empty(registries_sku)) {
-  name: '${acrName}/Microsoft.Authorization/${guid(resourceGroup().id, acrName)}'
-  properties: {
-    roleDefinitionId: AcrPullRole
-    principalId: aks.properties.identityProfile.kubeletidentity.objectId
-    principalType: 'ServicePrincipal'
-  }
-}
-*/
 // New way of setting scope https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/scope-extension-resources
 resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
@@ -260,31 +250,7 @@ resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11
   location: location
 }
 
-// BYO AGIC identity to fix : AGIC Identity needs atleast has 'Contributor' access to Application Gateway 'xx' and 'Reader' access to Application Gateway's Resource Group
-//resource agicIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (deployAppGw) {
-//  name: 'id-agic-${resourceName}'
-//  location: location
-//}
-
-//module appGw './appgw.bicep' = if (deployAppGw) {
-//  name: 'addAppGw'
-//  params: {
-//    resourceName: resourceName
-//    agicPrincipleId: agicIdentity.properties.principalId // aks.properties.addonProfiles.ingressApplicationGateway.identity.clientId
-//    location: location
-//    appGwSubnetId: appGwSubnetId
-//    privateIpApplicationGateway: privateIpApplicationGateway
-//    availabilityZones: availabilityZones
-//    userAssignedIdentity: (appgwKVIntegration || deployAppGw) ? appGwIdentity.id : ''
-//    workspaceId: aks_law.id
-//    appGWcount: appGWcount
-//    appGWmaxCount: appGWmaxCount
-//  }
-//}
-
-// ================== AppGW Module - in-lined ======
 var workspaceId = aks_law.id
-
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
@@ -375,7 +341,7 @@ var appgwProperties = union({
       name: 'hlisten'
       properties: {
         frontendIPConfiguration: {
-          id: '${appgwResourceId}/frontendIPConfigurations/appGatewayFrontendIP'
+          id: empty(privateIpApplicationGateway) ? '${appgwResourceId}/frontendIPConfigurations/appGatewayFrontendIP' : '${appgwResourceId}/frontendIPConfigurations/appGatewayPrivateIP'
         }
         frontendPort: {
           id: '${appgwResourceId}/frontendPorts/appGatewayFrontendPort'
@@ -633,6 +599,7 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
     }
   }
 }) : aks_addons
+
 
 var aks_addons2 = omsagent ? union(aks_addons1, {
   omsagent: {
