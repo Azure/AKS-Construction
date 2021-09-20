@@ -237,10 +237,17 @@ param appGWcount int = 2
 param appGWmaxCount int = 0
 param privateIpApplicationGateway string = ''
 param appgwKVIntegration bool = false
-param appGWsku string = 'WAF_v2'
 
+@allowed([
+  'Standard_v2'
+  'WAF_v2'
+])
+@description('The SKU for AppGw')
+param appGWsku string = 'WAF_v2'
+param appGWenableFirewall bool = true
 
 var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubnetId))
+var appGWenableWafFirewall = appGWsku=='WAF_v2' && appGWenableFirewall
 
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed: 
@@ -299,6 +306,14 @@ var appgwProperties = union({
   sslPolicy: {
     policyType: 'Predefined'
     policyName: 'AppGwSslPolicy20170401S'
+  }
+  webApplicationFirewallConfiguration: {
+    enabled: appGWenableWafFirewall
+    firewallMode: 'Prevention' 
+    ruleSetType: 'OWASP'
+    ruleSetVersion: '3.2'
+    requestBodyCheck: true
+    maxRequestBodySizeInKb: 128
   }
   gatewayIPConfigurations: [
     {
