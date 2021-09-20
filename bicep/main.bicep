@@ -247,7 +247,7 @@ param appGWsku string = 'WAF_v2'
 param appGWenableFirewall bool = true
 
 var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubnetId))
-var appGWenableWafFirewall = appGWsku=='WAF_v2' && appGWenableFirewall
+var appGWenableWafFirewall = appGWsku=='Standard_v2' ? false : appGWenableFirewall
 
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed: 
@@ -293,6 +293,15 @@ var frontendPrivateIpConfig = {
   name: 'appGatewayPrivateIP'
 }
 
+var appGwFirewallConfigOwasp = {
+  enabled: appGWenableWafFirewall
+  firewallMode: 'Prevention' 
+  ruleSetType: 'OWASP'
+  ruleSetVersion: '3.2'
+  requestBodyCheck: true
+  maxRequestBodySizeInKb: 128
+}
+
 var appGWskuObj = union({
   name: appGWsku
   tier: appGWsku
@@ -307,14 +316,7 @@ var appgwProperties = union({
     policyType: 'Predefined'
     policyName: 'AppGwSslPolicy20170401S'
   }
-  webApplicationFirewallConfiguration: {
-    enabled: appGWenableWafFirewall
-    firewallMode: 'Prevention' 
-    ruleSetType: 'OWASP'
-    ruleSetVersion: '3.2'
-    requestBodyCheck: true
-    maxRequestBodySizeInKb: 128
-  }
+  webApplicationFirewallConfiguration: appGWenableWafFirewall ? appGwFirewallConfigOwasp : json('null')
   gatewayIPConfigurations: [
     {
       name: 'besubnet'
