@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "15689473077999260665"
+      "templateHash": "17287026184570139123"
     }
   },
   "parameters": {
@@ -103,7 +103,18 @@
     },
     "appGWsku": {
       "type": "string",
-      "defaultValue": "WAF_v2"
+      "defaultValue": "WAF_v2",
+      "metadata": {
+        "description": "The SKU for AppGw"
+      },
+      "allowedValues": [
+        "Standard_v2",
+        "WAF_v2"
+      ]
+    },
+    "appGWenableFirewall": {
+      "type": "bool",
+      "defaultValue": true
     },
     "dnsPrefix": {
       "type": "string",
@@ -239,6 +250,7 @@
     "acrName": "[format('cr{0}{1}', replace(parameters('resourceName'), '-', ''), uniqueString(resourceGroup().id, parameters('resourceName')))]",
     "AcrPullRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
     "deployAppGw": "[and(parameters('ingressApplicationGateway'), or(parameters('custom_vnet'), not(empty(parameters('byoAGWSubnetId')))))]",
+    "appGWenableWafFirewall": "[if(equals(parameters('appGWsku'), 'Standard_v2'), false(), parameters('appGWenableFirewall'))]",
     "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
     "appgwName": "[format('agw-{0}', parameters('resourceName'))]",
     "appgwResourceId": "[if(variables('deployAppGw'), resourceId('Microsoft.Network/applicationGateways', variables('appgwName')), '')]",
@@ -249,6 +261,14 @@
         }
       },
       "name": "appGatewayFrontendIP"
+    },
+    "appGwFirewallConfigOwasp": {
+      "enabled": "[variables('appGWenableWafFirewall')]",
+      "firewallMode": "Prevention",
+      "ruleSetType": "OWASP",
+      "ruleSetVersion": "3.2",
+      "requestBodyCheck": true,
+      "maxRequestBodySizeInKb": 128
     },
     "appGWskuObj": "[union(createObject('name', parameters('appGWsku'), 'tier', parameters('appGWsku')), if(equals(parameters('appGWmaxCount'), 0), createObject('capacity', parameters('appGWcount')), createObject()))]",
     "DEPLOY_APPGW_ADDON": "[and(parameters('ingressApplicationGateway'), empty(parameters('byoAGWSubnetId')))]",
@@ -385,7 +405,7 @@
           "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))]": {}
         }
       },
-      "properties": "[union(createObject('sku', variables('appGWskuObj'), 'sslPolicy', createObject('policyType', 'Predefined', 'policyName', 'AppGwSslPolicy20170401S'), 'gatewayIPConfigurations', createArray(createObject('name', 'besubnet', 'properties', createObject('subnet', createObject('id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))))), 'frontendIPConfigurations', if(empty(parameters('privateIpApplicationGateway')), array(variables('frontendPublicIpConfig')), concat(array(variables('frontendPublicIpConfig')), array(createObject('properties', createObject('privateIPAllocationMethod', 'Static', 'privateIPAddress', parameters('privateIpApplicationGateway'), 'subnet', createObject('id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))), 'name', 'appGatewayPrivateIP')))), 'frontendPorts', createArray(createObject('name', 'appGatewayFrontendPort', 'properties', createObject('port', 80))), 'backendAddressPools', createArray(createObject('name', 'defaultaddresspool')), 'backendHttpSettingsCollection', createArray(createObject('name', 'defaulthttpsetting', 'properties', createObject('port', 80, 'protocol', 'Http', 'cookieBasedAffinity', 'Disabled', 'requestTimeout', 30, 'pickHostNameFromBackendAddress', true()))), 'httpListeners', createArray(createObject('name', 'hlisten', 'properties', createObject('frontendIPConfiguration', createObject('id', if(empty(parameters('privateIpApplicationGateway')), format('{0}/frontendIPConfigurations/appGatewayFrontendIP', variables('appgwResourceId')), format('{0}/frontendIPConfigurations/appGatewayPrivateIP', variables('appgwResourceId')))), 'frontendPort', createObject('id', format('{0}/frontendPorts/appGatewayFrontendPort', variables('appgwResourceId'))), 'protocol', 'Http'))), 'requestRoutingRules', createArray(createObject('name', 'appGwRoutingRuleName', 'properties', createObject('ruleType', 'Basic', 'httpListener', createObject('id', format('{0}/httpListeners/hlisten', variables('appgwResourceId'))), 'backendAddressPool', createObject('id', format('{0}/backendAddressPools/defaultaddresspool', variables('appgwResourceId'))), 'backendHttpSettings', createObject('id', format('{0}/backendHttpSettingsCollection/defaulthttpsetting', variables('appgwResourceId'))))))), if(greater(parameters('appGWmaxCount'), 0), createObject('autoscaleConfiguration', createObject('minCapacity', parameters('appGWcount'), 'maxCapacity', parameters('appGWmaxCount'))), createObject()))]",
+      "properties": "[union(createObject('sku', variables('appGWskuObj'), 'sslPolicy', createObject('policyType', 'Predefined', 'policyName', 'AppGwSslPolicy20170401S'), 'webApplicationFirewallConfiguration', if(variables('appGWenableWafFirewall'), variables('appGwFirewallConfigOwasp'), json('null')), 'gatewayIPConfigurations', createArray(createObject('name', 'besubnet', 'properties', createObject('subnet', createObject('id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))))), 'frontendIPConfigurations', if(empty(parameters('privateIpApplicationGateway')), array(variables('frontendPublicIpConfig')), concat(array(variables('frontendPublicIpConfig')), array(createObject('properties', createObject('privateIPAllocationMethod', 'Static', 'privateIPAddress', parameters('privateIpApplicationGateway'), 'subnet', createObject('id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2019-10-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))), 'name', 'appGatewayPrivateIP')))), 'frontendPorts', createArray(createObject('name', 'appGatewayFrontendPort', 'properties', createObject('port', 80))), 'backendAddressPools', createArray(createObject('name', 'defaultaddresspool')), 'backendHttpSettingsCollection', createArray(createObject('name', 'defaulthttpsetting', 'properties', createObject('port', 80, 'protocol', 'Http', 'cookieBasedAffinity', 'Disabled', 'requestTimeout', 30, 'pickHostNameFromBackendAddress', true()))), 'httpListeners', createArray(createObject('name', 'hlisten', 'properties', createObject('frontendIPConfiguration', createObject('id', if(empty(parameters('privateIpApplicationGateway')), format('{0}/frontendIPConfigurations/appGatewayFrontendIP', variables('appgwResourceId')), format('{0}/frontendIPConfigurations/appGatewayPrivateIP', variables('appgwResourceId')))), 'frontendPort', createObject('id', format('{0}/frontendPorts/appGatewayFrontendPort', variables('appgwResourceId'))), 'protocol', 'Http'))), 'requestRoutingRules', createArray(createObject('name', 'appGwRoutingRuleName', 'properties', createObject('ruleType', 'Basic', 'httpListener', createObject('id', format('{0}/httpListeners/hlisten', variables('appgwResourceId'))), 'backendAddressPool', createObject('id', format('{0}/backendAddressPools/defaultaddresspool', variables('appgwResourceId'))), 'backendHttpSettings', createObject('id', format('{0}/backendHttpSettingsCollection/defaulthttpsetting', variables('appgwResourceId'))))))), if(greater(parameters('appGWmaxCount'), 0), createObject('autoscaleConfiguration', createObject('minCapacity', parameters('appGWcount'), 'maxCapacity', parameters('appGWmaxCount'))), createObject()))]",
       "dependsOn": [
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))]",
         "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-agw-{0}', parameters('resourceName')))]",
