@@ -9,7 +9,7 @@ For each of the documented scenarios there is an accompanying implemenation guid
 
 Much of the code and configuration in this project is based off the work in the Secure Baseline, the philosphy however is different. This project aims to converge on a single IaC codebase, and vary behaviour through parameters, parameters which use *good defaults* to minimise needing to provide too many parameter values. The Secure Baseline covers much of the documentation and practices, and this project focusses on the implementation experience and automation samples.
 
-When the AKS Secure Baseline is updated, changes are evaluated and rolled into this project.
+When the AKS Secure Baseline is updated, changes are evaluated and rolled into this project. See [here](https://github.com/Azure/Aks-Construction/issues?q=label%3ASecure-Baseline) for a list of tagged PR's.
 
 ### Deviations from the baseline (and why)
 1. System pool and user pool seperation is made optional in interests of users seeking a cost optimised configuration.
