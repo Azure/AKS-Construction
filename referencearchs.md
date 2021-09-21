@@ -18,7 +18,9 @@ When the AKS Secure Baseline is updated, changes are evaluated and rolled into t
 
 ## Enterprise Scale
 
-The Enterprise Scale Reference Implemenation
+The Enterprise Scale Reference
+
+The [Deployment Helper Wizard](https://azure.github.io/Aks-Construction/?default=es) has an Enterprise-Scale lense, with preset configurations for each landing zone area.
 
 ## The Enterprise-Scale for AKS project
 
@@ -26,4 +28,3 @@ This is the parent project that our work belongs to. The reference implementatio
 
 ## Cloud Adoption Framework and Enterprise Scale
 
-The GUI experience is tailored towards an Enterprise Scale scenario. 
