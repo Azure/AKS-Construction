@@ -498,6 +498,8 @@ param authorizedIPRanges array = []
 param enablePrivateCluster bool = false
 param availabilityZones array = []
 
+param AksPaidSkuForSLA bool = false
+
 param podCidr string = '10.244.0.0/16'
 param serviceCidr string = '10.0.0.0/16'
 param dnsServiceIP string = '10.0.0.10'
@@ -541,6 +543,12 @@ var systemPoolBase = {
   type: 'VirtualMachineScaleSets'
   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
+  upgradeSettings: {
+    maxSurge: '33%'
+  }
+  nodeTaints: [
+    JustUseSystemPool ? '' : 'CriticalAddonsOnly=true:NoSchedule'
+  ]
 }
 
 var agentPoolProfileSystem = union(systemPoolBase, systemPoolPresets[SystemPoolType])
@@ -560,10 +568,14 @@ var agentPoolProfileUser = {
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
   minCount: autoScale ? agentCount : json('null')
   maxCount: autoScale ? agentCountMax : json('null')
+  upgradeSettings: {
+    maxSurge: '33%'
+  }
 }
 
 var agentPoolProfiles = JustUseSystemPool ? array(agentPoolProfileSystem) : concat(array(agentPoolProfileSystem), array(agentPoolProfileUser))
 
+var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
 var aks_properties_base = {
   kubernetesVersion: kubernetesVersion
@@ -674,6 +686,10 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-07-01' = {
   properties: aks_properties2
   identity: aks_byo_identity ? aks_identity : {
     type: 'SystemAssigned'
+  }
+  sku: {
+    name: 'Basic'
+    tier: akssku
   }
 }
 output aksClusterName string = aks.name
