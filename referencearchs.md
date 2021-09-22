@@ -15,6 +15,7 @@ When the AKS Secure Baseline is updated, changes are evaluated and rolled into t
 1. System pool and user pool seperation is made optional in interests of users seeking a cost optimised configuration.
 2. Ingress. Different baselines showcase different Ingress.
 3. Networking. Hub/Spoke networks typically already exist, and tightly bundling with Kubernetes doesn't work well here. BYO subnets are supported.
+4. AppGw Public Listener. AppGw is the WAF ingress point for inbound internet traffic, however private listeners are also valid for fully private clusters.
 
 ## Enterprise Scale
 
