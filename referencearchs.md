@@ -12,6 +12,7 @@ Much of the code and configuration in this project is based off the work in the 
 When the AKS Secure Baseline is updated, changes are evaluated and rolled into this project. See [here](https://github.com/Azure/Aks-Construction/issues?q=label%3ASecure-Baseline) for a list of tagged PR's.
 
 ### Deviations from the baseline (and why)
+
 1. System pool and user pool seperation is made optional in interests of users seeking a cost optimised configuration.
 2. Ingress. Different baselines showcase different Ingress.
 3. Networking. Hub/Spoke networks typically already exist, and tightly bundling with Kubernetes doesn't work well here. BYO subnets are supported.
