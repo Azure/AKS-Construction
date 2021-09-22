@@ -1,5 +1,15 @@
 # AKS Reference Architectures
 
+## Enterprise Scale
+
+Enterprise Scale provides prescriptive guidance based on authoritative design for the Azure platform as a whole. 
+
+The [Deployment Helper Wizard](https://azure.github.io/Aks-Construction/?default=es) has an Enterprise-Scale lense, with preset configurations for each landing zone area.
+
+## Enterprise-Scale for AKS
+
+This is the [parent project](https://github.com/Azure/Enterprise-Scale-for-AKS) that our work belongs to. The reference implementations in this repository are all focussed on guiding the creation of Landing Zones for AKS within an Enterprise Scale framework. They typically include deployments of Hub/Spoke infrastructure and development vm's, and includes a Terraform implementation.
+
 ## The Secure Baseline
 
 The AKS Construction bicep code is based on the AKS Secure Baseline.
@@ -17,13 +27,3 @@ When the AKS Secure Baseline is updated, changes are evaluated and rolled into t
 2. Ingress. Different baselines showcase different Ingress.
 3. Networking. Hub/Spoke networks typically already exist, and tightly bundling with Kubernetes doesn't work well here. BYO subnets are supported.
 4. AppGw Public Listener. AppGw is the WAF ingress point for inbound internet traffic, however private listeners are also valid for fully private clusters.
-
-## Enterprise Scale
-
-Enterprise Scale provides prescriptive guidance based on authoritative design for the Azure platform as a whole. 
-
-The [Deployment Helper Wizard](https://azure.github.io/Aks-Construction/?default=es) has an Enterprise-Scale lense, with preset configurations for each landing zone area.
-
-## Enterprise-Scale for AKS
-
-This is the [parent project](https://github.com/Azure/Enterprise-Scale-for-AKS) that our work belongs to. The reference implementations in this repository are all focussed on guiding the creation of Landing Zones for AKS within an Enterprise Scale framework. They typically include deployments of Hub/Spoke infrastructure and development vm's, and includes a Terraform implementation.
