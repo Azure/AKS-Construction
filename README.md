@@ -3,7 +3,7 @@
 This project provides a comprehensive, flexible templating approach to creating Azure Kubernetes Service clusters and related Azure services.
 It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
 
-The AKS Bicep Accelerator is part of the official [Enterprise Scale for AKS](https://github.com/Azure/enterprise-scale-for-aks) architectural approach.
+The AKS Bicep Accelerator is part of the official [Enterprise Scale for AKS](https://github.com/Azure/enterprise-scale-for-aks) architectural approach. To read more about this project and how the AKS Bicep Accelerator fits with Enterprise Scale and the AKS Secure Baseline, look [here](referencearchs.md). 
 
 ## The 3 Components
 
