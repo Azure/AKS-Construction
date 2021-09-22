@@ -18,13 +18,10 @@ When the AKS Secure Baseline is updated, changes are evaluated and rolled into t
 
 ## Enterprise Scale
 
-The Enterprise Scale Reference
+Enterprise Scale provides prescriptive guidance based on authoritative design for the Azure platform as a whole. 
 
 The [Deployment Helper Wizard](https://azure.github.io/Aks-Construction/?default=es) has an Enterprise-Scale lense, with preset configurations for each landing zone area.
 
-## The Enterprise-Scale for AKS project
+## Enterprise-Scale for AKS
 
-This is the parent project that our work belongs to. The reference implementations in this repository all have a Enterprise-Scale lense, and typically include deployments of Hub/Spoke infrastructure and development vm's. It includes a Terraform implementation, and is again based on the AKS Secure Baseline.
-
-## Cloud Adoption Framework and Enterprise Scale
-
+This is the [parent project](https://github.com/Azure/Enterprise-Scale-for-AKS) that our work belongs to. The reference implementations in this repository are all focussed on guiding the creation of Landing Zones for AKS within an Enterprise Scale framework. They typically include deployments of Hub/Spoke infrastructure and development vm's, and includes a Terraform implementation.
