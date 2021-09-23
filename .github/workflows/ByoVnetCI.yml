@@ -289,7 +289,7 @@ jobs:
             kubectl get svc -n  $NAMESP
             kubectl get ingress -n  $NAMESP
 
-            sleep 1m
+            sleep 3m
 
             kubectl get po -n  $NAMESP
             kubectl get svc -n  $NAMESP

@@ -1,0 +1,18 @@
+on: [pull_request, workflow_dispatch]
+
+name: Check Markdown
+jobs:
+  Validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Typo file contents check
+        shell: bash
+        run: cat ./.github/workflows_dep/_typos.toml
+        
+      - name: Check spelling of markdown files
+        uses: crate-ci/typos@master
+        with: 
+          files: ./*.md
+          config: ./.github/workflows_dep/_typos.toml
