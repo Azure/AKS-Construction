@@ -1,20 +1,20 @@
 on: [pull_request, workflow_dispatch]
 
-name: Check links for modified files
+name: Check Markdown
 jobs:
-  markdown-link-check:
+  Validation:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    
-    - name: check markdown links
-      uses: gaurav-nelson/github-action-markdown-link-check@v1
-      with:
-        use-quiet-mode: 'yes'
-        use-verbose-mode: 'yes'
-        check-modified-files-only: 'yes'
+      - uses: actions/checkout@v2
+   
+      - name: check markdown links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'yes'
+          check-modified-files-only: 'yes'
         
-    - name: Check spelling of file.txt
-      uses: crate-ci/typos@master
-      with: 
-        files: ./*.md
+      - name: Check spelling of file.txt
+        uses: crate-ci/typos@master
+        with: 
+          files: ./*.md
