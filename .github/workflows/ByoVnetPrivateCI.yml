@@ -320,6 +320,9 @@ jobs:
           respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
           echo $respcode   
           
+          #TODO: This is going to need to be rewritten. #loopshambles
+          #SSH'ing on the runner shows this works, sometimes it just takes ages
+          #Needs to be investigated.
           if [ "$respcode" != "200" ];
           then
               echo "going to need to wait longer i guess?"
@@ -330,8 +333,17 @@ jobs:
               
               if [ "$respcode" != "200" ];
               then
-                echo "Non 200 response code from app - Raising error"
-                exit 1
+                echo "going to need to wait EVEN longer i guess?  (wtf)"
+                sleep 6m
+
+                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
+                echo $respcode    
+
+                if [ "$respcode" != "200" ];
+                then
+                  echo "Non 200 response code from app - Raising error"
+                  exit 1
+                fi
               fi
           fi
           
