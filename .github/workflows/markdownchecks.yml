@@ -18,10 +18,10 @@ jobs:
         shell: bash
         run: |
           ls
-          cat ./workflows_dep/_typos.toml
+          cat ./.github/workflows_dep/_typos.toml
         
       - name: Check spelling of markdown files
         uses: crate-ci/typos@master
         with: 
           files: ./*.md
-          config: ./workflows_dep/_typos.toml
+          config: ./.github/workflows_dep/_typos.toml
