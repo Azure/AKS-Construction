@@ -13,6 +13,12 @@ jobs:
       #    use-quiet-mode: 'yes'
       #    use-verbose-mode: 'yes'
       #    check-modified-files-only: 'yes'
+      
+      - name: Path check
+        shell: bash
+        run: |
+          ls
+          cat ./workflows_dep/_typos.toml
         
       - name: Check spelling of markdown files
         uses: crate-ci/typos@master
