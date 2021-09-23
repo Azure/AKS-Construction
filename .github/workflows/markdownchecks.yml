@@ -6,19 +6,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-   
-      #- name: check markdown links
-      #  uses: gaurav-nelson/github-action-markdown-link-check@v1
-      #  with:
-      #    use-quiet-mode: 'yes'
-      #    use-verbose-mode: 'yes'
-      #    check-modified-files-only: 'yes'
       
-      - name: Path check
+      - name: Typo file contents check
         shell: bash
-        run: |
-          ls
-          cat ./.github/workflows_dep/_typos.toml
+        run: cat ./.github/workflows_dep/_typos.toml
         
       - name: Check spelling of markdown files
         uses: crate-ci/typos@master
