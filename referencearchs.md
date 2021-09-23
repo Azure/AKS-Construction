@@ -27,4 +27,4 @@ When the AKS Secure Baseline is updated, changes are evaluated and rolled into t
 2. Ingress. Different baselines showcase different Ingress.
 3. Networking. Hub/Spoke networks typically already exist, and tightly bundling with Kubernetes doesn't work well here. BYO subnets are supported.
 4. AppGw Public Listener. AppGw is the WAF ingress point for inbound internet traffic, however private listeners are also valid for fully private clusters.
-5. Cluster SLA. Is defaulted to off in iterests of a cost optimised configuration, a parameter can be provided to opt in for the paid SLA.
+5. Cluster SLA. Is defaulted to off in interests of a more cost optimised default configuration, a parameter can be provided to opt in for the paid SLA.
