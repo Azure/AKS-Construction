@@ -24,7 +24,7 @@ When the AKS Secure Baseline is updated, changes are evaluated and rolled into t
 ### Deviations from the baseline (and why)
 
 1. System pool and user pool seperation is made optional in interests of users seeking a cost optimised configuration.
-2. Ingress. Different baselines showcase different Ingress.
+2. Ingress. Supports no ingress, [AGIC](https://azure.github.io/application-gateway-kubernetes-ingress/) integrated experience or post deployment ingress scripts for [NGINX](https://docs.nginx.com/nginx-ingress-controller/) and [Contour](https://github.com/projectcontour/contour).
 3. Networking. Hub/Spoke networks typically already exist, and tightly bundling with Kubernetes doesn't work well here. BYO subnets are supported.
 4. AppGw Public Listener. AppGw is the WAF ingress point for inbound internet traffic, however private listeners are also valid for fully private clusters.
 5. Cluster SLA. Is defaulted to off in interests of a more cost optimised default configuration, a parameter can be provided to opt in for the paid SLA.
