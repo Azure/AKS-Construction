@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "5960337650207112004"
+      "templateHash": "16436444010258901712"
     }
   },
   "parameters": {
@@ -23,15 +23,24 @@
     },
     "custom_vnet": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Are you providing your own vNet CIDR blocks"
+      }
     },
     "byoAKSSubnetId": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "Full resource id path of an existing subnet to use for AKS"
+      }
     },
     "byoAGWSubnetId": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "Full resource id path of an existing subnet to use for Application Gateway"
+      }
     },
     "vnetAddressPrefix": {
       "type": "string",

@@ -5,36 +5,45 @@ param location string = resourceGroup().location
 @description('Used to name all resources')
 param resourceName string
 
-//------------------------------------------------------------------------------------------------- Network
+/*
+Resource sections
+1. Networking
+2. DNS
+3. Key Vault
+4. Container Registry
+5. Firewall
+6. Application Gateway
+7. AKS
+8. Log Analytics
+*/
+
+
+/*_   _ ______ _________          ______  _____  _  _______ _   _  _____ 
+ | \ | |  ____|__   __\ \        / / __ \|  __ \| |/ /_   _| \ | |/ ____|
+ |  \| | |__     | |   \ \  /\  / / |  | | |__) | ' /  | | |  \| | |  __ 
+ | . ` |  __|    | |    \ \/  \/ /| |  | |  _  /|  <   | | | . ` | | |_ |
+ | |\  | |____   | |     \  /\  / | |__| | | \ \| . \ _| |_| |\  | |__| |
+ |_| \_|______|  |_|      \/  \/   \____/|_|  \_\_|\_\_____|_| \_|\_____|*/
+//Networking can either be one of: custom / byo / default
+
+@description('Are you providing your own vNet CIDR blocks')
 param custom_vnet bool = false
+
+@description('Full resource id path of an existing subnet to use for AKS')
 param byoAKSSubnetId string = ''
+
+@description('Full resource id path of an existing subnet to use for Application Gateway')
 param byoAGWSubnetId string = ''
 
 //--- Custom or BYO networking requires BYO AKS User Identity
-//--------------------------------------------- User Identity
 var aks_byo_identity = custom_vnet || !empty(byoAKSSubnetId)
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (aks_byo_identity) {
   name: 'id-${resourceName}'
   location: location
 }
 
-//----------------------------------------------------- BYO
-/*
-var existingAksSubnetName = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 10 ? split(byoAKSSubnetId, '/')[10] : '') : ''
-var existingAksVnetName = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 9 ? split(byoAKSSubnetId, '/')[8] : '') : ''
-*/
+//----------------------------------------------------- BYO Vnet
 var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 4 ? split(byoAKSSubnetId, '/')[4] : '') : ''
-
-/*
-resource existingAksVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = if (!empty(byoAKSSubnetId)) {
-  name: existingAksVnetName
-  scope: resourceGroup(existingAksVnetRG)
-}
-resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = if (!empty(byoAKSSubnetId)) {
-  parent: existingAksVnet
-  name: existingAksSubnetName
-}
-*/
 
 module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId)) {
   name: 'addAksNetContributor'
@@ -59,7 +68,8 @@ resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01
   parent: existingAgwVnet
   name: existingAGWSubnetName
 }
-//------------------------------------------------------ Create
+
+//------------------------------------------------------ Create custom vnet
 param vnetAddressPrefix string = '10.0.0.0/8'
 param serviceEndpoints array = []
 param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
@@ -85,6 +95,7 @@ module network './network.bicep' = if (custom_vnet) {
 var appGatewaySubnetAddressPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : vnetAppGatewaySubnetAddressPrefix
 var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
 var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
+
 
 // ----------------------------------------------------------------------- If DNS Zone
 // will be solved with 'existing' https://github.com/Azure/bicep/issues/258
