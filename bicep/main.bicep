@@ -5,13 +5,31 @@ param location string = resourceGroup().location
 @description('Used to name all resources')
 param resourceName string
 
-//------------------------------------------------------------------------------------------------- Network
+/*
+Resource sections
+1. Networking
+2. DNS
+3. Key Vault
+4. Container Registry
+5. Firewall
+6. Application Gateway
+7. AKS
+8. Log Analytics
+*/
+
+
+/*_   _ ______ _________          ______  _____  _  _______ _   _  _____ 
+ | \ | |  ____|__   __\ \        / / __ \|  __ \| |/ /_   _| \ | |/ ____|
+ |  \| | |__     | |   \ \  /\  / / |  | | |__) | ' /  | | |  \| | |  __ 
+ | . ` |  __|    | |    \ \/  \/ /| |  | |  _  /|  <   | | | . ` | | |_ |
+ | |\  | |____   | |     \  /\  / | |__| | | \ \| . \ _| |_| |\  | |__| |
+ |_| \_|______|  |_|      \/  \/   \____/|_|  \_\_|\_\_____|_| \_|\_____|*/
+                                                                         
 param custom_vnet bool = false
 param byoAKSSubnetId string = ''
 param byoAGWSubnetId string = ''
 
 //--- Custom or BYO networking requires BYO AKS User Identity
-//--------------------------------------------- User Identity
 var aks_byo_identity = custom_vnet || !empty(byoAKSSubnetId)
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (aks_byo_identity) {
   name: 'id-${resourceName}'
