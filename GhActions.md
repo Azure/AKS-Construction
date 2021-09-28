@@ -53,19 +53,23 @@ The CI Actions leveraged have a certain amount of commonality, they primarily va
 
 ### Validation stage
 
-1. [What-If tests] The output of the What-If is captured as JSON, and you can write code to assert expected configuration against the prediction from Azure. Eg. If your parameter specification defined a certain number of AKS nodes, or a particular IP Whitelist for the API Server then you can test for this.
+As detailed above, the validation stage is essential in creating a baseline of quality.
 
 ### Deployment stage
 
-This stage captures all of the deployment and post deployment configuration activities and actually deploys the resources to an Azure subscription. There are often configuration tasks that need to be done after AKS is installed, such as the [Log Analytics Fast Alerting Experience](https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-enable-new-cluster) being enabled or a different ingress controller installed.
+This stage captures all of the deployment and post deployment configuration activities and actually deploys the resources to an Azure subscription.
+
+There are often configuration tasks that need to be done after AKS is installed, such as the [Log Analytics Fast Alerting Experience](https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-enable-new-cluster) being enabled or a different ingress controller installed from a shell script.
 
 ### Infrastructure tests
 
 This stage provides the opportunity for configuration to be checked. An example from the Private CI action is ensuring that the Cluster is able to provide logs to Log Analytics, which can trip up deployments where you bring your own networking and firewall.
 
-### WorkloadAdd
+### Workload Add
 
-A great smoke test of fresh infrastructure is deploying a known good static application. This is especially true when using Ingress controllers that require specific configuration. The Private CI action deploys both a public facing and private facing workload onto AKS using the [Application Gateway Ingress Controller](https://docs.microsoft.com/en-us/azure/application-gateway/ingress-controller-overview). After adding the workload, and integration test is performed by sending an http request to the frontend ip address on the Application Gateway and checking for the http response code.
+A great smoke test of fresh infrastructure is deploying a known good static application. This is especially true when using Ingress controllers that require specific configuration. 
+
+The Private CI action deploys both a public facing and private facing workload onto AKS using the [Application Gateway Ingress Controller](https://docs.microsoft.com/en-us/azure/application-gateway/ingress-controller-overview). After adding the workload, a basic integration test is performed by sending an http request to the frontend ip address on the Application Gateway and checking for the http response code being 200.
 
 ### Application Tests
 
@@ -73,7 +77,9 @@ This stage is really not to be part of an IaC pipeline, but inside the pipeline 
 
 ### Cleanup
 
-This stage will delete the resources created in Azure in order to keep costs optimised.
+This stage will delete the resources created in Azure, after proving the configuration. If one of the previous stages fails then the infrastructure will be left in order to enable troubleshooting.
+
+Each night the resource groups used for IaC testing are purged of all resources.
 
 ## CI Step Highlight
 
