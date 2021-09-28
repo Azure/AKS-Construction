@@ -1,6 +1,6 @@
 # CI Workflows
 
-A number of CI workflows are leveraged in this repo to test the bicep files from validation through deployment and testing to ensure quality is high. The patterns and practices used can be replicated into your own IaC pipelines.
+A number of CI workflows are leveraged in this repo to test the bicep files to ensure quality is high. The patterns and practices used can be replicated into your own IaC pipelines.
 
 In this page all of the GitHub actions used in the repo will be described, as well as good IaC practices.
 
@@ -35,11 +35,13 @@ There might also be a number of rules specific to your enterprise you wish may w
 
 Actually deploying Azure resources as part of an IaC pipeline isn't always the most valuable activity on its own. By running the Validation and WhatIf, you'll already have achieved a good level of rigour on quality. However it's essential when you want to enable integration tests for more complex infrastructure deployments. Additionally for fastidious individuals, having the confirmation that what was coded actually deploys can be really useful.
 
-Consider how often you'll employ this technique, as there are cost implications. It also adds a significant delay into your pipeline. In this repo we run a real deploy and integration tests every week.
+Consider how often you'll employ this technique, as there are cost implications. It also adds a significant delay into your pipeline.
+
+In this repo we run a real deployment and integration tests each week on a schedule.
 
 ### Workload smoke tests
 
-When you bicep code deploys multiple Azure environments that work together *Integration testing* of IaC templates become super valuable. Creating actual resources lets you see if they work together properly.
+When you bicep code deploys multiple Azure environments that work together *Integration testing* of IaC templates become super valuable. Creating actual resources lets you see if they work together properly, and provides the opportunity to write tests in your pipeline.
 
 ## Other actions used in this repo
 
