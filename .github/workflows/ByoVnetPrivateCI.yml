@@ -65,11 +65,11 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-      - name: PSRule - Analyze repo
-        uses: Microsoft/ps-rule@main
-        with:
-          modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
-          baseline: 'Azure.Preview'
+      #- name: PSRule - Analyze repo
+      #  uses: Microsoft/ps-rule@main
+      #  with:
+      #    modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
+      #    baseline: 'Azure.Preview'
           
       - name: PSRule - Analyze Azure compiled JSON file
         uses: Microsoft/ps-rule@main
