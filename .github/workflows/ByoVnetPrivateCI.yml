@@ -56,13 +56,7 @@ jobs:
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-
-      # Analyze Azure resources using PSRule for Azure
-      - name: Analyze Azure template files
-        uses: Microsoft/ps-rule@main
-        with:
-          modules: 'PSRule.Rules.Azure'
-
+          
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -70,6 +64,19 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
+          
+      # Analyze Azure resources using PSRule for Azure
+      #- name: Analyze Azure template files
+      #  uses: Microsoft/ps-rule@main
+      #  with:
+      #    modules: 'PSRule.Rules.Azure'
+
+      - name: PSRule Azure template file analyse
+        shell: pwsh
+        run: |
+          $Null = Install-Module -Name PSRule.Rules.Azure -Scope CurrentUser -Force;
+          Export-AzRuleTemplateData -TemplateFile bicep/main.bicep -ParameterFile ${{ env.ParamFilePath }};
+          Assert-PSRule -InputPath .\resources-export-*.json -Module PSRule.Rules.Azure;
           
       - name: Verify Active Deployments
         id: activedeps
