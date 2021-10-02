@@ -57,6 +57,10 @@ jobs:
             Write-Output $paramFileContent
           }
           
+      - name: Install Bicep
+        run: |
+          az bicep install
+          
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -64,6 +68,10 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
+          
+      - name: Check Bicep version
+        run: |
+          bicep --version
           
       - name: PSRule - Analyze repo
         uses: Microsoft/ps-rule@main
@@ -81,10 +89,7 @@ jobs:
           inputPath: bicep/compiled/*
           baseline: 'Azure.Preview'
           
-      - name: Install Bicep
-        continue-on-error: true
-        run: |
-          az bicep install
+
           
       - name: PSRule - Analyze Azure Bicep files
         uses: Microsoft/ps-rule@main
@@ -104,38 +109,7 @@ jobs:
           inputPath: "${{ env.ParamFilePath }}"
           baseline: 'Azure.GA_2021_09'
           
-          
-      - name: PSRule Azure template file analyse
-        shell: pwsh
-        run: |
-          Write-Output 'Installing Bicep'
-          az bicep install
-          
-          Write-Output 'Installing PSRule'
-          $Null = Install-Module -Name PSRule.Rules.Azure -Scope CurrentUser -Force -AllowPrerelease;
-         
-          Get-InstalledModule | select Name, Version, Repository, InstalledDate | ft
-          
-          Test-Path '${{ env.ParamFilePath }}'
-          
-          #Write-Output 'Exporting template data for ${{ env.ParamFilePath }}'
-          #Export-AzRuleTemplateData -TemplateFile bicep/compiled/main.json -ParameterFile ${{ env.ParamFilePath }} -OutputPath out/;
-          
-          # Validate resources
-          # OutputFormat Accepted values: None, Yaml, Json, Markdown, NUnit3, Csv
-          $assertParams = @{
-              InputPath = 'out/*.json'
-              Module = 'PSRule.Rules.Azure'
-              Style = 'GitHubActions'
-              OutputFormat = 'NUnit3'
-              OutputPath = 'reports/rule-report.xml'
-          }
-          Assert-PSRule @assertParams;
-          
-          
-          #Assert-PSRule -Module 'PSRule.Rules.Azure' -InputPath 'out/templates/' -Format File;
-          
-      - name: Verify Active Deployments
+      - name: Verify No Active Deployments in RG
         id: activedeps
         uses: Azure/cli@1.0.4
         with:
