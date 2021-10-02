@@ -123,6 +123,7 @@ jobs:
           }
           Assert-PSRule @assertParams;
           
+          
           #Assert-PSRule -Module 'PSRule.Rules.Azure' -InputPath 'out/templates/' -Format File;
           
       - name: Verify Active Deployments
