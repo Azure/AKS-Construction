@@ -27,3 +27,9 @@ configuration:
   # Authoring rules
   RULE_AUTHORING_ONLINE_HELP: 'https://azure.github.io/PSRule.Rules.Azure/en/rules/'
   RULE_AUTHORING_PREFIX: 'Azure'
+  
+  # Enable automatic expansion of Azure parameter files
+  AZURE_PARAMETER_FILE_EXPANSION: true
+  
+  # Enable automatic expansion of bicep source files
+  AZURE_BICEP_FILE_EXPANSION: true
