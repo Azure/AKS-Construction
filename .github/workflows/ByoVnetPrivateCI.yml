@@ -56,7 +56,13 @@ jobs:
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-          
+
+      # Analyze Azure resources using PSRule for Azure
+      - name: Analyze Azure template files
+        uses: Microsoft/ps-rule@main
+        with:
+          modules: 'PSRule.Rules.Azure'
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
