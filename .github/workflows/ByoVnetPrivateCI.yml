@@ -73,6 +73,12 @@ jobs:
 #          outputFormat: NUnit3  
 #          outputPath: psruleout                                     
 #          prerelease: true      
+
+      - name: Analyze Azure template files
+        uses: Microsoft/ps-rule@main
+        with:
+          modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
+          inputType: repository #inputPath
           
       - name: PSRule Azure template file analyse
         shell: pwsh
