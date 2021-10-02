@@ -65,36 +65,33 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-#      - name: Run PSRule analysis
-#        uses: Microsoft/ps-rule@main
-#        with:
-#          #inputType: inputPath
-#          #inputPath: ${{ env.ParamFilePath }}
-#          outputFormat: NUnit3  
-#          outputPath: psruleout                                     
-#          prerelease: true      
-
-      - name: Analyze Azure compiled JSON files
+      - name: PSRule - Analyze repo
         uses: Microsoft/ps-rule@main
         with:
           modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
-          inputType: inputPath #repository #inputPath
-          inputPath: bicep/compiled/* #/compiled/main.json
-          baseline: 'Azure.GA_2021_09'
+          baseline: 'Azure.Preview'
           
-      - name: Analyze Azure Bicep files
+      - name: PSRule - Analyze Azure compiled JSON file
         uses: Microsoft/ps-rule@main
         with:
-          modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
-          inputType: inputPath #repository #inputPath
-          inputPath: bicep/* #/compiled/main.json
+          modules: 'PSRule.Rules.Azure'  
+          inputType: inputPath 
+          inputPath: bicep/compiled/main.json
+          baseline: 'Azure.Preview'
+          
+      - name: PSRule - Analyze Azure Bicep files
+        uses: Microsoft/ps-rule@main
+        with:
+          modules: 'PSRule.Rules.Azure' 
+          inputType: inputPath 
+          inputPath: bicep/* 
           baseline: 'Azure.GA_2021_09'
           
       - name: Analyze Azure parameter file
         uses: Microsoft/ps-rule@main
         with:
-          modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
-          inputType: inputPath #repository #inputPath
+          modules: 'PSRule.Rules.Azure' 
+          inputType: inputPath 
           inputPath: "${{ env.ParamFilePath }}"
           baseline: 'Azure.GA_2021_09'
           
@@ -113,20 +110,20 @@ jobs:
           Test-Path '${{ env.ParamFilePath }}'
           
           #Write-Output 'Exporting template data for ${{ env.ParamFilePath }}'
-          #Export-AzRuleTemplateData -TemplateFile bicep/main.bicep -ParameterFile ${{ env.ParamFilePath }} -OutputPath out/;
+          #Export-AzRuleTemplateData -TemplateFile bicep/compiled/main.json -ParameterFile ${{ env.ParamFilePath }} -OutputPath out/;
           
           # Validate resources
           # OutputFormat Accepted values: None, Yaml, Json, Markdown, NUnit3, Csv
-          #$assertParams = @{
-          #    InputPath = 'out/*.json'
-          #    Module = 'PSRule.Rules.Azure'
-          #    Style = 'GitHubActions'
-          #    OutputFormat = 'NUnit3'
-          #    OutputPath = 'reports/rule-report.xml'
-          #}
-          #Assert-PSRule @assertParams;
+          $assertParams = @{
+              InputPath = 'out/*.json'
+              Module = 'PSRule.Rules.Azure'
+              Style = 'GitHubActions'
+              OutputFormat = 'NUnit3'
+              OutputPath = 'reports/rule-report.xml'
+          }
+          Assert-PSRule @assertParams;
           
-          Assert-PSRule -Module 'PSRule.Rules.Azure' -InputPath 'out/templates/' -Format File;
+          #Assert-PSRule -Module 'PSRule.Rules.Azure' -InputPath 'out/templates/' -Format File;
           
       - name: Verify Active Deployments
         id: activedeps
