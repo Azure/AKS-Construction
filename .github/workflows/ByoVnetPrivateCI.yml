@@ -65,40 +65,14 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-      # Analyze Azure resources using PSRule for Azure
-      #- name: Analyze Azure template files
-      #  uses: Microsoft/ps-rule@main
-      #  with:
-      #    modules: 'PSRule.Rules.Azure'
-      
-          
-
-      - name: PSRule Azure template file analyse
-        shell: pwsh
-        run: |
-          Write-Output 'Installing Bicep'
-          az bicep install
-          
-          Write-Output 'Installing PSRule'
-          $Null = Install-Module -Name PSRule.Rules.Azure -Scope CurrentUser -Force  -AllowPrerelease;
-         
-          Get-InstalledModule | select Name, Version, Repository, InstalledDate | ft
-          
-          Test-Path '${{ env.ParamFilePath }}'
-          
-          Write-Output 'Exporting template data for ${{ env.ParamFilePath }}'
-          Export-AzRuleTemplateData -TemplateFile bicep/main.bicep -ParameterFile ${{ env.ParamFilePath }} -OutputPath out/;
-
-          # Validate resources
-          # OutputFormat Accepted values: None, Yaml, Json, Markdown, NUnit3, Csv
-          $assertParams = @{
-              InputPath = 'out/*.json'
-              Module = 'PSRule.Rules.Azure'
-              Style = 'GitHubActions'
-              OutputFormat = 'NUnit3'
-              OutputPath = 'reports/rule-report.xml'
-          }
-          Assert-PSRule @assertParams;
+      - name: Run PSRule analysis
+        uses: Microsoft/ps-rule@main
+        with:
+          inputType: inputPath
+          inputPath: ${{ env.ParamFilePath }}
+          outputFormat: NUnit3  
+          outputPath: psruleout                                     
+          prerelease: true                                   
           
       - name: Verify Active Deployments
         id: activedeps
