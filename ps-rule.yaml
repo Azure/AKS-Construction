@@ -1,0 +1,29 @@
+#
+# PSRule configuration
+#
+
+# Please see the documentation for all configuration options:
+# https://microsoft.github.io/PSRule/
+
+input:
+  pathIgnore:
+  - '.vscode/'
+  - '*.md'
+  - '*.Designer.cs'
+  - '*.resx'
+  - '*.sln'
+  - '*.txt'
+  - '*.html'
+  - '*.ico'
+
+include:
+  path: []
+
+output:
+  culture:
+  - en-US
+
+configuration:
+  # Authoring rules
+  RULE_AUTHORING_ONLINE_HELP: 'https://azure.github.io/PSRule.Rules.Azure/en/rules/'
+  RULE_AUTHORING_PREFIX: 'Azure'
