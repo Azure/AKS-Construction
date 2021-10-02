@@ -76,8 +76,13 @@ jobs:
         with:
           modules: 'PSRule.Rules.Azure'  
           inputType: inputPath 
-          inputPath: bicep/compiled/main.json
+          inputPath: bicep/compiled/*
           baseline: 'Azure.Preview'
+          
+      - name: Install Bicep
+        shell: pwsh
+        run: |
+          az bicep install
           
       - name: PSRule - Analyze Azure Bicep files
         uses: Microsoft/ps-rule@main
