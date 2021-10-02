@@ -77,8 +77,10 @@ jobs:
           Write-Output 'Installing PSRule'
           $Null = Install-Module -Name PSRule.Rules.Azure -Scope CurrentUser -Force;
           
+          Test-Path '${{ env.ParamFilePath }}'
+          
           Write-Output 'Exporting template data for ${{ env.ParamFilePath }}'
-          Export-AzRuleTemplateData -TemplateFile bicep/compiled/main.json -ParameterFile .\parameters.json -OutputPath out/;
+          Export-AzRuleTemplateData -TemplateFile bicep/compiled/main.json -ParameterFile ${{ env.ParamFilePath }} -OutputPath out/;
 
           # Validate resources
           # OutputFormat Accepted values: None, Yaml, Json, Markdown, NUnit3, Csv
