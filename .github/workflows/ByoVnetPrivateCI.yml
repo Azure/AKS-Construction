@@ -65,14 +65,16 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-      #- name: PSRule - Analyze repo
-      #  uses: Microsoft/ps-rule@main
-      #  with:
-      #    modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
-      #    baseline: 'Azure.Preview'
+      - name: PSRule - Analyze repo
+        uses: Microsoft/ps-rule@main
+        continue-on-error: true
+        with:
+          modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
+          baseline: 'Azure.Preview'
           
       - name: PSRule - Analyze Azure compiled JSON file
         uses: Microsoft/ps-rule@main
+        continue-on-error: true
         with:
           modules: 'PSRule.Rules.Azure'  
           inputType: inputPath 
@@ -80,12 +82,13 @@ jobs:
           baseline: 'Azure.Preview'
           
       - name: Install Bicep
-        shell: pwsh
+        continue-on-error: true
         run: |
           az bicep install
           
       - name: PSRule - Analyze Azure Bicep files
         uses: Microsoft/ps-rule@main
+        continue-on-error: true
         with:
           modules: 'PSRule.Rules.Azure' 
           inputType: inputPath 
@@ -94,6 +97,7 @@ jobs:
           
       - name: Analyze Azure parameter file
         uses: Microsoft/ps-rule@main
+        continue-on-error: true
         with:
           modules: 'PSRule.Rules.Azure' 
           inputType: inputPath 
