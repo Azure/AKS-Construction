@@ -68,8 +68,8 @@ jobs:
       - name: Run PSRule analysis
         uses: Microsoft/ps-rule@main
         with:
-          inputType: inputPath
-          inputPath: ${{ env.ParamFilePath }}
+          #inputType: inputPath
+          #inputPath: ${{ env.ParamFilePath }}
           outputFormat: NUnit3  
           outputPath: psruleout                                     
           prerelease: true                                   
