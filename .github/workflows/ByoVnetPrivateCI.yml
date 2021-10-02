@@ -80,6 +80,7 @@ jobs:
           modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
           inputType: inputPath #repository #inputPath
           inputPath: bicep/* #/compiled/main.json
+          baseline: 'Azure.GA_2021_09'
           
       - name: PSRule Azure template file analyse
         shell: pwsh
