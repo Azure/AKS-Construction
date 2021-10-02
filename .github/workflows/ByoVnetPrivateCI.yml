@@ -74,13 +74,30 @@ jobs:
 #          outputPath: psruleout                                     
 #          prerelease: true      
 
-      - name: Analyze Azure template files
+      - name: Analyze Azure compiled JSON files
         uses: Microsoft/ps-rule@main
         with:
           modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
           inputType: inputPath #repository #inputPath
-          inputPath: bicep/** #/compiled/main.json
+          inputPath: bicep/compiled/* #/compiled/main.json
           baseline: 'Azure.GA_2021_09'
+          
+      - name: Analyze Azure Bicep files
+        uses: Microsoft/ps-rule@main
+        with:
+          modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
+          inputType: inputPath #repository #inputPath
+          inputPath: bicep/* #/compiled/main.json
+          baseline: 'Azure.GA_2021_09'
+          
+      - name: Analyze Azure parameter file
+        uses: Microsoft/ps-rule@main
+        with:
+          modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
+          inputType: inputPath #repository #inputPath
+          inputPath: "${{ env.ParamFilePath }}"
+          baseline: 'Azure.GA_2021_09'
+          
           
       - name: PSRule Azure template file analyse
         shell: pwsh
