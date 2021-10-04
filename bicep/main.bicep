@@ -121,7 +121,9 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 param azureKeyvaultSecretsProvider bool = false //This is a preview feature
 
 param createKV bool = false
+
 param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
+
 var akvName = 'kv-${replace(resourceName, '-', '')}'
 
 resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
@@ -230,6 +232,7 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
 }
 
 //---------------------------------------------------------------------------------- Firewall
+@description('Create an Azure Firewall')
 param azureFirewalls bool = false
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
@@ -243,10 +246,14 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
 }
 
 //---------------------------------------------------------------------------------- AppGateway
+@description('Create an Application Gateway')
 param ingressApplicationGateway bool = false
 param appGWcount int = 2
 param appGWmaxCount int = 0
+
+@description('A known private ip in the Application Gateway subnet range to be allocated for internal traffic')
 param privateIpApplicationGateway string = ''
+
 param appgwKVIntegration bool = false
 
 @allowed([
@@ -255,6 +262,8 @@ param appgwKVIntegration bool = false
 ])
 @description('The SKU for AppGw')
 param appGWsku string = 'WAF_v2'
+
+@description('Enable the WAF Firewall, valid for WAF_v2 SKUs')
 param appGWenableFirewall bool = true
 
 var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubnetId))
@@ -518,6 +527,10 @@ param dockerBridgeCidr string = '172.17.0.1/16'
 
 var autoScale = agentCountMax > agentCount
 
+param createAksMetricAlerts bool = true
+
+
+
 param JustUseSystemPool bool = false
 
 @allowed([
@@ -746,8 +759,20 @@ resource gitops 'Microsoft.KubernetesConfiguration/sourceControlConfigurations@2
 }
 */
 
+
+module aksmetricalerts './aksmetricalerts.bicep' = {
+  name: 'addAksNetContributor'
+  scope: resourceGroup()
+  params: {
+    clusterName: aks.name
+    logAnalyticsWorkspaceName: aks_law.name
+    metricAlertsEnabled: createAksMetricAlerts
+  }
+}
+
 //---------------------------------------------------------------------------------- Container Insights
 
+@description('The log retention period')
 param retentionInDays int = 30
 var aks_law_name = 'log-${resourceName}'
 resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (omsagent || deployAppGw || azureFirewalls) {
