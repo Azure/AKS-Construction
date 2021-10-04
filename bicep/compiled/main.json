@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "4244816968103377756"
+      "templateHash": "5500851443134513970"
     }
   },
   "parameters": {
@@ -1352,7 +1352,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.613.9944",
-              "templateHash": "7066884024678322300"
+              "templateHash": "3961221546053865195"
             }
           },
           "parameters": {
@@ -2132,6 +2132,7 @@
                   "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
                 ],
                 "windowSize": "[parameters('windowSize')]",
+                "autoMitigate": false,
                 "criteria": {
                   "allOf": [
                     {
