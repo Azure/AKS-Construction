@@ -105,7 +105,7 @@ jobs:
         continue-on-error: true
         with:
           modules: 'PSRule.Rules.Azure' 
-          inputType: inputPath 
+          inputType: repository
           inputPath: "${{ env.ParamFilePath }}"
           baseline: 'Azure.GA_2021_09'
           
