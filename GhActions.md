@@ -8,7 +8,7 @@ In this page all of the GitHub actions used in the repo will be described, as we
 
 ### The Foundations
 
-Often the term "Infrastructure as Code" is misinterpreted as representing your infrastructure as code. Done properly, IaC is about taking software engineering practices and applying them to infrastructure. Quality needs to be baked in from the beginning in order to instil confidence in those depending on the code that is produced.
+Often the term "Infrastructure as Code" is misinterpreted as representing your infrastructure as code. Done properly, IaC is about taking software engineering practices and applying them to infrastructure. Quality needs to be baked in from the beginning in order to instil confidence in those depending on the code that is produced. There's some good reading in the Azure Architecture Center on the subject of [Repeatable Infrastructure](https://docs.microsoft.com/en-us/azure/architecture/framework/devops/automation-infrastructure).
 
 #### Branch policies
 
