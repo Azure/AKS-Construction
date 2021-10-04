@@ -4,7 +4,14 @@ param clusterName string
 @description('The name of the Log Analytics workspace to log metric data to')
 param logAnalyticsWorkspaceName string
 
+@description('The region of the Log Analytics workspace')
+param logAnalyticsWorkspaceRegion string
+
 @description('Select the frequency on how often the alert rule should be run. Selecting frequency smaller than granularity of datapoints grouping will result in sliding window evaluation')
+@allowed([
+  'PT1M'
+  'PT15M'
+])
 param evalFrequency string = 'PT1M'
 
 @description('Create the metric alerts as either enabled or disabled')
@@ -13,6 +20,7 @@ param metricAlertsEnabled bool = true
 @description('Defines the interval over which datapoints are grouped using the aggregation type function')
 @allowed([
   'PT5M'
+  'PT1H'
 ])
 param windowSize string = 'PT5M'
 
@@ -425,7 +433,7 @@ resource Containers_getting_OOM_killed_for_clusterName_CI_6 'Microsoft.Insights/
     scopes: [
       AksResourceId
     ]
-    severity: 3
+    severity: alertSeverityNumber
     targetResourceType: 'microsoft.containerservice/managedclusters'
     windowSize: windowSize
   }
@@ -472,7 +480,7 @@ resource Persistent_volume_usage_high_for_clusterName_CI_18 'Microsoft.Insights/
     scopes: [
       AksResourceId
     ]
-    severity: 3
+    severity: alertSeverityNumber
     targetResourceType: 'microsoft.containerservice/managedclusters'
     windowSize: windowSize
   }
@@ -519,7 +527,7 @@ resource Pods_not_in_ready_state_for_clusterName_CI_8 'Microsoft.Insights/metric
     scopes: [
       AksResourceId
     ]
-    severity: 3
+    severity: alertSeverityNumber
     targetResourceType: 'microsoft.containerservice/managedclusters'
     windowSize: windowSize
   }
@@ -566,8 +574,179 @@ resource Restarting_container_count_for_clusterName_CI_7 'Microsoft.Insights/met
     scopes: [
       AksResourceId
     ]
-    severity: 3
+    severity: alertSeverityNumber
     targetResourceType: 'Microsoft.ContainerService/managedClusters'
     windowSize: windowSize
+  }
+}
+
+resource Container_CPU_usage_violates_the_configured_threshold_for_clustername_CI_19 'microsoft.insights/metricAlerts@2018-03-01' = {
+  name: 'Container CPU usage violates the configured threshold for ${clusterName} CI-19'
+  location: 'global'
+  properties: {
+    description: 'This alert monitors container CPU usage. It uses the threshold defined in the config map.'
+    severity: alertSeverityNumber
+    enabled: true
+    scopes: [
+      AksResourceId
+    ]
+    evaluationFrequency: evalFrequency
+    windowSize: windowSize
+    criteria: {
+      allOf: [
+        {
+          threshold: 0
+          name: 'Metric1'
+          metricNamespace: 'Insights.Container/containers'
+          metricName: 'cpuThresholdViolated'
+          dimensions: [
+            {
+              name: 'controllerName'
+              operator: 'Include'
+              values: [
+                '*'
+              ]
+            }
+            {
+              name: 'kubernetes namespace'
+              operator: 'Include'
+              values: [
+                '*'
+              ]
+            }
+          ]
+          operator: 'GreaterThan'
+          timeAggregation: 'Average'
+          skipMetricValidation: true
+          criterionType: 'StaticThresholdCriterion'
+        }
+      ]
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+    }
+  }
+}
+
+resource Container_working_set_memory_usage_violates_the_configured_threshold_for_clustername_CI_20 'microsoft.insights/metricAlerts@2018-03-01' = {
+  name: 'Container working set memory usage violates the configured threshold for ${clusterName} CI-20'
+  location: 'global'
+  properties: {
+    description: 'This alert monitors container working set memory usage. It uses the threshold defined in the config map.'
+    severity: alertSeverityNumber
+    enabled: metricAlertsEnabled
+    scopes: [
+      AksResourceId
+    ]
+    evaluationFrequency: evalFrequency
+    windowSize: windowSize
+    criteria: {
+      allOf: [
+        {
+          threshold: 0
+          name: 'Metric1'
+          metricNamespace: 'Insights.Container/containers'
+          metricName: 'memoryWorkingSetThresholdViolated'
+          dimensions: [
+            {
+              name: 'controllerName'
+              operator: 'Include'
+              values: [
+                '*'
+              ]
+            }
+            {
+              name: 'kubernetes namespace'
+              operator: 'Include'
+              values: [
+                '*'
+              ]
+            }
+          ]
+          operator: 'GreaterThan'
+          timeAggregation: 'Average'
+          skipMetricValidation: true
+          criterionType: 'StaticThresholdCriterion'
+        }
+      ]
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+    }
+  }
+}
+
+
+resource PV_usage_violates_the_configured_threshold_for_clustername_CI_21 'microsoft.insights/metricAlerts@2018-03-01' = {
+  name: 'PV usage violates the configured threshold for ${clusterName} CI-21'
+  location: 'global'
+  properties: {
+    description: 'This alert monitors PV usage. It uses the threshold defined in the config map.'
+    severity: alertSeverityNumber
+    enabled: metricAlertsEnabled
+    scopes: [
+      AksResourceId
+    ]
+    evaluationFrequency: evalFrequency
+    windowSize: windowSize
+    criteria: {
+      allOf: [
+        {
+          threshold: 0
+          name: 'Metric1'
+          metricNamespace: 'Insights.Container/persistentvolumes'
+          metricName: 'pvUsageThresholdViolated'
+          dimensions: [
+            {
+              name: 'podName'
+              operator: 'Include'
+              values: [
+                '*'
+              ]
+            }
+            {
+              name: 'kubernetesNamespace'
+              operator: 'Include'
+              values: [
+                '*'
+              ]
+            }
+          ]
+          operator: 'GreaterThan'
+          timeAggregation: 'Average'
+          skipMetricValidation: true
+          criterionType: 'StaticThresholdCriterion'
+        }
+      ]
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+    }
+  }
+}
+
+
+resource Daily_data_cap_breached_for_workspace_logworkspacename_CIQ_1_name_resource 'microsoft.insights/scheduledqueryrules@2021-02-01-preview' = {
+  name: 'Daily data cap breached for workspace ${logAnalyticsWorkspaceName} CIQ-1'
+  location: logAnalyticsWorkspaceRegion
+  properties: {
+    displayName: 'Daily data cap breached for workspace ${logAnalyticsWorkspaceName} CIQ-1'
+    description: 'This alert monitors daily data cap defined on a workspace and fires when the daily data cap is breached.'
+    severity: 1
+    enabled: metricAlertsEnabled
+    evaluationFrequency: evalFrequency
+    scopes: [
+      resourceId('microsoft.operationalinsights/workspaces', logAnalyticsWorkspaceName)
+    ]
+    windowSize: windowSize
+    criteria: {
+      allOf: [
+        {
+          query: '_LogOperation | where Operation == "Data collection Status" | where Detail contains "OverQuota"'
+          timeAggregation: 'Count'
+          operator: 'GreaterThan'
+          threshold: 0
+          failingPeriods: {
+            numberOfEvaluationPeriods: 1
+            minFailingPeriodsToAlert: 1
+          }
+        }
+      ]
+    }
+    muteActionsDuration: 'P1D'
   }
 }
