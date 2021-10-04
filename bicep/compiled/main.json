@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "4112654766772270196"
+      "templateHash": "13447777801659503316"
     }
   },
   "parameters": {
@@ -1308,7 +1308,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
-      "name": "addAksNetContributor",
+      "name": "aksmetricalerts",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
