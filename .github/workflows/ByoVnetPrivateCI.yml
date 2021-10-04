@@ -57,9 +57,9 @@ jobs:
             Write-Output $paramFileContent
           }
           
-      - name: Install Bicep
-        run: |
-          az bicep install
+      #- name: Install Bicep
+      #  run: |
+      #    az bicep install
           
       - name: Azure Login
         uses: Azure/login@v1
@@ -68,41 +68,13 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          
-      - name: Check Bicep version
-        run: |
-          bicep --version
-          
-      - name: PSRule - Analyze repo
+
+      # PSRule does this cool thing where it traverse the parameter file through to the arm template
+      # PSRule performs IaC recommendations of the template.
+      # https://azure.github.io/PSRule.Rules.Azure/
+      - name: PSRule - Analyze Azure parameter file
         uses: Microsoft/ps-rule@main
-        continue-on-error: true
-        with:
-          modules: 'PSRule.Rules.Azure'  # Analyze objects using the rules within the PSRule.Rules.Azure PowerShell module.
-          baseline: 'Azure.Preview'
-          
-      - name: PSRule - Analyze Azure compiled JSON file
-        uses: Microsoft/ps-rule@main
-        continue-on-error: true
-        with:
-          modules: 'PSRule.Rules.Azure'  
-          inputType: repository 
-          inputPath: bicep/compiled/*
-          baseline: 'Azure.Preview'
-          
-      - name: PSRule - Analyze Azure Bicep files
-        uses: Microsoft/ps-rule@main
-        continue-on-error: true
-        #env:
-        #  PSRULE_AZURE_BICEP_USE_AZURE_CLI: true
-        with:
-          modules: 'PSRule.Rules.Azure' 
-          inputType: repository 
-          inputPath: bicep/* 
-          baseline: 'Azure.GA_2021_09'
-          
-      - name: Analyze Azure parameter file
-        uses: Microsoft/ps-rule@main
-        continue-on-error: true
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.Azure' 
           inputType: repository
