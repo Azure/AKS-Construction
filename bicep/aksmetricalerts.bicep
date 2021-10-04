@@ -733,6 +733,7 @@ resource Daily_data_cap_breached_for_workspace_logworkspacename_CIQ_1_name_resou
       resourceId('microsoft.operationalinsights/workspaces', logAnalyticsWorkspaceName)
     ]
     windowSize: windowSize
+    autoMitigate: false
     criteria: {
       allOf: [
         {
