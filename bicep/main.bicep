@@ -851,7 +851,7 @@ var AlertFrequencyLookup = {
 var AlertFrequency = AlertFrequencyLookup[AksMetricAlertMetricFrequencyModel]
 
 module aksmetricalerts './aksmetricalerts.bicep' = {
-  name: 'addAksNetContributor'
+  name: 'aksmetricalerts'
   scope: resourceGroup()
   params: {
     clusterName: aks.name
