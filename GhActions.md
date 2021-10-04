@@ -25,7 +25,7 @@ As a minimum bar to assert the quality of the bicep code we really want to lever
 
 To do this we need to talk to the Azure Control Plane, so we'll need a set of Azure Credentials, Subscription and a resource group with RBAC configured.
 
-1. [Validation](https://docs.microsoft.com/en-us/cli/azure/deployment/group?view=azure-cli-latest#az_deployment_group_validate). Template ensures the template compiles, that there are no errors in the bicep code, that the parameter file provides all mandatory parameters and that the ARM Control plane will accept the deployment. A great example of what Validate can do is that it will fail if you supply incompatible configuration through parameters, eg. You want a feature of an Azure service that comes with a Premium SKU but you've set the SKU to Standard.
+1. [Validation](https://docs.microsoft.com/en-us/cli/azure/deployment/group?view=azure-cli-latest#az_deployment_group_validate). Validation ensures the template compiles, that there are no errors in the bicep code, that the parameter file provides all mandatory parameters and that the ARM Control plane will accept the deployment. A great example of what Validate can do is that it will fail if you supply incompatible configuration through parameters, eg. You want a feature of an Azure service that comes with a Premium SKU but you've set the SKU to Standard.
 1. [What-If](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/deploy-what-if). The what-if operation lets you see how resources will change if you deploy the template.
 
 After running a What-If, we have the opportunity to leverage the output of the WhatIf to assert a level of quality of what's been written. This is especially useful when your bicep template contains a lot of conditional logic. EG. If you're using parameter values to choose whether or not to install certain resources it can be especially useful to write a couple of test cases around this.
@@ -33,7 +33,8 @@ There might also be a number of rules specific to your enterprise you wish may w
 
 ### Deploying to an Azure Subscription
 
-Actually deploying Azure resources as part of an IaC pipeline isn't always the most valuable activity on its own. By running the Validation and WhatIf, you'll already have achieved a good level of rigour on quality. However it's essential when you want to enable integration tests for more complex infrastructure deployments. Additionally for fastidious individuals, having the confirmation that what was coded actually deploys can be really useful.
+Actually deploying Azure resources as part of an IaC pipeline isn't always the most valuable activity on its own. By running the Validation and WhatIf, you'll already have achieved a good level of rigour on quality. However it's essential when you want to enable integration tests for more complex infrastructure deployments. Additionally for fastidious individuals, having the confirmation that what was coded actually deploys can be really useful. It also is useful to see the end to end time it takes to deploy, so you can provide guidance to the
+teams who consume your code template.
 
 Consider how often you'll employ this technique, as there are cost implications. It also adds a significant delay into your pipeline.
 
