@@ -6,12 +6,20 @@ In this page all of the GitHub actions used in the repo will be described, as we
 
 ## Infrastructure as Code pipeline practices
 
-### Branch policies
+### The Foundations
+
+Often the term "Infrastructure as Code" is misinterpreted as representing your infrastructure as code. Done properly, IaC is about taking software engineering practices and applying them to infrastructure. Quality needs to be baked in from the beginning in order to instil confidence in those depending on the code that is produced.
+
+#### Branch policies
 
 It's important to protect your main branch by enforcing Pull Requests to be used with an additional reviewer.
 As part of the PR you can set various Actions to run, and crucially you can specify jobs in the pipelines that must always pass. For this repo, we're using `Validation` as the name of the job that must always pass [status checks](https://docs.github.com/v3/repos/statuses/).
 
-### Bicep Build
+### Pre-deploy Validation
+
+It's essential to shift left, and catch as many problems before a single resource is deployed to real infrastructure. There are a plethora of tools and techniques that can be leveraged to catch functional or syntactical problems.
+
+#### Bicep Build
 
 Whenever code files in the bicep directory are changed on a push, the bicep build command is run. This action installs bicep and runs the `bicep build` command, if this fails then this is a very early indicator to the author that the bicep file is not valid. Ideally these problems would have surfaced earlier in the coding inner loop, but sometimes mistakes can happen and bad files can make it back into source control.
 
@@ -19,7 +27,11 @@ Running a bicep build initiates the [linter](https://docs.microsoft.com/en-us/az
 
 Warnings do not form part of the pass/fail of the action step, however you can use [linter configuration](https://github.com/Azure/bicep/blob/main/docs/linter.md#configuration) to achieve this.
 
-### Using the AZ CLI to verify
+#### PSRule for Azure
+
+An interesting project for performing pre/post validation of Azure Resources against the Well Architected Framework is [PSRule for Azure](https://azure.github.io/PSRule.Rules.Azure/). Over [200 rules](https://azure.github.io/PSRule.Rules.Azure/en/baselines/Azure.All/) will be evaluated against your Arm template, ranging from Security configuration to naming conventions.
+
+#### Using the AZ CLI to verify
 
 As a minimum bar to assert the quality of the bicep code we really want to leverage some additional validation of "would this deploy successfully" and "what will this create", but without actually creating any actual Infrastructure resources.
 
@@ -70,7 +82,7 @@ This stage provides the opportunity for configuration to be checked. An example 
 
 ### Workload Add
 
-A great smoke test of fresh infrastructure is deploying a known good static application. This is especially true when using Ingress controllers that require specific configuration. 
+A great smoke test of fresh infrastructure is deploying a known good static application. This is especially true when using Ingress controllers that require specific configuration.
 
 The Private CI action deploys both a public facing and private facing workload onto AKS using the [Application Gateway Ingress Controller](https://docs.microsoft.com/en-us/azure/application-gateway/ingress-controller-overview). After adding the workload, a basic integration test is performed by sending an http request to the frontend ip address on the Application Gateway and checking for the http response code being 200.
 
