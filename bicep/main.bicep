@@ -350,9 +350,15 @@ var frontendPrivateIpConfig = {
   name: 'appGatewayPrivateIP'
 }
 
+@allowed([
+  'Prevention'
+  'Detection'
+])
+param appGwFirewallMode string = 'Prevention'
+
 var appGwFirewallConfigOwasp = {
   enabled: appGWenableWafFirewall
-  firewallMode: 'Prevention' 
+  firewallMode: appGwFirewallMode 
   ruleSetType: 'OWASP'
   ruleSetVersion: '3.2'
   requestBodyCheck: true
