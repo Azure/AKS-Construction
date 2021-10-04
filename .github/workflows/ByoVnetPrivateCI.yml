@@ -94,6 +94,8 @@ jobs:
       - name: PSRule - Analyze Azure Bicep files
         uses: Microsoft/ps-rule@main
         continue-on-error: true
+        env:
+          PSRULE_AZURE_BICEP_USE_AZURE_CLI: true
         with:
           modules: 'PSRule.Rules.Azure' 
           inputType: inputPath 
