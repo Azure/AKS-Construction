@@ -239,14 +239,15 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
 }
 
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
 
 resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
-  name: '${guid(aks.id, 'Acr', AcrPullRole)}'
+  name: '${guid(aks.id, 'Acr' , AcrPullRole)}'
   properties: {
     roleDefinitionId: AcrPullRole
     principalType: 'ServicePrincipal'
-    principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
+    principalId: KubeletObjectId
   }
   dependsOn: [
     aks
@@ -891,6 +892,7 @@ resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-
     principalType: 'ServicePrincipal'
   }
 }
+
 
 output LogAnalyticsName string = (createLaw) ? aks_law.name : ''
 output LogAnalyticsGuid string = (createLaw) ? aks_law.properties.customerId : ''
