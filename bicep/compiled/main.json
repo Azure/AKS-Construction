@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "16436444010258901712"
+      "templateHash": "13447777801659503316"
     }
   },
   "parameters": {
@@ -68,11 +68,17 @@
     },
     "azureKeyvaultSecretsProvider": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Installs the AKS KV CSI provider"
+      }
     },
     "createKV": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Creates a Key Vault"
+      }
     },
     "AKVserviceEndpointFW": {
       "type": "string",
@@ -88,11 +94,17 @@
     },
     "azureFirewalls": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Create an Azure Firewall"
+      }
     },
     "ingressApplicationGateway": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Create an Application Gateway"
+      }
     },
     "appGWcount": {
       "type": "int",
@@ -104,7 +116,10 @@
     },
     "privateIpApplicationGateway": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "A known private ip in the Application Gateway subnet range to be allocated for internal traffic"
+      }
     },
     "appgwKVIntegration": {
       "type": "bool",
@@ -123,7 +138,10 @@
     },
     "appGWenableFirewall": {
       "type": "bool",
-      "defaultValue": true
+      "defaultValue": true,
+      "metadata": {
+        "description": "Enable the WAF Firewall, valid for WAF_v2 SKUs"
+      }
     },
     "dnsPrefix": {
       "type": "string",
@@ -143,7 +161,10 @@
     },
     "omsagent": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Create, and use a new Log Analytics workspace for AKS logs"
+      }
     },
     "enableAzureRBAC": {
       "type": "bool",
@@ -244,9 +265,42 @@
       "type": "string",
       "defaultValue": ""
     },
+    "AksDiagCategories": {
+      "type": "array",
+      "defaultValue": [
+        "cluster-autoscaler",
+        "kube-controller-manager",
+        "kube-audit-admin",
+        "guard"
+      ],
+      "metadata": {
+        "description": "Diagnostic categories to log"
+      }
+    },
+    "createAksMetricAlerts": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Enable Metric Alerts"
+      }
+    },
+    "AksMetricAlertMetricFrequencyModel": {
+      "type": "string",
+      "defaultValue": "Long",
+      "metadata": {
+        "description": "Which Metric polling frequency model to use"
+      },
+      "allowedValues": [
+        "Short",
+        "Long"
+      ]
+    },
     "retentionInDays": {
       "type": "int",
-      "defaultValue": 30
+      "defaultValue": 30,
+      "metadata": {
+        "description": "The Log Analytics retention period"
+      }
     }
   },
   "functions": [],
@@ -327,19 +381,32 @@
     "aks_identity": {
       "type": "UserAssigned",
       "userAssignedIdentities": {
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))]": {}
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-aks-{0}', parameters('resourceName')))]": {}
       }
     },
     "policySetPodSecBaseline": "[resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')]",
     "buildInAKSRBACClusterAdmin": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')]",
-    "aks_law_name": "[format('log-{0}', parameters('resourceName'))]"
+    "AlertFrequencyLookup": {
+      "Short": {
+        "evalFrequency": "PT1M",
+        "windowSize": "PT5M"
+      },
+      "Long": {
+        "evalFrequency": "PT15M",
+        "windowSize": "PT1H"
+      }
+    },
+    "AlertFrequency": "[variables('AlertFrequencyLookup')[parameters('AksMetricAlertMetricFrequencyModel')]]",
+    "aks_law_name": "[format('log-{0}', parameters('resourceName'))]",
+    "createLaw": "[or(or(parameters('omsagent'), variables('deployAppGw')), parameters('azureFirewalls'))]",
+    "MonitoringMetricsPublisherRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')]"
   },
   "resources": [
     {
       "condition": "[variables('aks_byo_identity')]",
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
       "apiVersion": "2018-11-30",
-      "name": "[format('id-{0}', parameters('resourceName'))]",
+      "name": "[format('id-aks-{0}', parameters('resourceName'))]",
       "location": "[parameters('location')]"
     },
     {
@@ -374,7 +441,7 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', variables('acrName'))]",
-      "name": "[guid(resourceGroup().id, variables('acrName'))]",
+      "name": "[guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Acr', variables('AcrPullRole'))]",
       "properties": {
         "roleDefinitionId": "[variables('AcrPullRole')]",
         "principalType": "ServicePrincipal",
@@ -431,7 +498,7 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.Network/applicationGateways/{0}', variables('appgwName'))]",
-      "name": "[guid(resourceGroup().id, variables('appgwName'), 'appgwcont')]",
+      "name": "[guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Agic', variables('contributor'))]",
       "properties": {
         "roleDefinitionId": "[variables('contributor')]",
         "principalType": "ServicePrincipal",
@@ -446,7 +513,7 @@
       "condition": "[and(variables('DEPLOY_APPGW_ADDON'), variables('deployAppGw'))]",
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
-      "name": "[guid(resourceGroup().id, variables('appgwName'), 'rgread')]",
+      "name": "[guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Agic', variables('reader'))]",
       "properties": {
         "roleDefinitionId": "[variables('reader')]",
         "principalType": "ServicePrincipal",
@@ -461,7 +528,7 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.ManagedIdentity/userAssignedIdentities/{0}', format('id-appgw-{0}', parameters('resourceName')))]",
-      "name": "[guid(resourceGroup().id, variables('appgwName'), 'apidentityoperator')]",
+      "name": "[guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Agic', variables('managedIdentityOperator'))]",
       "properties": {
         "roleDefinitionId": "[variables('managedIdentityOperator')]",
         "principalType": "ServicePrincipal",
@@ -499,7 +566,7 @@
         "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
         "[resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))]",
         "[resourceId('Microsoft.Resources/deployments', 'network')]",
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))]"
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-aks-{0}', parameters('resourceName')))]"
       ]
     },
     {
@@ -522,7 +589,7 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.ContainerService/managedClusters/{0}', format('aks-{0}', parameters('resourceName')))]",
-      "name": "[guid(resourceGroup().id, 'aks_admin_role_assignment')]",
+      "name": "[guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'aksadmin', variables('buildInAKSRBACClusterAdmin'))]",
       "properties": {
         "roleDefinitionId": "[variables('buildInAKSRBACClusterAdmin')]",
         "principalType": "User",
@@ -533,7 +600,31 @@
       ]
     },
     {
-      "condition": "[or(or(parameters('omsagent'), variables('deployAppGw')), parameters('azureFirewalls'))]",
+      "condition": "[parameters('omsagent')]",
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[format('Microsoft.ContainerService/managedClusters/{0}', format('aks-{0}', parameters('resourceName')))]",
+      "name": "aksDiags",
+      "properties": {
+        "copy": [
+          {
+            "name": "logs",
+            "count": "[length(parameters('AksDiagCategories'))]",
+            "input": {
+              "category": "[parameters('AksDiagCategories')[copyIndex('logs')]]",
+              "enabled": true
+            }
+          }
+        ],
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
+      ]
+    },
+    {
+      "condition": "[variables('createLaw')]",
       "type": "Microsoft.OperationalInsights/workspaces",
       "apiVersion": "2021-06-01",
       "name": "[variables('aks_law_name')]",
@@ -541,6 +632,21 @@
       "properties": {
         "retentionInDays": "[parameters('retentionInDays')]"
       }
+    },
+    {
+      "condition": "[variables('createLaw')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2021-04-01-preview",
+      "scope": "[format('Microsoft.ContainerService/managedClusters/{0}', format('aks-{0}', parameters('resourceName')))]",
+      "name": "[guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'omsagent', variables('MonitoringMetricsPublisherRole'))]",
+      "properties": {
+        "roleDefinitionId": "[variables('MonitoringMetricsPublisherRole')]",
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.omsagent.identity.objectId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+      ]
     },
     {
       "condition": "[not(empty(parameters('byoAKSSubnetId')))]",
@@ -558,10 +664,10 @@
             "value": "[parameters('byoAKSSubnetId')]"
           },
           "user_identity_principalId": {
-            "value": "[if(variables('aks_byo_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))).principalId, '')]"
+            "value": "[if(variables('aks_byo_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-aks-{0}', parameters('resourceName')))).principalId, '')]"
           },
           "user_identity_name": {
-            "value": "[format('id-{0}', parameters('resourceName'))]"
+            "value": "[format('id-aks-{0}', parameters('resourceName'))]"
           },
           "user_identity_rg": {
             "value": "[resourceGroup().name]"
@@ -613,7 +719,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))]"
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-aks-{0}', parameters('resourceName')))]"
       ]
     },
     {
@@ -640,7 +746,7 @@
             "value": "[parameters('vnetAddressPrefix')]"
           },
           "aksPrincipleId": {
-            "value": "[if(variables('aks_byo_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))).principalId, '')]"
+            "value": "[if(variables('aks_byo_identity'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-aks-{0}', parameters('resourceName')))).principalId, '')]"
           },
           "vnetAksSubnetAddressPrefix": {
             "value": "[parameters('vnetAksSubnetAddressPrefix')]"
@@ -665,7 +771,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.613.9944",
-              "templateHash": "2750499435665179669"
+              "templateHash": "2892736808511445969"
             }
           },
           "parameters": {
@@ -806,12 +912,15 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.4.613.9944",
-                      "templateHash": "2859783932617740105"
+                      "templateHash": "14612576561830144908"
                     }
                   },
                   "parameters": {
                     "vnetFirewallSubnetAddressPrefix": {
-                      "type": "string"
+                      "type": "string",
+                      "metadata": {
+                        "description": "A subnet address for the Azure Firewall"
+                      }
                     }
                   },
                   "functions": [],
@@ -851,7 +960,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}', parameters('resourceName')))]"
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-aks-{0}', parameters('resourceName')))]"
       ]
     },
     {
@@ -886,7 +995,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.613.9944",
-              "templateHash": "5223086552725847780"
+              "templateHash": "9789377551391732560"
             }
           },
           "parameters": {
@@ -915,7 +1024,7 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2020-04-01-preview",
               "scope": "[format('Microsoft.Network/dnsZones/{0}', parameters('dnsZoneName'))]",
-              "name": "[guid(resourceGroup().id, parameters('principalId'))]",
+              "name": "[guid(resourceGroup().id, parameters('principalId'), variables('DNSZoneContributor'))]",
               "properties": {
                 "roleDefinitionId": "[variables('DNSZoneContributor')]",
                 "principalType": "ServicePrincipal",
@@ -927,7 +1036,7 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2020-04-01-preview",
               "scope": "[format('Microsoft.Network/privateDnsZones/{0}', parameters('dnsZoneName'))]",
-              "name": "[guid(resourceGroup().id, parameters('principalId'))]",
+              "name": "[guid(resourceGroup().id, parameters('principalId'), variables('PrivateDNSZoneContributor'))]",
               "properties": {
                 "roleDefinitionId": "[variables('PrivateDNSZoneContributor')]",
                 "principalType": "ServicePrincipal",
@@ -1195,6 +1304,850 @@
         "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
         "[resourceId('Microsoft.Resources/deployments', 'network')]"
       ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "aksmetricalerts",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "clusterName": {
+            "value": "[format('aks-{0}', parameters('resourceName'))]"
+          },
+          "logAnalyticsWorkspaceName": {
+            "value": "[variables('aks_law_name')]"
+          },
+          "logAnalyticsWorkspaceRegion": {
+            "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')), '2021-06-01', 'full').location]"
+          },
+          "metricAlertsEnabled": {
+            "value": "[parameters('createAksMetricAlerts')]"
+          },
+          "evalFrequency": {
+            "value": "[variables('AlertFrequency').evalFrequency]"
+          },
+          "windowSize": {
+            "value": "[variables('AlertFrequency').windowSize]"
+          },
+          "alertSeverity": {
+            "value": "Informational"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.613.9944",
+              "templateHash": "7066884024678322300"
+            }
+          },
+          "parameters": {
+            "clusterName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the AKS Cluster to configure the alerts on"
+              }
+            },
+            "logAnalyticsWorkspaceName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Log Analytics workspace to log metric data to"
+              }
+            },
+            "logAnalyticsWorkspaceRegion": {
+              "type": "string",
+              "metadata": {
+                "description": "The region of the Log Analytics workspace"
+              }
+            },
+            "evalFrequency": {
+              "type": "string",
+              "defaultValue": "PT1M",
+              "allowedValues": [
+                "PT1M",
+                "PT15M"
+              ],
+              "metadata": {
+                "description": "Select the frequency on how often the alert rule should be run. Selecting frequency smaller than granularity of datapoints grouping will result in sliding window evaluation"
+              }
+            },
+            "metricAlertsEnabled": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Create the metric alerts as either enabled or disabled"
+              }
+            },
+            "windowSize": {
+              "type": "string",
+              "defaultValue": "PT5M",
+              "allowedValues": [
+                "PT5M",
+                "PT1H"
+              ],
+              "metadata": {
+                "description": "Defines the interval over which datapoints are grouped using the aggregation type function"
+              }
+            },
+            "alertSeverity": {
+              "type": "string",
+              "defaultValue": "Informational",
+              "allowedValues": [
+                "Critical",
+                "Error",
+                "Warning",
+                "Informational",
+                "Verbose"
+              ]
+            }
+          },
+          "functions": [],
+          "variables": {
+            "alertServerityLookup": {
+              "Critical": 0,
+              "Error": 1,
+              "Warning": 2,
+              "Informational": 3,
+              "Verbose": 4
+            },
+            "alertSeverityNumber": "[variables('alertServerityLookup')[parameters('alertSeverity')]]",
+            "AksResourceId": "[resourceId('Microsoft.ContainerService/managedClusters', parameters('clusterName'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Node CPU utilization high for {0} CI-1', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "host",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "cpuUsagePercentage",
+                      "metricNamespace": "Insights.Container/nodes",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 80,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "Node CPU utilization across the cluster.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Node working set memory utilization high for {0} CI-2', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "host",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "memoryWorkingSetPercentage",
+                      "metricNamespace": "Insights.Container/nodes",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 80,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "Node working set memory utilization across the cluster.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Jobs completed more than 6 hours ago for {0} CI-11', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "controllerName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "kubernetes namespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "completedJobsCount",
+                      "metricNamespace": "Insights.Container/pods",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 0,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "This alert monitors completed jobs (more than 6 hours ago).",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Container CPU usage high for {0} CI-9', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "controllerName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "kubernetes namespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "cpuExceededPercentage",
+                      "metricNamespace": "Insights.Container/containers",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 90,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "This alert monitors container CPU utilization.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Container working set memory usage high for {0} CI-10', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "controllerName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "kubernetes namespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "memoryWorkingSetExceededPercentage",
+                      "metricNamespace": "Insights.Container/containers",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 90,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "This alert monitors container working set memory utilization.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Pods in failed state for {0} CI-4', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "phase",
+                          "operator": "Include",
+                          "values": [
+                            "Failed"
+                          ]
+                        }
+                      ],
+                      "metricName": "podCount",
+                      "metricNamespace": "Insights.Container/pods",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 0,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "Pod status monitoring.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Disk usage high for {0} CI-5', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "host",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "device",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "DiskUsedPercentage",
+                      "metricNamespace": "Insights.Container/nodes",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 80,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "This alert monitors disk usage for all nodes and storage devices.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Nodes in not ready status for {0} CI-3', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "status",
+                          "operator": "Include",
+                          "values": [
+                            "NotReady"
+                          ]
+                        }
+                      ],
+                      "metricName": "nodesCount",
+                      "metricNamespace": "Insights.Container/nodes",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 0,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "Node status monitoring.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Containers getting OOM killed for {0} CI-6', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "kubernetes namespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "controllerName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "oomKilledContainerCount",
+                      "metricNamespace": "Insights.Container/pods",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 0,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "This alert monitors number of containers killed due to out of memory (OOM) error.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Persistent volume usage high for {0} CI-18', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "podName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "kubernetesNamespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "pvUsageExceededPercentage",
+                      "metricNamespace": "Insights.Container/persistentvolumes",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 80,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "This alert monitors persistent volume utilization.",
+                "enabled": false,
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Pods not in ready state for {0} CI-8', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "controllerName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "kubernetes namespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "PodReadyPercentage",
+                      "metricNamespace": "Insights.Container/pods",
+                      "name": "Metric1",
+                      "operator": "LessThan",
+                      "threshold": 80,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "This alert monitors for excessive pods not in the ready state.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "microsoft.containerservice/managedclusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Restarting container count for {0} CI-7', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "criteria": {
+                  "allOf": [
+                    {
+                      "criterionType": "StaticThresholdCriterion",
+                      "dimensions": [
+                        {
+                          "name": "kubernetes namespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "controllerName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "metricName": "restartingContainerCount",
+                      "metricNamespace": "Insights.Container/pods",
+                      "name": "Metric1",
+                      "operator": "GreaterThan",
+                      "threshold": 0,
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "description": "This alert monitors number of containers restarting across the cluster.",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "severity": "[variables('alertSeverityNumber')]",
+                "targetResourceType": "Microsoft.ContainerService/managedClusters",
+                "windowSize": "[parameters('windowSize')]"
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Container CPU usage violates the configured threshold for {0} CI-19', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "description": "This alert monitors container CPU usage. It uses the threshold defined in the config map.",
+                "severity": "[variables('alertSeverityNumber')]",
+                "enabled": true,
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "windowSize": "[parameters('windowSize')]",
+                "criteria": {
+                  "allOf": [
+                    {
+                      "threshold": 0,
+                      "name": "Metric1",
+                      "metricNamespace": "Insights.Container/containers",
+                      "metricName": "cpuThresholdViolated",
+                      "dimensions": [
+                        {
+                          "name": "controllerName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "kubernetes namespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "operator": "GreaterThan",
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true,
+                      "criterionType": "StaticThresholdCriterion"
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('Container working set memory usage violates the configured threshold for {0} CI-20', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "description": "This alert monitors container working set memory usage. It uses the threshold defined in the config map.",
+                "severity": "[variables('alertSeverityNumber')]",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "windowSize": "[parameters('windowSize')]",
+                "criteria": {
+                  "allOf": [
+                    {
+                      "threshold": 0,
+                      "name": "Metric1",
+                      "metricNamespace": "Insights.Container/containers",
+                      "metricName": "memoryWorkingSetThresholdViolated",
+                      "dimensions": [
+                        {
+                          "name": "controllerName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "kubernetes namespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "operator": "GreaterThan",
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true,
+                      "criterionType": "StaticThresholdCriterion"
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Insights/metricAlerts",
+              "apiVersion": "2018-03-01",
+              "name": "[format('PV usage violates the configured threshold for {0} CI-21', parameters('clusterName'))]",
+              "location": "global",
+              "properties": {
+                "description": "This alert monitors PV usage. It uses the threshold defined in the config map.",
+                "severity": "[variables('alertSeverityNumber')]",
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "scopes": [
+                  "[variables('AksResourceId')]"
+                ],
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "windowSize": "[parameters('windowSize')]",
+                "criteria": {
+                  "allOf": [
+                    {
+                      "threshold": 0,
+                      "name": "Metric1",
+                      "metricNamespace": "Insights.Container/persistentvolumes",
+                      "metricName": "pvUsageThresholdViolated",
+                      "dimensions": [
+                        {
+                          "name": "podName",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        },
+                        {
+                          "name": "kubernetesNamespace",
+                          "operator": "Include",
+                          "values": [
+                            "*"
+                          ]
+                        }
+                      ],
+                      "operator": "GreaterThan",
+                      "timeAggregation": "Average",
+                      "skipMetricValidation": true,
+                      "criterionType": "StaticThresholdCriterion"
+                    }
+                  ],
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Insights/scheduledQueryRules",
+              "apiVersion": "2021-02-01-preview",
+              "name": "[format('Daily data cap breached for workspace {0} CIQ-1', parameters('logAnalyticsWorkspaceName'))]",
+              "location": "[parameters('logAnalyticsWorkspaceRegion')]",
+              "properties": {
+                "displayName": "[format('Daily data cap breached for workspace {0} CIQ-1', parameters('logAnalyticsWorkspaceName'))]",
+                "description": "This alert monitors daily data cap defined on a workspace and fires when the daily data cap is breached.",
+                "severity": 1,
+                "enabled": "[parameters('metricAlertsEnabled')]",
+                "evaluationFrequency": "[parameters('evalFrequency')]",
+                "scopes": [
+                  "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                ],
+                "windowSize": "[parameters('windowSize')]",
+                "criteria": {
+                  "allOf": [
+                    {
+                      "query": "_LogOperation | where Operation == \"Data collection Status\" | where Detail contains \"OverQuota\"",
+                      "timeAggregation": "Count",
+                      "operator": "GreaterThan",
+                      "threshold": 0,
+                      "failingPeriods": {
+                        "numberOfEvaluationPeriods": 1,
+                        "minFailingPeriodsToAlert": 1
+                      }
+                    }
+                  ]
+                },
+                "muteActionsDuration": "P1D"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
+      ]
     }
   ],
   "outputs": {
@@ -1208,11 +2161,11 @@
     },
     "LogAnalyticsName": {
       "type": "string",
-      "value": "[if(or(or(parameters('omsagent'), variables('deployAppGw')), parameters('azureFirewalls')), variables('aks_law_name'), '')]"
+      "value": "[if(variables('createLaw'), variables('aks_law_name'), '')]"
     },
     "LogAnalyticsGuid": {
       "type": "string",
-      "value": "[if(or(or(parameters('omsagent'), variables('deployAppGw')), parameters('azureFirewalls')), reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))).customerId, '')]"
+      "value": "[if(variables('createLaw'), reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))).customerId, '')]"
     }
   }
 }
