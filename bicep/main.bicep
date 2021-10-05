@@ -862,7 +862,6 @@ module aksmetricalerts './aksmetricalerts.bicep' = {
   params: {
     clusterName: aks.name
     logAnalyticsWorkspaceName: aks_law.name
-    logAnalyticsWorkspaceRegion: aks_law.location
     metricAlertsEnabled: createAksMetricAlerts
     evalFrequency: AlertFrequency.evalFrequency
     windowSize: AlertFrequency.windowSize

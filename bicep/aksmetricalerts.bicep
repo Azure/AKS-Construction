@@ -4,8 +4,8 @@ param clusterName string
 @description('The name of the Log Analytics workspace to log metric data to')
 param logAnalyticsWorkspaceName string
 
-@description('The region of the Log Analytics workspace')
-param logAnalyticsWorkspaceRegion string
+@description('The location of the Log Analytics workspace')
+param logAnalyticsWorkspaceLocation string = resourceGroup().location
 
 @description('Select the frequency on how often the alert rule should be run. Selecting frequency smaller than granularity of datapoints grouping will result in sliding window evaluation')
 @allowed([
@@ -722,7 +722,7 @@ resource PV_usage_violates_the_configured_threshold_for_clustername_CI_21 'micro
 
 resource Daily_data_cap_breached_for_workspace_logworkspacename_CIQ_1_name_resource 'microsoft.insights/scheduledqueryrules@2021-02-01-preview' = {
   name: 'Daily data cap breached for workspace ${logAnalyticsWorkspaceName} CIQ-1'
-  location: logAnalyticsWorkspaceRegion
+  location: logAnalyticsWorkspaceLocation
   properties: {
     displayName: 'Daily data cap breached for workspace ${logAnalyticsWorkspaceName} CIQ-1'
     description: 'This alert monitors daily data cap defined on a workspace and fires when the daily data cap is breached.'
