@@ -17,7 +17,7 @@ As part of the PR you can set various Actions to run, and crucially you can spec
 
 ### Pre-deploy Validation
 
-It's essential to shift left, and catch as many problems before a single resource is deployed to real infrastructure. There are a plethora of tools and techniques that can be leveraged to catch functional or syntactical problems.
+It's essential to shift left, and catch as many problems before a single resource is deployed to real infrastructure. There are a plethora of tools and techniques that can be leveraged to catch functional or syntactical problems depending on your authoring language and platform.
 
 #### Bicep Build
 
@@ -45,16 +45,25 @@ There might also be a number of rules specific to your enterprise you wish may w
 
 ### Deploying to an Azure Subscription
 
-Actually deploying Azure resources as part of an IaC pipeline isn't always the most valuable activity on its own. By running the Validation and WhatIf, you'll already have achieved a good level of rigour on quality. However it's essential when you want to enable integration tests for more complex infrastructure deployments. Additionally for fastidious individuals, having the confirmation that what was coded actually deploys can be really useful. It also is useful to see the end to end time it takes to deploy, so you can provide guidance to the
-teams who consume your code template.
+Actually deploying Azure resources as part of an IaC pipeline isn't always the most valuable activity on its own. By running the Validation and WhatIf, you'll already have achieved a good level of rigour on quality. However it's essential when you want to enable integration tests for more complex infrastructure deployments. Additionally for fastidious individuals, having the confirmation that what was coded actually deploys can be really useful. It also is useful to see the end to end time it takes to deploy, so you can provide guidance to the teams who consume your code template.
 
-Consider how often you'll employ this technique, as there are cost implications. It also adds a significant delay into your pipeline.
+Creating actual resources lets you see if they work together properly, and provides the opportunity to write tests in your pipeline, and gives valuable logs around the quality of what's being created over time.
+
+Consider how often you'll employ this technique, as there are `cost implications`. It also adds a significant delay into your pipeline.
 
 In this repo we run a real deployment and integration tests each week on a schedule.
 
-### Workload smoke tests
+### Post-deploy Validation
 
-When you bicep code deploys multiple Azure environments that work together *Integration testing* of IaC templates become super valuable. Creating actual resources lets you see if they work together properly, and provides the opportunity to write tests in your pipeline.
+The fact that a deployment completes successfully is a great sign in itself, however there are several post deployment checks that can be run to verify the usability of the IaC code thats been new'd up.
+
+The first, and often easiest activity is to test using the service. Attempting to contact the service endpoint is firmly in the realm of integration testing, not just because of the many deployed services working together but also because of the configuration of those services and restrictions in place in the environment you're deploying to.
+
+#### Workload smoke tests
+
+Depending on the IaC workload will change the approach you'll employ for smoke testing the application. In the case of Kuberetes, we have a platform that runs containers so we can focus the smoke tests on deploying containers to that platform and testing they function correctly. For this we'll not use our own application, but leverage a known good application. We don't want to build technical debt on maintaining an application to test with, instead identifying a maintained application project will save time and provide an additional baseline for running workloads because if we can't run a sample application properly what hope does our application teams have?
+
+For this project we're using the Azure Vote application, which is the de-facto app used in the AKS documentation. Where environment deplyoments include Application Gateway, it will be used as the testing entry point to ensure that it is configured correctly.
 
 ## Other actions used in this repo
 
