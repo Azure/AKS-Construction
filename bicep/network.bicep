@@ -105,15 +105,3 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
     principalType: 'ServicePrincipal'
   }
 }
-
-/*
-resource aks_vnet_cont 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (!empty(aksPrincipleId)) {
-  scope: existingAKSSubnet
-  name: guid(resourceGroup().id, aksPrincipleId)
-  properties: {
-    roleDefinitionId: networkContributorRole
-    principalId: aksPrincipleId
-    principalType: 'ServicePrincipal'
-  }
-}
-*/

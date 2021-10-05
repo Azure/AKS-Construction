@@ -14,16 +14,16 @@ Resource sections
 5. Firewall
 6. Application Gateway
 7. AKS
-8. Log Analytics
+8. Monitoring / Log Analytics
 */
 
 
-/*_   _ ______ _________          ______  _____  _  _______ _   _  _____ 
- | \ | |  ____|__   __\ \        / / __ \|  __ \| |/ /_   _| \ | |/ ____|
- |  \| | |__     | |   \ \  /\  / / |  | | |__) | ' /  | | |  \| | |  __ 
- | . ` |  __|    | |    \ \/  \/ /| |  | |  _  /|  <   | | | . ` | | |_ |
- | |\  | |____   | |     \  /\  / | |__| | | \ \| . \ _| |_| |\  | |__| |
- |_| \_|______|  |_|      \/  \/   \____/|_|  \_\_|\_\_____|_| \_|\_____|*/
+/*.__   __.  _______ .___________.____    __    ____  ______   .______       __  ___  __  .__   __.   _______ 
+|  \ |  | |   ____||           |\   \  /  \  /   / /  __  \  |   _  \     |  |/  / |  | |  \ |  |  /  _____|
+|   \|  | |  |__   `---|  |----` \   \/    \/   / |  |  |  | |  |_)  |    |  '  /  |  | |   \|  | |  |  __  
+|  . `  | |   __|      |  |       \            /  |  |  |  | |      /     |    <   |  | |  . `  | |  | |_ | 
+|  |\   | |  |____     |  |        \    /\    /   |  `--'  | |  |\  \----.|  .  \  |  | |  |\   | |  |__| | 
+|__| \__| |_______|    |__|         \__/  \__/     \______/  | _| `._____||__|\__\ |__| |__| \__|  \______| */
 //Networking can either be one of: custom / byo / default
 
 @description('Are you providing your own vNet CIDR blocks')
@@ -38,7 +38,7 @@ param byoAGWSubnetId string = ''
 //--- Custom or BYO networking requires BYO AKS User Identity
 var aks_byo_identity = custom_vnet || !empty(byoAKSSubnetId)
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (aks_byo_identity) {
-  name: 'id-${resourceName}'
+  name: 'id-aks-${resourceName}'
   location: location
 }
 
@@ -97,8 +97,14 @@ var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
 var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
 
 
-// ----------------------------------------------------------------------- If DNS Zone
-// will be solved with 'existing' https://github.com/Azure/bicep/issues/258
+
+
+/*______  .__   __.      _______.    ________    ______   .__   __.  _______      _______.
+|       \ |  \ |  |     /       |   |       /   /  __  \  |  \ |  | |   ____|    /       |
+|  .--.  ||   \|  |    |   (----`   `---/  /   |  |  |  | |   \|  | |  |__      |   (----`
+|  |  |  ||  . `  |     \   \          /  /    |  |  |  | |  . `  | |   __|      \   \    
+|  '--'  ||  |\   | .----)   |        /  /----.|  `--'  | |  |\   | |  |____ .----)   |   
+|_______/ |__| \__| |_______/        /________| \______/  |__| \__| |_______||_______/    */
 
 param dnsZoneId string = ''
 var dnsZoneRg = !empty(dnsZoneId) ? split(dnsZoneId, '/')[4] : ''
@@ -116,12 +122,21 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
   }
 }
 
-//---------------------------------------------------------------------------------- AKV
+/*__  __  _______ ____    ____    ____    ____  ___      __    __   __      .___________.
+|  |/  / |   ____|\   \  /   /    \   \  /   / /   \    |  |  |  | |  |     |           |
+|  '  /  |  |__    \   \/   /      \   \/   / /  ^  \   |  |  |  | |  |     `---|  |----`
+|    <   |   __|    \_    _/        \      / /  /_\  \  |  |  |  | |  |         |  |     
+|  .  \  |  |____     |  |           \    / /  _____  \ |  `--'  | |  `----.    |  |     
+|__|\__\ |_______|    |__|            \__/ /__/     \__\ \______/  |_______|    |__|     */
 
+@description('Installs the AKS KV CSI provider')
 param azureKeyvaultSecretsProvider bool = false //This is a preview feature
 
+@description('Creates a Key Vault')
 param createKV bool = false
+
 param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
+
 var akvName = 'kv-${replace(resourceName, '-', '')}'
 
 resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
@@ -186,7 +201,13 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
   } : {})
 }
 
-//---------------------------------------------------------------------------------- ACR
+/*   ___           ______     .______          
+    /   \         /      |    |   _  \         
+   /  ^  \       |  ,----'    |  |_)  |        
+  /  /_\  \      |  |         |      /         
+ /  _____  \   __|  `----. __ |  |\  \----. __ 
+/__/     \__\ (__)\______|(__)| _| `._____|(__)*/
+                                               
 param registries_sku string = ''
 param ACRserviceEndpointFW string = '' // either IP, or 'vnetonly'
 
@@ -218,19 +239,31 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
 }
 
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
-// New way of setting scope https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/scope-extension-resources
+var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
+
 resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
-  name: guid(resourceGroup().id, acrName)
+  name: '${guid(aks.id, 'Acr' , AcrPullRole)}'
   properties: {
     roleDefinitionId: AcrPullRole
     principalType: 'ServicePrincipal'
-    principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
+    principalId: KubeletObjectId
   }
+  dependsOn: [
+    aks
+  ]
 }
 
-//---------------------------------------------------------------------------------- Firewall
+/*______  __  .______       _______ ____    __    ____  ___       __       __      
+|   ____||  | |   _  \     |   ____|\   \  /  \  /   / /   \     |  |     |  |     
+|  |__   |  | |  |_)  |    |  |__    \   \/    \/   / /  ^  \    |  |     |  |     
+|   __|  |  | |      /     |   __|    \            / /  /_\  \   |  |     |  |     
+|  |     |  | |  |\  \----.|  |____    \    /\    / /  _____  \  |  `----.|  `----.
+|__|     |__| | _| `._____||_______|    \__/  \__/ /__/     \__\ |_______||_______|*/
+
+@description('Create an Azure Firewall')
 param azureFirewalls bool = false
+
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
   params: {
@@ -242,11 +275,22 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   }
 }
 
-//---------------------------------------------------------------------------------- AppGateway
+/*   ___      .______   .______          _______ ____    __    ____ 
+    /   \     |   _  \  |   _  \        /  _____|\   \  /  \  /   / 
+   /  ^  \    |  |_)  | |  |_)  |      |  |  __   \   \/    \/   /  
+  /  /_\  \   |   ___/  |   ___/       |  | |_ |   \            /   
+ /  _____  \  |  |      |  |     __    |  |__| |    \    /\    / __ 
+/__/     \__\ | _|      | _|    (__)    \______|     \__/  \__/ (__)*/
+
+@description('Create an Application Gateway')
 param ingressApplicationGateway bool = false
+
 param appGWcount int = 2
 param appGWmaxCount int = 0
+
+@description('A known private ip in the Application Gateway subnet range to be allocated for internal traffic')
 param privateIpApplicationGateway string = ''
+
 param appgwKVIntegration bool = false
 
 @allowed([
@@ -255,6 +299,8 @@ param appgwKVIntegration bool = false
 ])
 @description('The SKU for AppGw')
 param appGWsku string = 'WAF_v2'
+
+@description('Enable the WAF Firewall, valid for WAF_v2 SKUs')
 param appGWenableFirewall bool = true
 
 var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubnetId))
@@ -263,7 +309,7 @@ var appGWenableWafFirewall = appGWsku=='Standard_v2' ? false : appGWenableFirewa
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed: 
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if ( /* appgwKVIntegration && */deployAppGw) {
+resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (deployAppGw) {
   name: 'id-appgw-${resourceName}'
   location: location
 }
@@ -304,9 +350,15 @@ var frontendPrivateIpConfig = {
   name: 'appGatewayPrivateIP'
 }
 
+@allowed([
+  'Prevention'
+  'Detection'
+])
+param appGwFirewallMode string = 'Prevention'
+
 var appGwFirewallConfigOwasp = {
   enabled: appGWenableWafFirewall
-  firewallMode: 'Prevention' 
+  firewallMode: appGwFirewallMode 
   ruleSetType: 'OWASP'
   ruleSetVersion: '3.2'
   requestBodyCheck: true
@@ -402,8 +454,7 @@ var appgwProperties = union({
   }
 } : {})
 
-// 'identity' is always set until this is fixed: 
-// https://github.com/Azure/bicep/issues/387#issuecomment-885671296
+// 'identity' is always set until this is fixed: https://github.com/Azure/bicep/issues/387#issuecomment-885671296
 resource appgw 'Microsoft.Network/applicationGateways@2021-02-01' = if (deployAppGw) {
   name: appgwName
   location: location
@@ -424,7 +475,7 @@ var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988a
 // AGIC's identity requires "Contributor" permission over Application Gateway.
 resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: appgw
-  name: guid(resourceGroup().id, appgwName, 'appgwcont')
+  name: '${guid(aks.id, 'Agic', contributor)}'
   properties: {
     roleDefinitionId: contributor
     principalType: 'ServicePrincipal'
@@ -436,7 +487,7 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-pr
 var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
 resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: resourceGroup()
-  name: guid(resourceGroup().id, appgwName, 'rgread')
+  name: '${guid(aks.id, 'Agic', reader)}'
   properties: {
     roleDefinitionId: reader
     principalType: 'ServicePrincipal'
@@ -446,9 +497,9 @@ resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-p
 
 // AGIC's identity requires "Managed Identity Operator" permission over the user assigned identity of Application Gateway.
 var managedIdentityOperator = resourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830')
-resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && /* appgwKVIntegration && */ deployAppGw) {
+resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON &&  deployAppGw) {
   scope: appGwIdentity
-  name: guid(resourceGroup().id, appgwName, 'apidentityoperator')
+  name: '${guid(aks.id, 'Agic', managedIdentityOperator)}'
   properties: {
     roleDefinitionId: managedIdentityOperator
     principalType: 'ServicePrincipal'
@@ -456,7 +507,7 @@ resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-previ
   }
 }
 
-// ------------------------------------------------------------------ AppGW Diagnostics
+// AppGW Diagnostics
 var diagProperties = {
   workspaceId: workspaceId
   logs: [
@@ -486,11 +537,19 @@ resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =
 
 output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 
-//---------------------------------------------------------------------------------- AKS
+/*_  ___  __    __  .______    _______ .______      .__   __.  _______ .___________. _______      _______.
+|  |/  / |  |  |  | |   _  \  |   ____||   _  \     |  \ |  | |   ____||           ||   ____|    /       |
+|  '  /  |  |  |  | |  |_)  | |  |__   |  |_)  |    |   \|  | |  |__   `---|  |----`|  |__      |   (----`
+|    <   |  |  |  | |   _  <  |   __|  |      /     |  . `  | |   __|      |  |     |   __|      \   \    
+|  .  \  |  `--'  | |  |_)  | |  |____ |  |\  \----.|  |\   | |  |____     |  |     |  |____ .----)   |   
+|__|\__\  \______/  |______/  |_______|| _| `._____||__| \__| |_______|    |__|     |_______||_______/ */
+
 param dnsPrefix string = '${resourceName}-dns'
 param kubernetesVersion string = '1.20.9'
 param enable_aad bool = false
 param aad_tenant_id string = ''
+
+@description('Create, and use a new Log Analytics workspace for AKS logs')
 param omsagent bool = false
 
 param enableAzureRBAC bool = false
@@ -498,8 +557,11 @@ param upgradeChannel string = ''
 param osDiskType string = 'Ephemeral'
 param agentVMSize string = 'Standard_DS2_v2'
 param osDiskSizeGB int = 0
+
 param agentCount int = 3
 param agentCountMax int = 0
+var autoScale = agentCountMax > agentCount
+
 param maxPods int = 30
 param networkPlugin string = 'azure'
 param networkPolicy string = ''
@@ -515,8 +577,6 @@ param podCidr string = '10.244.0.0/16'
 param serviceCidr string = '10.0.0.0/16'
 param dnsServiceIP string = '10.0.0.10'
 param dockerBridgeCidr string = '172.17.0.1/16'
-
-var autoScale = agentCountMax > agentCount
 
 param JustUseSystemPool bool = false
 
@@ -728,7 +788,7 @@ param adminprincipleid string = ''
 var buildInAKSRBACClusterAdmin = resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
 resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (enableAzureRBAC && !empty(adminprincipleid)) {
   scope: aks // Use when specifying a scope that is different than the deployment scope
-  name: guid(resourceGroup().id, 'aks_admin_role_assignment')
+  name: '${guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)}'
   properties: {
     roleDefinitionId: buildInAKSRBACClusterAdmin
     principalType: 'User'
@@ -746,16 +806,100 @@ resource gitops 'Microsoft.KubernetesConfiguration/sourceControlConfigurations@2
 }
 */
 
+/*__  ___.   ______   .__   __.  __  .___________.  ______   .______       __  .__   __.   _______ 
+|   \/   |  /  __  \  |  \ |  | |  | |           | /  __  \  |   _  \     |  | |  \ |  |  /  _____|
+|  \  /  | |  |  |  | |   \|  | |  | `---|  |----`|  |  |  | |  |_)  |    |  | |   \|  | |  |  __  
+|  |\/|  | |  |  |  | |  . `  | |  |     |  |     |  |  |  | |      /     |  | |  . `  | |  | |_ | 
+|  |  |  | |  `--'  | |  |\   | |  |     |  |     |  `--'  | |  |\  \----.|  | |  |\   | |  |__| | 
+|__|  |__|  \______/  |__| \__| |__|     |__|      \______/  | _| `._____||__| |__| \__|  \______| */
+
+
+@description('Diagnostic categories to log')
+param AksDiagCategories array = [
+  'cluster-autoscaler'
+  'kube-controller-manager'
+  'kube-audit-admin'
+  'guard'
+]
+
+resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  if (omsagent)  {
+  name: 'aksDiags'
+  scope: aks
+  properties: {
+    workspaceId: aks_law.id
+    logs: [for aksDiagCategory in AksDiagCategories: {
+      category: aksDiagCategory
+      enabled: true
+    }]
+  }
+}
+
+@description('Enable Metric Alerts')
+param createAksMetricAlerts bool = true
+
+@allowed([
+  'Short'
+  'Long'
+])
+@description('Which Metric polling frequency model to use')
+param AksMetricAlertMetricFrequencyModel string = 'Long'
+
+var AlertFrequencyLookup = {
+  'Short': {
+    evalFrequency: 'PT1M'
+    windowSize: 'PT5M'
+  }
+  'Long': {
+    evalFrequency: 'PT15M'
+    windowSize: 'PT1H'
+  }
+}
+var AlertFrequency = AlertFrequencyLookup[AksMetricAlertMetricFrequencyModel]
+
+module aksmetricalerts './aksmetricalerts.bicep' = {
+  name: 'aksmetricalerts'
+  scope: resourceGroup()
+  params: {
+    clusterName: aks.name
+    logAnalyticsWorkspaceName: aks_law.name
+    metricAlertsEnabled: createAksMetricAlerts
+    evalFrequency: AlertFrequency.evalFrequency
+    windowSize: AlertFrequency.windowSize
+    alertSeverity: 'Informational'
+  }
+}
+
 //---------------------------------------------------------------------------------- Container Insights
 
+@description('The Log Analytics retention period')
 param retentionInDays int = 30
+
 var aks_law_name = 'log-${resourceName}'
-resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (omsagent || deployAppGw || azureFirewalls) {
+
+var createLaw = (omsagent || deployAppGw || azureFirewalls) 
+
+resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (createLaw) {
   name: aks_law_name
   location: location
   properties: {
     retentionInDays: retentionInDays
   }
 }
-output LogAnalyticsName string = (omsagent || deployAppGw || azureFirewalls) ? aks_law.name : ''
-output LogAnalyticsGuid string = (omsagent || deployAppGw || azureFirewalls) ? aks_law.properties.customerId : ''
+
+//This role assignment enables AKS->LA Fast Alerting experience
+var MonitoringMetricsPublisherRole = resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb') 
+resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createLaw) {
+  scope: aks
+  name: '${guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)}'
+  properties: {
+    roleDefinitionId: MonitoringMetricsPublisherRole
+    principalId: aks.properties.addonProfiles.omsagent.identity.objectId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+
+output LogAnalyticsName string = (createLaw) ? aks_law.name : ''
+output LogAnalyticsGuid string = (createLaw) ? aks_law.properties.customerId : ''
+
+//ACSCII Art link : https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=Star%20Wars&text=changeme

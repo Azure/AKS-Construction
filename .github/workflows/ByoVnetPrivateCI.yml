@@ -80,6 +80,7 @@ jobs:
           inputType: repository
           inputPath: "${{ env.ParamFilePath }}"
           baseline: 'Azure.GA_2021_09'
+          prerelease: true
           
       - name: Verify No Active Deployments in RG
         id: activedeps
