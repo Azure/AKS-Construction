@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "5500851443134513970"
+      "templateHash": "5485829007399422839"
     }
   },
   "parameters": {
@@ -1329,9 +1329,6 @@
           "logAnalyticsWorkspaceName": {
             "value": "[variables('aks_law_name')]"
           },
-          "logAnalyticsWorkspaceRegion": {
-            "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')), '2021-06-01', 'full').location]"
-          },
           "metricAlertsEnabled": {
             "value": "[parameters('createAksMetricAlerts')]"
           },
@@ -1352,7 +1349,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.613.9944",
-              "templateHash": "3961221546053865195"
+              "templateHash": "6447993220336030841"
             }
           },
           "parameters": {
@@ -1368,10 +1365,11 @@
                 "description": "The name of the Log Analytics workspace to log metric data to"
               }
             },
-            "logAnalyticsWorkspaceRegion": {
+            "logAnalyticsWorkspaceLocation": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
-                "description": "The region of the Log Analytics workspace"
+                "description": "The location of the Log Analytics workspace"
               }
             },
             "evalFrequency": {
@@ -2121,7 +2119,7 @@
               "type": "Microsoft.Insights/scheduledQueryRules",
               "apiVersion": "2021-02-01-preview",
               "name": "[format('Daily data cap breached for workspace {0} CIQ-1', parameters('logAnalyticsWorkspaceName'))]",
-              "location": "[parameters('logAnalyticsWorkspaceRegion')]",
+              "location": "[parameters('logAnalyticsWorkspaceLocation')]",
               "properties": {
                 "displayName": "[format('Daily data cap breached for workspace {0} CIQ-1', parameters('logAnalyticsWorkspaceName'))]",
                 "description": "This alert monitors daily data cap defined on a workspace and fires when the daily data cap is breached.",
