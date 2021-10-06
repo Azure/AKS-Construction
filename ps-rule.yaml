@@ -36,3 +36,36 @@ configuration:
   
   #ProjectSpecifc rules
   Azure_AKSNodeMinimumMaxPods: 30
+
+rule:
+  exclude:
+  # Ignore the following rules for all resources
+  - Azure.Resource.UseTags
+  - Azure.VM.Standalone
+  
+suppression:
+  Azure.AKS.AuthorizedIPs:
+  # Exclude the following AKS clusters
+  - aks-AksStan
+  
+  Azure.AKS.AuthorizedIPs:
+  - aks-AksStan
+  
+  Azure.AKS.MinNodeCount:
+  - aks-AksStan
+  
+  Azure.AKS.NetworkPolicy:
+  - aks-AksStan
+  
+  Azure.AKS.AzurePolicyAddOn:
+  - aks-AksStan
+  
+  Azure.AKS.AuthorizedIPs:
+  - aks-AksStan
+  
+  Azure.AKS.AutoScaling:
+  - aks-AksStan
+  
+  Azure.AKS.AvailabilityZone:
+  - aks-AksStan
+  
