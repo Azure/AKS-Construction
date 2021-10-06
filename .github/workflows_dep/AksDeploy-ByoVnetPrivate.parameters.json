@@ -57,10 +57,10 @@
             "value": true
         },
         "byoAKSSubnetId": {
-            "value": "subnetResourceId overriden from GitHub secrets"
+            "value": "/this/parameter/is/overridden/in/my/script/value/from/secrets"
         },
         "byoAGWSubnetId": {
-            "value": "subnetResourceId overriden from GitHub secrets"
+            "value": "/this/parameter/is/overridden/in/my/script/value/from/secrets"
         },
         "serviceCidr" : {
             "value" : "172.10.0.0/16"
