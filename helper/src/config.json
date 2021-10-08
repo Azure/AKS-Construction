@@ -14,12 +14,13 @@
             "disablePreviews": false
         },
         "cluster": {
+            "AksPaidSkuForSLA": false,
             "apisecurity": "none",
             "privateDNSZone": "none",
             "autoscale": false,
             "upgradeChannel": "none",
             "SystemPoolType": "Cost-Optimised",
-            "count": 2,
+            "agentCount": 3,
             "maxCount": 20,
             "vmSize": "Standard_DS3_v2",
             "osDiskSizeGB": 0,
@@ -43,6 +44,8 @@
             "appGWcount": 0,
             "appGWmaxCount": 10,
             "appGWsku": "WAF_v2",
+            "appGWenableFirewall": true,
+            "appGwFirewallMode": "Prevention",
             "appgwKVIntegration": false,
             "certMan": false,
             "certEmail": "",
@@ -53,6 +56,7 @@
             "podscale": false,
             "monitor": "none",
             "retentionInDays": 30,
+            "createAksMetricAlerts": true,
             "csisecret": "none",
             "kvId": "",
             "gitops": "none"
@@ -485,7 +489,7 @@
                             "enable_aad": true,
                             "apisecurity": "none",
                             "autoscale": true,
-                            "count": 2,
+                            "agentCount": 2,
                             "maxCount": 4,
                             "upgradeChannel": "none"
                         },

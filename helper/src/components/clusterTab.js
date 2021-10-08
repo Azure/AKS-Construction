@@ -31,7 +31,21 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
                 <Stack horizontal tokens={{ childrenGap: 55 }}>
                     <Stack.Item>
-                        <Label >System Pool Type <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/use-system-pools#system-and-user-node-pools'>docs</Link></Label>
+                        <Label >Uptime SLA <Link target='_' href='https://docs.microsoft.com/azure/aks/uptime-sla'>docs</Link></Label>
+                        <ChoiceGroup
+                            selectedKey={cluster.AksPaidSkuForSLA}
+                            options={[
+                                { key: false, text: 'Free clusters with a service level objective (SLO) of 99.5%' },
+                                { key: true, text: 'Uptime SLA guarantees 99.95% availability of the Kubernetes API server endpoint for clusters that use Availability Zones' }
+                            ]}
+                            onChange={(ev, { key }) => updateFn("AksPaidSkuForSLA", key)}
+                        />
+                    </Stack.Item>
+                </Stack>
+
+                <Stack horizontal tokens={{ childrenGap: 55 }}>
+                    <Stack.Item>
+                        <Label >System Pool Type <Link target='_' href='https://docs.microsoft.com/azure/aks/use-system-pools#system-and-user-node-pools'>docs</Link></Label>
                         <ChoiceGroup
                             selectedKey={cluster.SystemPoolType}
                             options={[
@@ -63,8 +77,8 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     <Stack.Item>
                         <Label >Scale Values</Label>
                         <Stack tokens={{ childrenGap: 0 }} styles={{ root: { width: 450 } }}>
-                            <Slider label={`Initial ${cluster.autoscale ? "(& Autoscaler Min nodes)" : "nodes"}`} min={1} max={10} step={1} defaultValue={cluster.count} showValue={true}
-                                onChange={(v) => updateFn("count", v)} />
+                            <Slider label={`Initial ${cluster.autoscale ? "(& Autoscaler Min nodes)" : "nodes"}`} min={1} max={10} step={1} defaultValue={cluster.agentCount} showValue={true}
+                                onChange={(v) => updateFn("agentCount", v)} />
                             {cluster.autoscale && (
                                 <Slider label="Autoscaler Max nodes" min={5} max={100} step={5} defaultValue={cluster.maxCount} showValue={true}
                                     onChange={(v) => updateFn("maxCount", v)}
@@ -156,7 +170,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             <Separator className="notopmargin" />
 
             <Stack.Item align="start">
-                <Label required={true}>Zone Support - AKS clusters deployed with multiple availability zones configured across a cluster provide a higher level of availability to protect against a hardware failure or a planned maintenance event. See <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/availability-zones#limitations-and-region-availability'>limits</Link> before selecting
+                <Label required={true}>Zone Support - AKS clusters deployed with multiple availability zones configured across a cluster provide a higher level of availability to protect against a hardware failure or a planned maintenance event. See <Link target='_' href='https://docs.microsoft.com/azure/aks/availability-zones#limitations-and-region-availability'>limits</Link> before selecting
                 </Label>
                 <ChoiceGroup
                     selectedKey={cluster.availabilityZones}
@@ -253,13 +267,13 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
                             />
 
-                            <Checkbox checked={cluster.enableAzureRBAC} onChange={(ev, val) => updateFn("enableAzureRBAC", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Azure RBAC for Kubernetes Authorization <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/manage-azure-rbac'>docs</Link>**</Text>} />
+                            <Checkbox checked={cluster.enableAzureRBAC} onChange={(ev, val) => updateFn("enableAzureRBAC", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Azure RBAC for Kubernetes Authorization <Link target='_' href='https://docs.microsoft.com/azure/aks/manage-azure-rbac'>docs</Link>**</Text>} />
 
                             {!cluster.enableAzureRBAC ?
                                 <>
                                     <TextField label="AAD Group objectIDs that will have admin role of the cluster ',' separated" onChange={(ev, val) => updateFn("aadgroupids", val)} value={cluster.aadgroupids} />
                                     {cluster.enable_aad && !cluster.aadgroupids &&
-                                        <MessageBar messageBarType={MessageBarType.warning}>You will be forbidden to do any kubernetes options unless you add a AAD Groups here, or follow <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/azure-ad-rbac#create-the-aks-cluster-resources-for-app-devs'>this</Link> after the cluster is created</MessageBar>
+                                        <MessageBar messageBarType={MessageBarType.warning}>You will be forbidden to do any kubernetes options unless you add a AAD Groups here, or follow <Link target='_' href='https://docs.microsoft.com/azure/aks/azure-ad-rbac#create-the-aks-cluster-resources-for-app-devs'>this</Link> after the cluster is created</MessageBar>
                                     }
                                 </>
                                 :
