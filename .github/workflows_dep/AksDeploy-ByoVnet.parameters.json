@@ -67,7 +67,7 @@
         },
         "SystemPoolType" : { 
             "value" : "Cost-Optimised"
-        }
+        },
         "upgradeChannel" : {
             "value" : "stable"
         },
