@@ -72,7 +72,7 @@
             "value" : "stable"
         },
         "createKV" : { 
-            "value" : "Standard"
+            "value" : true
         },
         "appgwKVIntegration" : {
             "value" : true
