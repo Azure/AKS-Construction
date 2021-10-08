@@ -263,6 +263,18 @@ jobs:
             } else {
               Write-Error "UAI not set properly"}
           }
+          
+          Write-Output "Checking for CSI Secrets driver"
+          if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
+            $csiEnabled=az aks show -n $AKSNAME -g $RG --query "addonProfiles.omsagent.enabled" -o tsv
+            write-output $csiEnabled
+            
+            if($csiEnabled -eq "true"){
+              Write-Output "CSI Secrets driver set correctly"
+            } else {
+              Write-Error "CSI Secrets driver not set properly"}
+          }
+          #grep KeyvaultSecretsProvider
 
       - name: Add AGIC AKS Workload
         uses: Azure/cli@1.0.4
