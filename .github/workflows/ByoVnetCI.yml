@@ -128,7 +128,7 @@ jobs:
           if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
             $feature='AKS-AzureKeyVaultSecretsProvider'
             write-output "-- $feature"
-            $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"
+            $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"}
             $featureCsi.properties.state
             
             if ($featureCsi.properties.state -ne 'Registered') {
