@@ -70,6 +70,9 @@
         },
         "createKV" : { 
             "value" : true
+        },
+        "appgwKVIntegration" : {
+            "value" : true
         }
     }
 }
