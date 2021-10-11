@@ -67,6 +67,9 @@
         },
         "SystemPoolType" : { 
             "value" : "Cost-Optimised"
+        },
+        "createKV" : { 
+            "value" : true
         }
     }
 }
