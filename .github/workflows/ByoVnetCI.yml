@@ -113,7 +113,9 @@ jobs:
 
           write-output 'Check specific features.'
           $paramFilePath="${{ env.ParamFilePath }}"
+          $paramFileContent=Get-Content $paramFilePath
           $params=$paramFileContent|ConvertFrom-Json
+          
           
           write-output '-- AutoupgradePreview'
           $autoupgrade = $aksfeatures |  Where-Object {$_.name -like '*AutoUpgradePreview'}
