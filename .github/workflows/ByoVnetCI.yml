@@ -95,10 +95,10 @@ jobs:
       - name: Verify Preview Features
         shell: pwsh
         run: |
-          write-output 'full list of features of AKS'
+          write-output 'Full list of features of AKS'
           az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService')].{Name:name,State:properties.state}"
 
-          write-output 'features that are still registering'
+          write-output 'Features that are still registering'
           az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService') && properties.state=='Registering'].{Name:name,State:properties.state}"
 
           write-output 'Checking to ensure no features are still registering'
@@ -109,10 +109,27 @@ jobs:
           
           if ($registeringfeatures -gt 0) {
             Write-Error "There are still features registering"
-          }
+          } else { Write-Output "All good, no features in the process of registering" }
 
+          write-output 'Check specific features.'
+          write-output '-- AutoupgradePreview'
           $autoupgrade = $aksfeatures |  Where-Object {$_.name -like '*AutoUpgradePreview'}
           write-output $autoupgrade
+          
+          if($params.parameters.upgradeChannel.value -ne $null) {
+
+          }
+          
+          if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
+            $feature='AKS-AzureKeyVaultSecretsProvider'
+            write-output '-- AKS-AzureKeyVaultSecretsProvider'
+            $featureCsi = $aksfeatures |  Where-Object {$_.name -like '*AKS-$feature'}
+            $featureCsi.properties.state
+            
+            if ($featureCsi.properties.state -ne 'Registered') {
+              Write-Error 'AKS-AzureKeyVaultSecretsProvider NOT registered'
+            } else { Write-Output ' Looks like AKS-AzureKeyVaultSecretsProvider is registered' }
+          }
           
       - name: Validate AKS
         uses: Azure/cli@1.0.4
