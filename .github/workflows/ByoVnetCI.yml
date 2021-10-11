@@ -127,14 +127,14 @@ jobs:
                    
           if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
             $feature='AKS-AzureKeyVaultSecretsProvider'
-            write-output '-- $feature'
-            $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature'"
+            write-output "-- $feature"
+            $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"
             $featureCsi.properties.state
             
             if ($featureCsi.properties.state -ne 'Registered') {
               Write-Ouput $featureCsi
-              Write-Error 'AKS-AzureKeyVaultSecretsProvider NOT registered'
-            } else { Write-Output ' Looks like AKS-AzureKeyVaultSecretsProvider is registered' }
+              Write-Error "$feature NOT registered"
+            } else { Write-Output "Looks like $feature is registered properly" }
           }
           
       - name: Validate AKS
