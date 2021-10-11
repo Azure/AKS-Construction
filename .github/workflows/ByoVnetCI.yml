@@ -76,7 +76,6 @@ jobs:
         id: activedeps
         uses: Azure/cli@1.0.4
         with:
-          azcliversion: 2.26.0
           inlineScript: |
             echo "AZ CLI version"
             az version
@@ -126,7 +125,7 @@ jobs:
         uses: Azure/cli@1.0.4
         continue-on-error: true
         with:
-          azcliversion: 2.26.0
+          azcliversion: 2.28.1
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
