@@ -4,6 +4,7 @@
 
 # Please see the documentation for all configuration options:
 # https://microsoft.github.io/PSRule/
+# https://azure.github.io/PSRule.Rules.Azure/setup/configuring-options/
 
 input:
   pathIgnore:
@@ -18,21 +19,22 @@ input:
 
 include:
   path: []
+  module:
+  # Allow local testing in Visual Studio Code
+  # https://azure.github.io/PSRule.Rules.Azure/validating-locally/
+  - 'PSRule.Rules.Azure'
 
 output:
   culture:
   - en-US
 
 configuration:
-  # Authoring rules
-  RULE_AUTHORING_ONLINE_HELP: 'https://azure.github.io/PSRule.Rules.Azure/en/rules/'
-  RULE_AUTHORING_PREFIX: 'Azure'
-  
   # Enable automatic expansion of Azure parameter files
   AZURE_PARAMETER_FILE_EXPANSION: true
   
+  # Bicep is experimental and currently disabled as testing occurs against compiled template
   # Enable automatic expansion of bicep source files
-  AZURE_BICEP_FILE_EXPANSION: true
+  # AZURE_BICEP_FILE_EXPANSION: true
   
   #ProjectSpecifc rules
   Azure_AKSNodeMinimumMaxPods: 30
@@ -48,9 +50,6 @@ suppression:
   # Exclude the following AKS clusters
   - aks-AksStan
   
-  Azure.AKS.AuthorizedIPs:
-  - aks-AksStan
-  
   Azure.AKS.MinNodeCount:
   - aks-AksStan
   
@@ -58,9 +57,6 @@ suppression:
   - aks-AksStan
   
   Azure.AKS.AzurePolicyAddOn:
-  - aks-AksStan
-  
-  Azure.AKS.AuthorizedIPs:
   - aks-AksStan
   
   Azure.AKS.AutoScaling:
