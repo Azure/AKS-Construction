@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Param check
+      - name: GH Param check
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -48,7 +48,7 @@ jobs:
           echo "Ref is ${{ github.ref }}"
           echo "EventTrigger name is ${{github.event_name}}"
 
-      - name: Dependency check
+      - name: Arm Parameter file check
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -72,7 +72,7 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
 
-      - name: Verify Active Deployments
+      - name: Verify Active RG Deployments
         id: activedeps
         uses: Azure/cli@1.0.4
         with:
@@ -92,7 +92,7 @@ jobs:
 
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
             
-      - name: Verify Preview Features
+      - name: Verify Preview Features on Subscription
         shell: pwsh
         run: |
           write-output 'Full list of features of AKS'
@@ -109,20 +109,23 @@ jobs:
           
           if ($registeringfeatures -gt 0) {
             Write-Error "There are still features registering"
-          } else { Write-Output "All good, no features in the process of registering" }
+          } else { Write-Output "-- All good, no features in the process of registering" }
 
           write-output 'Check specific features.'
           $paramFilePath="${{ env.ParamFilePath }}"
           $paramFileContent=Get-Content $paramFilePath
           $params=$paramFileContent|ConvertFrom-Json
           
-          
-          write-output '-- AutoupgradePreview'
-          $autoupgrade = $aksfeatures |  Where-Object {$_.name -like '*AutoUpgradePreview'}
-          write-output $autoupgrade
-          
           if($params.parameters.upgradeChannel.value -ne $null) {
-
+            $feature='AutoUpgradePreview'
+            write-output "-- $feature"
+            $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"}
+            $featureCsi.properties.state
+            
+            if ($featureCsi.properties.state -ne 'Registered') {
+              Write-Ouput $featureCsi
+              Write-Error "$feature NOT registered"
+            } else { Write-Output "-- Looks like $feature is registered properly" }
           }
                    
           if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
@@ -134,7 +137,7 @@ jobs:
             if ($featureCsi.properties.state -ne 'Registered') {
               Write-Ouput $featureCsi
               Write-Error "$feature NOT registered"
-            } else { Write-Output "Looks like $feature is registered properly" }
+            } else { Write-Output "-- Looks like $feature is registered properly" }
           }
           
       - name: Validate AKS
