@@ -163,6 +163,7 @@ jobs:
 
       - name: What If (edge Az cli version)
         uses: Azure/cli@1.0.4
+        id: edgeWhatIf
         continue-on-error: true
         with:
           inlineScript: |
@@ -182,9 +183,11 @@ jobs:
 
             cat $WHATIFPATH
             
-      - name: What If
+            echo "::set-output name=edgeSuccess::true"
+            
+      - name: What If (AZ CLI 2.26.0)
         uses: Azure/cli@1.0.4
-        if: failure()
+        if: always()
         with:
           azcliversion: 2.26.0
           inlineScript: |
@@ -192,6 +195,7 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
+            EdgeWhatIfPassed='${{ steps.edgeWhatIf.outputs.edgeSuccess}}'
 
             #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
