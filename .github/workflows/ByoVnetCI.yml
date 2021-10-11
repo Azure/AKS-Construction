@@ -203,6 +203,31 @@ jobs:
         shell: pwsh
         run: |
           Write-Output "TODO"
+          
+      - name: What If Gaps - Check for Soft deleted KeyVaults
+        shell: pwsh
+        run: |     
+          $paramFilePath="${{ env.ParamFilePath }}"
+          $paramFileContent=Get-Content $paramFilePath
+          $params=$paramFileContent|ConvertFrom-Json
+          
+          if($params.parameters.createKV.value -eq $true) {
+            Write-Output "Checking for already existing soft deleted KV"
+            
+            $vaultName = $params.parameters.resourceName
+            
+            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultName']"
+            
+            if($null -eq $deletedKv) {
+              Write-Output "Deleted KV not found"
+            }
+            else {
+              Write-Output $deletedKv
+              
+              az keyvault list-deleted -o table
+              Write-Error "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
+            }
+          }
 
   Deploy:
     runs-on: ubuntu-latest
@@ -240,30 +265,6 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          
-      - name: Check for Soft deleted KV
-        shell: pwsh
-        run: |     
-          $paramFilePath="${{ env.ParamFilePath }}"
-          $paramFileContent=Get-Content $paramFilePath
-          $params=$paramFileContent|ConvertFrom-Json
-          
-          if($params.parameters.createKV.value -eq $true) {
-            Write-Output "Checking for already existing soft deleted KV"
-            
-            $vaultName = $params.parameters.resourceName
-            
-            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultName']"
-            
-            if($null -eq $deletedKv) {
-              Write-Output "Deleted KV not found"
-            }
-            else {
-              #az keyvault purge --name $vaultName
-              az keyvault list-deleted -o table
-              Write-Error "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
-            }
-          }
             
       - name: Deploy AKS
         id: deployAks
