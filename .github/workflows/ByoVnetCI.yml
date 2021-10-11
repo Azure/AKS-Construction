@@ -163,14 +163,14 @@ jobs:
       - name: What If
         uses: Azure/cli@1.0.4
         with:
-          #azcliversion: 2.26.0
+          azcliversion: 2.26.0
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
 
-            az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
+            #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
             az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
 
@@ -225,6 +225,7 @@ jobs:
               Write-Output "All is good, soft deleted KV not found."
             }
             else {
+              Write-Output "Soft deleted KV output"
               Write-Output $deletedKv.length
               
               az keyvault list-deleted -o table
