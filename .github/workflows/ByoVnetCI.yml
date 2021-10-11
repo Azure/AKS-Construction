@@ -112,7 +112,6 @@ jobs:
             Write-Error "There are still features registering"
           }
 
-          #echo "Specific check: auto upgrade"
           $autoupgrade = $aksfeatures |  Where-Object {$_.name -like '*AutoUpgradePreview'}
           write-output $autoupgrade
           
