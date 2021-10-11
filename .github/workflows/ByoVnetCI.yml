@@ -189,8 +189,10 @@ jobs:
       - name: What If (bash AZ CLI Dev Nighly)
         if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
         run: |
-          git clone https://github.com/Azure/azure-cli.git
-          git checkout dev
+          mkdir azcli
+          cd azcli
+          
+          git clone -b dev https://github.com/Azure/azure-cli.git
           python -m venv env
           env\Scripts\activate.ps1
           pip install azdev
