@@ -161,7 +161,7 @@ jobs:
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --verbose
 
-      - name: What If (edge Az cli version)
+      - name: What If (edge Az cli version) (has issues)
         uses: Azure/cli@1.0.4
         id: edgeWhatIf
         continue-on-error: true
@@ -187,7 +187,7 @@ jobs:
             
       - name: What If (AZ CLI 2.26.0)
         uses: Azure/cli@1.0.4
-        if: always()
+        if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
         with:
           azcliversion: 2.26.0
           inlineScript: |
