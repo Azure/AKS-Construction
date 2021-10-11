@@ -94,18 +94,17 @@ jobs:
             
       - name: Verify Preview Features
         shell: pwsh
-        continue-on-error: true #this is proving flaky.  TODO: Make it nice.
         run: |
-          echo "full list of features of AKS"
+          write-output 'full list of features of AKS'
           az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService')].{Name:name,State:properties.state}"
 
-          echo "features that are still registering"
+          write-output 'features that are still registering'
           az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService') && properties.state=='Registering'].{Name:name,State:properties.state}"
 
-          echo "Checking to ensure no features are still registering
+          write-output 'Checking to ensure no features are still registering'
           #Not going to use JMES as i'm getting a weird error that i don't see locally in powershell
-          $allfeatures = az feature list | ConvertFrom-Json
-          $aksfeatures = $allfeatures | Where-Object {$_.Name -like 'Microsoft.ContainerService*'}
+          $aksfeatures = az feature list --query "[?contains(name, 'Microsoft.ContainerService')]" | ConvertFrom-Json
+          #$aksfeatures = $allfeatures | Where-Object {$_.Name -like 'Microsoft.ContainerService*'}
           $registeringfeatures = $aksfeatures |  Where-Object {$_.properties.state -eq 'Registering'}
           
           if ($registeringfeatures -gt 0) {
