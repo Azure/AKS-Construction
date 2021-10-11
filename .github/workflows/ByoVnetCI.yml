@@ -81,6 +81,7 @@ jobs:
         with:
           modules: 'PSRule.Rules.Azure' 
           inputPath: "${{ env.ParamFilePath }}"
+          prerelease: true
           
       - name: Verify Active RG Deployments
         id: activedeps
