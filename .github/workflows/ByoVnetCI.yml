@@ -260,7 +260,7 @@ jobs:
             }
             else {
               #az keyvault purge --name $vaultName
-              Write-Output "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
+              Write-Error "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
             }
           }
             
