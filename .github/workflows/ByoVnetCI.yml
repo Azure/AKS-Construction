@@ -185,25 +185,34 @@ jobs:
             
             echo "::set-output name=edgeSuccess::true"
             
-      - name: What If (AZ CLI Dev Nighly)
-        shell: pwsh
+            
+      - name: What If (bash AZ CLI Dev Nighly)
         if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
         run: |
-          Write-Output "Installing Dev branch of AZ CLI"
-          rpm -ivh --nodeps $(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/InstallAzureCliRpmEdge)
+          git clone https://github.com/Azure/azure-cli.git
+          git checkout dev
+          python -m venv env
+          env\Scripts\activate.ps1
+          pip install azdev
+          azdev setup -c azure-cli
+          az -v
+                    
+          RG='${{ env.RG }}'
+          RESNAME='${{ env.RESNAME }}'
+          DEPNAME='${{ env.DEPNAME }}'
+          WHATIFPATH='whatif.json'
+          EdgeWhatIfPassed='${{ steps.edgeWhatIf.outputs.edgeSuccess}}'
 
-          Write-Output "Checking parameter file existance/contents"
-          $paramFilePath="${{ env.ParamFilePath }}"
-          Test-Path $paramFilePath
+          #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
-          if (Test-Path $paramFilePath) {
-            $paramFileContent=Get-Content $paramFilePath
-            Write-Output $paramFileContent
-            
-            Write-Output "Test Pulling a param (ingressApplicationGateway)"
-            $params=$paramFileContent|ConvertFrom-Json
-            Write-Output $params.parameters.ingressApplicationGateway.value
-          }
+          az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
+
+          if [[ -f $WHATIFPATH ]]
+          then
+              echo "The WhatIf json file was created"
+          fi
+
+          cat $WHATIFPATH
           
       - name: What If (AZ CLI 2.26.0)
         uses: Azure/cli@1.0.4
