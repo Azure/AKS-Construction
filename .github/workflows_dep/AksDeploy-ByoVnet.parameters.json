@@ -73,6 +73,9 @@
         },
         "azureKeyvaultSecretsProvider" : {
             "value" : true
+        },
+        "appgwKVIntegration" : {
+            "value" : true
         }
     }
 }
