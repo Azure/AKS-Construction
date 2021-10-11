@@ -140,6 +140,7 @@ jobs:
 
       - name: What If Pwsh Parse
         shell: pwsh
+        continue-on-error: true
         run: |
           $whatifpath='whatif.json'
 
