@@ -103,8 +103,7 @@ jobs:
           az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService') && properties.state=='Registering'].{Name:name,State:properties.state}"
 
           echo "Checking to ensure no features are still registering
-          #$registeringfeatures=az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService') && properties.state=='Registering'].{Name:name,State:properties.state}" -o json | ConvertFrom-Json
-          $registeringfeatures=az feature list --query "[?contains(name, 'Microsoft.ContainerService') && properties.state=='Registered'].{Name:name,State:properties.state}" -o json | ConvertFrom-Json
+          $registeringfeatures = az feature list --query "[?contains(name, 'Microsoft.ContainerService') && properties.state=='Registered'].{Name:name,State:properties.state}" -o json | ConvertFrom-Json
           if ($registeringfeatures -gt 0) {
             Write-Error "There are still features registering"
           }
