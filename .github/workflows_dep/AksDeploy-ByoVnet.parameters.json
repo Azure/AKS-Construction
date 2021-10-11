@@ -71,7 +71,7 @@
         "createKV" : { 
             "value" : true
         },
-        "appgwKVIntegration" : {
+        "azureKeyvaultSecretsProvider" : {
             "value" : true
         }
     }
