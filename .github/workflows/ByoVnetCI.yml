@@ -120,6 +120,7 @@ jobs:
 
       - name: What If
         uses: Azure/cli@1.0.4
+        continue-on-error: true
         with:
           inlineScript: |
             RG='${{ env.RG }}'
