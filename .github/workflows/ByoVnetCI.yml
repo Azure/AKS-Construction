@@ -112,6 +112,9 @@ jobs:
           } else { Write-Output "All good, no features in the process of registering" }
 
           write-output 'Check specific features.'
+          $paramFilePath="${{ env.ParamFilePath }}"
+          $params=$paramFileContent|ConvertFrom-Json
+          
           write-output '-- AutoupgradePreview'
           $autoupgrade = $aksfeatures |  Where-Object {$_.name -like '*AutoUpgradePreview'}
           write-output $autoupgrade
