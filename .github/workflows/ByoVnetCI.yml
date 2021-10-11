@@ -71,7 +71,17 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-
+          
+      # PSRule does this cool thing where it traverse the parameter file through to the arm template
+      # PSRule performs IaC recommendations of the template.
+      # https://azure.github.io/PSRule.Rules.Azure/
+      - name: PSRule - Analyze Azure parameter file
+        uses: Microsoft/ps-rule@main
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
+        with:
+          modules: 'PSRule.Rules.Azure' 
+          inputPath: "${{ env.ParamFilePath }}"
+          
       - name: Verify Active RG Deployments
         id: activedeps
         uses: Azure/cli@1.0.4
@@ -210,6 +220,7 @@ jobs:
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
+          
       - name: Dependency check
         shell: pwsh
         run: |
@@ -229,7 +240,28 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-
+          
+      - name: Verify Preview Features on Subscription
+        shell: pwsh
+        run: |     
+          $paramFilePath="${{ env.ParamFilePath }}"
+          $paramFileContent=Get-Content $paramFilePath
+          $params=$paramFileContent|ConvertFrom-Json
+          
+          if($params.parameters.createKV.value -eq $true) {
+            Write-Output "Checking for already existing soft deleted KV"
+            
+            $deletedKv = az keyvault list-deleted -o table --query "[?name=='kv-AksByo']"
+            
+            if($null -eq $deletedKv) {
+              Write-Output "Deleted KV not found"
+            }
+            else {
+              #az keyvault purge --name kv-AksByo
+              Write-Output "Existing soft deleted Key Vault Found - Cannot proceed, as deployment will fail"
+            }
+          }
+            
       - name: Deploy AKS
         id: deployAks
         uses: Azure/cli@1.0.4
