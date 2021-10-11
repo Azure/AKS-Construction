@@ -76,6 +76,9 @@
         },
         "appgwKVIntegration" : {
             "value" : true
+        },
+        "upgradeChannel" : {
+            "value" : "stable"
         }
     }
 }
