@@ -207,6 +207,8 @@ jobs:
       - name: What If Gaps - Check for Soft deleted KeyVaults
         shell: pwsh
         run: |     
+          #This is a current gap in the What-If analysis.
+          
           $paramFilePath="${{ env.ParamFilePath }}"
           $paramFileContent=Get-Content $paramFilePath
           $params=$paramFileContent|ConvertFrom-Json
@@ -218,8 +220,8 @@ jobs:
             
             $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultName']"
             
-            if($null -eq $deletedKv) {
-              Write-Output "Deleted KV not found"
+            if($null -eq $deletedKv || $deletedKv.length -eq 0) {
+              Write-Output "All is good, soft deleted KV not found."
             }
             else {
               Write-Output $deletedKv
