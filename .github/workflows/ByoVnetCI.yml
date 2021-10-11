@@ -161,7 +161,7 @@ jobs:
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --verbose
 
-      - name: What If (edge Az cli version) (has issues)
+      - name: What If (GA edge Az cli version) (has issues)
         uses: Azure/cli@1.0.4
         id: edgeWhatIf
         continue-on-error: true
@@ -185,6 +185,26 @@ jobs:
             
             echo "::set-output name=edgeSuccess::true"
             
+      - name: What If (AZ CLI Dev Nighly)
+        shell: pwsh
+        if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
+        run: |
+          Write-Output "Installing Dev branch of AZ CLI"
+          rpm -ivh --nodeps $(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/InstallAzureCliRpmEdge)
+
+          Write-Output "Checking parameter file existance/contents"
+          $paramFilePath="${{ env.ParamFilePath }}"
+          Test-Path $paramFilePath
+
+          if (Test-Path $paramFilePath) {
+            $paramFileContent=Get-Content $paramFilePath
+            Write-Output $paramFileContent
+            
+            Write-Output "Test Pulling a param (ingressApplicationGateway)"
+            $params=$paramFileContent|ConvertFrom-Json
+            Write-Output $params.parameters.ingressApplicationGateway.value
+          }
+          
       - name: What If (AZ CLI 2.26.0)
         uses: Azure/cli@1.0.4
         if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
