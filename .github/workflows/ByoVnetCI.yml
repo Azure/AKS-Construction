@@ -124,18 +124,15 @@ jobs:
           if($params.parameters.upgradeChannel.value -ne $null) {
 
           }
-          
-          write-output 'debug'
-          write-output $params
-          write-output $params.parameters.azureKeyvaultSecretsProvider.value
-          
+                   
           if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
             $feature='AKS-AzureKeyVaultSecretsProvider'
-            write-output '-- AKS-AzureKeyVaultSecretsProvider'
-            $featureCsi = $aksfeatures |  Where-Object {$_.name -like '*AKS-$feature'}
+            write-output '-- $feature'
+            $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature'"
             $featureCsi.properties.state
             
             if ($featureCsi.properties.state -ne 'Registered') {
+              Write-Ouput $featureCsi
               Write-Error 'AKS-AzureKeyVaultSecretsProvider NOT registered'
             } else { Write-Output ' Looks like AKS-AzureKeyVaultSecretsProvider is registered' }
           }
