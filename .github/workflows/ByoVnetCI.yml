@@ -120,6 +120,10 @@ jobs:
 
           }
           
+          write-output 'debug'
+          write-output $params
+          write-output $params.parameters.azureKeyvaultSecretsProvider.value
+          
           if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
             $feature='AKS-AzureKeyVaultSecretsProvider'
             write-output '-- AKS-AzureKeyVaultSecretsProvider'
