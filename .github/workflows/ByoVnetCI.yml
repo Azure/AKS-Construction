@@ -241,7 +241,7 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-      - name: Verify Preview Features on Subscription
+      - name: Check for Soft deleted KV
         shell: pwsh
         run: |     
           $paramFilePath="${{ env.ParamFilePath }}"
@@ -251,14 +251,16 @@ jobs:
           if($params.parameters.createKV.value -eq $true) {
             Write-Output "Checking for already existing soft deleted KV"
             
-            $deletedKv = az keyvault list-deleted -o table --query "[?name=='kv-AksByo']"
+            $vaultName = $params.parameters.resourceName
+            
+            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultName']"
             
             if($null -eq $deletedKv) {
               Write-Output "Deleted KV not found"
             }
             else {
-              #az keyvault purge --name kv-AksByo
-              Write-Output "Existing soft deleted Key Vault Found - Cannot proceed, as deployment will fail"
+              #az keyvault purge --name $vaultName
+              Write-Output "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
             }
           }
             
