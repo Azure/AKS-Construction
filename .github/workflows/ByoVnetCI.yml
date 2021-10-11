@@ -77,6 +77,9 @@ jobs:
         uses: Azure/cli@1.0.4
         with:
           inlineScript: |
+            echo "AZ CLI version"
+            echo az version
+            
             RG='${{ env.RG }}'
             RUNCOUNT=$(az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name] | length(@)" -o tsv)
             echo "Active deployments : $RUNCOUNT"
