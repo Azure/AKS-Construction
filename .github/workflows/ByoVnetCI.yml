@@ -345,75 +345,12 @@ jobs:
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
 
-
-
-      - name: Test Control Plane Config
-        shell: pwsh
-        run: |
-          $RG='${{ env.RG }}'
-          $AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-          $paramFilePath="${{ env.ParamFilePath }}"
-          $params = Get-Content $paramFilePath | ConvertFrom-Json
-
-          Write-Output "Checking for User Assigned Identity"
-          if($params.parameters.custom_vnet.value -eq $true) {
-            $aksId=az aks show -n $AKSNAME -g $RG --query "identity.type" -o tsv
-            write-output $aksId
-            
-            if($aksId -eq "UserAssigned"){
-              Write-Output "UAI set correctly"
-            } else {
-              Write-Error "UAI not set properly"}
-          }
-          
-          Write-Output "Checking for CSI Secrets driver"
-          if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
-            $csiEnabled=az aks show -n $AKSNAME -g $RG --query "addonProfiles.omsagent.enabled" -o tsv
-            write-output $csiEnabled
-            
-            if($csiEnabled -eq "true"){
-              Write-Output "CSI Secrets driver set correctly"
-            } else {
-              Write-Error "CSI Secrets driver not set properly"}
-          }
-          #grep KeyvaultSecretsProvider
-
-      - name: Add AGIC AKS Workload
-        uses: Azure/cli@1.0.4
-        if: success()
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
-          NAMESP: "default"
-        with:
-          inlineScript: |
-            RG='${{ env.RG }}'
-            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-
-            echo $AKSNAME
-            az aks get-credentials -n $AKSNAME -g $RG --admin
-
-            az aks install-cli
-            kubectl version
-
-            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-            kubectl get po -n  $NAMESP
-            kubectl get svc -n  $NAMESP
-            kubectl get ingress -n  $NAMESP
-
-            sleep 9m
-
-            kubectl get po -n  $NAMESP
-            kubectl get svc -n  $NAMESP
-            kubectl get ingress -n  $NAMESP
-
-            pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-            echo $pubIp
-
-            curl $pubIp
-
+  PostDeployConfig:
+    runs-on: [self-hosted, linux]
+    needs: [Deploy]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
 
       - name: Install KeyVault Pwsh module
         shell: pwsh
@@ -455,6 +392,131 @@ jobs:
             $parsedCert = Get-PfxData -FilePath $certOutPath
             $parsedCert.EndEntityCertificates | Select-Object -Property *
 
+  WorkloadAdd:
+    runs-on: [self-hosted, linux]
+    needs: [Deploy, PostDeployConfig]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          
+          whoami
+      - name: Azure Login MSI
+        run: |
+          az login --identity
+        
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Deploy AGIC Public Facing Workload
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
+          NAMESP: "default"
+        run: |
+          kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
+          
+          echo $MANIFESTTESTURL
+          kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+      - name: Verify AGIC Public Workload
+        env:
+          NAMESP: "default"
+        run: |
+          sleep 2m #Give everything a chance to work
+        
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+          echo "Getting private ip"
+          privIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+          echo "Private ip : $privIp"
+          
+          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
+          echo $respcode   
+          
+          #TODO: This is going to need to be rewritten. #loopshambles
+          #SSH'ing on the runner shows this works, sometimes it just takes ages
+          #Needs to be investigated.
+          if [ "$respcode" != "200" ];
+          then
+              echo "going to need to wait longer i guess?"
+              sleep 3m
+              
+              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
+              echo $respcode    
+              
+              if [ "$respcode" != "200" ];
+              then
+                echo "going to need to wait EVEN longer i guess?  (wtf)"
+                sleep 6m
+                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
+                echo $respcode    
+                if [ "$respcode" != "200" ];
+                then
+                  echo "Non 200 response code from app - Raising error"
+                  exit 1
+                fi
+              fi
+          fi
+          
+          curl $privIp
+          
+  DeployVerify:
+    runs-on: ubuntu-latest
+    needs: [Deploy]
+    steps:
+      - name: Test Control Plane Config
+        shell: pwsh
+        run: |
+          $RG='${{ env.RG }}'
+          $AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+          $paramFilePath="${{ env.ParamFilePath }}"
+          $params = Get-Content $paramFilePath | ConvertFrom-Json
+
+          Write-Output "Checking for User Assigned Identity"
+          if($params.parameters.custom_vnet.value -eq $true) {
+            $aksId=az aks show -n $AKSNAME -g $RG --query "identity.type" -o tsv
+            write-output $aksId
+            
+            if($aksId -eq "UserAssigned"){
+              Write-Output "UAI set correctly"
+            } else {
+              Write-Error "UAI not set properly"}
+          }
+          
+          Write-Output "Checking for CSI Secrets driver"
+          if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
+            $csiEnabled=az aks show -n $AKSNAME -g $RG --query "addonProfiles.omsagent.enabled" -o tsv
+            write-output $csiEnabled
+            
+            if($csiEnabled -eq "true"){
+              Write-Output "CSI Secrets driver set correctly"
+            } else {
+              Write-Error "CSI Secrets driver not set properly"}
+          }
+          #grep KeyvaultSecretsProvider
+
+
   InfraTests:
     runs-on: ubuntu-latest
     needs: [Deploy]
@@ -469,10 +531,12 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
           echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}"
+          
       - name: Allow Monitoring extension
         shell: pwsh
         run: |
           az extension add -n log-analytics -y
+          
       - name: Azure Login
         uses: Azure/login@v1
         with:
