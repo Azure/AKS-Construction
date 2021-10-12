@@ -403,7 +403,7 @@ jobs:
             kubectl get svc -n  $NAMESP
             kubectl get ingress -n  $NAMESP
 
-            sleep 3m
+            sleep 9m
 
             kubectl get po -n  $NAMESP
             kubectl get svc -n  $NAMESP
