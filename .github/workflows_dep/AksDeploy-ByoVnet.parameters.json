@@ -79,6 +79,9 @@
         },
         "upgradeChannel" : {
             "value" : "stable"
+        },
+        "KeyVaultSoftDelete" : {
+            "value" : false
         }
     }
 }

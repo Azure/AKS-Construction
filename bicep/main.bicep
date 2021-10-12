@@ -135,6 +135,9 @@ param azureKeyvaultSecretsProvider bool = false //This is a preview feature
 @description('Creates a Key Vault')
 param createKV bool = false
 
+@description('If soft delete protection is enabled')
+param KeyVaultSoftDelete bool = true
+
 param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
 
 var akvName = 'kv-${replace(resourceName, '-', '')}'
@@ -149,6 +152,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
       name: 'Standard'
     }
     enabledForTemplateDeployment: true
+    enableSoftDelete: KeyVaultSoftDelete
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
     publicNetworkAccess: 'enabled'
     accessPolicies: concat(azureKeyvaultSecretsProvider ? array({
