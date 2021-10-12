@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "5485829007399422839"
+      "templateHash": "6544036488683900783"
     }
   },
   "parameters": {
@@ -2158,6 +2158,10 @@
     }
   ],
   "outputs": {
+    "keyVaultName": {
+      "type": "string",
+      "value": "[if(parameters('createKV'), variables('akvName'), '')]"
+    },
     "ApplicationGatewayName": {
       "type": "string",
       "value": "[if(variables('deployAppGw'), variables('appgwName'), '')]"
