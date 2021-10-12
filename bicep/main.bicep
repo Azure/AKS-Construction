@@ -201,6 +201,9 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
   } : {})
 }
 
+output keyVaultName string = createKV ? kv.name : ''
+
+
 /*   ___           ______     .______          
     /   \         /      |    |   _  \         
    /  ^  \       |  ,----'    |  |_)  |        
