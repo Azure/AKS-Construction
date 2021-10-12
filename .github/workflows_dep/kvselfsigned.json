@@ -1,0 +1,29 @@
+{ 
+  "issuerParameters": {
+    "certificateTransparency": null,
+    "name": "Self"
+  },
+  "keyProperties": {
+    "curve": null,
+    "exportable": true,
+    "keySize": 2048,
+    "keyType": "RSA"
+  },
+  "lifetimeActions": [
+    {
+      "action": {
+        "actionType": "AutoRenew"
+      },
+      "trigger": {
+        "daysBeforeExpiry": 90
+      }
+    }
+  ],
+  "secretProperties": {
+    "contentType": "application/x-pkcs12"
+  },
+  "x509CertificateProperties": {
+    "subject": "CN=aksbicepci",
+    "validityInMonths": 12
+  }
+}
