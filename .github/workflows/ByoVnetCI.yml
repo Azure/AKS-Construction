@@ -426,6 +426,7 @@ jobs:
         run: |
             $RG='${{ env.RG }}'
             $AKVNAME='${{ steps.deployAks.outputs.AKVNAME}}'
+            $CERTNAME='${{ env.CERTNAME }}'
 
             Write-Output "Creating Certificate $CERTNAME in $AKVNAME"
             $policy = New-AzKeyVaultCertificatePolicy -CertificateTransparency $null -IssuerName 'Self' -KeySize 2048 -KeyType RSA -RenewAtNumberOfDaysBeforeExpiry 28 -SecretContentType "application/x-pkcs12" -SubjectName "CN=$CERTNAME" -ValidityInMonths 2
@@ -440,6 +441,7 @@ jobs:
         run: |
             $RG='${{ env.RG }}'
             $AKVNAME='${{ steps.deployAks.outputs.AKVNAME}}'
+            $CERTNAME='${{ env.CERTNAME }}'
 
             Write-Output "Getting Certificate $CERTNAME from $AKVNAME"
             $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
