@@ -415,17 +415,39 @@ jobs:
             curl $pubIp
 
 
-      - name: Configure Key Vault for self signed certs
-        uses: Azure/cli@1.0.4
+      - name: Create self signed cert in Key Vault
         env:
-          KEYVAULTCERTJSONPATH: ".github/workflows_dep/kvselfsigned.json"
-        with:
-          inlineScript: |
-            RG='${{ env.RG }}'
-            AKVNAME='${{ steps.deployAks.outputs.AKVNAME}}'
+          CERTNAME: "openjdk-demo-service"
+        shell: pwsh
+        run: |
+            $RG='${{ env.RG }}'
+            $AKVNAME='${{ steps.deployAks.outputs.AKVNAME}}'
 
-            echo $AKVNAME
-            az keyvault certificate create --vault-name myvault -n azclicert -p @policy.json
+            Write-Output "Creating Certificate $CERTNAME in $AKVNAME"
+            $policy = New-AzKeyVaultCertificatePolicy -CertificateTransparency $null -IssuerName 'Self' -KeySize 2048 -KeyType RSA -RenewAtNumberOfDaysBeforeExpiry 28 -SecretContentType "application/x-pkcs12" -SubjectName "CN=$CERTNAME" -ValidityInMonths 2
+            $CertRequest = Add-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME -CertificatePolicy $policy
+            
+            Write-Output $CertRequest.Id
+
+      - name: Retrieve self signed certificate from AKV
+        env:
+          CERTNAME: "openjdk-demo-service"
+        shell: pwsh
+        run: |
+            $RG='${{ env.RG }}'
+            $AKVNAME='${{ steps.deployAks.outputs.AKVNAME}}'
+
+            Write-Output "Getting Certificate $CERTNAME from $AKVNAME"
+            $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
+            $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
+            $secretByte = [Convert]::FromBase64String($secret)
+            
+            # Write to a file
+            $certOutPath = "$CERTNAME.pfx"
+            [System.IO.File]::WriteAllBytes($certOutPath, $secretByte)
+            
+            $parsedCert = Get-PfxData -FilePath $certOutPath
+            $parsedCert.EndEntityCertificates | Select-Object -Property *
 
   InfraTests:
     runs-on: ubuntu-latest
