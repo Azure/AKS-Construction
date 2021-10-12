@@ -417,7 +417,7 @@ jobs:
 
       - name: Install KeyVault Pwsh module
         shell: pwsh
-        run: Install-Module -Name Az.KeyVault
+        run: Install-Module -Name Az.KeyVault -Force
         
       - name: Create self signed cert in Key Vault
         env:
