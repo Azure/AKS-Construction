@@ -427,8 +427,7 @@ jobs:
             echo $AKVNAME
             az keyvault certificate create --vault-name myvault -n azclicert -p @policy.json
 
-
-InfraTests:
+  InfraTests:
     runs-on: ubuntu-latest
     needs: [Deploy]
     steps:
@@ -473,7 +472,6 @@ InfraTests:
           
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
-          
 
   Cleanup:
     runs-on: ubuntu-latest
