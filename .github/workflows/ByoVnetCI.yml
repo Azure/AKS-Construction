@@ -264,6 +264,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Validation]
     environment: azurecirgs
+    outputs: 
+      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
+      LANAME : ${{ steps.deployAks.outputs.LANAME}}
+      LAWGUID : ${{ steps.deployAks.outputs.LAWGUID}}
+      AKVNAME : ${{ steps.deployAks.outputs.AKVNAME}}
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v2
@@ -362,7 +367,7 @@ jobs:
         shell: pwsh
         run: |
             $RG='${{ env.RG }}'
-            $AKVNAME='${{ steps.deployAks.outputs.AKVNAME}}'
+            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
             $CERTNAME='${{ env.CERTNAME }}'
 
             Write-Output "Creating Certificate $CERTNAME in $AKVNAME"
@@ -377,7 +382,7 @@ jobs:
         shell: pwsh
         run: |
             $RG='${{ env.RG }}'
-            $AKVNAME='${{ steps.deployAks.outputs.AKVNAME}}'
+            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
             $CERTNAME='${{ env.CERTNAME }}'
 
             Write-Output "Getting Certificate $CERTNAME from $AKVNAME"
