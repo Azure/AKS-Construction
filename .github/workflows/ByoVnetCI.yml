@@ -293,7 +293,7 @@ jobs:
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: false
+          enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
             
