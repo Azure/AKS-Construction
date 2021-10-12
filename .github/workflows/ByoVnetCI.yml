@@ -415,6 +415,10 @@ jobs:
             curl $pubIp
 
 
+      - name: Install KeyVault Pwsh module
+        shell: pwsh
+        run: Install-Module -Name Az.KeyVault
+        
       - name: Create self signed cert in Key Vault
         env:
           CERTNAME: "openjdk-demo-service"
