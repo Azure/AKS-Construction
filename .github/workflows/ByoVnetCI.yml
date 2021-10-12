@@ -476,7 +476,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy]
+    needs: [Validation, Deploy, InfraTests]
     steps:
       #- uses: actions/checkout@v2
 
