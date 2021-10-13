@@ -277,6 +277,7 @@ jobs:
       AKVNAME : ${{ steps.deployAks.outputs.AKVNAME}}
       ACRNAME : ${{ steps.deployAks.outputs.ACRNAME}}
       AGNAME : ${{ steps.deployAks.outputs.AGNAME}}
+      
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v2
@@ -389,13 +390,13 @@ jobs:
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Az.KeyVault -Force
           
-      - name: Add KV access policy for certificates
+      - name: Add KV access policy for certificates for this CI action user
         shell: pwsh
         run: |
           $CiSpId='${{ secrets.AZURE_CREDENTIALS_OBJID }}'
           $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           
-          Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all -PermissionsToSecrets get
+          Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all -PermissionsToSecrets get,list
           
       - name: Create self signed cert in Key Vault
         env:
@@ -483,11 +484,11 @@ jobs:
           
           echo $RG
           
-          ## Get the identity created from the KeyVaultSecert Addon
+          echo 'Get the identity created from the KeyVaultSecret Addon'
           export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
+          echo $CSISECRET_CLIENTID
           
-          az aks get-credentials -g $RG -n $AKSNAME
-          
+          echo 'Create and submit the yaml manifest for deployment (it aint pretty)'
           echo "
           apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
           kind: SecretProviderClass
