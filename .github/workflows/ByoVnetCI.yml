@@ -327,6 +327,12 @@ jobs:
             AKVNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.keyVaultName.value" -o tsv)
             echo "::set-output name=AKVNAME::$AKVNAME" 
             
+            LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
+            echo "::set-output name=LANAME::$LANAME" #outputting for conditon
+            
+            LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
+            echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
+            
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
         if: success()
@@ -365,6 +371,14 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
 
+      - name: Add KV access policy for certificates
+        shell: pwsh
+        env:
+          CIObjId: "7128d1b2-42fa-4b82-8aed-b01a413309da"
+        run: |
+          $CiSpId='${{ env.CIObjId }}'
+          Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all
+          
       - name: Install KeyVault Pwsh module
         shell: pwsh
         run: |
