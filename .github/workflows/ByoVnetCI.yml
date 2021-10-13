@@ -425,6 +425,7 @@ jobs:
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
           
           whoami
+          
       - name: Azure Login MSI
         run: |
           az login --identity
@@ -502,11 +503,29 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME }}"
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+          
       - name: Test Control Plane Config
         shell: pwsh
         run: |
           $RG='${{ env.RG }}'
-          $AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME }}'
           $paramFilePath="${{ env.ParamFilePath }}"
           $params = Get-Content $paramFilePath | ConvertFrom-Json
 
@@ -545,8 +564,8 @@ jobs:
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
-          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
-          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}"
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME }}"
+          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID }}"
           
       - name: Allow Monitoring extension
         shell: pwsh
