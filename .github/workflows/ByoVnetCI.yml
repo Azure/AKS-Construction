@@ -351,15 +351,25 @@ jobs:
             fi
 
   PostDeployConfig:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     needs: [Deploy]
     environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
 
       - name: Install KeyVault Pwsh module
         shell: pwsh
-        run: Install-Module -Name Az.KeyVault -Force
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Az.KeyVault -Force
         
       - name: Create self signed cert in Key Vault
         env:
@@ -398,7 +408,7 @@ jobs:
             $parsedCert.EndEntityCertificates | Select-Object -Property *
 
   WorkloadAdd:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     needs: [Deploy, PostDeployConfig]
     environment: azurecirgs
     steps:
@@ -490,6 +500,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Deploy]
     steps:
+      - uses: actions/checkout@v2
+      
       - name: Test Control Plane Config
         shell: pwsh
         run: |
@@ -520,7 +532,6 @@ jobs:
               Write-Error "CSI Secrets driver not set properly"}
           }
           #grep KeyvaultSecretsProvider
-
 
   InfraTests:
     runs-on: ubuntu-latest
@@ -575,29 +586,6 @@ jobs:
     if: github.event_name == 'schedule'
     needs: [Validation, Deploy, InfraTests, DeployVerify, PostDeployConfig, WorkloadAdd]
     steps:
-      #- uses: actions/checkout@v2
-
-      - name: Param check
-        run: |
-          RG='${{ env.RG }}'
-          echo "RG is: $RG"
-
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
-
-      - name: Dependency check
-        shell: pwsh
-        run: |
-          Write-Output "Checking parameter file existance/contents"
-          $paramFilePath="${{ env.ParamFilePath }}"
-          Test-Path $paramFilePath
-
-          if (Test-Path $paramFilePath) {
-            $paramFileContent=Get-Content $paramFilePath
-            Write-Output $paramFileContent
-          }
-
       - name: Azure Login
         uses: Azure/login@v1
         with:
