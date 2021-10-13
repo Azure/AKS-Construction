@@ -276,6 +276,7 @@ jobs:
       LAWGUID : ${{ steps.deployAks.outputs.LAWGUID}}
       AKVNAME : ${{ steps.deployAks.outputs.AKVNAME}}
       ACRNAME : ${{ steps.deployAks.outputs.ACRNAME}}
+      AGNAME : ${{ steps.deployAks.outputs.AGNAME}}
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v2
@@ -478,12 +479,15 @@ jobs:
           CERTNAME='${{ env.CERTNAME }}'
           KVTENANT=$(az account show --query tenantId -o tsv)
           AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
-          ACRNAME=''
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          
+          echo $RG
           
           ## Get the identity created from the KeyVaultSecert Addon
           export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
           
-          az aks get-credentials -g $AKSRG -n $AKSNAME
+          az aks get-credentials -g $RG -n $AKSNAME
+          
           echo "
           apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
           kind: SecretProviderClass
@@ -510,8 +514,6 @@ jobs:
 
       - name: Create Root Cert reference in AppGW
         env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
-          NAMESP: "default"
           CERTNAME: "openjdk-demo-service"
         continue-on-error: true
         run: |
@@ -529,7 +531,7 @@ jobs:
 
       - name: Deploy Java Sample App
         env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Azure/Aks-Construction/gb-akv/samples/openjdk-e2etls-demo.yml"
+          MANIFESTTESTURL: "samples/openjdk-e2etls-demo.yml"
           NAMESP: "default"
           CERTNAME: "openjdk-demo-service"
         continue-on-error: true
