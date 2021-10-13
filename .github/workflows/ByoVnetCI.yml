@@ -275,6 +275,7 @@ jobs:
       LANAME : ${{ steps.deployAks.outputs.LANAME}}
       LAWGUID : ${{ steps.deployAks.outputs.LAWGUID}}
       AKVNAME : ${{ steps.deployAks.outputs.AKVNAME}}
+      ACRNAME : ${{ steps.deployAks.outputs.ACRNAME}}
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v2
@@ -338,6 +339,10 @@ jobs:
             
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
             echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
+            
+            ACRNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.containerRegistryName.value" -o tsv)
+            echo "::set-output name=ACRNAME::$ACRNAME" #outputting for conditon
+            
             
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
@@ -406,7 +411,7 @@ jobs:
             
             Write-Output $CertRequest.Id
 
-      - name: Retrieve self signed certificate from AKV
+      - name: Test retrieving self signed certificate from AKV
         env:
           CERTNAME: "openjdk-demo-service"
         shell: pwsh
@@ -420,10 +425,50 @@ jobs:
             $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
             $secretByte = [Convert]::FromBase64String($secret)
 
+     
+
+  SmokeTestTLSe2eApp:
+    runs-on: ubuntu-latest
+    needs: [Deploy, PostDeployConfig]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+        
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
       - name: Create the SecretProviderClass for CSISecrets driver
-        continue-on-error: true
         env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
+          NAMESP: "default"
           CERTNAME: "openjdk-demo-service"
+        continue-on-error: true
         run: |
           # REF: https://github.com/khowling/e2e-tls-java-aks
           
@@ -439,7 +484,6 @@ jobs:
           export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
           
           az aks get-credentials -g $AKSRG -n $AKSNAME
-
           echo "
           apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
           kind: SecretProviderClass
@@ -464,9 +508,18 @@ jobs:
               tenantId: \"${KVTENANT}\"                 # the tenant ID of the KeyVault
           " | kubectl apply -f -
 
-
-          ## https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs#how-integration-works
-
+      - name: Create Root Cert reference in AppGW
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
+          NAMESP: "default"
+          CERTNAME: "openjdk-demo-service"
+        continue-on-error: true
+        run: |
+          AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          
           ## Create Root Cert reference in AppGW
           az network application-gateway root-cert create \
                --gateway-name $AGNAME  \
@@ -474,9 +527,26 @@ jobs:
                --name $CERTNAME \
                --keyvault-secret $(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
 
-          sed -e "s|{{ACRNAME}}|${ACRNAME}|g" -e "s|{{DNSZONE}}|${DNSZONE}|g" -e "s|{{KVNAME}}|${KVNAME}|g" -e "s|{{PRIVATEIP}}|${PRIVATEIP}|g"  -e "s|{{CHALLENGE_TYPE}}|${CHALLENGE_TYPE}|g" ./deployment-csi.yml | kubectl apply -f -
+      - name: Deploy Java Sample App
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Azure/Aks-Construction/gb-akv/samples/openjdk-e2etls-demo.yml"
+          NAMESP: "default"
+          CERTNAME: "openjdk-demo-service"
+        continue-on-error: true
+        run: |
+          AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          ACRNAME='${{ needs.Deploy.outputs.ACRNAME}}'
+          
+          export PRIVATEIP=false
+          export CHALLENGE_TYPE=$( [[ $PRIVATEIP == "true" ]] && echo "dns01" || echo "http01" ) 
+          
+          sed -e "s|{{ACRNAME}}|${ACRNAME}|g" -e "s|{{DNSZONE}}|${DNSZONE}|g" -e "s|{{KVNAME}}|${KVNAME}|g" -e "s|{{PRIVATEIP}}|${PRIVATEIP}|g"  -e "s|{{CHALLENGE_TYPE}}|${CHALLENGE_TYPE}|g" $MANIFESTTESTURL | kubectl apply -f -
 
-  WorkloadAdd:
+
+  SmokeTestSimpleApp:
     runs-on: ubuntu-latest
     needs: [Deploy, PostDeployConfig]
     environment: azurecirgs
@@ -672,7 +742,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, PostDeployConfig, WorkloadAdd, WellArchitected]
+    needs: [Validation, Deploy, InfraTests, DeployVerify, PostDeployConfig, SmokeTestSimpleApp, SmokeTestTLSe2eApp, WellArchitected]
     steps:
       - name: Azure Login
         uses: Azure/login@v1
