@@ -548,7 +548,7 @@ jobs:
 
   SmokeTestSimpleApp:
     runs-on: ubuntu-latest
-    needs: [Deploy, PostDeployConfig]
+    needs: [Deploy]
     environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
