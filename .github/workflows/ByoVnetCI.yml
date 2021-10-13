@@ -389,9 +389,8 @@ jobs:
           $CiSpId='${{ secrets.AZURE_CREDENTIALS_OBJID }}'
           $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           
-          Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all
+          Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all -PermissionsToSecrets get
           
-        
       - name: Create self signed cert in Key Vault
         env:
           CERTNAME: "openjdk-demo-service"
