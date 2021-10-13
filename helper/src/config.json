@@ -108,7 +108,7 @@
                 },
                 {
                     "key": "oss",
-                    "title": "I prefer control & commuity opensource soltuions",
+                    "title": "I prefer control & commuity opensource solutions",
                     "description": {
                         "title": "Use proven, opensource projects for my Kubernetes operational environment, and self-manage my clusters upgrades and scalling",
                         "bulets": [
