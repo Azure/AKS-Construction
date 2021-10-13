@@ -419,13 +419,62 @@ jobs:
             $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
             $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
             $secretByte = [Convert]::FromBase64String($secret)
-            
-            # Write to a file
-            $certOutPath = "$CERTNAME.pfx"
-            [System.IO.File]::WriteAllBytes($certOutPath, $secretByte)
-            
-            $parsedCert = Get-PfxData -FilePath $certOutPath
-            $parsedCert.EndEntityCertificates | Select-Object -Property *
+
+      - name: Create the SecretProviderClass for CSISecrets driver
+        continue-on-error: true
+        env:
+          CERTNAME: "openjdk-demo-service"
+        run: |
+          # REF: https://github.com/khowling/e2e-tls-java-aks
+          
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          KVTENANT=$(az account show --query tenantId -o tsv)
+          AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
+          ACRNAME=''
+          
+          ## Get the identity created from the KeyVaultSecert Addon
+          export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
+          
+          az aks get-credentials -g $AKSRG -n $AKSNAME
+
+          echo "
+          apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+          kind: SecretProviderClass
+          metadata:
+            name: azure-${KVNAME}
+          spec:
+            provider: azure
+            parameters:
+              usePodIdentity: \"false\"         # [OPTIONAL] if not provided, will default to "false"
+              useVMManagedIdentity: \"true\"
+              userAssignedIdentityID: \"${CSISECRET_CLIENTID}\"
+              keyvaultName: \"${KVNAME}\"          # the name of the KeyVault
+              cloudName: \"\"                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud 
+              objects:  |
+                array:
+                  - |
+                    objectName: \"${CERTNAME}\"
+                    objectAlias: identity.p12
+                    objectType: secret
+                    objectFormat: PFX
+                    objectEncoding: base64
+              tenantId: \"${KVTENANT}\"                 # the tenant ID of the KeyVault
+          " | kubectl apply -f -
+
+
+          ## https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs#how-integration-works
+
+          ## Create Root Cert reference in AppGW
+          az network application-gateway root-cert create \
+               --gateway-name $AGNAME  \
+               --resource-group $RG \
+               --name $CERTNAME \
+               --keyvault-secret $(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+
+          sed -e "s|{{ACRNAME}}|${ACRNAME}|g" -e "s|{{DNSZONE}}|${DNSZONE}|g" -e "s|{{KVNAME}}|${KVNAME}|g" -e "s|{{PRIVATEIP}}|${PRIVATEIP}|g"  -e "s|{{CHALLENGE_TYPE}}|${CHALLENGE_TYPE}|g" ./deployment-csi.yml | kubectl apply -f -
 
   WorkloadAdd:
     runs-on: ubuntu-latest
