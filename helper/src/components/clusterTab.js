@@ -1,3 +1,4 @@
+/* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
 import { mergeStyles, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
 import { adv_stackstyle, getError, hasError } from './common'
@@ -49,7 +50,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                         <ChoiceGroup
                             selectedKey={cluster.SystemPoolType}
                             options={[
-                                { key: 'none', text: 'No seperate system pool: Use a single pool for System and User workloads' },
+                                { key: 'none', text: 'No separate system pool: Use a single pool for System and User workloads' },
                                 { key: 'Cost-Optimised', text: 'Cost-Optimised: use low-cost Burstable VMs, with 1-3 node autoscale' },
                                 { key: 'Standard', text: 'Standard: use standard 4-core VMs, with 2-3 node autoscale' }
                             ]}

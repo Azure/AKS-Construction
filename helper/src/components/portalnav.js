@@ -55,6 +55,21 @@ function Header({ entScale, setEntScale, featureFlag }) {
           disabled={false}
           onChange={(ev, val) => setEntScale(val)}
         />
+        <Toggle
+          label={
+            <Text nowrap>
+              GitHub Project
+              <TooltipHost content="use if you are following Enterprise Scale">
+                <Icon iconName="Info" aria-label="Info tooltip" />
+              </TooltipHost>
+            </Text>
+          }
+          onText="Yes"
+          offText="No"
+          checked={entScale}
+          disabled={false}
+          onChange={(ev, val) => setEntScale(val)}
+        />
       </Stack.Item>
     </Stack>
   )
@@ -140,7 +155,7 @@ export default function PortalNav({ config }) {
             // resolve conditional params
             ...Object.keys(carvals[t]).reduce((a, c) => {
               const val = carvals[t][c]
-              // if value is array with at least 1 element with a object that has a propery 'set'
+              // if value is array with at least 1 element with a object that has a properly 'set'
               const targetVal = Array.isArray(val) && val.length > 0 && typeof val[0] === 'object' && val[0].hasOwnProperty("set") ?
                 val.reduce((a, c) => a === undefined ? (c.page && c.field ? (p[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
                 :
@@ -187,7 +202,7 @@ export default function PortalNav({ config }) {
   invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'),
     "Enter valid IP address")
   invalidFn('addons', 'appgwKVIntegration', addons.ingress === "appgw" && addons.appgwKVIntegration && addons.csisecret !== 'akvNew',
-    "Keyvault integration requires the 'CSI Secrets' 'Yes, Provision a new KeyVault' option to be selected")
+    "KeyVault integration requires the 'CSI Secrets' 'Yes, Provision a new KeyVault' option to be selected")
   invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
     "Enter a valid Subnet Id where AKS nodes will be installed")
   invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
