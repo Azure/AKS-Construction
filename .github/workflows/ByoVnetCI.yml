@@ -389,6 +389,8 @@ jobs:
           CIObjId: "7128d1b2-42fa-4b82-8aed-b01a413309da"
         run: |
           $CiSpId='${{ env.CIObjId }}'
+          $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          
           Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all
           
         
