@@ -565,9 +565,13 @@ jobs:
           
           whoami
           
-      - name: Azure Login MSI
-        run: |
-          az login --identity
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
         
       - name: AKS Connect
         run: |
