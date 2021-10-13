@@ -244,7 +244,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
     }
   } : {}
 }
-output acrName string = !empty(registries_sku) ? acr.name : ''
+output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
 
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
