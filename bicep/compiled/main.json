@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "5482916455255665694"
+      "templateHash": "11312045676081163111"
     }
   },
   "parameters": {
@@ -2168,6 +2168,10 @@
     "keyVaultName": {
       "type": "string",
       "value": "[if(parameters('createKV'), variables('akvName'), '')]"
+    },
+    "acrName": {
+      "type": "string",
+      "value": "[if(not(empty(parameters('registries_sku'))), variables('acrName'), '')]"
     },
     "ApplicationGatewayName": {
       "type": "string",
