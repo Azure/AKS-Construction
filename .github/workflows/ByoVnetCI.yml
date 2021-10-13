@@ -377,6 +377,12 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
 
+      - name: Install KeyVault Pwsh module
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Az.KeyVault -Force
+          
       - name: Add KV access policy for certificates
         shell: pwsh
         env:
@@ -385,11 +391,6 @@ jobs:
           $CiSpId='${{ env.CIObjId }}'
           Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all
           
-      - name: Install KeyVault Pwsh module
-        shell: pwsh
-        run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name Az.KeyVault -Force
         
       - name: Create self signed cert in Key Vault
         env:
