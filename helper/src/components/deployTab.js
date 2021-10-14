@@ -18,7 +18,8 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
   const params = {
     resourceName: deploy.clusterName,
     kubernetesVersion: deploy.kubernetesVersion,
-    agentCount: cluster.count,
+    ...(cluster.agentCount != defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
+    ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA } ),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
@@ -31,10 +32,11 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
     ...(addons.registry !== "none" && { registries_sku: addons.registry }),
     ...(net.afw && { azureFirewalls: true, ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.length > 0 && { serviceEndpoints: net.serviceEndpoints.map(s => { return { service: s } }) }),
-    ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays }),
+    ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
-    networkPlugin: net.networkPlugin, ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
+    ...(net.networkPlugin != defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}), 
+    ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
@@ -43,6 +45,8 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
       ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
         appGWcount: addons.appGWcount,
         appGWsku: addons.appGWsku,
+        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall != defaults.addons.appGWenableFirewall && { appGWenableFirewall: addons.appGWenableFirewall }),
+        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall && addons.appGwFirewallMode != defaults.addons.appGwFirewallMode && { appGwFirewallMode: addons.appGwFirewallMode }),
         ...(addons.appGWautoscale && { appGWmaxCount: addons.appGWmaxCount }),
         ...(addons.appgw_privateIp && { privateIpApplicationGateway: addons.appgw_privateIpAddress }),
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
@@ -228,7 +232,7 @@ EOF
           <TextField label="Kubernetes version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
 
           <Stack.Item styles={{ root: { display: (cluster.apisecurity !== "whitelist" ? "none" : "block") } }} >
-            <TextField label="Initial api server whitelisted IPs/CIDRs  (',' seperated)" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+            <TextField label="Initial api server whitelisted IPs/CIDRs  (',' separated)" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
           </Stack.Item>
 
         </Stack>

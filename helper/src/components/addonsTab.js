@@ -1,3 +1,4 @@
+/* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
 import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
@@ -10,7 +11,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label >Cluster Monitoring requirements</Label>
-                <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monitor for Containers option, or the opensource CNCF Prometheus/Grafana solution</MessageBar>
+                <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monitor for Containers option, or the open source CNCF Prometheus/Grafana solution</MessageBar>
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.monitor}
@@ -24,21 +25,26 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                 />
             </Stack.Item>
 
-            <Stack.Item align="center" styles={{ root: { width: '600px', display: (addons.monitor !== "aci" ? "none" : "block") } }} >
-                <Dropdown
-                    label="Log and Metrics Data Retention (Days)"
-                    onChange={(ev, { key }) => updateFn("retentionInDays", key)} selectedKey={addons.retentionInDays}
-                    options={[
-                        { key: 30, text: '30 Days' },
-                        { key: 60, text: '60 Days' },
-                        { key: 90, text: '90 Days' },
-                        { key: 120, text: '120 Days' },
-                        { key: 180, text: '180 Days' },
-                        { key: 270, text: '270 Days' },
-                        { key: 365, text: '365 Days' }
-                    ]}
-                />
-            </Stack.Item>
+            { addons.monitor === "aci" &&
+                <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
+                    <Dropdown
+                        label="Log and Metrics Data Retention (Days)"
+                        onChange={(ev, { key }) => updateFn("retentionInDays", key)} selectedKey={addons.retentionInDays}
+                        options={[
+                            { key: 30, text: '30 Days' },
+                            { key: 60, text: '60 Days' },
+                            { key: 90, text: '90 Days' },
+                            { key: 120, text: '120 Days' },
+                            { key: 180, text: '180 Days' },
+                            { key: 270, text: '270 Days' },
+                            { key: 365, text: '365 Days' }
+                        ]}
+                    />
+
+                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
+
+                </Stack.Item>
+            }
 
             <Separator className="notopmargin" />
 
@@ -132,16 +138,37 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                 }
 
                                 <Stack.Item>
-                                    <Label style={{ marginBottom: "0px" }}>Application Gateway Type</Label>
+                                    <Label style={{ marginBottom: "0px" }}>Application Gateway Type (<Link target='_' href='https://docs.microsoft.com/en-us/azure/web-application-firewall/ag/ag-overview'>docs</Link>)</Label>
                                     <ChoiceGroup
                                         selectedKey={addons.appGWsku}
                                         options={[
-                                            { key: 'Standard_v2', text: 'Standard Application Gateway' },
-                                            { key: 'WAF_v2', text: 'Web Application Firewall (WAF) on Application Gateway' }
+                                            { key: 'Standard_v2', text: 'Standard_v2: Standard Application Gateway' },
+                                            { key: 'WAF_v2', text: 'WAF_v2: Web Application Firewall (WAF) on Application Gateway' }
                                         ]}
                                         onChange={(ev, { key }) => updateFn("appGWsku", key)}
                                     />
                                 </Stack.Item>
+
+                                { addons.appGWsku === 'WAF_v2' && 
+                                    <Stack.Item style={{ marginLeft: "20px"}}>
+                                        <Checkbox checked={addons.appGWenableFirewall} onChange={(ev, v) => updateFn("appGWenableFirewall", v)} label={<Text>Enable Firewall: Provides centralized protection of your web applications from common exploits and vulnerabilities</Text>} />
+                                    
+                                        { addons.appGWenableFirewall && 
+                                            <Stack.Item style={{ marginLeft: "25px"}}>
+                                                <Label style={{ marginBottom: "0px", marginTop: "5px" }}>WAF mode</Label>
+                                                <ChoiceGroup
+                                                    style={{marginBottom: "0px", marginTop: "0px" }}
+                                                    selectedKey={addons.appGwFirewallMode}
+                                                    options={[
+                                                        { key: 'Prevention', text: 'Prevention:   Blocks intrusions and attacks that the rules detect' },
+                                                        { key: 'Detection', text: 'Detection:   Monitors and logs all threat alerts.' }
+                                                    ]}
+                                                    onChange={(ev, { key }) => updateFn("appGwFirewallMode", key)}
+                                                />
+                                            </Stack.Item>
+                                        }
+                                    </Stack.Item>
+                                }
 
                                 <Label style={{ marginBottom: "0px" }}>Capacity</Label>
                                 <Stack horizontal tokens={{ childrenGap: 150 }} styles={{ root: { marginTop: '0px !important' } }}>
@@ -222,7 +249,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'registry')}</MessageBar>
                 }
                 {net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' &&
-                    <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.warning}>As you have selected Container Registry in Networking Service Endpoint, the templte will only Allow traffic to your Registry from the AKS Subnet, and your specified IP addresses <b>{deploy.apiips.split(',')}</b> (<Link target="_t2" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet">docs</Link>) *** Preview feature</MessageBar>
+                    <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.warning}>As you have selected Container Registry in Networking Service Endpoint, the template will only Allow traffic to your Registry from the AKS Subnet, and your specified IP addresses <b>{deploy.apiips.split(',')}</b> (<Link target="_t2" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet">docs</Link>) *** Preview feature</MessageBar>
                 }
             </Stack.Item>
 
@@ -230,7 +257,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    CSI Secrets : Store Kubernetes Secrets in Azure Keyvault, using AKS Managed Identity (**Preview)
+                    CSI Secrets : Store Kubernetes Secrets in Azure KeyVault, using AKS Managed Identity (**Preview)
                     (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver">docs</a>)
                 </Label>
                 <ChoiceGroup

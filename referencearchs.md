@@ -2,9 +2,9 @@
 
 ## Enterprise Scale
 
-Enterprise Scale provides prescriptive guidance based on authoritative design for the Azure platform as a whole. 
+Enterprise Scale provides prescriptive guidance based on authoritative design for the Azure platform as a whole.
 
-The [Deployment Helper Wizard](https://azure.github.io/Aks-Construction/?default=es) has an Enterprise-Scale lense, with preset configurations for each landing zone area.
+The [Deployment Helper Wizard](https://azure.github.io/Aks-Construction/?default=es) has an Enterprise-Scale lens, with preset configurations for each landing zone area.
 
 ## Enterprise-Scale for AKS
 
@@ -29,3 +29,4 @@ When the AKS Baseline is updated, changes are evaluated and rolled into this pro
 1. Networking. Hub/Spoke networks typically already exist, and tightly bundling with Kubernetes doesn't work well here. BYO subnets are supported.
 1. AppGw Public Listener. AppGw is the WAF ingress point for inbound internet traffic, however private listeners are also valid for fully private environments.
 1. Cluster SLA. Is defaulted to off in interests of a more cost optimised default configuration, a parameter can be provided to opt in for the paid SLA.
+1. Monitoring Alerts. Parametrised metric analysis frequency, created two presets (1 as per baseline, 2 less frequent), set default to be much less frequent. Added extra monitoring alerts as per in-cluster suggestions.

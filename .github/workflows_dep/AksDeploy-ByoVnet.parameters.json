@@ -1,6 +1,9 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
+    "metadata": {
+        "template": "bicep/compiled/main.json"
+    },
     "parameters": {
         "location" : {
             "value": "westeurope"
@@ -51,10 +54,10 @@
             "value": "172.21.1.27"
         },
         "byoAKSSubnetId": {
-            "value": "subnetResourceId overriden from GitHub secrets"
+            "value": "/this/parameter/is/overridden/in/my/script/value/from/secrets"
         },
         "byoAGWSubnetId": {
-            "value": "subnetResourceId overriden from GitHub secrets"
+            "value": "/this/parameter/is/overridden/in/my/script/value/from/secrets"
         },
         "serviceCidr" : {
             "value" : "172.10.0.0/16"
@@ -67,6 +70,18 @@
         },
         "SystemPoolType" : { 
             "value" : "Standard"
+        },
+        "createKV" : { 
+            "value" : true
+        },
+        "azureKeyvaultSecretsProvider" : {
+            "value" : true
+        },
+        "appgwKVIntegration" : {
+            "value" : true
+        },
+        "upgradeChannel" : {
+            "value" : "stable"
         }
     }
 }

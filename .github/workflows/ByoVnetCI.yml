@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Param check
+      - name: GH Param check
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -48,7 +48,7 @@ jobs:
           echo "Ref is ${{ github.ref }}"
           echo "EventTrigger name is ${{github.event_name}}"
 
-      - name: Dependency check
+      - name: Arm Parameter file check
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -68,15 +68,29 @@ jobs:
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: false
+          enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-
-      - name: Verify Active Deployments
+          
+      # PSRule does this cool thing where it traverse the parameter file through to the arm template
+      # PSRule performs IaC recommendations of the template.
+      # https://azure.github.io/PSRule.Rules.Azure/
+      - name: PSRule - Analyze Azure parameter file
+        uses: Microsoft/ps-rule@main
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
+        with:
+          modules: 'PSRule.Rules.Azure' 
+          inputPath: "${{ env.ParamFilePath }}"
+          prerelease: true
+          
+      - name: Verify Active RG Deployments
         id: activedeps
         uses: Azure/cli@1.0.4
         with:
           inlineScript: |
+            echo "AZ CLI version"
+            az version
+            
             RG='${{ env.RG }}'
             RUNCOUNT=$(az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name] | length(@)" -o tsv)
             echo "Active deployments : $RUNCOUNT"
@@ -88,7 +102,55 @@ jobs:
             #az deployment group list -g $RG --query "[].[properties.provisioningState, name]"
 
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
+            
+      - name: Verify Preview Features on Subscription
+        shell: pwsh
+        run: |
+          write-output 'Full list of features of AKS'
+          az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService')].{Name:name,State:properties.state}"
 
+          write-output 'Features that are still registering'
+          az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService') && properties.state=='Registering'].{Name:name,State:properties.state}"
+
+          write-output 'Checking to ensure no features are still registering'
+          #Not going to use JMES as i'm getting a weird error that i don't see locally in powershell
+          $aksfeatures = az feature list --query "[?contains(name, 'Microsoft.ContainerService')]" | ConvertFrom-Json
+          #$aksfeatures = $allfeatures | Where-Object {$_.Name -like 'Microsoft.ContainerService*'}
+          $registeringfeatures = $aksfeatures |  Where-Object {$_.properties.state -eq 'Registering'}
+          
+          if ($registeringfeatures -gt 0) {
+            Write-Error "There are still features registering"
+          } else { Write-Output "-- All good, no features in the process of registering" }
+
+          write-output 'Check specific features.'
+          $paramFilePath="${{ env.ParamFilePath }}"
+          $paramFileContent=Get-Content $paramFilePath
+          $params=$paramFileContent|ConvertFrom-Json
+          
+          if($params.parameters.upgradeChannel.value -ne $null) {
+            $feature='AutoUpgradePreview'
+            write-output "-- $feature"
+            $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"}
+            $featureCsi.properties.state
+            
+            if ($featureCsi.properties.state -ne 'Registered') {
+              Write-Ouput $featureCsi
+              Write-Error "$feature NOT registered"
+            } else { Write-Output "-- Looks like $feature is registered properly" }
+          }
+                   
+          if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
+            $feature='AKS-AzureKeyVaultSecretsProvider'
+            write-output "-- $feature"
+            $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"}
+            $featureCsi.properties.state
+            
+            if ($featureCsi.properties.state -ne 'Registered') {
+              Write-Ouput $featureCsi
+              Write-Error "$feature NOT registered"
+            } else { Write-Output "-- Looks like $feature is registered properly" }
+          }
+          
       - name: Validate AKS
         uses: Azure/cli@1.0.4
         #if: steps.activedeps.outputs.RUNCOUNT == 0
@@ -99,14 +161,43 @@ jobs:
             DEPNAME='Dep${{ github.run_number }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --verbose
 
-      - name: What If
+      - name: What If (GA edge Az cli version) (has issues)
         uses: Azure/cli@1.0.4
+        id: edgeWhatIf
+        continue-on-error: true
         with:
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
+
+            az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
+
+            az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
+
+            if [[ -f $WHATIFPATH ]]
+            then
+                echo "The WhatIf json file was created"
+            fi
+
+            cat $WHATIFPATH
+            
+            echo "::set-output name=edgeSuccess::true"
+
+      - name: What If (AZ CLI 2.26.0)
+        uses: Azure/cli@1.0.4
+        if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
+        with:
+          azcliversion: 2.26.0
+          inlineScript: |
+            RG='${{ env.RG }}'
+            RESNAME='${{ env.RESNAME }}'
+            DEPNAME='${{ env.DEPNAME }}'
+            WHATIFPATH='whatif.json'
+            EdgeWhatIfPassed='${{ steps.edgeWhatIf.outputs.edgeSuccess}}'
+
+            #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
             az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
 
@@ -139,6 +230,35 @@ jobs:
         shell: pwsh
         run: |
           Write-Output "TODO"
+          
+      - name: What If Gaps - Check for Soft deleted KeyVaults
+        shell: pwsh
+        run: |     
+          #This is a current gap in the What-If analysis.
+          
+          $paramFilePath="${{ env.ParamFilePath }}"
+          $paramFileContent=Get-Content $paramFilePath
+          $params=$paramFileContent|ConvertFrom-Json
+          
+          if($params.parameters.createKV.value -eq $true) {
+            Write-Output "Checking for already existing soft deleted KV"
+            
+            $vaultName = $params.parameters.resourceName
+            
+            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultName']" | ConvertFrom-Json
+            
+            if($deletedKv.length -eq 0) {
+              Write-Output "All is good, soft deleted KV not found."
+            }
+            else {
+              Write-Output "Soft deleted KV output"
+              Write-Output $deletedKv.length
+              
+              az keyvault list-deleted -o table
+              
+              Write-Error "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
+            }
+          }
 
   Deploy:
     runs-on: ubuntu-latest
@@ -156,6 +276,7 @@ jobs:
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
+          
       - name: Dependency check
         shell: pwsh
         run: |
@@ -175,7 +296,7 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-
+            
       - name: Deploy AKS
         id: deployAks
         uses: Azure/cli@1.0.4
@@ -263,6 +384,18 @@ jobs:
             } else {
               Write-Error "UAI not set properly"}
           }
+          
+          Write-Output "Checking for CSI Secrets driver"
+          if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
+            $csiEnabled=az aks show -n $AKSNAME -g $RG --query "addonProfiles.omsagent.enabled" -o tsv
+            write-output $csiEnabled
+            
+            if($csiEnabled -eq "true"){
+              Write-Output "CSI Secrets driver set correctly"
+            } else {
+              Write-Error "CSI Secrets driver not set properly"}
+          }
+          #grep KeyvaultSecretsProvider
 
       - name: Add AGIC AKS Workload
         uses: Azure/cli@1.0.4
@@ -350,10 +483,15 @@ jobs:
           # Get all ARM resources from all resource groups
           $rgToPurge = Get-AzResourceGroup -Name $RG
           try {
+            #purge any KV's
+            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.KeyVault/vaults"} | Remove-AzKeyVault -force
+            
             #Remove all but public ip addresses
             Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
+            
             #Remove public ip addresses
             Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
+            
             #Final run to clean other dependant resources in parent-child graph
             Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
           }

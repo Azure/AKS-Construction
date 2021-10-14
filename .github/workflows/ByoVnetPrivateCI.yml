@@ -57,6 +57,10 @@ jobs:
             Write-Output $paramFileContent
           }
           
+      #- name: Install Bicep
+      #  run: |
+      #    az bicep install
+          
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -64,8 +68,21 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
+
+      # PSRule does this cool thing where it traverse the parameter file through to the arm template
+      # PSRule performs IaC recommendations of the template.
+      # https://azure.github.io/PSRule.Rules.Azure/
+      - name: PSRule - Analyze Azure parameter file
+        uses: Microsoft/ps-rule@main
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
+        with:
+          modules: 'PSRule.Rules.Azure' 
+          inputType: repository
+          inputPath: "${{ env.ParamFilePath }}"
+          baseline: 'Azure.GA_2021_09'
+          prerelease: true
           
-      - name: Verify Active Deployments
+      - name: Verify No Active Deployments in RG
         id: activedeps
         uses: Azure/cli@1.0.4
         with:
