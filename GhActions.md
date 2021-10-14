@@ -72,15 +72,15 @@ In this repo we run a real deployment and integration tests each week on a sched
 
 ### Post-deploy Validation
 
-The fact that a deployment completes successfully is a great sign in itself, however there are several post deployment checks that can be run to verify the usability of the IaC code thats been new'd up.
+The fact that a deployment completes successfully is a great sign in itself, however there are several post deployment checks that can be run to verify the usability of the IaC code that's been new'd up.
 
 The first, and often easiest activity is to test using the service. Attempting to contact the service endpoint is firmly in the realm of integration testing, not just because of the many deployed services working together but also because of the configuration of those services and restrictions in place in the environment you're deploying to.
 
 #### Workload smoke tests
 
-Depending on the IaC workload will change the approach you'll employ for smoke testing the application. In the case of Kuberetes, we have a platform that runs containers so we can focus the smoke tests on deploying containers to that platform and testing they function correctly. For this we'll not use our own application, but leverage a known good application. We don't want to build technical debt on maintaining an application to test with, instead identifying a maintained application project will save time and provide an additional baseline for running workloads because if we can't run a sample application properly what hope does our application teams have?
+Depending on the IaC workload will change the approach you'll employ for smoke testing the application. In the case of Kubernetes, we have a platform that runs containers so we can focus the smoke tests on deploying containers to that platform and testing they function correctly. For this we'll not use our own application, but leverage a known good application. We don't want to build technical debt on maintaining an application to test with, instead identifying a maintained application project will save time and provide an additional baseline for running workloads because if we can't run a sample application properly what hope does our application teams have?
 
-For this project we're using the Azure Vote application, which is the de-facto app used in the AKS documentation. Where environment deplyoments include Application Gateway, it will be used as the testing entry point to ensure that it is configured correctly.
+For this project we're using the Azure Vote application, which is the de-facto app used in the AKS documentation. Where environment deployments include Application Gateway, it will be used as the testing entry point to ensure that it is configured correctly.
 
 ## Other actions used in this repo
 
@@ -130,7 +130,7 @@ Different action workflow files showcase different complexities of CI/CD practic
 1. [Deployment What-If](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L111)
 1. [Deployment What-If Pester Testing](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L141)
 1. [Bicep Deployment](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L189)
-1. [Post Deployment AddOns](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetPrivateCI.yml#L194)
+1. [Post Deployment Add-Ons](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetPrivateCI.yml#L194)
 1. [Verify Deployment Configuration](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetCI.yml#L261)
 1. [Deploy Test workload](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetPrivateCI.yml#L230)
 1. [Verify Test workload](https://github.com/Azure/Aks-Construction/blob/ed15a8945ab019bd86469c366df85e6d59aeb8ab/.github/workflows/ByoVnetPrivateCI.yml#L278)
