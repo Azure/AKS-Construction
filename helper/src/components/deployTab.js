@@ -232,7 +232,7 @@ EOF
           <TextField label="Kubernetes version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
 
           <Stack.Item styles={{ root: { display: (cluster.apisecurity !== "whitelist" ? "none" : "block") } }} >
-            <TextField label="Initial api server whitelisted IPs/CIDRs  (',' seperated)" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+            <TextField label="Initial api server whitelisted IPs/CIDRs  (',' separated)" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
           </Stack.Item>
 
         </Stack>
