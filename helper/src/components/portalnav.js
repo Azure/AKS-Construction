@@ -38,6 +38,7 @@ function Header({ entScale, setEntScale, featureFlag }) {
       <Stack tokens={{ padding: 10 }}>
         <Text variant="xLarge">AKS Deploy helper</Text>
         <Text >Provide the requirements of your AKS deployment to generate the assets to create a full operational environment, incorporating best-practices guidance</Text>
+        <Text >For documentation, and CI/CD samples - please refer to our <a href="https://github.com/Azure/Aks-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
       <Stack.Item tokens={{ padding: 10 }}>
         <Toggle
@@ -55,9 +56,6 @@ function Header({ entScale, setEntScale, featureFlag }) {
           disabled={false}
           onChange={(ev, val) => setEntScale(val)}
         />
-        <Text nowrap>
-          Check out our GitHub Project
-        </Text>
       </Stack.Item>
     </Stack>
   )
