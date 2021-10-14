@@ -476,7 +476,7 @@ jobs:
           
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
           RG='${{ env.RG }}'
-          KVNAME= '${{ needs.Deploy.outputs.AKVNAME}}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           KVNAMELOWER=${KVNAME,,}
           CERTNAME='${{ env.CERTNAME }}'
           KVTENANT=$(az account show --query tenantId -o tsv)
@@ -524,12 +524,12 @@ jobs:
           KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           CERTNAME='${{ env.CERTNAME }}'
           
+          ##Get KV Secret Id
+          CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          echo $CERTID
+          
           ## Create Root Cert reference in AppGW
-          az network application-gateway root-cert create \
-               --gateway-name $AGNAME  \
-               --resource-group $RG \
-               --name $CERTNAME \
-               --keyvault-secret $(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID
 
       - name: Deploy Java Sample App
         env:
@@ -539,7 +539,7 @@ jobs:
           DNSZONE: 'replaceme'
         continue-on-error: true
         run: |
-          AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
           RG='${{ env.RG }}'
           KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           KVNAMELOWER=${KVNAME,,}
