@@ -58,7 +58,7 @@ If you're looking to use this project as part of your deployments, follow these 
 The guiding principal we have with this project is to focus on the the *downstream use* of the project (see [releases](https://github.com/Azure/Aks-Construction/releases)). As such, these are our specific practices.
 1. Deploy all components through a single, modular, itempotent bicep template Converge on a single bicep template, which can easily be consumed as a module
 2. Provide best-practice defaults, then use parameters for different environment deployments
-3. Minimise "manual" steps for ease of automation
+3. Minimize "manual" steps for ease of automation
 4. Maintain quality through validation & CI/CD pipelines that also serve as working samples/docs
 5. Focus on AKS and supporting services, linking to other repos to solve; Demo apps / Developer workstations / Jumpboxes / CI Build Agents / Certificate Authorities
 
