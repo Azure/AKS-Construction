@@ -71,7 +71,7 @@ export default function ({ sections, updateCardValues }) {
                             }
                             <Text variant="smallPlus" >
                                 <ul style={{ paddingInlineStart: "20px" }}>
-                                    {c.description.bulets.map((b, i) =>
+                                    {c.description.bullets.map((b, i) =>
                                         <li key={i}>
                                             {b.description}
                                             {b.linksrc && <span> (<a target="_nsg" href={b.linksrc}>docs</a>)</span>}

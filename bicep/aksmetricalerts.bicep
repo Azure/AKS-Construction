@@ -33,14 +33,14 @@ param windowSize string = 'PT5M'
 ])
 param alertSeverity string = 'Informational'
 
-var alertServerityLookup = {
+var alertSeverityLookup = {
   'Critical': 0
   'Error': 1
   'Warning': 2
   'Informational': 3
   'Verbose': 4
 }
-var alertSeverityNumber = alertServerityLookup[alertSeverity]
+var alertSeverityNumber = alertSeverityLookup[alertSeverity]
 
 var AksResourceId = resourceId('Microsoft.ContainerService/managedClusters', clusterName)
 
