@@ -34,6 +34,8 @@
         "linksrc",
         "monospace",
         "mounttime",
+        "noopener",
+        "noreferrer",
         "notopmargin",
         "omsagent",
         "pagename",
