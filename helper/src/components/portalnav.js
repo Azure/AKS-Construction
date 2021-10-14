@@ -37,8 +37,7 @@ function Header({ entScale, setEntScale, featureFlag }) {
       <img src="aks.svg" alt="Kubernetes Service" style={{ width: "6%", height: "auto" }}></img>
       <Stack tokens={{ padding: 10 }}>
         <Text variant="xLarge">AKS Deploy helper</Text>
-        <Text >Provide the requirements of your AKS deployment to generate the assets to create a full operational environment, incorporating best-practices guidance</Text>
-        <Text >For documentation, and CI/CD samples - please refer to our <a href="https://github.com/Azure/Aks-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
+        <Text >Provide the requirements of your AKS deployment to generate the assets to create a full operational environment, incorporating best-practices guidance. For documentation, and CI/CD samples - please refer to our <a href="https://github.com/Azure/Aks-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
       <Stack.Item tokens={{ padding: 10 }}>
         <Toggle
