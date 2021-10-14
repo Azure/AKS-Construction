@@ -55,21 +55,9 @@ function Header({ entScale, setEntScale, featureFlag }) {
           disabled={false}
           onChange={(ev, val) => setEntScale(val)}
         />
-        <Toggle
-          label={
-            <Text nowrap>
-              GitHub Project
-              <TooltipHost content="use if you are following Enterprise Scale">
-                <Icon iconName="Info" aria-label="Info tooltip" />
-              </TooltipHost>
-            </Text>
-          }
-          onText="Yes"
-          offText="No"
-          checked={entScale}
-          disabled={false}
-          onChange={(ev, val) => setEntScale(val)}
-        />
+        <Text nowrap>
+          Check out our GitHub Project
+        </Text>
       </Stack.Item>
     </Stack>
   )
