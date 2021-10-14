@@ -15,6 +15,23 @@ Often the term "Infrastructure as Code" is misinterpreted as representing your i
 It's important to protect your main branch by enforcing Pull Requests to be used with an additional reviewer.
 As part of the PR you can set various Actions to run, and crucially you can specify jobs in the pipelines that must always pass. For this repo, we're using `Validation` as the name of the job that must always pass [status checks](https://docs.github.com/v3/repos/statuses/).
 
+### The workflow
+
+Behind any IaC you write, you'll want to have some automation to assure quality. There is a compromise to be had when it comes to the amount of time and activities to include in the automation workflow. It's important to shift left as much as you can, to take advantage of quick wins to feedback to the engineer that's contributing the IaC. It's also important to consider the consumers of your IaC code;
+
+- How are they going to be provided the IaC
+- Do they know how to run it
+- How does the deployment  behaviour change as the parameters vary
+- How can they incorporate a new version of the template as you improve it
+
+#### One of our workflows
+
+Here's a sample of one of the workflows used in this project. We have multiple stages which are run conditionally based on the workflow trigger.
+
+It's important to note that deploying applications from an infrastructure pipeline is an anti-pattern, and the applications that are being deployed in this workflow are serving as `smoke tests` of the infrastructure.
+
+![sample workflow](docassets/ghactionworkflow.jpg)
+
 ### Pre-deploy Validation
 
 It's essential to shift left, and catch as many problems before a single resource is deployed to real infrastructure. There are a plethora of tools and techniques that can be leveraged to catch functional or syntactical problems depending on your authoring language and platform.
