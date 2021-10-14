@@ -613,11 +613,11 @@ jobs:
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
           
-          echo "Getting private ip"
-          privIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo "Private ip : $privIp"
+          echo "Getting public ip"
+          pubId=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Public ip : $pubId"
           
-          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
+          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
           echo $respcode   
           
           #TODO: This is going to need to be rewritten. #loopshambles
@@ -628,14 +628,14 @@ jobs:
               echo "going to need to wait longer i guess?"
               sleep 3m
               
-              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
+              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
               echo $respcode    
               
               if [ "$respcode" != "200" ];
               then
                 echo "going to need to wait EVEN longer i guess?  (wtf)"
                 sleep 6m
-                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
+                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
                 echo $respcode    
                 if [ "$respcode" != "200" ];
                 then
@@ -645,7 +645,7 @@ jobs:
               fi
           fi
           
-          curl $privIp
+          curl $pubId
           
   DeployVerify:
     runs-on: ubuntu-latest
