@@ -138,7 +138,7 @@ param createKV bool = false
 @description('If soft delete protection is enabled')
 param KeyVaultSoftDelete bool = true
 
-@description('If soft delete protection is enabled')
+@description('If purge protection is enabled')
 param KeyVaultPurgeProtection bool = true
 
 param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
@@ -155,7 +155,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
       name: 'Standard'
     }
     enabledForTemplateDeployment: true
-    enableSoftDelete: KeyVaultSoftDelete //? true : json('null')
+    enableSoftDelete: KeyVaultSoftDelete 
     enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
     publicNetworkAccess: 'enabled'
