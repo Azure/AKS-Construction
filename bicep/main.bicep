@@ -221,6 +221,10 @@ resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
         category: 'AuditEvent'
         enabled: true
       }
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
     ]
   }
 }
