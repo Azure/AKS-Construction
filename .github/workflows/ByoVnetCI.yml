@@ -241,6 +241,7 @@ jobs:
         shell: pwsh
         run: |     
           #This is a current gap in the What-If analysis.
+          $whatifpath='whatif.json'
           
           $paramFilePath="${{ env.ParamFilePath }}"
           $paramFileContent=Get-Content $paramFilePath
@@ -249,9 +250,13 @@ jobs:
           if($params.parameters.createKV.value -eq $true) {
             Write-Output "Checking for already existing soft deleted KV"
             
-            $vaultName = $params.parameters.resourceName
             
-            $deletedKv = az keyvault list-deleted -o table --query "[?name=='kv-$vaultName']" | ConvertFrom-Json
+            #lets do this properly and interrogate the whatif file for the KVNAME
+            $whatIf = Get-Content $whatifpath | ConvertFrom-Json
+            $kvafter = $whatif.changes | where-object {$_.after.type -eq 'Microsoft.KeyVault/vaults'} | where {$_.changeType -ne 'Ignore'}  | select after
+            $vaultname = $kvafter.after.name
+            
+            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultName']" | ConvertFrom-Json
             
             if($deletedKv.length -eq 0) {
               Write-Output "All is good, soft deleted KV not found."
