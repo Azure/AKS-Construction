@@ -64,7 +64,7 @@ The guiding principal we have with this project is to focus on the the *downstre
 
 ## Contributing
 
-If you're interested in contributing, please refer to the [contribution guide](CONTRIBUTE.md)
+If you're interested in contributing, please refer to the [contribution guide](CONTRIBUTING.md)
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us

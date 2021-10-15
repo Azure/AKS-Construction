@@ -40,7 +40,7 @@ export default function ({ tabValues, updateFn, invalidArray, featureFlag }) {
                 {hasError(invalidArray, 'afw') &&
                     <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'afw')}</MessageBar>
                 }
-                <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }} disabled={false} errorMessage={getError(invalidArray, 'afw')} checked={net.afw} onChange={(ev, v) => updateFn("afw", v)} label="Implement Azure Firewall & UDR nexthop" />
+                <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }} disabled={false} errorMessage={getError(invalidArray, 'afw')} checked={net.afw} onChange={(ev, v) => updateFn("afw", v)} label="Implement Azure Firewall & UDR next hop" />
 
             </Stack.Item>
 

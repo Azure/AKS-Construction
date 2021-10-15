@@ -89,11 +89,13 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
+
       - name: Install Pwsh modules
         shell: pwsh
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Az.KeyVault -Force
+
           
       - name: Verify Active RG Deployments
         id: activedeps
@@ -211,6 +213,33 @@ jobs:
 
             #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
+            az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
+
+            az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
+
+            if [[ -f $WHATIFPATH ]]
+            then
+                echo "The WhatIf json file was created"
+            fi
+
+            cat $WHATIFPATH
+            
+            echo "::set-output name=edgeSuccess::true"
+
+      - name: What If (AZ CLI 2.26.0)
+        uses: Azure/cli@1.0.4
+        if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
+        with:
+          azcliversion: 2.26.0
+          inlineScript: |
+            RG='${{ env.RG }}'
+            RESNAME='${{ env.RESNAME }}'
+            DEPNAME='${{ env.DEPNAME }}'
+            WHATIFPATH='whatif.json'
+            EdgeWhatIfPassed='${{ steps.edgeWhatIf.outputs.edgeSuccess}}'
+
+            #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
+
             az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
 
             if [[ -f $WHATIFPATH ]]
@@ -255,8 +284,7 @@ jobs:
           
           if($params.parameters.createKV.value -eq $true) {
             Write-Output "Checking for already existing soft deleted KV"
-            
-            
+                        
             #lets do this properly and interrogate the whatif file for the KVNAME
             $whatIf = Get-Content $whatifpath | ConvertFrom-Json
             $kvafter = $whatif.changes | where-object {$_.after.type -eq 'Microsoft.KeyVault/vaults'} | where {$_.changeType -ne 'Ignore'}  | select after
@@ -274,6 +302,7 @@ jobs:
               Write-Output "Soft deleted KV output"
               Write-Output $deletedKv.length
               Write-Output $deletedKv
+
               
               Write-Error "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
             }
