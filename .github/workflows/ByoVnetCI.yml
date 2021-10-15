@@ -434,13 +434,13 @@ jobs:
             $RG='${{ env.RG }}'
             $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
             $CERTNAME='${{ env.CERTNAME }}'
+            
+            start-sleep -Seconds 90
 
             Write-Output "Getting Certificate $CERTNAME from $AKVNAME"
             $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
             $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
             $secretByte = [Convert]::FromBase64String($secret)
-
-     
 
   SmokeTestTLSe2eApp:
     runs-on: ubuntu-latest
