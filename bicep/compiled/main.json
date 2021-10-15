@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "16082846689697689251"
+      "templateHash": "18199843958445915365"
     }
   },
   "parameters": {
@@ -454,6 +454,10 @@
         "logs": [
           {
             "category": "AuditEvent",
+            "enabled": true
+          },
+          {
+            "category": "AllMetrics",
             "enabled": true
           }
         ]
