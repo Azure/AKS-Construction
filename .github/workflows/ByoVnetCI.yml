@@ -257,9 +257,9 @@ jobs:
             $vaultname = $kvafter.after.name
             
             write-output "Looking for KeyVault $vaultname"
-            az keyvault list-deleted -o table
+            Get-AzKeyVault -InRemovedState | ft 
             
-            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultname']" | ConvertFrom-Json
+            $deletedKv = Get-AzKeyVault -InRemovedState | where-object {$_.vaultname -eq $vaultname}
             
             if($deletedKv.length -eq 0) {
               Write-Output "All is good, soft deleted KV not found in soft deleted list."
@@ -267,8 +267,7 @@ jobs:
             else {
               Write-Output "Soft deleted KV output"
               Write-Output $deletedKv.length
-              
-              az keyvault list-deleted -o table
+              Write-Output $deletedKv
               
               Write-Error "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
             }
