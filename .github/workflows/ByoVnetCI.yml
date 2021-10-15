@@ -213,33 +213,6 @@ jobs:
 
             #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
-            #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
-
-            az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
-
-            if [[ -f $WHATIFPATH ]]
-            then
-                echo "The WhatIf json file was created"
-            fi
-
-            cat $WHATIFPATH
-            
-            echo "::set-output name=edgeSuccess::true"
-
-      - name: What If (AZ CLI 2.26.0)
-        uses: Azure/cli@1.0.4
-        if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
-        with:
-          azcliversion: 2.26.0
-          inlineScript: |
-            RG='${{ env.RG }}'
-            RESNAME='${{ env.RESNAME }}'
-            DEPNAME='${{ env.DEPNAME }}'
-            WHATIFPATH='whatif.json'
-            EdgeWhatIfPassed='${{ steps.edgeWhatIf.outputs.edgeSuccess}}'
-
-            #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
-
             az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
 
             if [[ -f $WHATIFPATH ]]
