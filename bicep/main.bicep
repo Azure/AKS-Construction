@@ -155,8 +155,8 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
       name: 'Standard'
     }
     enabledForTemplateDeployment: true
-    enableSoftDelete: KeyVaultSoftDelete
-    enablePurgeProtection: KeyVaultPurgeProtection
+    enableSoftDelete: KeyVaultSoftDelete ? true : json('null')
+    enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
     publicNetworkAccess: 'enabled'
     accessPolicies: concat(azureKeyvaultSecretsProvider ? array({
