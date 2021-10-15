@@ -138,6 +138,9 @@ param createKV bool = false
 @description('If soft delete protection is enabled')
 param KeyVaultSoftDelete bool = true
 
+@description('If soft delete protection is enabled')
+param KeyVaultPurgeProtection bool = true
+
 param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
 
 var akvName = 'kv-${replace(resourceName, '-', '')}'
@@ -153,6 +156,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     }
     enabledForTemplateDeployment: true
     enableSoftDelete: KeyVaultSoftDelete
+    enablePurgeProtection: KeyVaultPurgeProtection
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
     publicNetworkAccess: 'enabled'
     accessPolicies: concat(azureKeyvaultSecretsProvider ? array({
@@ -206,6 +210,20 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
 }
 
 output keyVaultName string = createKV ? kv.name : ''
+
+resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'kvDiags'
+  scope: kv
+  properties: {
+    workspaceId:workspaceId
+    logs: [
+      {
+        category: 'AuditEvent'
+        enabled: true
+      }
+    ]
+  }
+}
 
 
 /*   ___           ______     .______          

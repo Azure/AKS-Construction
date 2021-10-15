@@ -67,6 +67,12 @@
         },
         "dnsServiceIP" : {
             "value" : "172.10.0.10"
+        },
+        "KeyVaultSoftDelete" : {
+            "value" : false
+        },
+        "KeyVaultPurgeProtection" : {
+            "value" : false
         }
     }
 }
