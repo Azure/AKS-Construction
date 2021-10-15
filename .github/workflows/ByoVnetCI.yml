@@ -256,10 +256,13 @@ jobs:
             $kvafter = $whatif.changes | where-object {$_.after.type -eq 'Microsoft.KeyVault/vaults'} | where {$_.changeType -ne 'Ignore'}  | select after
             $vaultname = $kvafter.after.name
             
-            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultName']" | ConvertFrom-Json
+            write-output "Looking for KeyVault $vaultname"
+            az keyvault list-deleted -o table
+            
+            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultname']" | ConvertFrom-Json
             
             if($deletedKv.length -eq 0) {
-              Write-Output "All is good, soft deleted KV not found."
+              Write-Output "All is good, soft deleted KV not found in soft deleted list."
             }
             else {
               Write-Output "Soft deleted KV output"
