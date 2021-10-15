@@ -88,7 +88,13 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-                   
+          
+      - name: Install Pwsh modules
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Az.KeyVault -Force
+          
       - name: Verify Active RG Deployments
         id: activedeps
         uses: Azure/cli@1.0.4
