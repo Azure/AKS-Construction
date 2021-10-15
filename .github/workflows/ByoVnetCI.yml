@@ -251,7 +251,7 @@ jobs:
             
             $vaultName = $params.parameters.resourceName
             
-            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultName']" | ConvertFrom-Json
+            $deletedKv = az keyvault list-deleted -o table --query "[?name=='kv-$vaultName']" | ConvertFrom-Json
             
             if($deletedKv.length -eq 0) {
               Write-Output "All is good, soft deleted KV not found."
