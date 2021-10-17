@@ -41,7 +41,7 @@ jobs:
         
       - name: Playwright - Run helper tests
         env:
-          filenamewordmatch: 'clicking-around'
+          filenamewordmatch: 'helper'
         run: npx playwright test --browser chromium .github/workflows_dep/playwright/ -g '${{ env.filenamewordmatch }}'
         
       - name: Deploy to GitHub Pages
