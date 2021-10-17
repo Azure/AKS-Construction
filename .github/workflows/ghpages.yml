@@ -36,8 +36,8 @@ jobs:
       - name: Debugging
         run: |
           pwd
-          ls ../.github/workflows_dep/playwright/ | wc -l
-          ls ../.github/workflows_dep/playwright/
+          ls
+          ls .github/workflows_dep/playwright/ | wc -l
         
       - name: Playwright - Run helper tests
         run: npx playwright test --browser chromium ../.github/workflows_dep/playwright/
