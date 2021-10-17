@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      
+      - uses: actions/setup-node@v2
+        name: Install Node
+        with:
+          node-version: '14'
+          
       - name: Build
         run: |
           cd helper
