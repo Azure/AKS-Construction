@@ -7,7 +7,7 @@ on:
       - "helper/**"
 
 jobs:
-  build:
+  HelperAppBuildTestPublish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -18,14 +18,14 @@ jobs:
           REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/0.1.7-preview/main.json" npm run build
           (npm run start&)
           
-      - name: Test web server is up
-        run: curl http://localhost:3000/Aks-Construction
-          
       - name: Playwright - Install OS dependencies
         run: npx playwright install-deps chromium
         
       - name: Playwright - Install test cli
         run: npm install -D @playwright/test
+        
+      - name: Test web server is up
+        run: curl http://localhost:3000/Aks-Construction
         
       - name: Playwright - Run helper tests
         env:
