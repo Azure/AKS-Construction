@@ -1,5 +1,7 @@
 const { test, expect } = require('@playwright/test');
 test('test', async ({ page }) => {
+  await page.goto('http://localhost:3000/Aks-Construction');
+  
   await page.waitForSelector('.ms-Stack:nth-child(2) > .ms-DocumentCard:nth-child(1) > .ms-DocumentCardDetails > .ms-Checkbox > .ms-Checkbox-label > .ms-Checkbox-text')
   await page.click('.ms-Stack:nth-child(2) > .ms-DocumentCard:nth-child(1) > .ms-DocumentCardDetails > .ms-Checkbox > .ms-Checkbox-label > .ms-Checkbox-text')
 
