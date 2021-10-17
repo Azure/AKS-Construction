@@ -140,6 +140,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                 <Stack.Item>
                                     <Label style={{ marginBottom: "0px" }}>Application Gateway Type (<Link target='_' href='https://docs.microsoft.com/en-us/azure/web-application-firewall/ag/ag-overview'>docs</Link>)</Label>
                                     <ChoiceGroup
+                                        name="AppGwSku"                                                
                                         selectedKey={addons.appGWsku}
                                         options={[
                                             { key: 'Standard_v2', text: 'Standard_v2: Standard Application Gateway' },
