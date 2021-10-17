@@ -17,8 +17,21 @@ jobs:
           cd helper
           npm install
           REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/0.1.7-preview/main.json" npm run build
+          (npm run start&)
+          
+      - name: Test web server is up
+        run: curl http://localhost:3000/Aks-Construction
+          
+      - name: Playwright - Install OS dependencies
+        run: npx playwright install-deps chromium
+        
+      - name: Playwright - Install test cli
+        run: npm install -D @playwright/test
+        
+        
+        
       - name: Deploy to GitHub Pages
-        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: gh-pages
