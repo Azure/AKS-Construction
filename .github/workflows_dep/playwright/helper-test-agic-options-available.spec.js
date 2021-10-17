@@ -34,5 +34,5 @@ test('test', async ({ page }) => {
   await page.waitForSelector('#ChoiceGroupLabel92-Prevention')
   await page.click('#ChoiceGroupLabel92-Prevention')
 
-  await page.screenshot({ path: 'screenshot_1.png', fullPage: true })
+  await page.screenshot({ path: 'screengrabs/screenshot_1.png', fullPage: true })
 });
