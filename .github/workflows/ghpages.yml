@@ -40,7 +40,9 @@ jobs:
           ls .github/workflows_dep/playwright/ | wc -l
         
       - name: Playwright - Run helper tests
-        run: npx playwright test --browser chromium ../.github/workflows_dep/playwright/
+        env:
+          filenamewordmatch: 'clicking-around'
+        run: npx playwright test --browser chromium .github/workflows_dep/playwright/ -g '${{ env.filenamewordmatch }}'
         
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
