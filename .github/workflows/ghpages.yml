@@ -47,12 +47,13 @@ jobs:
         
       - name: Archive code coverage results
         uses: actions/upload-artifact@v2
+        if: failure()
         with:
           name: PlaywrightScreengrabs
           path: screengrabs/*.png
         
       - name: Deploy to GitHub Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: gh-pages
