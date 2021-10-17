@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      - uses: actions/setup-node@v2
-        name: Install Node
-        with:
-          node-version: '14'
+      #- uses: actions/setup-node@v2
+      #  name: Install Node
+      #  with:
+      #    node-version: '14'
           
       - name: Build
         run: |
@@ -34,9 +34,7 @@ jobs:
         run: curl http://localhost:3000/Aks-Construction
         
       - name: Playwright - Run helper tests
-        env:
-          filenamewordmatch: 'helper'
-        run: npx playwright test --browser chromium -g '${{ env.filenamewordmatch }}'
+        run: npx playwright test --browser chromium .github/workflows_dep/playwright/
         
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
