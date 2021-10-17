@@ -27,7 +27,10 @@ jobs:
       - name: Playwright - Install test cli
         run: npm install -D @playwright/test
         
-        
+      - name: Playwright - Run helper tests
+        env:
+          filenamewordmatch: 'helper'
+        run: npx playwright test --browser chromium -g '${{ env.filenamewordmatch }}'
         
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
