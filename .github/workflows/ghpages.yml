@@ -33,16 +33,23 @@ jobs:
       - name: Test web server is up
         run: curl http://localhost:3000/Aks-Construction
         
-      - name: Debugging
+      - name: File system prep
         run: |
           pwd
           ls
           ls .github/workflows_dep/playwright/ | wc -l
+          mkdir screengrabs
         
       - name: Playwright - Run helper tests
         env:
           filenamewordmatch: 'helper'
         run: npx playwright test --browser chromium .github/workflows_dep/playwright/ -g '${{ env.filenamewordmatch }}'
+        
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: PlaywrightScreengrabs
+          path: screengrabs/*.png
         
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
