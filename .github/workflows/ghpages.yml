@@ -12,12 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      #- uses: actions/setup-node@v2
-      #  name: Install Node
-      #  with:
-      #    node-version: '14'
           
-      - name: Build
+      - name: Build and start node app
         run: |
           cd helper
           npm install
@@ -35,9 +31,6 @@ jobs:
         
       - name: File system prep
         run: |
-          pwd
-          ls
-          ls .github/workflows_dep/playwright/ | wc -l
           mkdir screengrabs
         
       - name: Playwright - Run helper tests
@@ -45,7 +38,7 @@ jobs:
           filenamewordmatch: 'helper'
         run: npx playwright test --browser chromium .github/workflows_dep/playwright/ -g '${{ env.filenamewordmatch }}'
         
-      - name: Archive code coverage results
+      - name: Persist test screengrabs as artifacts
         uses: actions/upload-artifact@v2
         if: failure()
         with:
