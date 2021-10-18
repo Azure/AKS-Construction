@@ -36,7 +36,7 @@ jobs:
         
       - name: Playwright - Run fragile helper tests
         env:
-          filenamewordmatch: 'helper\|fragile'
+          filenamewordmatch: 'helper-fragile'
         continue-on-error: true
         run: npx playwright test --browser chromium .github/workflows_dep/playwright/ -g '${{ env.filenamewordmatch }}'
         
