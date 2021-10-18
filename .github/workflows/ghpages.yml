@@ -1,4 +1,4 @@
-name: Publish Helper Gtihub Page
+name: Publish Helper GitHub Page
 
 on:
   push:
