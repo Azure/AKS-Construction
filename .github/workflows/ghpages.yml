@@ -6,6 +6,8 @@ on:
       - ".github/workflows/ghpages.yml"
       - "helper/**"
 
+  workflow_dispatch:
+  
 jobs:
   HelperAppBuildTestPublish:
     runs-on: ubuntu-latest
@@ -34,9 +36,9 @@ jobs:
         
       - name: Playwright - Run helper tests
         env:
-          filenamewordmatch: 'helper'
+          filenamewordmatch: 'helper\|fragile'
         run: npx playwright test --browser chromium .github/workflows_dep/playwright/ -g '${{ env.filenamewordmatch }}'
-        
+
       - name: Persist test screengrabs as artifacts
         uses: actions/upload-artifact@v2
         if: failure()
