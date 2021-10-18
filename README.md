@@ -1,9 +1,8 @@
 # AKS Bicep Accelerator
 
-Building Kubernetes clusters can be hard work! The AKS Bicep Accelerator focusses on expediting customers onboarding of Azure Kubernetes Service workloads using best practices.
+Building Kubernetes clusters can be hard work! The AKS Bicep Accelerator focusses on expediting customers onboarding of Azure Kubernetes Service workloads using best practices and a flexible templating approach to suit differing requirements.
 
-This project provides a comprehensive, flexible templating approach to creating Azure Kubernetes Service clusters and related Azure services.
-It unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Well Architected Framework](https://docs.microsoft.com/en-us/azure/architecture/framework/), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
+This project unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Well Architected Framework](https://docs.microsoft.com/en-us/azure/architecture/framework/), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
 
 The AKS Bicep Accelerator is part of the official [Enterprise Scale for AKS](https://github.com/Azure/enterprise-scale-for-aks) architectural approach. To read more about this project and how the AKS Bicep Accelerator fits with Enterprise Scale and the AKS Secure Baseline, look [here](referencearchs.md). 
 
@@ -17,7 +16,7 @@ This projects focus is split equally over 3 areas, configuration, modular templa
 
 To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/Aks-Construction/), which will provide a set of parameters and scripts to make deployment simple. The deployment helper provides links to the official Microsoft documentation to help provide additional context for each feature.
 
-[![preview screenshot of the helper wizard](helper_preview.png)](https://azure.github.io/Aks-Construction/)
+[![preview screenshot of the helper wizard](helper_preview_es.png)](https://azure.github.io/Aks-Construction/)
 
 ### IaC - Bicep code files
 
