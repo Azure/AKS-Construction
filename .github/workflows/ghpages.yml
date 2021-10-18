@@ -38,13 +38,13 @@ jobs:
         env:
           filenamewordmatch: 'helper-fragile'
         continue-on-error: true
-        run: npx playwright test --browser chromium .github/workflows_dep/playwright/ -g '${{ env.filenamewordmatch }}'
+        run: npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}'
         
       - name: Playwright - Run stable helper tests
         env:
           filenamewordmatch: 'helper'
           filenamewordexclude: 'fragile'
-        run: npx playwright test --browser chromium .github/workflows_dep/playwright/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}'
+        run: npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}'
         
       - name: Persist test screengrabs as artifacts
         uses: actions/upload-artifact@v2
