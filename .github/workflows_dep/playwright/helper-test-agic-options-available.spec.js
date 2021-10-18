@@ -39,7 +39,7 @@ test('test', async ({ page }) => {
   await page.screenshot({ path: 'screengrabs/managed-private-addons.png', fullPage: true })
   
   //testing to see if prevention/detection are there for simple-simple
-  await page.waitForSelector('.ms-Stack:nth-child(2) > .ms-DocumentCard:nth-child(1) > .ms-DocumentCardDetails > .ms-Checkbox > .ms-Checkbox-label > .ms-Checkbox-text')
+  await page.waitForSelector('')
   await page.click('.ms-Stack:nth-child(2) > .ms-DocumentCard:nth-child(1) > .ms-DocumentCardDetails > .ms-Checkbox > .ms-Checkbox-label > .ms-Checkbox-text')
 
   await page.waitForSelector('.ms-Stack:nth-child(4) > .ms-DocumentCard:nth-child(1) > .ms-DocumentCardDetails > .ms-Checkbox > .ms-Checkbox-label > .ms-Checkbox-text')
@@ -53,5 +53,5 @@ test('test', async ({ page }) => {
   
   //await page.waitForSelector('#ChoiceGroupLabel92-Prevention')
   const visible = await page.isVisible('#ChoiceGroupLabel92-Prevention');
-  expect(visible).toBeTruthy();
+  expect(visible).toBeFalsy();
 });
