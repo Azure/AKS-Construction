@@ -548,7 +548,7 @@ jobs:
 
       - name: Deploy Java Sample App
         env:
-          MANIFESTTESTURL: "samples/openjdk-e2etls-demo.yml"
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/khowling/e2e-tls-java-aks/main/deployment-csi.yml"
           NAMESP: "default"
           CERTNAME: "openjdk-demo-service"
           DNSZONE: 'replaceme'
