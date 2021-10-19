@@ -207,6 +207,7 @@ EOF
           <TextField label="Resource Group" onChange={(ev, val) => updateFn('rg', val)} required errorMessage={getError(invalidArray, 'rg')} value={deploy.rg} />
           <TextField label="Cluster Name" onChange={(ev, val) => updateFn('clusterName', val)} required errorMessage={getError(invalidArray, 'clusterName')} value={deploy.clusterName} />
           <Dropdown
+            data-testid="deploy-location-Dropdown"
             label="Location"
             selectedKey={deploy.location}
             onChange={(ev, { key }) => updateFn('location', key)}

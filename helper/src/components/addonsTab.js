@@ -132,15 +132,14 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                             <>
                                 <MessageBar messageBarType={MessageBarType.warning}>Custom or BYO networking is requested, so template will provision a new Application Gateway</MessageBar>
 
-                                <Checkbox checked={addons.appgwKVIntegration} onChange={(ev, v) => updateFn("appgwKVIntegration", v)} label={<Text>Enable KeyVault Integration for TLS Certificates (<Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs">docs</Link>) </Text>} />
+                                <Checkbox inputProps={{ 'data-testid': "addons-ingress-appgwKVIntegration-Checkbox"}} checked={addons.appgwKVIntegration} onChange={(ev, v) => updateFn("appgwKVIntegration", v)} label={<Text>Enable KeyVault Integration for TLS Certificates (<Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs">docs</Link>) </Text>} />
                                 {hasError(invalidArray, 'appgwKVIntegration') &&
                                     <MessageBar styles={{ root: { marginTop: '0px !important' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'appgwKVIntegration')}</MessageBar>
                                 }
 
                                 <Stack.Item>
                                     <Label style={{ marginBottom: "0px" }}>Application Gateway Type (<Link target='_' href='https://docs.microsoft.com/en-us/azure/web-application-firewall/ag/ag-overview'>docs</Link>)</Label>
-                                    <ChoiceGroup
-                                        name="AppGwSku"                                                
+                                    <ChoiceGroup                                       
                                         selectedKey={addons.appGWsku}
                                         options={[
                                             { key: 'Standard_v2', text: 'Standard_v2: Standard Application Gateway' },

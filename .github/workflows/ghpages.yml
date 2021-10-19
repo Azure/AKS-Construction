@@ -24,8 +24,8 @@ jobs:
       - name: Playwright - Install OS dependencies
         run: npx playwright install-deps chromium
         
-      - name: Playwright - Install test cli
-        run: npm install -D @playwright/test
+##      - name: Playwright - Install test cli
+##        run: npm install -D @playwright/test
         
       - name: Test web server is up
         run: curl http://localhost:3000/Aks-Construction
@@ -38,13 +38,17 @@ jobs:
         env:
           filenamewordmatch: 'helper-fragile'
         continue-on-error: true
-        run: npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}'
+        run: |
+          cd helper
+          npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}'
         
       - name: Playwright - Run stable helper tests
         env:
           filenamewordmatch: 'helper'
           filenamewordexclude: 'fragile'
-        run: npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}'
+        run: |
+          cd helper
+          npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}'
         
       - name: Persist test screengrabs as artifacts
         uses: actions/upload-artifact@v2

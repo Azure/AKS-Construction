@@ -228,7 +228,7 @@ export default function PortalNav({ config }) {
 
         <Separator styles={{ root: { marginTop: "55px !important", marginBottom: "5px" } }}><b>Deploy</b> (optionally use 'Details' tabs for additional configuration)</Separator>
 
-        <Pivot selectedKey={key} onLinkClick={_handleLinkClick}>
+        <Pivot selectedKey={key} onLinkClick={_handleLinkClick} focusZoneProps={{ 'data-testid': `portalnav-Pivot`}}>
           <PivotItem headerText={tabLabels.deploy} itemKey="deploy" onRenderItemLink={(a, b) => _customRenderer('deploy', a, b)}>
             <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} />
           </PivotItem>

@@ -48,7 +48,7 @@ export default function ({ sections, updateCardValues }) {
                     tokens={{ childrenMargin: 12 }}
                 >
                     <DocumentCardDetails styles={{ root: { padding: "8px 16px", position: "relative" } }}>
-                        <Checkbox checked={selected[s.key] === c.key} label={c.title} styles={{ label: { fontWeight: selected[s.key] === c.key ? '500' : 'normal' } }} />
+                        <Checkbox inputProps={{ 'data-testid': `portalnav-presets-${s.key}-${c.key}-Checkbox`}} checked={selected[s.key] === c.key} label={c.title} styles={{ label: { fontWeight: selected[s.key] === c.key ? '500' : 'normal' } }} />
 
                     </DocumentCardDetails>
 
