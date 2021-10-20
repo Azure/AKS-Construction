@@ -23,7 +23,8 @@ jobs:
           
       - name: Playwright - Install OS dependencies
         run: npx playwright install-deps chromium
-        
+
+##      we don't need to install the test cli as this is now done by the npm install run above
 ##      - name: Playwright - Install test cli
 ##        run: npm install -D @playwright/test
         
@@ -32,7 +33,8 @@ jobs:
         
       - name: File system prep
         run: |
-          mkdir screengrabs
+          mkdir failscreengrabs
+          mkdir alwaysscreengrabs
         
       - name: Playwright - Run fragile helper tests
         env:
@@ -55,7 +57,14 @@ jobs:
         if: failure()
         with:
           name: PlaywrightScreengrabs
-          path: screengrabs/*.png
+          path: failscreengrabs/*.png
+
+      - name: Persist always screengrabs as artifacts
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: PlaywrightScreengrabs
+          path: alwaysscreengrabs/*.png
         
       - name: Deploy to GitHub Pages
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
