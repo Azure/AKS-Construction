@@ -57,14 +57,14 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: PlaywrightScreengrabs
+          name: TestFailScreengrabs
           path: helper/failscreengrabs/*.png
 
       - name: Persist always screengrabs as artifacts
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: PlaywrightScreengrabs
+          name: Screengrabs
           path: helper/alwaysscreengrabs/*.png
         
       # - name: File system checks
