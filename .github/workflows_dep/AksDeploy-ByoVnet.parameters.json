@@ -50,9 +50,6 @@
         "ingressApplicationGateway": {
             "value": true
         },
-        "privateIpApplicationGateway": {
-            "value": "172.21.1.27"
-        },
         "byoAKSSubnetId": {
             "value": "/this/parameter/is/overridden/in/my/script/value/from/secrets"
         },
@@ -82,6 +79,12 @@
         },
         "upgradeChannel" : {
             "value" : "stable"
+        },
+        "KeyVaultSoftDelete" : {
+            "value" : false
+        },
+        "KeyVaultPurgeProtection" : {
+            "value" : false
         }
     }
 }

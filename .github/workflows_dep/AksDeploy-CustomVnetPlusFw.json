@@ -58,6 +58,12 @@
 		},
 		"networkPlugin": {
 			"value": "azure"
-		}
+		},
+        "KeyVaultSoftDelete" : {
+            "value" : false
+        },
+        "KeyVaultPurgeProtection" : {
+            "value" : false
+        }
 	}
 }
