@@ -42,7 +42,7 @@ jobs:
         continue-on-error: true
         run: |
           cd helper
-          npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}'
+          npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter line
         
       - name: Playwright - Run stable helper tests
         env:
@@ -50,7 +50,7 @@ jobs:
           filenamewordexclude: 'fragile'
         run: |
           cd helper
-          npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}'
+          npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}' --reporter line
         
       - name: Persist test failure screengrabs as artifacts
         uses: actions/upload-artifact@v2
