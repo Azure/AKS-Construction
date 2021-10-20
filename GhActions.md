@@ -62,13 +62,17 @@ There might also be a number of rules specific to your enterprise you wish may w
 
 ### Deploying to an Azure Subscription
 
-Actually deploying Azure resources as part of an IaC pipeline isn't always the most valuable activity on its own. By running the Validation and WhatIf, you'll already have achieved a good level of rigour on quality. However it's essential when you want to enable integration tests for more complex infrastructure deployments. Additionally for fastidious individuals, having the confirmation that what was coded actually deploys can be really useful. It also is useful to see the end to end time it takes to deploy, so you can provide guidance to the teams who consume your code template.
+By running the Validation and WhatIf, you'll already have achieved a good level of rigour on quality, however there are gaps (Key Vault soft delete, Diagnostic Setting category validation, to name but two) with these validation tests - and the only way to know for sure if your template works is to deploy it.
 
-Creating actual resources lets you see if they work together properly, and provides the opportunity to write tests in your pipeline, and gives valuable logs around the quality of what's being created over time.
+Actually deploying your IaC template as part of the development process also supports;
+
+- Enabling integration tests for more complex infrastructure deployments.
+- Documented evidence of the IaC working with associated logs, great for future analysis if things break.
+- Seeing the end to end time it takes to deploy, so you can provide guidance to the teams who consume your code template.
 
 Consider how often you'll employ this technique, as there are `cost implications`. It also adds a significant delay into your pipeline.
 
-In this repo we run a real deployment and integration tests each week on a schedule.
+In this repo we run a real deployment and integration tests each week on a schedule, not for every push of the code.
 
 ### Post-deploy Validation
 

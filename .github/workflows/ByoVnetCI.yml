@@ -31,6 +31,23 @@ env:
   DEPNAME: "Dep${{ github.run_number }}"
 
 jobs:
+  WellArchitected:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      # PSRule does this cool thing where it traverse the parameter file through to the arm template
+      # PSRule performs IaC recommendations of the template.
+      # https://azure.github.io/PSRule.Rules.Azure/
+      - name: PSRule - Analyze Azure parameter file
+        uses: Microsoft/ps-rule@main
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
+        with:
+          modules: 'PSRule.Rules.Azure' 
+          inputPath: "${{ env.ParamFilePath }}"
+          prerelease: true
+          
   Validation:
     runs-on: ubuntu-latest
 
@@ -72,16 +89,13 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-      # PSRule does this cool thing where it traverse the parameter file through to the arm template
-      # PSRule performs IaC recommendations of the template.
-      # https://azure.github.io/PSRule.Rules.Azure/
-      - name: PSRule - Analyze Azure parameter file
-        uses: Microsoft/ps-rule@main
-        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
-        with:
-          modules: 'PSRule.Rules.Azure' 
-          inputPath: "${{ env.ParamFilePath }}"
-          prerelease: true
+
+      - name: Install Pwsh modules
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Az.KeyVault -Force
+
           
       - name: Verify Active RG Deployments
         id: activedeps
@@ -172,7 +186,7 @@ jobs:
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
 
-            az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
+            #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
             az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} > $WHATIFPATH
 
@@ -235,6 +249,7 @@ jobs:
         shell: pwsh
         run: |     
           #This is a current gap in the What-If analysis.
+          $whatifpath='whatif.json'
           
           $paramFilePath="${{ env.ParamFilePath }}"
           $paramFileContent=Get-Content $paramFilePath
@@ -242,19 +257,25 @@ jobs:
           
           if($params.parameters.createKV.value -eq $true) {
             Write-Output "Checking for already existing soft deleted KV"
+                        
+            #lets do this properly and interrogate the whatif file for the KVNAME
+            $whatIf = Get-Content $whatifpath | ConvertFrom-Json
+            $kvafter = $whatif.changes | where-object {$_.after.type -eq 'Microsoft.KeyVault/vaults'} | where {$_.changeType -ne 'Ignore'}  | select after
+            $vaultname = $kvafter.after.name
             
-            $vaultName = $params.parameters.resourceName
+            write-output "Looking for KeyVault $vaultname"
+            Get-AzKeyVault -InRemovedState | ft 
             
-            $deletedKv = az keyvault list-deleted -o table --query "[?name=='$vaultName']" | ConvertFrom-Json
+            $deletedKv = Get-AzKeyVault -InRemovedState | where-object {$_.vaultname -eq $vaultname}
             
             if($deletedKv.length -eq 0) {
-              Write-Output "All is good, soft deleted KV not found."
+              Write-Output "All is good, soft deleted KV not found in soft deleted list."
             }
             else {
               Write-Output "Soft deleted KV output"
               Write-Output $deletedKv.length
-              
-              az keyvault list-deleted -o table
+              Write-Output $deletedKv
+
               
               Write-Error "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
             }
@@ -264,6 +285,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Validation]
     environment: azurecirgs
+    outputs: 
+      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
+      LANAME : ${{ steps.deployAks.outputs.LANAME}}
+      LAWGUID : ${{ steps.deployAks.outputs.LAWGUID}}
+      AKVNAME : ${{ steps.deployAks.outputs.AKVNAME}}
+      ACRNAME : ${{ steps.deployAks.outputs.ACRNAME}}
+      AGNAME : ${{ steps.deployAks.outputs.AGNAME}}
+      
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v2
@@ -293,7 +322,7 @@ jobs:
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: false
+          enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
             
@@ -314,11 +343,24 @@ jobs:
 
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
-            echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
+            echo "::set-output name=AKSNAME::$AKSNAME"
 
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
-            echo "::set-output name=AGNAME::$AGNAME" #outputting for conditon
+            echo "::set-output name=AGNAME::$AGNAME" 
 
+            AKVNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.keyVaultName.value" -o tsv)
+            echo "::set-output name=AKVNAME::$AKVNAME" 
+            
+            LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
+            echo "::set-output name=LANAME::$LANAME" #outputting for conditon
+            
+            LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
+            echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
+            
+            ACRNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.containerRegistryName.value" -o tsv)
+            echo "::set-output name=ACRNAME::$ACRNAME" #outputting for conditon
+            
+            
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
         if: success()
@@ -342,35 +384,313 @@ jobs:
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
 
-      #      - name: Add simple AKS Workload
-      #        uses: Azure/cli@1.0.4
-      #        if: success()
-      #        env:
-      #          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-      #        with:
-      #          inlineScript: |
-      #            RG='${{ env.RG }}'
-      #            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-      #
-      #            echo $AKSNAME
-      #            az aks get-credentials -n $AKSNAME -g $RG --admin
-      #
-      #            az aks install-cli
-      #            kubectl version
-      #            echo $MANIFESTTESTURL
-      #            kubectl apply -f $MANIFESTTESTURL
-      #
-      #            sleep 1m
-      #
-      #            kubectl get po
-      #            kubectl get svc
-      #            kubectl get ingress
+  PostDeployConfig:
+    runs-on: ubuntu-latest
+    needs: [Deploy]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
 
+      - name: Install KeyVault Pwsh module
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Az.KeyVault -Force
+          
+      - name: Add KV access policy for certificates for this CI action user
+        shell: pwsh
+        run: |
+          $CiSpId='${{ secrets.AZURE_CREDENTIALS_OBJID }}'
+          $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          
+          Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all -PermissionsToSecrets get,list
+          
+      - name: Create self signed cert in Key Vault
+        env:
+          CERTNAME: "openjdk-demo-service"
+        shell: pwsh
+        run: |
+            $RG='${{ env.RG }}'
+            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+            $CERTNAME='${{ env.CERTNAME }}'
+
+            Write-Output "Creating Certificate $CERTNAME in $AKVNAME"
+            $policy = New-AzKeyVaultCertificatePolicy -CertificateTransparency $null -IssuerName 'Self' -KeySize 2048 -KeyType RSA -RenewAtNumberOfDaysBeforeExpiry 28 -SecretContentType "application/x-pkcs12" -SubjectName "CN=$CERTNAME" -ValidityInMonths 2
+            $CertRequest = Add-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME -CertificatePolicy $policy
+            
+            Write-Output $CertRequest.Id
+
+      - name: Test retrieving self signed certificate from AKV
+        env:
+          CERTNAME: "openjdk-demo-service"
+        shell: pwsh
+        run: |
+            $RG='${{ env.RG }}'
+            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+            $CERTNAME='${{ env.CERTNAME }}'
+            
+            start-sleep -Seconds 90
+
+            Write-Output "Getting Certificate $CERTNAME from $AKVNAME"
+            $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
+            $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
+            $secretByte = [Convert]::FromBase64String($secret)
+
+  SmokeTestTLSe2eApp:
+    runs-on: ubuntu-latest
+    needs: [Deploy, PostDeployConfig]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+        
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Create the SecretProviderClass for CSISecrets driver
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
+          NAMESP: "default"
+          CERTNAME: "openjdk-demo-service"
+        continue-on-error: true
+        run: |
+          # REF: https://github.com/khowling/e2e-tls-java-aks
+          
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          KVNAMELOWER=${KVNAME,,}
+          CERTNAME='${{ env.CERTNAME }}'
+          KVTENANT=$(az account show --query tenantId -o tsv)
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          
+          echo $RG
+          
+          echo 'Get the identity created from the KeyVaultSecret Addon'
+          export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
+          echo $CSISECRET_CLIENTID
+          
+          echo 'Create and submit the yaml manifest for deployment (it aint pretty)'
+          echo "
+          apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+          kind: SecretProviderClass
+          metadata:
+            name: azure-${KVNAMELOWER}
+          spec:
+            provider: azure
+            parameters:
+              usePodIdentity: \"false\"         # [OPTIONAL] if not provided, will default to "false"
+              useVMManagedIdentity: \"true\"
+              userAssignedIdentityID: \"${CSISECRET_CLIENTID}\"
+              keyvaultName: \"${KVNAMELOWER}\"          # the name of the KeyVault
+              cloudName: \"\"                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud 
+              objects:  |
+                array:
+                  - |
+                    objectName: \"${CERTNAME}\"
+                    objectAlias: identity.p12
+                    objectType: secret
+                    objectFormat: PFX
+                    objectEncoding: base64
+              tenantId: \"${KVTENANT}\"                 # the tenant ID of the KeyVault
+          " | kubectl apply -f -
+
+      - name: Create Root Cert reference in AppGW
+        env:
+          CERTNAME: "openjdk-demo-service"
+        continue-on-error: true
+        run: |
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          
+          ##Get KV Secret Id
+          CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          echo $CERTID
+          
+          ## Create Root Cert reference in AppGW
+          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID
+
+      - name: Deploy Java Sample App
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/khowling/e2e-tls-java-aks/main/deployment-csi.yml"
+          NAMESP: "default"
+          CERTNAME: "openjdk-demo-service"
+          DNSZONE: 'replaceme'
+        continue-on-error: true
+        run: |
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          KVNAMELOWER=${KVNAME,,}
+          CERTNAME='${{ env.CERTNAME }}'
+          ACRNAME='${{ needs.Deploy.outputs.ACRNAME}}'
+          DNSZONE='${{ env.DNSZONE }}'
+          
+          export PRIVATEIP=false
+          export CHALLENGE_TYPE=$( [[ $PRIVATEIP == "true" ]] && echo "dns01" || echo "http01" ) 
+          
+          sed -e "s|{{ACRNAME}}|${ACRNAME}|g" -e "s|{{DNSZONE}}|${DNSZONE}|g" -e "s|{{KVNAME}}|${KVNAMELOWER}|g" -e "s|{{PRIVATEIP}}|${PRIVATEIP}|g"  -e "s|{{CHALLENGE_TYPE}}|${CHALLENGE_TYPE}|g" $MANIFESTTESTURL | kubectl apply -f -
+
+
+  SmokeTestSimpleApp:
+    runs-on: ubuntu-latest
+    needs: [Deploy]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          
+          whoami
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+        
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Deploy AGIC Public Facing Workload
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
+          NAMESP: "default"
+        run: |
+          kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
+          
+          echo $MANIFESTTESTURL
+          kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+      - name: Verify AGIC Public Workload
+        env:
+          NAMESP: "default"
+        run: |
+          sleep 2m #Give everything a chance to work
+        
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+          echo "Getting public ip"
+          pubId=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Public ip : $pubId"
+          
+          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
+          echo $respcode   
+          
+          #TODO: This is going to need to be rewritten. #loopshambles
+          #SSH'ing on the runner shows this works, sometimes it just takes ages
+          #Needs to be investigated.
+          if [ "$respcode" != "200" ];
+          then
+              echo "going to need to wait longer i guess?"
+              sleep 3m
+              
+              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
+              echo $respcode    
+              
+              if [ "$respcode" != "200" ];
+              then
+                echo "going to need to wait EVEN longer i guess?  (wtf)"
+                sleep 6m
+                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
+                echo $respcode    
+                if [ "$respcode" != "200" ];
+                then
+                  echo "Non 200 response code from app - Raising error"
+                  exit 1
+                fi
+              fi
+          fi
+          
+          curl $pubId
+          
+  DeployVerify:
+    runs-on: ubuntu-latest
+    needs: [Deploy]
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME }}"
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+          
       - name: Test Control Plane Config
         shell: pwsh
         run: |
           $RG='${{ env.RG }}'
-          $AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME }}'
           $paramFilePath="${{ env.ParamFilePath }}"
           $params = Get-Content $paramFilePath | ConvertFrom-Json
 
@@ -397,70 +717,59 @@ jobs:
           }
           #grep KeyvaultSecretsProvider
 
-      - name: Add AGIC AKS Workload
-        uses: Azure/cli@1.0.4
-        if: success()
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
-          NAMESP: "default"
-        with:
-          inlineScript: |
-            RG='${{ env.RG }}'
-            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-
-            echo $AKSNAME
-            az aks get-credentials -n $AKSNAME -g $RG --admin
-
-            az aks install-cli
-            kubectl version
-
-            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-            kubectl get po -n  $NAMESP
-            kubectl get svc -n  $NAMESP
-            kubectl get ingress -n  $NAMESP
-
-            sleep 3m
-
-            kubectl get po -n  $NAMESP
-            kubectl get svc -n  $NAMESP
-            kubectl get ingress -n  $NAMESP
-
-            pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-            echo $pubIp
-
-            curl $pubIp
-
-  Cleanup:
+  InfraTests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
-    needs: [Validation, Deploy]
+    needs: [Deploy]
     steps:
-      #- uses: actions/checkout@v2
-
       - name: Param check
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-
+          
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
-
-      - name: Dependency check
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME }}"
+          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID }}"
+          
+      - name: Allow Monitoring extension
         shell: pwsh
         run: |
-          Write-Output "Checking parameter file existance/contents"
-          $paramFilePath="${{ env.ParamFilePath }}"
-          Test-Path $paramFilePath
-
-          if (Test-Path $paramFilePath) {
-            $paramFileContent=Get-Content $paramFilePath
-            Write-Output $paramFileContent
+          az extension add -n log-analytics -y
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+          
+      - name: Log Analytics log table verification
+        shell: pwsh
+        run: |
+          Write-Output "Check for Logs in the Log Analytics Workspace"
+          $LANAME='${{ needs.Deploy.outputs.LANAME}}'
+          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
+          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          
+          #$KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
+          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
+          Write-Output $KubeNode
+          Write-Output $KubeNode[0].Count
+          
+          if ($KubeNode[0].Count -eq 0) {
+            throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
           }
+          
+          $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
+          Write-Output $containers
 
+  Cleanup:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    needs: [Validation, Deploy, InfraTests, DeployVerify, PostDeployConfig, SmokeTestSimpleApp, SmokeTestTLSe2eApp, WellArchitected]
+    steps:
       - name: Azure Login
         uses: Azure/login@v1
         with:

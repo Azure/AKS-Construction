@@ -31,6 +31,12 @@
         },
         "registries_sku": {
             "value": "Standard"
+        },
+        "KeyVaultSoftDelete" : {
+            "value" : false
+        },
+        "KeyVaultPurgeProtection" : {
+            "value" : false
         }
     }
 }
