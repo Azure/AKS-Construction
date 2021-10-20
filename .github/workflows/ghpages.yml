@@ -52,7 +52,7 @@ jobs:
           cd helper
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}'
         
-      - name: Persist test screengrabs as artifacts
+      - name: Persist test failure screengrabs as artifacts
         uses: actions/upload-artifact@v2
         if: failure()
         with:
