@@ -46,6 +46,7 @@
         "portalnav",
         "routable",
         "stackstyle",
+        "testid",
         "vnetonly",
         "vnetprivateend",
         "Wautoscale",

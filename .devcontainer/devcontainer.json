@@ -19,7 +19,9 @@
 		"dbaeumer.vscode-eslint",
 		"ms-vscode.azurecli",
 		"ms-azuretools.vscode-bicep",
-		"streetsidesoftware.code-spell-checker"
+		"streetsidesoftware.code-spell-checker",
+		"ms-playwright.playwright",
+		"cschleiden.vscode-github-actions"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
