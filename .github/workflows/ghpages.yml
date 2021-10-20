@@ -52,10 +52,10 @@ jobs:
         run: |
           cd helper
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}' --reporter list
-        
+
       - name: Persist test failure screengrabs as artifacts
         uses: actions/upload-artifact@v2
-        if: failure()
+        if: always() #failure()
         with:
           name: PlaywrightScreengrabs
           path: failscreengrabs/*.png
@@ -67,6 +67,15 @@ jobs:
           name: PlaywrightScreengrabs
           path: alwaysscreengrabs/*.png
         
+      - name: File system checks
+        run: |
+          ls
+          find -iname "standard-config.png"
+          ls failscreengrabs
+          ls .playwrighttests
+        
+        
+
       - name: Deploy to GitHub Pages
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: crazy-max/ghaction-github-pages@v2
