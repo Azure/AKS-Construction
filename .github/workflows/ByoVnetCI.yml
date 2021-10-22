@@ -489,12 +489,10 @@ jobs:
           DNSRESOURCEGROUP: "domainssl"
         run: |
           RG='${{ env.RG }}'
-          AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
 
           echo "AKS $AKSNAME"
-          echo "AG $AGNAME"
 
-          echo "Checking if ingressApplicationGateway is enabled"
           KubeletId=$(az aks show -n $AKSNAME -g  $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
           TenantId=$(az account show --query tenantId -o tsv)
           SubscriptionId=$(az account show --query id -o tsv)
