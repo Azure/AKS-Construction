@@ -479,13 +479,54 @@ jobs:
         run: |
           #sudo az aks install-cli
           kubectl version
-          
+
+      - name: Grab some Helm charts to install
+        run: |
+          git clone https://github.com/Gordonby/minihelm.git helmcharts
+
+      - name: Add a secret for use with externaldns
+        env:
+          DNSRESOURCEGROUP: "domainssl"
+        run: |
+          RG='${{ env.RG }}'
+          AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+
+          echo "AKS $AKSNAME"
+          echo "AG $AGNAME"
+
+          echo "Checking if ingressApplicationGateway is enabled"
+          KubeletId=$(az aks show -n $AKSNAME -g  $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
+          TenantId=$(az account show --query tenantId -o tsv)
+          SubscriptionId=$(az account show --query id -o tsv)
+
+          kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdin<<EOF
+          {
+            "userAssignedIdentityID": "$KubeletId",
+            "tenantId": "$TenantId",
+            "useManagedIdentityExtension": true,
+            "subscriptionId": "$SubscriptionId",
+            "resourceGroup": "$DNSRESOURCEGROUP"
+          }
+          EOF
+
+      - name: Add a secret for use with externaldns
+        env:
+          DOMAINFILTER: "azdemo.co.uk"
+        run: |
+          helm install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
+
+      - name: Install Cert Manager
+        env:
+          MANIFESTTESTURL: "kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml"
+        run: kubectl apply -f $MANIFESTTESTURL
+
+      - name: Install CertIssuer
+        run: helm install smokeCertIssuer ./helmcharts/samples/certmanager
+
       - name: Create the SecretProviderClass for CSISecrets driver
         env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
           NAMESP: "default"
           CERTNAME: "openjdk-demo-service"
-        continue-on-error: true
         run: |
           # REF: https://github.com/khowling/e2e-tls-java-aks
           
