@@ -526,7 +526,7 @@ jobs:
       - name: Install CertIssuer
         run: helm upgrade --install smokecertissuer ./helmcharts/samples/certmanager
 
-      - name: Create the SecretProviderClass for CSISecrets driver
+      - name: Install the Java sample app
         env:
           NAMESP: "default"
           CERTNAME: "openjdk-demo-service"
@@ -571,7 +571,8 @@ jobs:
           CERTNAME='${{ env.CERTNAME }}'
           
           ##Get KV Secret Id
-          CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
           echo $CERTID
           
           ## Create Root Cert reference in AppGW
