@@ -201,6 +201,7 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
+            PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}'
 
             #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
@@ -226,6 +227,7 @@ jobs:
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
             EdgeWhatIfPassed='${{ steps.edgeWhatIf.outputs.edgeSuccess}}'
+            PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}'
 
             #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
@@ -353,7 +355,9 @@ jobs:
             DEPNAME='Dep${{ github.run_number }}'
             PARAMS='needs.Validation.outputs.AKSNAME'
 
-            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} --name $DEPNAME --verbose
+            echo $PARAMS
+
+            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS --name $DEPNAME --verbose
 
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
