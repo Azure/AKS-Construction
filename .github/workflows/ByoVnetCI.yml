@@ -544,7 +544,7 @@ jobs:
           KVTENANT=$(az account show --query tenantId -o tsv)
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          DNSNAME='${{ $DOMAINPREFIX }}.${{ $DOMAINSUFFIX }}'
+          DNSNAME=${DOMAINPREFIX}.${DOMAINSUFFIX}
           
           echo $RG
           echo $DNSNAME
