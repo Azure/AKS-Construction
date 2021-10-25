@@ -581,7 +581,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Deploy]
     environment: azurecirgs
-    if: 1=2
+    if: ${{ 1==2 }}
     steps:
       - uses: actions/checkout@v2
 
