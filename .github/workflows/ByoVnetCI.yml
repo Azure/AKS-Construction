@@ -524,12 +524,15 @@ jobs:
         run: kubectl apply -f $MANIFESTTESTURL
 
       - name: Install CertIssuer
-        run: helm upgrade --install smokeCertIssuer ./helmcharts/samples/certmanager
+        run: helm upgrade --install smokecertissuer ./helmcharts/samples/certmanager
 
       - name: Create the SecretProviderClass for CSISecrets driver
         env:
           NAMESP: "default"
           CERTNAME: "openjdk-demo-service"
+          DOMAINSUFFIX: "azdemo.co.uk"
+          DOMAINPREFIX: "openjdk-demo"
+          
         run: |
           # REF: https://github.com/khowling/e2e-tls-java-aks
           
@@ -541,37 +544,21 @@ jobs:
           KVTENANT=$(az account show --query tenantId -o tsv)
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          DNSNAME='${{ $DOMAINPREFIX }}.${{ $DOMAINSUFFIX }}'
           
           echo $RG
+          echo $DNSNAME
+          echo $KVNAMELOWER
+          echo $KVTENANT
+          echo $DNSNAME
           
           echo 'Get the identity created from the KeyVaultSecret Addon'
           export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
           echo $CSISECRET_CLIENTID
           
-          echo 'Create and submit the yaml manifest for deployment (it aint pretty)'
-          echo "
-          apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
-          kind: SecretProviderClass
-          metadata:
-            name: azure-${KVNAMELOWER}
-          spec:
-            provider: azure
-            parameters:
-              usePodIdentity: \"false\"         # [OPTIONAL] if not provided, will default to "false"
-              useVMManagedIdentity: \"true\"
-              userAssignedIdentityID: \"${CSISECRET_CLIENTID}\"
-              keyvaultName: \"${KVNAMELOWER}\"          # the name of the KeyVault
-              cloudName: \"\"                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud 
-              objects:  |
-                array:
-                  - |
-                    objectName: \"${CERTNAME}\"
-                    objectAlias: identity.p12
-                    objectType: secret
-                    objectFormat: PFX
-                    objectEncoding: base64
-              tenantId: \"${KVTENANT}\"                 # the tenant ID of the KeyVault
-          " | kubectl apply -f -
+          git clone https://github.com/Gordonby/e2e-tls-java-aks.git e2esmokeapp
+          helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set csisecrets.vaultname="$KVNAMELOWER" csisecrets.tenantId="$KVTENANT" csisecrets.clientId="$CSISECRET_CLIENTID" dnsname="$DNSNAME"
+         
 
       - name: Create Root Cert reference in AppGW
         env:
@@ -589,27 +576,6 @@ jobs:
           
           ## Create Root Cert reference in AppGW
           az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID
-
-      - name: Deploy Java Sample App
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/khowling/e2e-tls-java-aks/main/deployment-csi.yml"
-          NAMESP: "default"
-          CERTNAME: "openjdk-demo-service"
-          DNSZONE: 'replaceme'
-        continue-on-error: true
-        run: |
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          KVNAMELOWER=${KVNAME,,}
-          CERTNAME='${{ env.CERTNAME }}'
-          ACRNAME='${{ needs.Deploy.outputs.ACRNAME}}'
-          DNSZONE='${{ env.DNSZONE }}'
-          
-          export PRIVATEIP=false
-          export CHALLENGE_TYPE=$( [[ $PRIVATEIP == "true" ]] && echo "dns01" || echo "http01" ) 
-          
-          sed -e "s|{{ACRNAME}}|${ACRNAME}|g" -e "s|{{DNSZONE}}|${DNSZONE}|g" -e "s|{{KVNAME}}|${KVNAMELOWER}|g" -e "s|{{PRIVATEIP}}|${PRIVATEIP}|g"  -e "s|{{CHALLENGE_TYPE}}|${CHALLENGE_TYPE}|g" $MANIFESTTESTURL | kubectl apply -f -
 
 
   SmokeTestSimpleApp:
