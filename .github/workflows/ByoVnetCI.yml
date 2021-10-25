@@ -498,7 +498,8 @@ jobs:
           TenantId=$(az account show --query tenantId -o tsv)
           SubscriptionId=$(az account show --query id -o tsv)
 
-          kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdin<<EOF
+          JSONSECRETPATH="azure.json"
+          cat<<EOF>$JSONSECRETPATH
           {
             "userAssignedIdentityID": "$KubeletId",
             "tenantId": "$TenantId",
@@ -507,8 +508,10 @@ jobs:
             "resourceGroup": "$DNSRESOURCEGROUP"
           }
           EOF
+          
+          kubectl create secret generic azure-config-file --dry-run=client -o yaml --from-file=azure.json | kubectl apply -f -
 
-      - name: Add a secret for use with externaldns
+      - name: Add external dns config
         env:
           DOMAINFILTER: "azdemo.co.uk"
         run: |
