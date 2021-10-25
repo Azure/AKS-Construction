@@ -579,6 +579,14 @@ jobs:
           ## Create Root Cert reference in AppGW
           az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID
 
+      - name: Create Root Cert reference in AppGW
+        env:
+          SECRETNAME: "tls-secret"
+        run: |
+          sleep 4m
+          kubectl describe secrets $SECRETNAME
+
+
   SmokeTestSimpleApp:
     runs-on: ubuntu-latest
     needs: [Deploy]
