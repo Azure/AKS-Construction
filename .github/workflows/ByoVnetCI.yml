@@ -563,7 +563,6 @@ jobs:
       - name: Create Root Cert reference in AppGW
         env:
           CERTNAME: "openjdk-demo-service"
-        continue-on-error: true
         run: |
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
           RG='${{ env.RG }}'
