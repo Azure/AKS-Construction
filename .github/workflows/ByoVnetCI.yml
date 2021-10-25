@@ -516,7 +516,7 @@ jobs:
           DOMAINFILTER: "azdemo.co.uk"
         run: |
           echo $DOMAINFILTER
-          helm install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
+          helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
 
       - name: Install Cert Manager
         env:
@@ -524,7 +524,7 @@ jobs:
         run: kubectl apply -f $MANIFESTTESTURL
 
       - name: Install CertIssuer
-        run: helm install smokeCertIssuer ./helmcharts/samples/certmanager
+        run: helm upgrade --install smokeCertIssuer ./helmcharts/samples/certmanager
 
       - name: Create the SecretProviderClass for CSISecrets driver
         env:
