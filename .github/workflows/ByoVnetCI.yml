@@ -557,8 +557,8 @@ jobs:
           echo $CSISECRET_CLIENTID
           
           git clone https://github.com/Gordonby/e2e-tls-java-aks.git e2esmokeapp
-          helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set csisecrets.vaultname="$KVNAMELOWER" csisecrets.tenantId="$KVTENANT" csisecrets.clientId="$CSISECRET_CLIENTID" dnsname="$DNSNAME"
-         
+          #helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set csisecrets.vaultname="$KVNAMELOWER" csisecrets.tenantId="$KVTENANT" csisecrets.clientId="$CSISECRET_CLIENTID" dnsname="$DNSNAME"
+          helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
 
       - name: Create Root Cert reference in AppGW
         env:
