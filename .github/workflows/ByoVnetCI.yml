@@ -174,7 +174,7 @@ jobs:
           inlineScript: |
             RG='${{ env.RG }}'
             PARAMOVERRIDES="resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
-            
+            echo $PARAMOVERRIDES
             echo "::set-output name=PARAMOVERRIDES::$PARAMOVERRIDES"
 
       - name: Validate AKS
@@ -186,6 +186,8 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}'
+            
+            echo $PARAMS
             
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS --verbose
 
