@@ -492,6 +492,7 @@ jobs:
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
 
           echo "AKS $AKSNAME"
+          echo $DNSRESOURCEGROUP
 
           KubeletId=$(az aks show -n $AKSNAME -g  $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
           TenantId=$(az account show --query tenantId -o tsv)
@@ -511,11 +512,12 @@ jobs:
         env:
           DOMAINFILTER: "azdemo.co.uk"
         run: |
+          echo $DOMAINFILTER
           helm install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
 
       - name: Install Cert Manager
         env:
-          MANIFESTTESTURL: "kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml"
+          MANIFESTTESTURL: "https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml"
         run: kubectl apply -f $MANIFESTTESTURL
 
       - name: Install CertIssuer
