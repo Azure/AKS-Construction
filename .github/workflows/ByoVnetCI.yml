@@ -353,7 +353,7 @@ jobs:
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
-            PARAMS='needs.Validation.outputs.PARAMOVERRIDES'
+            PARAMS='${{ needs.Validation.outputs.PARAMOVERRIDES }}'
 
             echo $PARAMS
 
