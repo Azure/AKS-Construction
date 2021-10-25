@@ -164,7 +164,17 @@ jobs:
               Write-Error "$feature NOT registered"
             } else { Write-Output "-- Looks like $feature is registered properly" }
           }
-          
+
+      - name: Create Parameter override string
+        uses: Azure/cli@1.0.4
+        id: imperitiveparams
+        with:
+          inlineScript: |
+            RG='${{ env.RG }}'
+            PARAMOVERRIDES = "-p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
+            
+            echo "::set-output name=PARAMOVERRIDES::$PARAMOVERRIDES"
+
       - name: Validate AKS
         uses: Azure/cli@1.0.4
         #if: steps.activedeps.outputs.RUNCOUNT == 0
