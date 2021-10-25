@@ -50,7 +50,7 @@ jobs:
           
   Validation:
     outputs:
-      PARAMOVERRIDES: ${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}
+      PARAMOVERRIDES: "${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}"
     runs-on: ubuntu-latest
 
     steps:
@@ -354,6 +354,7 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             PARAMS='${{ needs.Validation.outputs.PARAMOVERRIDES }}'
+            echo "params are ${{ needs.Validation.outputs.PARAMOVERRIDES}}"
 
             echo $PARAMS
 
