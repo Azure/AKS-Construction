@@ -173,7 +173,7 @@ jobs:
         with:
           inlineScript: |
             RG='${{ env.RG }}'
-            PARAMOVERRIDES = "resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
+            PARAMOVERRIDES="resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
             
             echo "::set-output name=PARAMOVERRIDES::$PARAMOVERRIDES"
 
