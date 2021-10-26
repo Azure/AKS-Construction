@@ -598,14 +598,60 @@ jobs:
           
           ## Create Root Cert reference in AppGW
           az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID
+          
+          echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
 
-      - name: Create Root Cert reference in AppGW
+      - name: Verify LetsEncrypt Secret in AppGW
         env:
           SECRETNAME: "tls-secret"
         run: |
           sleep 4m
           kubectl describe secrets $SECRETNAME
 
+      - name: Verify Java App is reachable
+        env:
+          NAMESP: "default"
+          INGNAME: "openjdk-demo-service-ingress"
+        run: |
+          sleep 2m #Give everything a chance to work
+        
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+          echo "Getting public ip"
+          pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Public ip : $pubId"
+          
+          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
+          echo $respcode   
+          
+          #TODO: This is going to need to be rewritten. #loopshambles
+          #SSH'ing on the runner shows this works, sometimes it just takes ages
+          #Needs to be investigated.
+          if [ "$respcode" != "200" ];
+          then
+              echo "going to need to wait longer i guess?"
+              sleep 3m
+              
+              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
+              echo $respcode    
+              
+              if [ "$respcode" != "200" ];
+              then
+                echo "going to need to wait EVEN longer i guess?  (wtf)"
+                sleep 6m
+                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
+                echo $respcode    
+                if [ "$respcode" != "200" ];
+                then
+                  echo "Non 200 response code from app - Raising error"
+                  exit 1
+                fi
+              fi
+          fi
+          
+          curl $pubId
 
   SmokeTestSimpleApp:
     runs-on: ubuntu-latest
