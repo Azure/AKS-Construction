@@ -6,7 +6,7 @@ name: ByoVnetCI
 on:
   push:
     paths:
-      - ".github/workflows/ByoVnetCI.yml"
+      #- ".github/workflows/ByoVnetCI.yml"
       - ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
       - "bicep/*"
 
@@ -499,6 +499,14 @@ jobs:
         run: |
           #sudo az aks install-cli
           kubectl version
+          
+      - name: Observe Existing DNSConfig
+        env:
+          DNSDOMAIN: "azdemo.co.uk"
+          DNSRG: "domainssl"
+          RECORDNAME: "openjdk-demo"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
 
       - name: Grab some Helm charts to install
         run: |
@@ -537,6 +545,14 @@ jobs:
         run: |
           echo $DOMAINFILTER
           helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
+
+      - name: Check DNS config
+        env:
+          DNSDOMAIN: "azdemo.co.uk"
+          DNSRG: "domainssl"
+          RECORDNAME: "openjdk-demo"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
 
       - name: Install Cert Manager
         env:
