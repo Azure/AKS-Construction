@@ -567,6 +567,48 @@ jobs:
           
           kubectl describe clusterissuer letsencrypt-staging
 
+      - name: Create Root Cert reference in AppGW
+        env:
+          CERTNAME: "openjdk-demo-service"
+        continue-on-error: true
+        id: AppGwRootCert
+        run: |
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          
+          ##Get KV Secret Id
+          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
+          echo $CERTID
+          
+          ## Create Root Cert reference in AppGW
+          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID
+          
+          echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
+          echo "::set-output name=appGwRootSuccess::true"
+          
+      - name: (Retry) Create Root Cert reference in AppGW
+        env:
+          CERTNAME: "openjdk-demo-service"
+        if: steps.AppGwRootCert.outputs.appGwRootSuccess != 'true'
+        continue-on-error: true
+        run: |
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          
+          ##Get KV Secret Id
+          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
+          echo $CERTID
+          
+          ## Create Root Cert reference in AppGW
+          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID    
+          
+
       - name: Install the Java sample app
         env:
           NAMESP: "default"
@@ -600,25 +642,6 @@ jobs:
           git clone https://github.com/Gordonby/e2e-tls-java-aks.git e2esmokeapp
           #helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set csisecrets.vaultname="$KVNAMELOWER" csisecrets.tenantId="$KVTENANT" csisecrets.clientId="$CSISECRET_CLIENTID" dnsname="$DNSNAME"
           helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set fullnameOverride="openjdk-demo-service",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
-
-      - name: Create Root Cert reference in AppGW
-        env:
-          CERTNAME: "openjdk-demo-service"
-        run: |
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          CERTNAME='${{ env.CERTNAME }}'
-          
-          ##Get KV Secret Id
-          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
-          CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
-          echo $CERTID
-          
-          ## Create Root Cert reference in AppGW
-          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID
-          
-          echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
 
       - name: Verify LetsEncrypt Secret in AppGW
         env:
