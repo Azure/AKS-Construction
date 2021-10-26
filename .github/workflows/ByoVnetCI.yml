@@ -556,16 +556,20 @@ jobs:
         env:
           EMAILAD: "gdogg@microsoft.com"
         run: |
-          kubectl describe clusterissuer letsencrypt-staging
-          kubectl get po
-          kubectl get ing
-          kubectl get svc
-          sleep 2m
+          sleep 1m
           kubectl get po
           kubectl get ing
           kubectl get svc
           
           kubectl describe clusterissuer letsencrypt-staging
+          
+      - name: Await on Cert Issue
+        env:
+          CERTNAMEREF: "tls-secret"
+        run: |
+          sleep 1m
+          
+          kubectl describe cert $CERTNAMEREF
 
       - name: Create Root Cert reference in AppGW
         env:
