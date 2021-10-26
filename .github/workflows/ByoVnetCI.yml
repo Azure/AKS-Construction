@@ -660,6 +660,7 @@ jobs:
         env:
           NAMESP: "default"
           INGNAME: "openjdk-demo-ingress"
+          URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
         run: |
           sleep 2m #Give everything a chance to work
         
@@ -670,8 +671,9 @@ jobs:
           echo "Getting public ip"
           pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo "Public ip : $pubId"
+          echo "URL to hit: $URLTOHIT"
           
-          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
+          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $URLTOHIT)
           echo $respcode   
           
           #TODO: This is going to need to be rewritten. #loopshambles
@@ -682,14 +684,14 @@ jobs:
               echo "going to need to wait longer i guess?"
               sleep 3m
               
-              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
+              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $URLTOHIT)
               echo $respcode    
               
               if [ "$respcode" != "200" ];
               then
                 echo "going to need to wait EVEN longer i guess?  (wtf)"
                 sleep 3m
-                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
+                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $URLTOHIT)
                 echo $respcode    
                 if [ "$respcode" != "200" ];
                 then
