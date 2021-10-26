@@ -546,7 +546,9 @@ jobs:
           sleep 1m
 
       - name: Install CertIssuer
-        run: helm upgrade --install smokecertissuer ./helmcharts/samples/certmanager
+        env:
+          EMAILAD: "gdogg@microsoft.com"
+        run: helm upgrade --install smokecertissuer ./helmcharts/samples/certmanager --set email $EMAILAD
 
       - name: Install the Java sample app
         env:
