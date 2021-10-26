@@ -50,7 +50,7 @@ jobs:
           
   Validation:
     outputs:
-      PARAMOVERRIDES: "${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}"
+      PARAMOVERRIDES: "${{ steps.imperitiveparams.outputs.PARAMOVERRIDES }}"
     runs-on: ubuntu-latest
 
     steps:
