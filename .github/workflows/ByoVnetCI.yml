@@ -649,7 +649,7 @@ jobs:
           
           git clone https://github.com/Gordonby/e2e-tls-java-aks.git e2esmokeapp
           #helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set csisecrets.vaultname="$KVNAMELOWER" csisecrets.tenantId="$KVTENANT" csisecrets.clientId="$CSISECRET_CLIENTID" dnsname="$DNSNAME"
-          helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set fullnameOverride="openjdk-demo-service",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
+          helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set fullnameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
 
       - name: Verify LetsEncrypt Certificate logs
         run: |
@@ -659,7 +659,7 @@ jobs:
       - name: Verify Java App is reachable
         env:
           NAMESP: "default"
-          INGNAME: "openjdk-demo-service-ingress"
+          INGNAME: "openjdk-demo-ingress"
         run: |
           sleep 2m #Give everything a chance to work
         
