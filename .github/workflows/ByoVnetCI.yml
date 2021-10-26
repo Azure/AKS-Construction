@@ -464,6 +464,48 @@ jobs:
             $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
             $secretByte = [Convert]::FromBase64String($secret)
 
+      - name: Create Root Cert reference in AppGW
+        env:
+          CERTNAME: "openjdk-demo-service"
+        continue-on-error: true
+        id: AppGwRootCert
+        run: |
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          
+          ##Get KV Secret Id
+          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
+          echo $CERTID
+          
+          ## Create Root Cert reference in AppGW
+          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID
+          
+          echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
+          echo "::set-output name=appGwRootSuccess::true"
+          
+      - name: (Retry) Create Root Cert reference in AppGW
+        env:
+          CERTNAME: "openjdk-demo-service"
+        if: steps.AppGwRootCert.outputs.appGwRootSuccess != 'true'
+        continue-on-error: true
+        run: |
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          
+          ##Get KV Secret Id
+          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
+          echo $CERTID
+          
+          ## Create Root Cert reference in AppGW
+          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID    
+          
+
   SmokeTestTLSe2eApp:
     runs-on: ubuntu-latest
     needs: [Deploy, PostDeployConfig]
@@ -572,63 +614,8 @@ jobs:
         env:
           EMAILAD: "gdogg@microsoft.com"
         run: |
-          sleep 1m
-          kubectl get po
-          kubectl get ing
-          kubectl get svc
-          
+          sleep 1m          
           kubectl describe clusterissuer letsencrypt-staging
-          
-      - name: Await on Cert Issue
-        continue-on-error: true
-        env:
-          CERTNAMEREF: "tls-secret"
-        run: |
-          sleep 1m
-          
-          kubectl describe cert $CERTNAMEREF
-
-      - name: Create Root Cert reference in AppGW
-        env:
-          CERTNAME: "openjdk-demo-service"
-        continue-on-error: true
-        id: AppGwRootCert
-        run: |
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          CERTNAME='${{ env.CERTNAME }}'
-          
-          ##Get KV Secret Id
-          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
-          CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
-          echo $CERTID
-          
-          ## Create Root Cert reference in AppGW
-          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID
-          
-          echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
-          echo "::set-output name=appGwRootSuccess::true"
-          
-      - name: (Retry) Create Root Cert reference in AppGW
-        env:
-          CERTNAME: "openjdk-demo-service"
-        if: steps.AppGwRootCert.outputs.appGwRootSuccess != 'true'
-        continue-on-error: true
-        run: |
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          CERTNAME='${{ env.CERTNAME }}'
-          
-          ##Get KV Secret Id
-          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
-          CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
-          echo $CERTID
-          
-          ## Create Root Cert reference in AppGW
-          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID    
-          
 
       - name: Install the Java sample app
         env:
@@ -664,12 +651,10 @@ jobs:
           #helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set csisecrets.vaultname="$KVNAMELOWER" csisecrets.tenantId="$KVTENANT" csisecrets.clientId="$CSISECRET_CLIENTID" dnsname="$DNSNAME"
           helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set fullnameOverride="openjdk-demo-service",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
 
-      - name: Verify LetsEncrypt Secret in AppGW
-        env:
-          SECRETNAME: "tls-secret"
+      - name: Verify LetsEncrypt Certificate logs
         run: |
-          sleep 4m
-          kubectl describe secrets $SECRETNAME
+          sleep 1m
+          kubectl describe cert
 
       - name: Verify Java App is reachable
         env:
@@ -703,7 +688,7 @@ jobs:
               if [ "$respcode" != "200" ];
               then
                 echo "going to need to wait EVEN longer i guess?  (wtf)"
-                sleep 6m
+                sleep 3m
                 respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
                 echo $respcode    
                 if [ "$respcode" != "200" ];
