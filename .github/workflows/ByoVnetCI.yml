@@ -568,7 +568,7 @@ jobs:
           echo "Email Address for Lets Encrypt: $EMAILAD"
           helm upgrade --install smokecertissuer ./helmcharts/samples/certmanager --set email=$EMAILAD
 
-      - name: Await on Cert Issue
+      - name: Verify ClusterIssuer
         env:
           EMAILAD: "gdogg@microsoft.com"
         run: |
@@ -580,6 +580,7 @@ jobs:
           kubectl describe clusterissuer letsencrypt-staging
           
       - name: Await on Cert Issue
+        continue-on-error: true
         env:
           CERTNAMEREF: "tls-secret"
         run: |
