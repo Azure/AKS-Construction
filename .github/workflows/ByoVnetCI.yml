@@ -508,7 +508,7 @@ jobs:
 
   SmokeTest_PublicJavaTLSApp:
     runs-on: ubuntu-latest
-    needs: [Deploy, CertificateConfig]
+    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp]
     environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
@@ -707,7 +707,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Deploy]
     environment: azurecirgs
-    if: ${{ 1==2 }}
     steps:
       - uses: actions/checkout@v2
 
@@ -797,6 +796,12 @@ jobs:
           fi
           
           curl $pubId
+          
+      - name: Remove App from cluster
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
+          NAMESP: "default"
+        run: kubectl delete -f -n $NAMESP
           
   DeployVerify:
     runs-on: ubuntu-latest
