@@ -404,7 +404,7 @@ jobs:
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
 
-  PostDeployConfig:
+  CertificateConfig:
     runs-on: ubuntu-latest
     needs: [Deploy]
     environment: azurecirgs
@@ -506,9 +506,9 @@ jobs:
           az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $CERTID    
           
 
-  SmokeTestTLSe2eApp:
+  SmokeTest_PublicJavaTLSApp:
     runs-on: ubuntu-latest
-    needs: [Deploy, PostDeployConfig]
+    needs: [Deploy, CertificateConfig]
     environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
@@ -701,7 +701,7 @@ jobs:
           
           curl $pubId
 
-  SmokeTestSimpleApp:
+  SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
     needs: [Deploy]
     environment: azurecirgs
@@ -902,7 +902,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, PostDeployConfig, SmokeTestSimpleApp, SmokeTestTLSe2eApp, WellArchitected]
+    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, WellArchitected]
     steps:
       - name: Azure Login
         uses: Azure/login@v1
