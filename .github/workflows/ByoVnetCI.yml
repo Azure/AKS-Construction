@@ -50,7 +50,7 @@ jobs:
           
   Validation:
     outputs:
-      PARAMOVERRIDES: "${{ steps.imperitiveparams.outputs.PARAMOVERRIDES }}"
+      PARAMS: "${{ steps.imperitiveparams.outputs.PARAMOVERRIDES }}"
     runs-on: ubuntu-latest
 
     steps:
@@ -353,10 +353,8 @@ jobs:
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
-            PARAMS='${{ needs.Validation.outputs.PARAMOVERRIDES }}'
-            echo "params are ${{ needs.Validation.outputs.PARAMOVERRIDES}}"
-
-            echo $PARAMS
+            PARAMS="resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
+            echo "needs.params are ${{ needs.Validation.outputs.PARAMS}}"
 
             az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS --name $DEPNAME --verbose
 
