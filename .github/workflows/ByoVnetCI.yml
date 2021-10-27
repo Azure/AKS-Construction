@@ -584,111 +584,9 @@ jobs:
             --resource-group $RG  \
             --key-vault-secret-id $unversionedSecretId 
 
-  SmokeTest_SampleAgicTlsApp:
-    runs-on: ubuntu-latest
-    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp]
-    environment: azurecirgs
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Param check
-        run: |
-          RG='${{ env.RG }}'
-          echo "RG is: $RG"
-          
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
-          echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
-          
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-        
-      - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
-      - name: Kubectl
-        run: |
-          #sudo az aks install-cli
-          kubectl version
-          
-      - name: Install Sample App
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Agic-simple-tls"
-          APPGWSSELCERTNAME: "mykvsslcert"
-        run: |
-          kubectl apply -f $MANIFESTTESTURL
-
-      - name: Verify app is reachable
-        env:
-          NAMESP: "default"
-          INGNAME: "aspnetapp"
-        continue-on-error: true
-        run: |
-          sleep 2m #Give everything a chance to work
-        
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-          kubectl get ing -n $NAMESP $INGNAME
-
-          echo "Getting public ip"
-          pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          echo "Public ip : $pubId"
-          
-          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $pubId)
-          echo $respcode   
-          
-          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null https://$pubId)
-          echo $respcode   
-          
-          #TODO: This is going to need to be rewritten. #loopshambles
-          #SSH'ing on the runner shows this works, sometimes it just takes ages
-          #Needs to be investigated.
-          if [ "$respcode" != "200" ];
-          then
-              echo "going to need to wait longer i guess?"
-              sleep 3m
-              
-              respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $pubId)
-              echo $respcode    
-              
-              if [ "$respcode" != "200" ];
-              then
-                echo "going to need to wait EVEN longer i guess?  (wtf)"
-                sleep 3m
-                respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $pubId)
-                echo $respcode    
-                if [ "$respcode" != "200" ];
-                then
-                  echo "Non 200 response code from app - Raising error"
-                  exit 1
-                fi
-              fi
-          fi
-          
-          curl --insecure $pubId
-
-
-      - name: Remove Sample App
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Agic-simple-tls"
-        run: |
-          kubectl delete -f $MANIFESTTESTURL
-
-
-
   SmokeTest_PublicJavaTLSApp:
     runs-on: ubuntu-latest
-    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_SampleAgicTlsApp]
+    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp]
     environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
@@ -734,7 +632,7 @@ jobs:
         run: |
           git clone https://github.com/Gordonby/minihelm.git helmcharts
 
-      - name: Add a secret for use with externaldns
+      - name: Add a azure-config secret for use with externaldns
         env:
           DNSRESOURCEGROUP: "domainssl"
         run: |
@@ -783,7 +681,7 @@ jobs:
           kubectl apply -f $MANIFESTTESTURL
           sleep 1m
 
-      - name: Install CertIssuer
+      - name: Install ClusterIssuer
         env:
           EMAILAD: "gdogg@microsoft.com"
         run: |
@@ -875,6 +773,9 @@ jobs:
           fi
           
           curl --insecure $URLTOHIT
+
+      - name: Cleanup app
+        run: helm uninstall e2esmokeapp
 
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
@@ -1081,7 +982,7 @@ jobs:
 
   PreCleanup_Diags:
     runs-on: ubuntu-latest
-    needs: [Deploy, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, SmokeTest_SampleAgicTlsApp]
+    needs: [Deploy, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp]
     if: always()
     steps:
       - name: Azure Login
@@ -1126,38 +1027,10 @@ jobs:
 
           kubectl get events -n $NAMESP
 
-  AppCleanup:
-    runs-on: ubuntu-latest
-    needs: [Deploy, PreCleanup_Diags]
-    if: success()
-    steps:
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-
-      - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
-      - name: Kubectl
-        run: |
-          #sudo az aks install-cli
-          kubectl version
-          
-      - name: Remove Helm packages
-        shell: pwsh
-        run: |
-          helm ls --short | %{helm uninstall  $_}
-
   Infra_Destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, WellArchitected, PreCleanup_Diags, AppCleanup]
+    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, WellArchitected, PreCleanup_Diags]
     steps:
       - name: Azure Login
         uses: Azure/login@v1
