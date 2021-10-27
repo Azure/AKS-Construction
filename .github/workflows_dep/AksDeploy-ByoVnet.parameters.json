@@ -9,7 +9,7 @@
             "value": "westeurope"
         },
         "resourceName": {
-            "value": "AksByo"
+            "value": "byo"
         },
         "kubernetesVersion": {
             "value": "1.21.1"
@@ -78,7 +78,7 @@
             "value" : true
         },
         "upgradeChannel" : {
-            "value" : "stable"
+            "value" : "none"
         },
         "KeyVaultSoftDelete" : {
             "value" : false
