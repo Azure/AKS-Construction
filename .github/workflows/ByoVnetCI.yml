@@ -463,8 +463,8 @@ jobs:
             $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
             $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
             $secretByte = [Convert]::FromBase64String($secret)
-
-      - name: Create Root Cert reference in AppGW
+            
+      - name: Create Root Cert reference in AppGW for Java App
         env:
           CERTNAME: "openjdk-demo-service"
         continue-on-error: true
@@ -490,6 +490,48 @@ jobs:
           echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
           echo "::set-output name=appGwRootSuccess::true"
 
+      - name: Create self signed cert in Key Vault for sample app
+        env:
+          CERTNAME: "aspnetapp"
+        shell: pwsh
+        run: |
+            $RG='${{ env.RG }}'
+            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+            $CERTNAME='${{ env.CERTNAME }}'
+
+            Write-Output "Creating Certificate $CERTNAME in $AKVNAME"
+            $policy = New-AzKeyVaultCertificatePolicy -CertificateTransparency $null -IssuerName 'Self' -KeySize 2048 -KeyType RSA -RenewAtNumberOfDaysBeforeExpiry 28 -SecretContentType "application/x-pkcs12" -SubjectName "CN=$CERTNAME" -ValidityInMonths 2
+            $CertRequest = Add-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME -CertificatePolicy $policy
+            
+            Write-Output $CertRequest.Id
+            
+      - name: Create Cert reference in AppGW for Sample App
+        env:
+          CERTNAME: "aspnetapp"
+          APPGWSSELCERTNAME: "mykvsslcert"
+        continue-on-error: true
+        run: |
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          
+          ##Get KV Secret Id
+          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
+          #CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
+          
+          versionedSecretId=$(az keyvault certificate show -n $CERTNAME --vault-name $KVNAME --query "sid" -o tsv)
+          unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url
+          
+          echo $unversionedSecretId
+          
+          ## Create Cert reference in AppGW
+          az network application-gateway ssl-cert create \
+            -n $APPGWSSELCERTNAME \
+            --gateway-name  $AGNAME \
+            --resource-group $RG  \
+            --key-vault-secret-id $unversionedSecretId 
+          
 
   SmokeTest_SampleAgicTlsApp:
     runs-on: ubuntu-latest
@@ -527,17 +569,10 @@ jobs:
           #sudo az aks install-cli
           kubectl version
           
-      - name: Observe Existing DNSConfig
-        env:
-          DNSDOMAIN: ""
-          DNSRG: "domainssl"
-          RECORDNAME: "openjdk-demo"
-        run: |
-          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
-
       - name: Install Sample App
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Agic-simple-tls"
+          APPGWSSELCERTNAME: "mykvsslcert"
         run: |
           kubectl apply -f $MANIFESTTESTURL
 
