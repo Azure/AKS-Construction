@@ -823,20 +823,13 @@ jobs:
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
           DNSNAME=${DOMAINPREFIX}.${DOMAINSUFFIX}
-          
-          echo $RG
-          echo $DNSNAME
-          echo $KVNAMELOWER
-          echo $KVTENANT
-          echo $DNSNAME
-          
+
           echo 'Get the identity created from the KeyVaultSecret Addon'
           export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
           echo $CSISECRET_CLIENTID
           
-          git clone https://github.com/Gordonby/e2e-tls-java-aks.git e2esmokeapp
-          #helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set csisecrets.vaultname="$KVNAMELOWER" csisecrets.tenantId="$KVTENANT" csisecrets.clientId="$CSISECRET_CLIENTID" dnsname="$DNSNAME"
-          helm upgrade --install e2esmokeapp ./e2esmokeapp/openjdk-demo-service --set fullnameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
+          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsapp --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}" --dry-run
+          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsapp --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
 
       - name: Verify LetsEncrypt Certificate logs
         run: |
