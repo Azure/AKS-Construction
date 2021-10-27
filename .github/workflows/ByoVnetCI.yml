@@ -474,7 +474,7 @@ jobs:
             $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
             $CERTNAME='${{ env.CERTNAME }}'
 
-            export COMMON_NAME=openjdk-demo-service
+            COMMON_NAME=openjdk-demo-service
 
             az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )"
 
