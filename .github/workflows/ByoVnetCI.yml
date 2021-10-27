@@ -1093,6 +1093,7 @@ jobs:
   PreCleanup_Diags:
     runs-on: ubuntu-latest
     needs: [Deploy, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, SmokeTest_SampleAgicTlsApp]
+    if: always()
     steps:
       - name: Azure Login
         uses: Azure/login@v1
