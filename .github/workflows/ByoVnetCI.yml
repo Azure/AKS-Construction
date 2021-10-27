@@ -421,10 +421,10 @@ jobs:
               az role assignment list --assignee $agicobjid
 
               $rgScope=az group show -n $RG --query id
-              az role assignment create --role Reader --assignee-object-id $agicobjid  --scope $rgScope
+              az role assignment create --role Reader --assignee-object-id $agicobjid --assignee-principal-type ServicePrincipal --scope $rgScope
 
               $agwScope=az network application-gateway show -g $RG -n $AGNAME --query id -o tsv
-              az role assignment create --role Contributor --assignee-object-id $agicobjid  --scope $agwScope
+              az role assignment create --role Contributor --assignee-object-id $agicobjid --assignee-principal-type ServicePrincipal --scope $agwScope
 
               az role assignment list --assignee $agicobjid
             }
