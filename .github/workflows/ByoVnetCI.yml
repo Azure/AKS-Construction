@@ -470,9 +470,9 @@ jobs:
            CERTNAME: "openjdk-demo-service"
         with:
           inlineScript: |
-            $RG='${{ env.RG }}'
-            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-            $CERTNAME='${{ env.CERTNAME }}'
+            RG='${{ env.RG }}'
+            AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+            CERTNAME='${{ env.CERTNAME }}'
 
             COMMON_NAME=openjdk-demo-service
 
