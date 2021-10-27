@@ -1066,7 +1066,6 @@ jobs:
 
   PreCleanup_Diags:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
     needs: [Deploy, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, SmokeTest_SampleAgicTlsApp]
     steps:
       - name: Azure Login
@@ -1111,7 +1110,34 @@ jobs:
 
           kubectl get events -n $NAMESP
 
-  Cleanup:
+  AppCleanup:
+    runs-on: ubuntu-latest
+    needs: [Deploy, PreCleanup_Diags]
+    steps:
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Remove Helm packages
+        shell: pwsh
+        run: |
+          helm ls --short | %{helm uninstall  $_}
+
+  Infra_Destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
     needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, WellArchitected, PreCleanup_Diags]
