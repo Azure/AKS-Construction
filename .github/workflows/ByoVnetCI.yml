@@ -464,11 +464,12 @@ jobs:
             $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
             $secretByte = [Convert]::FromBase64String($secret)
 
-
       - name: Create self signed cert in Key Vault
+        uses: Azure/cli@1.0.4
         env:
-          CERTNAME: "openjdk-demo-service"
-        run: |
+           CERTNAME: "openjdk-demo-service"
+        with:
+          inlineScript: |
             $RG='${{ env.RG }}'
             $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
             $CERTNAME='${{ env.CERTNAME }}'
@@ -476,8 +477,6 @@ jobs:
             export COMMON_NAME=openjdk-demo-service
 
             az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )"
-
-            Write-Output $CertRequest.Id
 
       - name: Test retrieving self signed certificate from AKV
         env:
