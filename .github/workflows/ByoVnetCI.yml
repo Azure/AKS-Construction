@@ -548,7 +548,7 @@ jobs:
           echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
           echo "::set-output name=appGwRootSuccess::true"
 
-      - name: Create self signed cert in Key Vault for sample app
+      - name: Create self signed cert in Key Vault for a FE sample app
         env:
           CERTNAME: "aspnetapp"
         shell: pwsh
@@ -573,15 +573,9 @@ jobs:
           RG='${{ env.RG }}'
           KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           CERTNAME='${{ env.CERTNAME }}'
-          
-          ##Get KV Secret Id
-          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
-          #CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
-          
+                    
           versionedSecretId=$(az keyvault certificate show -n $CERTNAME --vault-name $KVNAME --query "sid" -o tsv)
           unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url
-          
-          echo $unversionedSecretId
           
           ## Create Cert reference in AppGW
           az network application-gateway ssl-cert create \
@@ -589,7 +583,6 @@ jobs:
             --gateway-name  $AGNAME \
             --resource-group $RG  \
             --key-vault-secret-id $unversionedSecretId 
-          
 
   SmokeTest_SampleAgicTlsApp:
     runs-on: ubuntu-latest
