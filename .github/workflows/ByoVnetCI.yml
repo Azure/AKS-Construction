@@ -489,11 +489,116 @@ jobs:
           
           echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
           echo "::set-output name=appGwRootSuccess::true"
+
+
+  SmokeTest_SampleAgicTlsApp:
+    runs-on: ubuntu-latest
+    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
           
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+        
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Observe Existing DNSConfig
+        env:
+          DNSDOMAIN: ""
+          DNSRG: "domainssl"
+          RECORDNAME: "openjdk-demo"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
+
+      - name: Install Sample App
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Agic-simple-tls"
+        run: |
+          kubectl apply -f $MANIFESTTESTURL
+
+      - name: Verify app is reachable
+        env:
+          NAMESP: "default"
+          INGNAME: "aspnetapp"
+        continue-on-error: true
+        run: |
+          sleep 2m #Give everything a chance to work
+        
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+          echo "Getting public ip"
+          pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Public ip : $pubId"
+          
+          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $pubId)
+          echo $respcode   
+          
+          #TODO: This is going to need to be rewritten. #loopshambles
+          #SSH'ing on the runner shows this works, sometimes it just takes ages
+          #Needs to be investigated.
+          if [ "$respcode" != "200" ];
+          then
+              echo "going to need to wait longer i guess?"
+              sleep 3m
+              
+              respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $pubId)
+              echo $respcode    
+              
+              if [ "$respcode" != "200" ];
+              then
+                echo "going to need to wait EVEN longer i guess?  (wtf)"
+                sleep 3m
+                respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $pubId)
+                echo $respcode    
+                if [ "$respcode" != "200" ];
+                then
+                  echo "Non 200 response code from app - Raising error"
+                  exit 1
+                fi
+              fi
+          fi
+          
+          curl --insecure $pubId
+
+
+      - name: Remove Sample App
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Agic-simple-tls"
+        run: |
+          kubectl delete -f $MANIFESTTESTURL
+
+
 
   SmokeTest_PublicJavaTLSApp:
     runs-on: ubuntu-latest
-    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp]
+    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_SampleAgicTlsApp]
     environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
