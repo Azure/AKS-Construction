@@ -468,7 +468,6 @@ jobs:
       - name: Create self signed cert in Key Vault
         env:
           CERTNAME: "openjdk-demo-service"
-        shell: pwsh
         run: |
             $RG='${{ env.RG }}'
             $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
@@ -495,6 +494,8 @@ jobs:
             $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
             $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
             $secretByte = [Convert]::FromBase64String($secret)
+            
+            Write-Output $cert
 
       - name: Create Root Cert reference in AppGW for Java App
         env:
