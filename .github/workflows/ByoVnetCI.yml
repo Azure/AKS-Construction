@@ -27,7 +27,7 @@ concurrency: ci-${{ github.ref }}
 env:
   RG: "Automation-Actions-AksDeployCI"
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
-  RESNAME: "AksByo"
+  RESNAME: "byo"
   DEPNAME: "Dep${{ github.run_number }}"
 
 jobs:
