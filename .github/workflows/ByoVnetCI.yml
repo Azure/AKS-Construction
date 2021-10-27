@@ -619,7 +619,8 @@ jobs:
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
-          
+          kubectl get ing -n $NAMESP $INGNAME
+
           echo "Getting public ip"
           pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo "Public ip : $pubId"
