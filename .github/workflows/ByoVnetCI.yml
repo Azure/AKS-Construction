@@ -1064,6 +1064,53 @@ jobs:
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
 
+  PreCleanup_Diags:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    needs: [Deploy, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, SmokeTest_SampleAgicTlsApp]
+    steps:
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Describe AGIC Pod
+        env:
+          NAMESP: "kube-system"
+        run: |
+          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+
+          kubectl describe po -n $NAMESP $APPGWPODNAME
+
+      - name: Grab AGIC pod logs
+        env:
+          NAMESP: "kube-system"
+        run: |
+          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+
+          kubectl logs -n $NAMESP $APPGWPODNAME
+          
+      - name: Check Events for default namespace
+        env:
+          NAMESP: "default"
+        run: |
+          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+
+          kubectl get events -n $NAMESP
+
   Cleanup:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
