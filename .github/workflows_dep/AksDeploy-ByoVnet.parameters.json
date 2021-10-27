@@ -39,7 +39,7 @@
             "value": 30
         },
         "networkPolicy": {
-            "value": "calico"
+            "value": "azure"
         },
         "azurepolicy": {
             "value": "audit"
