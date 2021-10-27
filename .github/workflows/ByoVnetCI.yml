@@ -673,7 +673,7 @@ jobs:
           echo "Public ip : $pubId"
           echo "URL to hit: $URLTOHIT"
           
-          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $URLTOHIT)
+          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
           echo $respcode   
           
           #TODO: This is going to need to be rewritten. #loopshambles
@@ -684,14 +684,14 @@ jobs:
               echo "going to need to wait longer i guess?"
               sleep 3m
               
-              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $URLTOHIT)
+              respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
               echo $respcode    
               
               if [ "$respcode" != "200" ];
               then
                 echo "going to need to wait EVEN longer i guess?  (wtf)"
                 sleep 3m
-                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $URLTOHIT)
+                respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
                 echo $respcode    
                 if [ "$respcode" != "200" ];
                 then
@@ -701,7 +701,7 @@ jobs:
               fi
           fi
           
-          curl $pubId
+          curl --insecure $URLTOHIT
 
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
