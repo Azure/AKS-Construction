@@ -654,6 +654,9 @@ jobs:
           respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $pubId)
           echo $respcode   
           
+          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null https://$pubId)
+          echo $respcode   
+          
           #TODO: This is going to need to be rewritten. #loopshambles
           #SSH'ing on the runner shows this works, sometimes it just takes ages
           #Needs to be investigated.
