@@ -211,7 +211,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
 
 output keyVaultName string = createKV ? kv.name : ''
 
-resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createKV) {
   name: 'kvDiags'
   scope: kv
   properties: {
