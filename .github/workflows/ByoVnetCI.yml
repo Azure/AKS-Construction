@@ -1139,6 +1139,7 @@ jobs:
   AppCleanup:
     runs-on: ubuntu-latest
     needs: [Deploy, PreCleanup_Diags]
+    if: success()
     steps:
       - name: Azure Login
         uses: Azure/login@v1
@@ -1166,7 +1167,7 @@ jobs:
   Infra_Destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, WellArchitected, PreCleanup_Diags]
+    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, WellArchitected, PreCleanup_Diags, AppCleanup]
     steps:
       - name: Azure Login
         uses: Azure/login@v1
