@@ -801,7 +801,7 @@ jobs:
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
           NAMESP: "default"
-        run: kubectl delete -f -n $NAMESP
+        run: kubectl delete -f $MANIFESTTESTURL -n $NAMESP
           
   DeployVerify:
     runs-on: ubuntu-latest
