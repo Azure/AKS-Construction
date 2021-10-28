@@ -983,7 +983,7 @@ jobs:
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
 
-  PreCleanup_Diags:
+  CaptureAgicLogs:
     runs-on: ubuntu-latest
     needs: [Deploy, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp]
     if: always()
@@ -1011,7 +1011,6 @@ jobs:
           NAMESP: "kube-system"
         run: |
           APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-
           kubectl describe po -n $NAMESP $APPGWPODNAME
 
       - name: Grab AGIC pod logs
@@ -1019,21 +1018,17 @@ jobs:
           NAMESP: "kube-system"
         run: |
           APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-
           kubectl logs -n $NAMESP $APPGWPODNAME
           
       - name: Check Events for default namespace
         env:
           NAMESP: "default"
-        run: |
-          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-
-          kubectl get events -n $NAMESP
+        run: kubectl get events -n $NAMESP
 
   Infra_Destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, WellArchitected, PreCleanup_Diags]
+    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, WellArchitected, CaptureAgicLogs]
     steps:
       - name: Azure Login
         uses: Azure/login@v1
