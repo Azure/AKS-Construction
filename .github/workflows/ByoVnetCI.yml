@@ -533,10 +533,7 @@ jobs:
           KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           CERTNAME='${{ env.CERTNAME }}'
           
-          ##Get KV Secret Id
-          #CERTID=$(az keyvault secret list-versions --vault-name $KVNAME -n $CERTNAME --query "[?attributes.enabled].id" -o tsv)
-          #CERTID=$(az keyvault secret show --vault-name $KVNAME -n $CERTNAME --query id -o tsv)
-          
+          ##Get KV Secret Id        
           versionedSecretId=$(az keyvault certificate show -n $CERTNAME --vault-name $KVNAME --query "sid" -o tsv)
           unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url
           
@@ -567,19 +564,21 @@ jobs:
         env:
           CERTNAME: "aspnetapp"
           APPGWSSELCERTNAME: "mykvsslcert"
-        continue-on-error: true
         run: |
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
           RG='${{ env.RG }}'
           KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           CERTNAME='${{ env.CERTNAME }}'
           APPGWSSELCERTNAME='${{ env.APPGWSSELCERTNAME }}'
+          
+          echo "Waiting for cert"
+          sleep 1m
                     
           versionedSecretId=$(az keyvault certificate show -n $CERTNAME --vault-name $KVNAME --query "sid" -o tsv)
-          echo versionedSecretId
+          echo $versionedSecretId
           
           unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url
-          echo unversionedSecretId
+          echo $unversionedSecretId
           
           ## Create Cert reference in AppGW
           az network application-gateway ssl-cert create \
