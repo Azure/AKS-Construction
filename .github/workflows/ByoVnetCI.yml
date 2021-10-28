@@ -641,6 +641,14 @@ jobs:
             --resource-group $RG  \
             --key-vault-secret-id $unversionedSecretId 
 
+      - name: Confirm certificates registered in AppGw
+        run: |
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+
+          az network application-gateway ssl-cert list -g $RG --gateway-name $AGNAME --query "[].name"
+          az network application-gateway root-cert list -g $RG --gateway-name $AGNAME --query "[].name"
 
   SmokeTest_PrivateJavaTLSApp:
     runs-on: ubuntu-latest
