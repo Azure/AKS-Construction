@@ -451,44 +451,13 @@ jobs:
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Az.KeyVault -Force
           
-      - name: Add KV access policy for certificates for this CI action user
+      - name: Add KV access policy for managing certificates as this CI action user
         shell: pwsh
         run: |
           $CiSpId='${{ secrets.AZURE_CREDENTIALS_OBJID }}'
           $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           
           Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all -PermissionsToSecrets get,list
-          
-      - name: Create self signed cert in Key Vault
-        env:
-          CERTNAME: "openjdk-demo-service-pwsh"
-        shell: pwsh
-        run: |
-            $RG='${{ env.RG }}'
-            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-            $CERTNAME='${{ env.CERTNAME }}'
-
-            Write-Output "Creating Certificate $CERTNAME in $AKVNAME"
-            $policy = New-AzKeyVaultCertificatePolicy -CertificateTransparency $null -IssuerName 'Self' -KeySize 2048 -KeyType RSA -RenewAtNumberOfDaysBeforeExpiry 28 -SecretContentType "application/x-pkcs12" -SubjectName "CN=$CERTNAME" -ValidityInMonths 2
-            $CertRequest = Add-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME -CertificatePolicy $policy
-            
-            Write-Output $CertRequest.Id
-
-      - name: Test retrieving self signed certificate from AKV
-        env:
-          CERTNAME: "openjdk-demo-service-pwsh"
-        shell: pwsh
-        run: |
-            $RG='${{ env.RG }}'
-            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-            $CERTNAME='${{ env.CERTNAME }}'
-            
-            start-sleep -Seconds 90
-
-            Write-Output "Getting Certificate $CERTNAME from $AKVNAME"
-            $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
-            $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
-            $secretByte = [Convert]::FromBase64String($secret)
 
       - name: Create self signed cert in Key Vault
         uses: Azure/cli@1.0.4
@@ -500,7 +469,7 @@ jobs:
             AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
             CERTNAME='${{ env.CERTNAME }}'
 
-            COMMON_NAME=openjdk-demo-service
+            COMMON_NAME=$CERTNAME
 
             az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )"
 
@@ -537,7 +506,7 @@ jobs:
             
             az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )"
 
-      - name: Test retrieving self signed certificate from AKV
+      - name: Test retrieving the self signed certificate from AKV
         env:
           CERTNAME: "openjdk-kvssl-be"
         shell: pwsh
@@ -599,7 +568,7 @@ jobs:
           ## Create Root Cert reference in AppGW
           az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $unversionedSecretId
 
-      - name: Create self signed cert in Key Vault for a FE sample app
+      - name: Create a self signed cert in Key Vault for a FE sample app
         env:
           CERTNAME: "aspnetapp"
         shell: pwsh
