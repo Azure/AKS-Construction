@@ -573,9 +573,13 @@ jobs:
           RG='${{ env.RG }}'
           KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           CERTNAME='${{ env.CERTNAME }}'
+          APPGWSSELCERTNAME='${{ env.APPGWSSELCERTNAME }}'
                     
           versionedSecretId=$(az keyvault certificate show -n $CERTNAME --vault-name $KVNAME --query "sid" -o tsv)
+          echo versionedSecretId
+          
           unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url
+          echo unversionedSecretId
           
           ## Create Cert reference in AppGW
           az network application-gateway ssl-cert create \
