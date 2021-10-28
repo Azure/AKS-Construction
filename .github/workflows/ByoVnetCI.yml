@@ -641,9 +641,182 @@ jobs:
             --resource-group $RG  \
             --key-vault-secret-id $unversionedSecretId 
 
-  SmokeTest_PublicJavaTLSApp:
+
+  SmokeTest_PrivateJavaTLSApp:
     runs-on: ubuntu-latest
     needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp]
+    environment: azurecirgs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Param check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+        
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Observe Existing DNSConfig
+        env:
+          DNSDOMAIN: "azdemo.co.uk"
+          DNSRG: "domainssl"
+          RECORDNAME: "openjdk-demo"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
+
+      - name: Grab some Helm charts to install
+        run: |
+          git clone https://github.com/Gordonby/minihelm.git helmcharts
+
+      - name: Add a azure-config secret for use with externaldns
+        env:
+          DNSRESOURCEGROUP: "domainssl"
+        run: |
+          RG='${{ env.RG }}'
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+
+          echo "AKS $AKSNAME"
+          echo $DNSRESOURCEGROUP
+
+          KubeletId=$(az aks show -n $AKSNAME -g  $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
+          TenantId=$(az account show --query tenantId -o tsv)
+          SubscriptionId=$(az account show --query id -o tsv)
+
+          JSONSECRETPATH="azure.json"
+          cat<<EOF>$JSONSECRETPATH
+          {
+            "userAssignedIdentityID": "$KubeletId",
+            "tenantId": "$TenantId",
+            "useManagedIdentityExtension": true,
+            "subscriptionId": "$SubscriptionId",
+            "resourceGroup": "$DNSRESOURCEGROUP"
+          }
+          EOF
+          
+          kubectl create secret generic azure-config-file --dry-run=client -o yaml --from-file=azure.json | kubectl apply -f -
+
+      - name: Add external dns config
+        env:
+          DOMAINFILTER: "azdemo.co.uk"
+        run: |
+          echo $DOMAINFILTER
+          helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
+
+      - name: Check DNS config
+        env:
+          DNSDOMAIN: "azdemo.co.uk"
+          DNSRG: "domainssl"
+          RECORDNAME: "openjdk-demo"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
+
+      - name: Install the Java sample app
+        env:
+          NAMESP: "default"
+          CERTNAME: "openjdk-demo-service"
+          DOMAINSUFFIX: "azdemo.co.uk"
+          DOMAINPREFIX: "openjdk-demo"
+          
+        run: |
+          # REF: https://github.com/khowling/e2e-tls-java-aks
+          
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          KVNAMELOWER=${KVNAME,,}
+          CERTNAME='${{ env.CERTNAME }}'
+          KVTENANT=$(az account show --query tenantId -o tsv)
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          DNSNAME=${DOMAINPREFIX}.${DOMAINSUFFIX}
+
+          echo 'Get the identity created from the KeyVaultSecret Addon'
+          export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
+          echo $CSISECRET_CLIENTID
+          
+          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}" --dry-run
+          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
+
+      - name: Verify LetsEncrypt Certificate logs
+        run: |
+          sleep 1m
+          kubectl describe cert
+
+      - name: Verify Java App is reachable
+        env:
+          NAMESP: "default"
+          INGNAME: "openjdk-demo-ingress"
+          URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
+        run: |
+          sleep 2m #Give everything a chance to work
+        
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+          echo "Getting public ip"
+          pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Public ip : $pubId"
+          echo "URL to hit: $URLTOHIT"
+          
+          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
+          echo $respcode   
+          
+          #TODO: This is going to need to be rewritten. #loopshambles
+          #SSH'ing on the runner shows this works, sometimes it just takes ages
+          #Needs to be investigated.
+          if [ "$respcode" != "200" ];
+          then
+              echo "going to need to wait longer i guess?"
+              sleep 3m
+              
+              respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
+              echo $respcode    
+              
+              if [ "$respcode" != "200" ];
+              then
+                echo "going to need to wait EVEN longer i guess?  (wtf)"
+                sleep 3m
+                respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
+                echo $respcode    
+                if [ "$respcode" != "200" ];
+                then
+                  echo "Non 200 response code from app - Raising error"
+                  exit 1
+                fi
+              fi
+          fi
+          
+          curl --insecure $URLTOHIT
+
+      - name: Cleanup app
+        run: helm uninstall e2esmokeapp
+
+  SmokeTest_PublicJavaTLSApp:
+    runs-on: ubuntu-latest
+    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PrivateJavaTLSApp]
     environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
