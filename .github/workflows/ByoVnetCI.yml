@@ -758,12 +758,7 @@ jobs:
           
           helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}" --dry-run
           helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
-
-      - name: Verify LetsEncrypt Certificate logs
-        run: |
-          sleep 1m
-          kubectl describe cert
-
+      
       - name: Verify Java App is reachable
         env:
           NAMESP: "default"
@@ -810,6 +805,12 @@ jobs:
           fi
           
           curl --insecure $URLTOHIT
+
+      - name: Verify Frontend Certificate
+        env:
+          URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
+        run: |
+          curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
       - name: Cleanup app
         run: helm uninstall e2esmokeapp
@@ -1003,6 +1004,12 @@ jobs:
           fi
           
           curl --insecure $URLTOHIT
+          
+      - name: Verify Frontend Certificate
+        env:
+          URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
+        run: |
+          curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
       - name: Cleanup app
         run: helm uninstall e2esmokeapp
