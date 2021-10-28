@@ -1228,7 +1228,7 @@ jobs:
   CaptureAgicLogs:
     runs-on: ubuntu-latest
     needs: [Deploy, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp]
-    if: needs.Deploy.outputs.AKSNAME != blank
+    if: needs.Deploy.outputs.AKSNAME != ''
     steps:
       - name: Azure Login
         uses: Azure/login@v1
