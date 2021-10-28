@@ -522,10 +522,42 @@ jobs:
             
             Write-Output $cert
 
+      - name: Create self signed cert in Key Vault
+        uses: Azure/cli@1.0.4
+        env:
+           CERTNAME: "openjdk-kvssl-be"
+        with:
+          inlineScript: |
+            RG='${{ env.RG }}'
+            AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+            CERTNAME='${{ env.CERTNAME }}'
+
+            COMMON_NAME=openjdk-kvssl
+
+            az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )"
+
+      - name: Test retrieving self signed certificate from AKV
+        env:
+          CERTNAME: "openjdk-kvssl-be"
+        shell: pwsh
+        run: |
+            $RG='${{ env.RG }}'
+            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+            $CERTNAME='${{ env.CERTNAME }}'
+            
+            start-sleep -Seconds 90
+
+            Write-Output "Getting Certificate $CERTNAME from $AKVNAME"
+            $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
+            $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
+            $secretByte = [Convert]::FromBase64String($secret)
+            
+            Write-Output $cert
+
+
       - name: Create Root Cert reference in AppGW for Java App
         env:
           CERTNAME: "openjdk-demo-service"
-        continue-on-error: true
         id: AppGwRootCert
         run: |
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
@@ -545,6 +577,24 @@ jobs:
           echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
           echo "::set-output name=appGwRootSuccess::true"
 
+      - name: Create Root Cert reference in AppGW for Java App
+        env:
+          CERTNAME: "openjdk-kvssl-be"
+        run: |
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CERTNAME='${{ env.CERTNAME }}'
+          
+          ##Get KV Secret Id        
+          versionedSecretId=$(az keyvault certificate show -n $CERTNAME --vault-name $KVNAME --query "sid" -o tsv)
+          unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url
+          
+          echo $unversionedSecretId
+          
+          ## Create Root Cert reference in AppGW
+          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $unversionedSecretId
+
       - name: Create self signed cert in Key Vault for a FE sample app
         env:
           CERTNAME: "aspnetapp"
@@ -560,7 +610,7 @@ jobs:
             
             Write-Output $CertRequest.Id
             
-      - name: Create Cert reference in AppGW for Sample App
+      - name: Create Cert reference in AppGW for FE Sample App
         env:
           CERTNAME: "aspnetapp"
           APPGWSSELCERTNAME: "mykvsslcert"
