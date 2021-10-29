@@ -503,16 +503,17 @@ jobs:
         env:
           CERTNAMES: '["aspnetapp","openjdk-kvssl-fe"]'
         run: |
-            $RG='${{ env.RG }}'
-            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
             
-            echo $CERTNAMES | jq -r '.[]' | while read cert; do
-               echo "getting id for $cert"; 
-               versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
-               unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
-               echo $unversionedSecretId;
-               az network application-gateway ssl-cert create -n $cert --gateway-name $AGNAME -g $RG --key-vault-secret-id $unversionedSecretId 
-            done
+          echo $CERTNAMES | jq -r '.[]' | while read cert; do
+             echo "getting id for $cert"; 
+             versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
+             unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
+             echo $unversionedSecretId;
+             az network application-gateway ssl-cert create -n $cert --gateway-name $AGNAME -g $RG --key-vault-secret-id $unversionedSecretId 
+          done
 
 
       - name: Confirm certificates registered in AppGw
