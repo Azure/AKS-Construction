@@ -28,9 +28,6 @@ on:
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'  
         default: 'no'
-      fireDebugSteps:
-        description: 'Fire Debug steps'  
-        default: ${{ false }}
         
 concurrency: ci-${{ github.ref }}
 
@@ -40,6 +37,7 @@ env:
   RESNAME: "AksByo"
   DEPNAME: "Dep${{ github.run_number }}"
   DOVERIFICATIONSTEPS: true
+  DODEBUGSTEPS: false
 
 jobs:
   Well_Architected:
@@ -67,7 +65,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Job parameter check
-        if: github.event.inputs.fireDebugSteps
+        if: env.DODEBUGSTEPS == true
         run: |       
           RG='${{ env.RG }}'
           echo "RG is: $RG"
