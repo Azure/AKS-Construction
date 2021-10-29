@@ -133,6 +133,7 @@ jobs:
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
             
       - name: What If
+        if: env.DOVERIFICATIONSTEPS == true
         uses: Azure/cli@1.0.4
         with:
           inlineScript: |
