@@ -12,7 +12,7 @@ on:
         
   push:
     paths: 
-      - ".github/workflows/ByoVnetPrivateCI.yml"
+      #- ".github/workflows/ByoVnetPrivateCI.yml"
       - 'bicep/*'
       
   pull_request:
