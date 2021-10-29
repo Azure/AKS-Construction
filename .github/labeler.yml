@@ -4,8 +4,8 @@ helper-ui:
 
 # Add 'test' label to any change to *.spec.js files
 test:
-- **/*.spec.js
+- '*.spec.js'
 
 # Add 'documentation' label to any change to *.md files
 documentation:
-- **/*.md
+- '*.md'
