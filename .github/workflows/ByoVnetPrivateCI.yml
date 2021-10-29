@@ -9,6 +9,12 @@ on:
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'  
         default: 'no'
+      doDebugSteps:
+        description: 'Run informational steps'  
+        default: 'no'
+      doVerifySteps:
+        description: 'Run optional verify steps'  
+        default: 'no'
         
   push:
     paths: 
@@ -24,12 +30,15 @@ on:
   schedule:
     # At 11:00pm, every Tuesday week
     - cron: '0 23 * * 2'
+    
 env:
   RG: 'Automation-Actions-AksDeployCI'
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json"
   RESNAME: 'AksPriv'
   DEPNAME: 'DepPriv${{ github.run_number }}'
-
+  DOVERIFICATIONSTEPS: github.event.inputs.doDebugSteps != 'no' #These are steps that will generally throw errors when things aren't there
+  DODEBUGSTEPS:  github.event.inputs.doVerifySteps != 'no' #These are steps that are purely informational
+  
 concurrency: ci-${{ github.ref }}
 
 jobs:
@@ -57,7 +66,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Param check
+      - name: Job parameter check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -68,7 +78,8 @@ jobs:
           echo "EventTrigger name is ${{github.event_name}}"
           echo "Actor name is ${{ github.actor}}"
 
-      - name: Dependency check
+      - name: Arm Parameter file check
+        if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -80,7 +91,6 @@ jobs:
             Write-Output $paramFileContent
           }
           
-          
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -89,7 +99,8 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-      - name: Verify No Active Deployments in RG
+      - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
+        if: env.DOVERIFICATIONSTEPS == true
         id: activedeps
         uses: Azure/cli@1.0.4
         with:
@@ -111,14 +122,15 @@ jobs:
               exit 1
             fi
             
-      - name: Validate AKS
+      - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
         with:
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
-            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --verbose
+            
+            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
             
       - name: What If
         uses: Azure/cli@1.0.4
@@ -127,7 +139,8 @@ jobs:
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
-            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --verbose
+            
+            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
 
   Deploy:
     runs-on: ubuntu-latest
@@ -141,7 +154,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Param check
+      - name: Job parameter check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -150,7 +164,8 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
 
-      - name: Dependency check
+      - name: Parameter file dependency check
+        if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -170,7 +185,7 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-      - name: Start Runner VM
+      - name: Start Private GitHub Runner Virtual Machine
         uses: Azure/cli@1.0.4
         with:
           inlineScript: |
@@ -180,7 +195,7 @@ jobs:
 
             az vm start --name $RunnerVM --no-wait --resource-group $RunnerRG
             
-      - name: Deploy AKS
+      - name: Deploy Infrastructure
         id:  deployAks
         uses: Azure/cli@1.0.4
         with:
@@ -206,7 +221,6 @@ jobs:
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
             echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
             
-            
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
         with:
@@ -218,6 +232,8 @@ jobs:
             echo "AKS $AKSNAME"
             echo "AG $AGNAME"
             
+            #TODO:Check AGNAME value to see if one was created
+            
             echo "Checking if ingressApplicationGateway is enabled"
             AGICEnabled=$(az aks show -n $AKSNAME -g  $RG --query "addonProfiles.ingressApplicationGateway.enabled")
             echo "AGICEnabled = $AGICEnabled"
@@ -226,26 +242,8 @@ jobs:
             then
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
-            
-      - name: Fast alerting experience
-        uses: Azure/cli@1.0.4
-        with:
-          inlineScript: |          
-            RG='${{ env.RG }}'
-            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-            LANAME='${{ steps.deployAks.outputs.AGNAME}}'
-            
-            echo "AKS $AKSNAME"
-            echo "LA $LANAME"
-            
-            if [ "true" == "true" ];
-            then
-                AKSRESID=$(az aks show -g $RG  -n $AKSNAME --query id -o tsv)
-                LAID=$(az aks show -g $RG -n $AKSNAME --query "[addonProfiles.omsagent.identity.clientId]" -o tsv)
-                az role assignment create  --assignee-object-id $LAID --assignee-principal-type "ServicePrincipal" --scope $AKSRESID --role "Monitoring Metrics Publisher"
-            fi
 
-
+  #PRIVATE AGENT RUNNING THIS JOB
   SmokeTest_KnownGoodApp:
     runs-on: [self-hosted, linux]
     needs: [Deploy]
@@ -253,7 +251,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Param check
+      - name: Job parameter check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -265,7 +264,7 @@ jobs:
           
           whoami
 
-      - name: Azure Login MSI
+      - name: Azure Login MSI #Since we're doing this on a private agent we can use its managed identity
         run: |
           az login --identity
 
@@ -275,6 +274,7 @@ jobs:
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
       - name: Kubectl
+        if: env.DODEBUGSTEPS == true
         run: |
           #sudo az aks install-cli
           kubectl version
@@ -310,11 +310,7 @@ jobs:
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
-          
-          #TODO
-          #Hit the load balancer ip
-          #Hit the ingress ip
-          
+        
           pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
           echo $pubIp
           
@@ -401,7 +397,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Deploy]
     steps:
-      - name: Param check
+      - name: Job parameter check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -412,7 +409,7 @@ jobs:
           echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
           echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}"
 
-      - name: Allow Monitoring extension
+      - name: Add Monitoring extension
         shell: pwsh
         run: |
           az extension add -n log-analytics -y
@@ -445,15 +442,14 @@ jobs:
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
 
-  Cleanup:
+  Infra_Destroy:
     runs-on: ubuntu-latest
     needs: [Validation, Deploy, InfraTests, SmokeTest_KnownGoodApp, Well_Architected]
     if: github.event_name == 'schedule'
     environment: azurecirgs
     steps:
-      #- uses: actions/checkout@v2
-
-      - name: Param check
+      - name: Job parameter check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -462,18 +458,6 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
 
-      - name: Dependency check
-        shell: pwsh
-        run: |
-          Write-Output "Checking parameter file existance/contents"
-          $paramFilePath="${{ env.ParamFilePath }}"
-          Test-Path $paramFilePath
-          
-          if (Test-Path $paramFilePath) {
-            $paramFileContent=Get-Content $paramFilePath
-            Write-Output $paramFileContent
-          }
-          
       - name: Azure Login
         uses: Azure/login@v1
         with:
