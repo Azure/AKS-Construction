@@ -23,9 +23,12 @@ on:
   workflow_dispatch:
     inputs:
       minihelmbranch:
-        description: 'If you want to take the smoke test helm packages from a branch'  
+        description: 'Branch name to use from MiniHelm repo'  
         default: 'main'
-
+      doWellArchitected:
+        description: 'Whether to perform the Well Architected assesment'  
+        default: 'no'
+        
 concurrency: ci-${{ github.ref }}
 
 env:
@@ -33,11 +36,13 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "AksByo"
   DEPNAME: "Dep${{ github.run_number }}"
+  DEBUG: true
+  DOVERIFICATIONSTEPS: true
 
 jobs:
-  WellArchitected:
+  Well_Architected:
     runs-on: ubuntu-latest
-
+    if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected != 'no'
     steps:
       - uses: actions/checkout@v2
       
@@ -51,17 +56,17 @@ jobs:
           modules: 'PSRule.Rules.Azure' 
           inputPath: "${{ env.ParamFilePath }}"
           prerelease: true
-          
+        
+  #Pre deployment validation of the parameters + bicep code
   Validation:
-    outputs:
-      PARAMS: "${{ steps.imperitiveparams.outputs.PARAMOVERRIDES }}"
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: GH Param check
-        run: |
+      - name: Job parameter check
+        if: env.DEBUG
+        run: |       
           RG='${{ env.RG }}'
           echo "RG is: $RG"
 
@@ -358,7 +363,6 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             PARAMS="resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
-            echo "needs.params are ${{ needs.Validation.outputs.PARAMS}}"
 
             az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS --name $DEPNAME --verbose
 
@@ -1152,7 +1156,7 @@ jobs:
   Infra_Destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, WellArchitected, CaptureAgicLogs]
+    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, Well_Architected, CaptureAgicLogs]
     steps:
       - name: Azure Login
         uses: Azure/login@v1
