@@ -459,156 +459,56 @@ jobs:
           
           Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all -PermissionsToSecrets get,list
 
-      - name: Create self signed cert in Key Vault
+      - name: Create self signed certs in Key Vault
         uses: Azure/cli@1.0.4
         env:
-           CERTNAME: "openjdk-demo-service"
+           CERTNAMES: '["openjdk-demo-service","openjdk-kvssl-be","openjdk-kvssl-fe"]'
         with:
           inlineScript: |
             RG='${{ env.RG }}'
             AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-            CERTNAME='${{ env.CERTNAME }}'
 
-            COMMON_NAME=$CERTNAME
+            echo $CERTNAMES | jq -r '.[]' | while read cert; do
+             echo "creating $cert"; 
+             COMMON_NAME=$cert;
+             az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )";
+            done
+            
+            sleep 90s
+            
 
-            az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )"
-
-      - name: Test retrieving self signed certificate from AKV
+      - name: Create Root Cert references in AppGW
         env:
-          CERTNAME: "openjdk-demo-service"
-        shell: pwsh
-        run: |
-            $RG='${{ env.RG }}'
-            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-            $CERTNAME='${{ env.CERTNAME }}'
-            
-            start-sleep -Seconds 90
-
-            Write-Output "Getting Certificate $CERTNAME from $AKVNAME"
-            $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
-            $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
-            $secretByte = [Convert]::FromBase64String($secret)
-            
-            Write-Output $cert
-
-      - name: Create self signed cert in Key Vault
-        uses: Azure/cli@1.0.4
-        env:
-           CERTNAME: "openjdk-kvssl-be"
-        with:
-          inlineScript: |
-            RG='${{ env.RG }}'
-            AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-            CERTNAME='${{ env.CERTNAME }}'
-
-            COMMON_NAME=$CERTNAME
-            echo $COMMON_NAME
-            
-            az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )"
-
-      - name: Test retrieving the self signed certificate from AKV
-        env:
-          CERTNAME: "openjdk-kvssl-be"
-        shell: pwsh
-        run: |
-            $RG='${{ env.RG }}'
-            $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-            $CERTNAME='${{ env.CERTNAME }}'
-            
-            start-sleep -Seconds 90
-
-            Write-Output "Getting Certificate $CERTNAME from $AKVNAME"
-            $cert = Get-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME
-            if ($null -eq $cert) {
-              Write-Error "Certificate $CERTNAME not found in $AKVNAME"
-            }
-            
-            $secret = Get-AzKeyVaultSecret -VaultName $AKVNAME -Name $cert.Name -AsPlainText
-            $secretByte = [Convert]::FromBase64String($secret)
-            
-            Write-Output $cert
-
-      - name: Create Root Cert reference in AppGW for Java App
-        env:
-          CERTNAME: "openjdk-demo-service"
+          CERTNAMES: '["openjdk-demo-service","openjdk-kvssl-be"]'
         id: AppGwRootCert
         run: |
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
           RG='${{ env.RG }}'
           KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          CERTNAME='${{ env.CERTNAME }}'
-          
-          ##Get KV Secret Id        
-          versionedSecretId=$(az keyvault certificate show -n $CERTNAME --vault-name $KVNAME --query "sid" -o tsv)
-          unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url
-          
-          echo $unversionedSecretId
-          
-          ## Create Root Cert reference in AppGW
-          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $unversionedSecretId
-          
-          echo "TODO: sometimes this fails with a 'canceled' error message, needs hardening"
-          echo "::set-output name=appGwRootSuccess::true"
 
-      - name: Create Root Cert reference in AppGW for Java App
+          echo $CERTNAMES | jq -r '.[]' | while read cert; do
+             echo "getting id for $cert"; 
+             versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
+             unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
+             echo $unversionedSecretId;
+             az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $cert --keyvault-secret $unversionedSecretId;
+          done
+          
+      - name: Create FrontEnd Cert references in AppGW
         env:
-          CERTNAME: "openjdk-kvssl-be"
-        run: |
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          CERTNAME='${{ env.CERTNAME }}'
-          
-          ##Get KV Secret Id        
-          versionedSecretId=$(az keyvault certificate show -n $CERTNAME --vault-name $KVNAME --query "sid" -o tsv)
-          unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url
-          
-          echo $unversionedSecretId
-          
-          ## Create Root Cert reference in AppGW
-          az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $CERTNAME --keyvault-secret $unversionedSecretId
-
-      - name: Create a self signed cert in Key Vault for a FE sample app
-        env:
-          CERTNAME: "aspnetapp"
-        shell: pwsh
+          CERTNAMES: '["aspnetapp","openjdk-kvssl-fe"]'
         run: |
             $RG='${{ env.RG }}'
             $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-            $CERTNAME='${{ env.CERTNAME }}'
+            
+            echo $CERTNAMES | jq -r '.[]' | while read cert; do
+               echo "getting id for $cert"; 
+               versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
+               unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
+               echo $unversionedSecretId;
+               az network application-gateway ssl-cert create -n $cert --gateway-name $AGNAME -g $RG --key-vault-secret-id $unversionedSecretId 
+            done
 
-            Write-Output "Creating Certificate $CERTNAME in $AKVNAME"
-            $policy = New-AzKeyVaultCertificatePolicy -CertificateTransparency $null -IssuerName 'Self' -KeySize 2048 -KeyType RSA -RenewAtNumberOfDaysBeforeExpiry 28 -SecretContentType "application/x-pkcs12" -SubjectName "CN=$CERTNAME" -ValidityInMonths 2
-            $CertRequest = Add-AzKeyVaultCertificate -VaultName $AKVNAME -Name $CERTNAME -CertificatePolicy $policy
-            
-            Write-Output $CertRequest.Id
-            
-      - name: Create Cert reference in AppGW for FE Sample App
-        env:
-          CERTNAME: "aspnetapp"
-          APPGWSSELCERTNAME: "mykvsslcert"
-        run: |
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          CERTNAME='${{ env.CERTNAME }}'
-          APPGWSSELCERTNAME='${{ env.APPGWSSELCERTNAME }}'
-          
-          echo "Waiting for cert"
-          sleep 1m
-                    
-          versionedSecretId=$(az keyvault certificate show -n $CERTNAME --vault-name $KVNAME --query "sid" -o tsv)
-          echo $versionedSecretId
-          
-          unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url
-          echo $unversionedSecretId
-          
-          ## Create Cert reference in AppGW
-          az network application-gateway ssl-cert create \
-            -n $APPGWSSELCERTNAME \
-            --gateway-name  $AGNAME \
-            --resource-group $RG  \
-            --key-vault-secret-id $unversionedSecretId 
 
       - name: Confirm certificates registered in AppGw
         run: |
@@ -733,8 +633,8 @@ jobs:
           export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
           echo $CSISECRET_CLIENTID
           
-          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}" --dry-run
-          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
+          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="aspnetapp" --dry-run
+          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="aspnetapp"
       
       - name: Verify Java App is reachable
         env:
