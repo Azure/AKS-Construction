@@ -16,6 +16,7 @@ on:
       - "bicep/*"
       - ".github/workflows/ByoVnetCI.yml"
 
+  #Running on a schedule helps trap issues like Kubernetes versions not being available in the region, or Well Architected recommendations changing
   schedule:
     # At 11:00pm, every Wednesday week
     - cron: "0 23 * * 3"
@@ -115,7 +116,7 @@ jobs:
           Install-Module -Name Az.KeyVault -Force
 
           
-      - name: Verify Active RG Deployments
+      - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         id: activedeps
         if: env.DOVERIFICATIONSTEPS == true
         uses: Azure/cli@1.0.4
@@ -136,7 +137,7 @@ jobs:
 
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
             
-      - name: Verify Preview Features on Subscription
+      - name: Verify AKS Preview Features are available in target Subscription
         if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
@@ -185,7 +186,7 @@ jobs:
             } else { Write-Output "-- Looks like $feature is registered properly" }
           }
 
-      - name: Create Parameter override string
+      - name: Create Parameter file imperitive override string
         uses: Azure/cli@1.0.4
         id: imperitiveparams
         with:
@@ -195,7 +196,7 @@ jobs:
             echo $PARAMOVERRIDES
             echo "::set-output name=PARAMOVERRIDES::$PARAMOVERRIDES"
 
-      - name: Validate AKS
+      - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
         with:
           inlineScript: |
@@ -257,7 +258,8 @@ jobs:
 
             cat $WHATIFPATH
 
-      - name: What If Pwsh Parse
+      - name: What If Analysis Output - Parse output
+        if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
           $whatifpath='whatif.json'
@@ -275,12 +277,13 @@ jobs:
             Write-Output $whatif.changes[0].after.type
           }
 
-      - name: What If PesterTests
+      - name: What If Analysis Output - Pester Testing
         shell: pwsh
         run: |
-          Write-Output "TODO"
+          Write-Output "https://pester.dev/"
+          Write-Output "TODO
           
-      - name: What If Gaps - Check for Soft deleted KeyVaults
+      - name: What If Analysis Gaps - Check for Soft deleted KeyVaults
         shell: pwsh
         run: |     
           #This is a current gap in the What-If analysis.
@@ -332,7 +335,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Param check
+      - name: Job parameter check
         if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
@@ -342,7 +345,7 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
           
-      - name: Dependency check
+      - name: Parameter file dependency check
         if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
@@ -363,7 +366,7 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
             
-      - name: Deploy AKS
+      - name: Deploy Infrastructure
         id: deployAks
         uses: Azure/cli@1.0.4
         with:
