@@ -30,10 +30,10 @@ on:
         default: 'no'
       doDebugSteps:
         description: 'Run informational steps'  
-        default: 'no'
+        default: 'yes'
       doVerifySteps:
         description: 'Run optional verify steps'  
-        default: 'no'
+        default: 'yes'
         
 concurrency: ci-${{ github.ref }}
 
