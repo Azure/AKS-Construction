@@ -441,7 +441,7 @@ jobs:
 
   Cleanup:
     runs-on: ubuntu-latest
-    needs: [Validation, Deploy, InfraTests, SmokeTest_VotingApps]
+    needs: [Validation, Deploy, InfraTests, SmokeTest_KnownGoodApp, Well_Architected]
     if: github.event_name == 'schedule'
     environment: azurecirgs
     steps:
