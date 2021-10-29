@@ -15,6 +15,7 @@ Various workflows run on Push / PR / Schedule.
 | Bicep Build | Every Push | `Quality` To run the bicep linter upon changes to the bicep files  |
 | Greetings   | Issue / PR | `Community` Greeting new contributors to the repo |
 | Stale bot   | Issue / PR | `Tidy` Marks old issues as stale |
+| Labeler   | PR | `Tidy` Adds relevant labels to PR's based on files changed |
 | Publish Helper | PR | `Quality` Tests changes to the UI work |
 | Publish Helper | Push `main` | Publishes the UI to GitHub Pages |
 | Check Markdown | PR | `Quality` Checks markdown files for spelling mistakes |
