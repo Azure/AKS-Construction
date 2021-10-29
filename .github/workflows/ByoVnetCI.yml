@@ -28,6 +28,9 @@ on:
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'  
         default: 'no'
+      fireDebugSteps:
+        description: 'Fire Debug steps'  
+        default: ${{ false }}
         
 concurrency: ci-${{ github.ref }}
 
@@ -36,7 +39,6 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "AksByo"
   DEPNAME: "Dep${{ github.run_number }}"
-  DEBUG: ${{ false }}
   DOVERIFICATIONSTEPS: true
 
 jobs:
@@ -65,7 +67,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Job parameter check
-        if: env.DEBUG
+        if: github.event.inputs.fireDebugSteps
         run: |       
           RG='${{ env.RG }}'
           echo "RG is: $RG"
