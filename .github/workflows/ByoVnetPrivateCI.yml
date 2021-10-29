@@ -309,7 +309,6 @@ jobs:
           #Hit the ingress ip
           
           pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
           
           curl -o /dev/null -s -w "%{http_code}\n" $pubIp
           curl $pubIp       
@@ -317,11 +316,13 @@ jobs:
       - name: Playwright - Install OS dependencies
         run: npx playwright install-deps chromium
         
-      - name: Playwright - Run fragile helper tests
+      - name: Playwright - Run helper tests
         env:
           filenamewordmatch: 'playwright-azurevote'
         run: |
-          npx playwright test --browser chromium .github/workflows_dep/ -g '${{ env.filenamewordmatch }}' --reporter list
+          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+         
+          PLAYTESTURL="http://${pubIp}/" npx playwright test --browser chromium .github/workflows_dep/ -g '${{ env.filenamewordmatch }}' --reporter list
         
       - name: Delete AGIC Public Facing Workload
         env:
