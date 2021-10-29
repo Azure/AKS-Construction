@@ -465,7 +465,7 @@ jobs:
 
       - name: Create self signed certs in Key Vault
         env:
-          CERTNAMES: '["openjdk-demo-service","openjdk-kvssl-be","openjdk-kvssl-fe","aspnetapp"]'
+          CERTNAMES: '["openjdk-demo-service","openjdk-certmgr","openjdk-kvssl","openjdk-kvssl-fe","aspnetapp"]'
         run: |
             RG='${{ env.RG }}'
             AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
@@ -487,7 +487,7 @@ jobs:
 
       - name: Create Root Cert references in AppGW
         env:
-          CERTNAMES: '["openjdk-demo-service","openjdk-kvssl-be"]'
+          CERTNAMES: '["openjdk-demo-service","openjdk-kvssl-be","openjdk-certmgr","openjdk-kvssl"]'
         id: AppGwRootCert
         run: |
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
