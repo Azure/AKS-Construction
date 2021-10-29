@@ -26,7 +26,7 @@ on:
         description: 'Branch name to use from MiniHelm repo'  
         default: 'main'
       doWellArchitected:
-        description: 'Whether to perform the Well Architected assesment'  
+        description: 'Perform the Well Architected Framework assesment'  
         default: 'no'
         
 concurrency: ci-${{ github.ref }}
