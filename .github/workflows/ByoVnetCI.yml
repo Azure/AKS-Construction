@@ -46,6 +46,7 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "AksByo"
   DEPNAME: "Dep${{ github.run_number }}"
+  MINIHELMBRANCHNAME: main
   DOVERIFICATIONSTEPS: github.event.inputs.doDebugSteps != 'no' #These are steps that will generally throw errors when things aren't there
   DODEBUGSTEPS:  github.event.inputs.doVerifySteps != 'no' #These are steps that are purely informational
 
@@ -598,7 +599,8 @@ jobs:
 
       - name: Grab some Helm charts to install
         run: |
-          BRANCH="${{ github.event.inputs.minihelmbranch }}"
+          #BRANCH="${{ github.event.inputs.minihelmbranch }}"
+          BRANCH='${{ env.MINIHELMBRANCHNAME }}'
           echo "$BRANCH"
           git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
 
