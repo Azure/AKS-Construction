@@ -495,7 +495,8 @@ jobs:
              versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
              unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
              echo $unversionedSecretId;
-             az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $cert --keyvault-secret $unversionedSecretId;
+             rootcertcmd ="az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $cert --keyvault-secret $unversionedSecretId";
+             $rootcertcmd || $rootcertcmd
           done
           
       - name: Create FrontEnd Cert references in AppGW
