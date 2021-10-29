@@ -21,6 +21,10 @@ on:
     - cron: "0 23 * * 3"
 
   workflow_dispatch:
+    inputs:
+      minihelmbranch:
+        description: 'If you want to take the smoke test helm packages from a branch'  
+        default: 'main'
 
 concurrency: ci-${{ github.ref }}
 
@@ -572,7 +576,9 @@ jobs:
 
       - name: Grab some Helm charts to install
         run: |
-          git clone https://github.com/Gordonby/minihelm.git helmcharts
+          BRANCH="${{ github.event.inputs.logLevel }}"
+          echo "$BRANCH"
+          git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
 
       - name: Add a azure-config secret for use with externaldns
         env:
