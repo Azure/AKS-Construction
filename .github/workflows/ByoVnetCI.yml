@@ -460,11 +460,9 @@ jobs:
           Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all -PermissionsToSecrets get,list
 
       - name: Create self signed certs in Key Vault
-        uses: Azure/cli@1.0.4
         env:
-           CERTNAMES: '["openjdk-demo-service","openjdk-kvssl-be","openjdk-kvssl-fe"]'
-        with:
-          inlineScript: |
+          CERTNAMES: '["openjdk-demo-service","openjdk-kvssl-be","openjdk-kvssl-fe"]'
+        run: |
             RG='${{ env.RG }}'
             AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
 
