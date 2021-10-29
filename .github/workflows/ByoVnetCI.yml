@@ -461,7 +461,7 @@ jobs:
 
       - name: Create self signed certs in Key Vault
         env:
-          CERTNAMES: '["openjdk-demo-service","openjdk-kvssl-be","openjdk-kvssl-fe"]'
+          CERTNAMES: '["openjdk-demo-service","openjdk-kvssl-be","openjdk-kvssl-fe","aspnetapp"]'
         run: |
             RG='${{ env.RG }}'
             AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
@@ -495,7 +495,7 @@ jobs:
              versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
              unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
              echo $unversionedSecretId;
-             rootcertcmd ="az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $cert --keyvault-secret $unversionedSecretId";
+             rootcertcmd="az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $cert --keyvault-secret $unversionedSecretId";
              $rootcertcmd || $rootcertcmd
           done
           
@@ -512,7 +512,8 @@ jobs:
              versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
              unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
              echo $unversionedSecretId;
-             az network application-gateway ssl-cert create -n $cert --gateway-name $AGNAME -g $RG --key-vault-secret-id $unversionedSecretId 
+             fecertcmd="az network application-gateway ssl-cert create -n $cert --gateway-name $AGNAME -g $RG --key-vault-secret-id $unversionedSecretId";
+             $fecertcmd || $fecertcmd
           done
 
 
