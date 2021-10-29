@@ -18,9 +18,9 @@ Various workflows run on Push / PR / Schedule.
 | Publish Helper | PR | `Quality` Tests changes to the UI work |
 | Publish Helper | Push `main` | Publishes the UI to GitHub Pages |
 | Check Markdown | PR | `Quality` Checks markdown files for spelling mistakes |
-| Infra CI - Private Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests the most secure/private paramter config |
-| Infra CI - Byo Vnet Cluster | Push / PR / Schedule | `Quality` High maturity IaC deployment example. Tests a typical production grade paramter config |
-| Infra CI - Basic Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests a sandbox grade paramter config |
+| Infra CI - Private Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests the most secure/private parameter config |
+| Infra CI - Byo Vnet Cluster | Push / PR / Schedule | `Quality` High maturity IaC deployment example. Tests a typical production grade parameter config |
+| Infra CI - Basic Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests a sandbox grade parameter config |
 | App CI | Manual | `Quality` Application deployment sample showing different application deployment practices and automation capabilities |
 
 ### Enforced PR Checks
