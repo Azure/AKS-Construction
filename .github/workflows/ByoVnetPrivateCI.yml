@@ -316,6 +316,7 @@ jobs:
           #Hit the ingress ip
           
           pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+          echo $pubIp
           
           curl -o /dev/null -s -w "%{http_code}\n" $pubIp
           curl $pubIp       
