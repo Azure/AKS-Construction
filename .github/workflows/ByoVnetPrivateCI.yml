@@ -272,6 +272,14 @@ jobs:
           #sudo az aks install-cli
           kubectl version
           
+      - name: Deny all network traffic
+        env:
+          MANIFESTPATH: "k8smanifests/networkpolicy-deny-all.yml"
+        run: |
+          echo $MANIFESTPATH
+          
+          kubectl apply -f $MANIFESTPATH
+          
       - name: Deploy AGIC Public Facing Workload
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
