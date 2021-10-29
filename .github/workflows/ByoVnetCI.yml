@@ -576,7 +576,7 @@ jobs:
 
       - name: Grab some Helm charts to install
         run: |
-          BRANCH="${{ github.event.inputs.logLevel }}"
+          BRANCH="${{ github.event.inputs.minihelmbranch }}"
           echo "$BRANCH"
           git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
 
