@@ -5,7 +5,11 @@ name: ByoVNetPrivateCI
 
 on:
   workflow_dispatch:
-    
+    inputs:
+      doWellArchitected:
+        description: 'Perform the Well Architected Framework assesment'  
+        default: 'no'
+        
   push:
     paths: 
       - ".github/workflows/ByoVnetPrivateCI.yml"
@@ -29,6 +33,25 @@ env:
 concurrency: ci-${{ github.ref }}
 
 jobs:
+  Well_Architected:
+    runs-on: ubuntu-latest
+    if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected != 'no'
+    steps:
+      - uses: actions/checkout@v2
+      
+      # PSRule does this cool thing where it traverse the parameter file through to the arm template
+      # PSRule performs IaC recommendations of the template.
+      # https://azure.github.io/PSRule.Rules.Azure/
+      - name: PSRule - Analyze Azure parameter file
+        uses: Microsoft/ps-rule@main
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
+        with:
+          modules: 'PSRule.Rules.Azure' 
+          inputType: repository
+          inputPath: "${{ env.ParamFilePath }}"
+          baseline: 'Azure.GA_2021_09'
+          prerelease: true
+          
   Validation:
     runs-on: ubuntu-latest
     steps:
@@ -57,9 +80,6 @@ jobs:
             Write-Output $paramFileContent
           }
           
-      #- name: Install Bicep
-      #  run: |
-      #    az bicep install
           
       - name: Azure Login
         uses: Azure/login@v1
@@ -68,19 +88,6 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-
-      # PSRule does this cool thing where it traverse the parameter file through to the arm template
-      # PSRule performs IaC recommendations of the template.
-      # https://azure.github.io/PSRule.Rules.Azure/
-      - name: PSRule - Analyze Azure parameter file
-        uses: Microsoft/ps-rule@main
-        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
-        with:
-          modules: 'PSRule.Rules.Azure' 
-          inputType: repository
-          inputPath: "${{ env.ParamFilePath }}"
-          baseline: 'Azure.GA_2021_09'
-          prerelease: true
           
       - name: Verify No Active Deployments in RG
         id: activedeps
