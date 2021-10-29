@@ -36,8 +36,8 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "AksByo"
   DEPNAME: "Dep${{ github.run_number }}"
-  DOVERIFICATIONSTEPS: true
-  DODEBUGSTEPS: false
+  DOVERIFICATIONSTEPS: true #These are steps that will generally throw errors when things aren't there
+  DODEBUGSTEPS: false #These are steps that are purely informational
 
 jobs:
   Well_Architected:
@@ -77,6 +77,7 @@ jobs:
           echo "EventTrigger name is ${{github.event_name}}"
 
       - name: Arm Parameter file check
+        if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -110,6 +111,7 @@ jobs:
           
       - name: Verify Active RG Deployments
         id: activedeps
+        if: env.DOVERIFICATIONSTEPS == true
         uses: Azure/cli@1.0.4
         with:
           inlineScript: |
@@ -129,6 +131,7 @@ jobs:
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
             
       - name: Verify Preview Features on Subscription
+        if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
           write-output 'Full list of features of AKS'
@@ -188,7 +191,6 @@ jobs:
 
       - name: Validate AKS
         uses: Azure/cli@1.0.4
-        #if: steps.activedeps.outputs.RUNCOUNT == 0
         with:
           inlineScript: |
             RG='${{ env.RG }}'
@@ -325,6 +327,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Param check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -334,6 +337,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}
           
       - name: Dependency check
+        if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -356,7 +360,6 @@ jobs:
       - name: Deploy AKS
         id: deployAks
         uses: Azure/cli@1.0.4
-        if: steps.activedeps.outputs.RUNCOUNT == 0
         with:
           inlineScript: |
             RG='${{ env.RG }}'
@@ -526,10 +529,10 @@ jobs:
 
 
       - name: Confirm certificates registered in AppGw
+        if: env.DOVERIFICATIONSTEPS == true
         run: |
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
           RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
 
           az network application-gateway ssl-cert list -g $RG --gateway-name $AGNAME --query "[].name"
           az network application-gateway root-cert list -g $RG --gateway-name $AGNAME --query "[].name"
@@ -542,6 +545,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Param check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -566,11 +570,13 @@ jobs:
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
       - name: Kubectl
+        if: env.DODEBUGSTEPS == true
         run: |
           #sudo az aks install-cli
           kubectl version
           
       - name: Observe Existing DNSConfig
+        if: env.DODEBUGSTEPS == true
         env:
           DNSDOMAIN: "azdemo.co.uk"
           DNSRG: "domainssl"
@@ -619,6 +625,7 @@ jobs:
           helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
 
       - name: Check DNS config
+        if: env.DOVERIFICATIONSTEPS == true
         env:
           DNSDOMAIN: "azdemo.co.uk"
           DNSRG: "domainssl"
@@ -701,6 +708,7 @@ jobs:
           curl --insecure $URLTOHIT
 
       - name: Verify Frontend Certificate
+        if: env.DOVERIFICATIONSTEPS == true
         env:
           URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
         run: |
@@ -717,6 +725,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Param check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -741,11 +750,13 @@ jobs:
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
       - name: Kubectl
+        if: env.DODEBUGSTEPS == true
         run: |
           #sudo az aks install-cli
           kubectl version
           
       - name: Observe Existing DNSConfig
+        if: env.DODEBUGSTEPS == true
         env:
           DNSDOMAIN: "azdemo.co.uk"
           DNSRG: "domainssl"
@@ -792,6 +803,7 @@ jobs:
           helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
 
       - name: Check DNS config
+        if: env.DOVERIFICATIONSTEPS == true
         env:
           DNSDOMAIN: "azdemo.co.uk"
           DNSRG: "domainssl"
@@ -814,6 +826,7 @@ jobs:
           helm upgrade --install smokecertissuer ./helmcharts/samples/certmanager --set email=$EMAILAD
 
       - name: Verify ClusterIssuer
+        if: env.DOVERIFICATIONSTEPS == true
         env:
           EMAILAD: "gdogg@microsoft.com"
         run: |
@@ -848,6 +861,7 @@ jobs:
           helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsapp --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
 
       - name: Verify LetsEncrypt Certificate logs
+        if: env.DOVERIFICATIONSTEPS == true
         run: |
           sleep 1m
           kubectl describe cert
@@ -900,6 +914,7 @@ jobs:
           curl --insecure $URLTOHIT
           
       - name: Verify Frontend Certificate
+        if: env.DOVERIFICATIONSTEPS == true
         env:
           URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
         run: |
@@ -916,6 +931,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Param check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -941,6 +957,7 @@ jobs:
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
       - name: Kubectl
+        if: env.DODEBUGSTEPS == true
         run: |
           #sudo az aks install-cli
           kubectl version
@@ -1015,6 +1032,7 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: Param check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -1068,6 +1086,7 @@ jobs:
     needs: [Deploy]
     steps:
       - name: Param check
+        if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -1130,6 +1149,7 @@ jobs:
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
       - name: Kubectl
+        if: env.DODEBUGSTEPS == true
         run: |
           #sudo az aks install-cli
           kubectl version
