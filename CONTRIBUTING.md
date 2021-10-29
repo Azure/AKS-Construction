@@ -2,10 +2,30 @@
 
 A few important factoids to consume about the Repo, before you contribute.
 
+## Dev Container / Codespaces
+
+A dev container is present in the repo which makes dev and testing of the UI Helper component much easier.
+
 ## Action Workflows
 
 Various workflows run on Push / PR / Schedule.
-Each has a *Validate stage*, that is required to pass before merging to main.
+
+| Workflow    | Fires on  | Purpose  |
+|-------------|-----------|----------|
+| Bicep Build | Every Push | `Quality` To run the bicep linter upon changes to the bicep files  |
+| Greetings   | Issue / PR | `Community` Greeting new contributors to the repo |
+| Stale bot   | Issue / PR | `Tidy` Marks old issues as stale |
+| Publish Helper | PR | `Quality` Tests changes to the UI work |
+| Publish Helper | Push `main` | Publishes the UI to GitHub Pages |
+| Check Markdown | PR | `Quality` Checks markdown files for spelling mistakes |
+| Infra CI - Private Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests the most secure/private paramter config |
+| Infra CI - Byo Vnet Cluster | Push / PR / Schedule | `Quality` High maturity IaC deployment example. Tests a typical production grade paramter config |
+| Infra CI - Basic Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests a sandbox grade paramter config |
+| App CI | Manual | `Quality` Application deployment sample showing different application deployment practices and automation capabilities |
+
+### Enforced PR Checks
+
+Each has a *Validate job*, that is required to pass before merging to main. PR's tagged with `bug`, that contain changes to bicep or workflow files will need to pass all of the jobs in the relevant workflows before merge is possible.
 
 ## Branches
 
