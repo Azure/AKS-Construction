@@ -319,7 +319,12 @@ jobs:
           
           curl -o /dev/null -s -w "%{http_code}\n" $pubIp
           curl $pubIp       
-
+          
+      - uses: actions/setup-node@v2
+        name: Playwright - Install Node
+        with:
+          node-version: '14'
+          
       - name: Playwright - Install OS dependencies
         run: npx playwright install-deps chromium
         
