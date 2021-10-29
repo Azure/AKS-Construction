@@ -468,6 +468,8 @@ jobs:
             RG='${{ env.RG }}'
             AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
 
+            echo $CERTNAMES | jq -r
+
             echo $CERTNAMES | jq -r '.[]' | while read cert; do
              echo "creating $cert"; 
              COMMON_NAME=$cert;
