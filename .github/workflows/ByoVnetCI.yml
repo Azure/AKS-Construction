@@ -86,6 +86,8 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}
           echo "Ref is ${{ github.ref }}"
           echo "EventTrigger name is ${{github.event_name}}"
+          echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
+          echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
 
       - name: Arm Parameter file check
         if: env.DOVERIFICATIONSTEPS == true
@@ -503,7 +505,6 @@ jobs:
             done
             
             sleep 90s
-            
 
       - name: Create Root Cert references in AppGW
         env:
@@ -539,7 +540,6 @@ jobs:
              fecertcmd="az network application-gateway ssl-cert create -n $cert --gateway-name $AGNAME -g $RG --key-vault-secret-id $unversionedSecretId";
              $fecertcmd || $fecertcmd
           done
-
 
       - name: Confirm certificates registered in AppGw
         if: env.DOVERIFICATIONSTEPS == true
