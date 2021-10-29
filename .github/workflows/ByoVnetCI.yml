@@ -328,7 +328,7 @@ jobs:
       ACRNAME : ${{ steps.deployAks.outputs.ACRNAME}}
       AGNAME : ${{ steps.deployAks.outputs.AGNAME}}
       
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop' || contains( github.event.pull_request.labels.*.name, 'bug')
     steps:
       - uses: actions/checkout@v2
 
