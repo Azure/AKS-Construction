@@ -49,6 +49,7 @@ env:
   MINIHELMBRANCHNAME: main
   DOVERIFICATIONSTEPS: github.event.inputs.doDebugSteps != 'no' #These are steps that will generally throw errors when things aren't there
   DODEBUGSTEPS:  github.event.inputs.doVerifySteps != 'no' #These are steps that are purely informational
+  DOSMOKETESTS:  github.event.inputs.doSmokeTests
 
 jobs:
   Well_Architected:
@@ -88,6 +89,8 @@ jobs:
           echo "EventTrigger name is ${{github.event_name}}"
           echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
           echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
+          echo "DOSMOKETESTS is ${{ env.DOSMOKETESTS }}
+          echo "DOVERIFICATIONSTEPS is ${{ env.DOVERIFICATIONSTEPS }}
 
       - name: Arm Parameter file check
         if: env.DOVERIFICATIONSTEPS == true
