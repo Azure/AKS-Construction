@@ -83,14 +83,16 @@ jobs:
           echo "RG is: $RG"
 
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
           echo "Ref is ${{ github.ref }}"
           echo "EventTrigger name is ${{github.event_name}}"
           echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
           echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
-          echo "DOSMOKETESTS is ${{ env.DOSMOKETESTS }}
-          echo "DOVERIFICATIONSTEPS is ${{ env.DOVERIFICATIONSTEPS }}
+          echo "DOSMOKETESTS is ${{ env.DOSMOKETESTS }}"
+          echo "DOVERIFICATIONSTEPS is ${{ env.DOVERIFICATIONSTEPS }}"
+          echo "MINIHELMBRANCHNAME is ${{ env.MINIHELMBRANCHNAME }}"
+          
 
       - name: Arm Parameter file check
         if: env.DOVERIFICATIONSTEPS == true
