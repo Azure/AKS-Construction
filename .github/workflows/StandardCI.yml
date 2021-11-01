@@ -1,7 +1,7 @@
 name: InfraCI - Starter cluster
 # Prerequisites
 # 1. Set up your AZURE CREDENTIALS SECRET as per : https://github.com/marketplace/actions/azure-login#configure-a-service-principal-with-a-secret
-# 2. Make sure the Service Principal has IAM Owner on the Resource Group you're deploying into (we're making role assignments)
+# 2. Make sure the Service Principal has IAM Owner on the Resource Group you're deploying into (we're making role assignments in the Infra code)
 
 on:
   #Run on Manual execution
