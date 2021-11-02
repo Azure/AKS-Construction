@@ -71,7 +71,7 @@ jobs:
         
   #Pre deployment validation of the parameters + bicep code
   Validation:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux] #ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
