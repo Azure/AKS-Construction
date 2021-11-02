@@ -52,6 +52,8 @@ jobs:
         run: |
           cd helper
           
+          ls node_modules
+          
           #debugging missing exe
           PLAYPATH="node_modules/playwright"
           if [[ -d $PLAYPATH ]]
