@@ -31,8 +31,10 @@ jobs:
           REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/0.1.7-preview/main.json" npm run build
           npm run start&
           
-      - name: Playwright - Install OS dependencies
-        run: npx playwright install-deps chromium
+      - name: Playwright - Install w/ OS dependencies
+        run: |
+          npx playwright install
+          npx playwright install-deps chromium
         
       - name: Test web server is up
         run: curl http://localhost:3000/Aks-Construction
@@ -41,19 +43,7 @@ jobs:
         run: |
           mkdir failscreengrabs
           mkdir alwaysscreengrabs
-          
-      - name: Playwright - Check Installed Properly
-        env:
-          filenamewordmatch: 'helper-fragile'
-        continue-on-error: true
-        run: |
-          #list packages installed
-          #npm list -g
-          npm ls | grep playwright
-          
-          ls /home/runner/.cache/ms-playwright/
-          ls /home/runner/.cache/ms-playwright/chromium-920619/chrome-linux/chrome
-          
+                    
       - name: Playwright - Run fragile helper tests
         env:
           filenamewordmatch: 'helper-fragile'
