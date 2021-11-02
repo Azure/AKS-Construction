@@ -47,9 +47,9 @@ env:
   RESNAME: "AksByo"
   DEPNAME: "Dep${{ github.run_number }}"
   MINIHELMBRANCHNAME: main
-  DOVERIFICATIONSTEPS: github.event.inputs.doDebugSteps != 'no' #These are steps that will generally throw errors when things aren't there
-  DODEBUGSTEPS:  github.event.inputs.doVerifySteps != 'no' #These are steps that are purely informational
-  DOSMOKETESTS:  github.event.inputs.doSmokeTests
+  DOVERIFICATIONSTEPS: ${{ github.event.inputs.doDebugSteps != 'no' }} #These are steps that will generally throw errors when things aren't there
+  DODEBUGSTEPS: ${{ github.event.inputs.doVerifySteps != 'no' }} #These are steps that are purely informational
+  DOSMOKETESTS: ${{ github.event.inputs.doSmokeTests }}
 
 jobs:
   Well_Architected:
