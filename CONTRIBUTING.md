@@ -86,7 +86,7 @@ Running the playwright tests after starting the Wizard web app
 ```bash
 #Open a new terminal window
 cd helper
-npx playwright install
-npx playwright install-deps chromium
+#npx playwright install
+#npx playwright install-deps chromium
 npx playwright test --browser chromium .playwrighttests/ --reporter list
 ```
