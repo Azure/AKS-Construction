@@ -53,12 +53,18 @@ jobs:
           cd helper
           
           #debugging missing exe
-          if [[ -d node_modules/playwright ]]
+          PLAYPATH="node_modules/playwright"
+          if [[ -d $PLAYPATH ]]
           then
-              echo "node_modules/playwright exists on your filesystem."
+              echo "$PLAYPATH exists on your filesystem."
+          else
+              echo "$PLAYPATH does not exist on your filesystem."
           fi
           
+          
+          echo "Playwright version"
           npx playwright -V
+          
           
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter dot
         
