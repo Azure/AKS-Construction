@@ -30,10 +30,11 @@ jobs:
           npm install
           REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/0.1.7-preview/main.json" npm run build
           npm run start&
-          
+
       - name: Playwright - Install w/ OS dependencies
         run: |
-          npx playwright install
+          cd helper
+          #npx playwright install
           npx playwright install-deps chromium
         
       - name: Test web server is up
@@ -50,6 +51,15 @@ jobs:
         continue-on-error: true
         run: |
           cd helper
+          
+          #debugging missing exe
+          if [[ -d node_modules/playwright ]]
+          then
+              echo "node_modules/playwright exists on your filesystem."
+          fi
+          
+          npx playwright -V
+          
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter dot
         
       - name: Playwright - Run stable helper tests
