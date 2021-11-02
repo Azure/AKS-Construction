@@ -2,10 +2,6 @@
 
 A few important factoids to consume about the Repo, before you contribute.
 
-## Dev Container / Codespaces
-
-A dev container is present in the repo which makes dev and testing of the UI Helper component much easier.
-
 ## Action Workflows
 
 Various workflows run on Push / PR / Schedule.
@@ -69,3 +65,28 @@ We anticipate the use of the Develop branch is temporary.
 ## Releases
 
 Releases are used to capture a tested release (all stages, not just Validation), where there are significant new features or bugfixes. The release does not include CI Action files, just the Bicep code.
+
+## Dev Container / Codespaces
+
+A dev container is present in the repo which makes dev and testing of the UI Helper component much easier.
+
+### Commands
+
+Some helpful terminal commands for when you're getting started with DevContainer/Codespaces experience
+
+Running the Wizard GUI app
+
+```bash
+cd helper
+npm start
+#Browser should automatically open. Web app runs on port 3000 on path /Aks-Construction
+```
+
+Running the playwright tests after starting the Wizard web app
+```bash
+#Open a new terminal window
+cd helper
+npx playwright install
+npx playwright install-deps chromium
+npx playwright test --browser chromium .playwrighttests/ --reporter list
+```
