@@ -42,6 +42,7 @@ on:
 concurrency: ci-${{ github.ref }}
 
 env:
+  AZCLIVERSION: 2.29.2
   RG: "Automation-Actions-AksDeployCI"
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "AksByo"
@@ -92,6 +93,7 @@ jobs:
           echo "DOSMOKETESTS is ${{ env.DOSMOKETESTS }}"
           echo "DOVERIFICATIONSTEPS is ${{ env.DOVERIFICATIONSTEPS }}"
           echo "MINIHELMBRANCHNAME is ${{ env.MINIHELMBRANCHNAME }}"
+          echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
           
 
       - name: Arm Parameter file check
@@ -118,7 +120,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: 2.26.0
+          azcliversion: ${{ env.AZCLIVERSION }}
 
       - name: Install Pwsh modules
         shell: pwsh
@@ -132,6 +134,7 @@ jobs:
         if: env.DOVERIFICATIONSTEPS == true
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             echo "AZ CLI version"
             az version
@@ -201,6 +204,7 @@ jobs:
         uses: Azure/cli@1.0.4
         id: imperitiveparams
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             PARAMOVERRIDES="resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
@@ -210,6 +214,7 @@ jobs:
       - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
@@ -225,6 +230,7 @@ jobs:
         id: edgeWhatIf
         continue-on-error: true
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
