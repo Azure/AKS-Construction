@@ -695,7 +695,7 @@ jobs:
           INGNAME: "openjdk-demo-ingress"
           URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
         run: |
-          sleep 2m #Give everything a chance to work
+          sleep 3m #Give everything a chance to work
         
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
