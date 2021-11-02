@@ -41,7 +41,17 @@ jobs:
         run: |
           mkdir failscreengrabs
           mkdir alwaysscreengrabs
-        
+          
+      - name: Playwright - Install
+        env:
+          filenamewordmatch: 'helper-fragile'
+        continue-on-error: true
+        run: |
+          #list packages installed
+          npm list -g
+          
+          npx playwright install
+          
       - name: Playwright - Run fragile helper tests
         env:
           filenamewordmatch: 'helper-fragile'
