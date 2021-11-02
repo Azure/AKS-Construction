@@ -118,7 +118,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: 2.29.2
+          azcliversion: 2.26.0
 
       - name: Install Pwsh modules
         shell: pwsh
