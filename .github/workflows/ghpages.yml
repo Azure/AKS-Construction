@@ -42,15 +42,17 @@ jobs:
           mkdir failscreengrabs
           mkdir alwaysscreengrabs
           
-      - name: Playwright - Install
+      - name: Playwright - Check Installed Properly
         env:
           filenamewordmatch: 'helper-fragile'
         continue-on-error: true
         run: |
           #list packages installed
-          npm list -g
+          #npm list -g
+          npm ls | grep playwright
           
-          npx playwright install
+          ls /home/runner/.cache/ms-playwright/chromium-920619/chrome-linux/chrome
+          ls /home/runner/.cache/ms-playwright/chromium-920619/chrome-linux/chrome
           
       - name: Playwright - Run fragile helper tests
         env:
