@@ -71,7 +71,7 @@ jobs:
         
   #Pre deployment validation of the parameters + bicep code
   Validation:
-    runs-on: [self-hosted, linux] #ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -118,7 +118,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          
+          azcliversion: 2.29.2
 
       - name: Install Pwsh modules
         shell: pwsh
@@ -376,6 +376,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+          azcliversion: 2.29.2
             
       - name: Deploy Infrastructure
         id: deployAks
@@ -475,6 +476,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+          azcliversion: 2.29.2
 
       - name: Install KeyVault Pwsh module
         shell: pwsh
@@ -581,6 +583,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+          azcliversion: 2.29.2
         
       - name: AKS Connect
         run: |
@@ -762,6 +765,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+          azcliversion: 2.29.2
         
       - name: AKS Connect
         run: |
@@ -969,6 +973,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+          azcliversion: 2.29.2
         
       - name: AKS Connect
         run: |
@@ -1068,6 +1073,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+          azcliversion: 2.29.2
           
       - name: Test Control Plane Config
         shell: pwsh
@@ -1128,6 +1134,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+          azcliversion: 2.29.2
           
       - name: Log Analytics log table verification
         shell: pwsh
@@ -1161,6 +1168,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+          azcliversion: 2.29.2
 
       - name: AKS Connect
         run: |
@@ -1204,6 +1212,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+          azcliversion: 2.29.2
 
       - name: Install Pwsh modules
         shell: pwsh
