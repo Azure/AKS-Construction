@@ -34,12 +34,22 @@ jobs:
       - name: Playwright - Install w/ OS dependencies
         run: |
           cd helper
-          #npx playwright install
+          npx playwright install #https://github.com/microsoft/playwright/issues/4033
           npx playwright install-deps chromium
         
       - name: Test web server is up
         run: curl http://localhost:3000/Aks-Construction
         
+      - name: Verifying Playwright install
+        run: |
+          cd helper
+          
+          echo "Looking for playwright
+          ls node_modules | grep playwright
+
+          echo "Playwright version"
+          npx playwright -V
+          
       - name: File system prep
         run: |
           mkdir failscreengrabs
@@ -51,23 +61,6 @@ jobs:
         continue-on-error: true
         run: |
           cd helper
-          
-          ls node_modules
-          
-          #debugging missing exe
-          PLAYPATH="node_modules/playwright"
-          if [[ -d $PLAYPATH ]]
-          then
-              echo "$PLAYPATH exists on your filesystem."
-          else
-              echo "$PLAYPATH does not exist on your filesystem."
-          fi
-          
-          
-          echo "Playwright version"
-          npx playwright -V
-          
-          
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter dot
         
       - name: Playwright - Run stable helper tests
