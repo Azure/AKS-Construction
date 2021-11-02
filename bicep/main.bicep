@@ -76,6 +76,10 @@ param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
 param vnetFirewallSubnetAddressPrefix string = '10.241.130.0/26'
 param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
 
+param privateLinks bool = false
+param privateLinkSubnetAddressPrefix string = '10.3.0.0/16'
+
+
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
   params: {
@@ -89,6 +93,10 @@ module network './network.bicep' = if (custom_vnet) {
     vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
     azureFirewalls: azureFirewalls
     vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
+    privateLinks: privateLinks
+    privateLinkSubnetAddressPrefix: privateLinkSubnetAddressPrefix
+    privateLinkAcrId: privateLinks && !empty(registries_sku) ? acr.id : ''
+    privateLinkAkvId: privateLinks && createKV ? kv.id : ''
   }
 }
 
@@ -154,11 +162,22 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
       family: 'A'
       name: 'Standard'
     }
-    enabledForTemplateDeployment: true
+    networkAcls: {
+      bypass: 'AzureServices' 
+      defaultAction: 'Deny'
+      ipRules: []
+      virtualNetworkRules: []
+    }
+    //enabledForTemplateDeployment: true
+    enableRbacAuthorization: true
+    enabledForDeployment: false
+    enabledForDiskEncryption: false
+    enabledForTemplateDeployment: false
     enableSoftDelete: KeyVaultSoftDelete 
     enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
     publicNetworkAccess: 'enabled'
+    /*
     accessPolicies: concat(azureKeyvaultSecretsProvider ? array({
       tenantId: subscription().tenantId
       objectId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.objectId
@@ -189,7 +208,10 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
         ]
       }
     }) : [])
-  }, !empty(AKVserviceEndpointFW) ? {
+  */
+  }, {}  )
+  
+  /*, !empty(AKVserviceEndpointFW) ? {
     networkAcls: {
       defaultAction: 'Deny'
       virtualNetworkRules: concat(array({
@@ -206,8 +228,32 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
         }
       ] : null
     }
-  } : {})
+  } :*/
+  /*,*/ 
 }
+
+var keyVaultSecretsUserRole = resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+resource kvAppGwSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && appgwKVIntegration) {
+  scope: kv
+  name: '${guid(aks.id, 'AppGw', keyVaultSecretsUserRole)}'
+  properties: {
+    roleDefinitionId: keyVaultSecretsUserRole
+    principalType: 'ServicePrincipal'
+    principalId: appGwIdentity.properties.principalId
+  }
+}
+
+resource kvCSIdriverSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && azureKeyvaultSecretsProvider) {
+  scope: kv
+  name: '${guid(aks.id, 'CSIDriver', keyVaultSecretsUserRole)}'
+  properties: {
+    roleDefinitionId: keyVaultSecretsUserRole
+    principalType: 'ServicePrincipal'
+    principalId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.objectId
+  }
+}
+
+
 
 output keyVaultName string = createKV ? kv.name : ''
 
@@ -250,6 +296,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
   sku: {
     name: registries_sku
   }
+  /*
   properties: !empty(ACRserviceEndpointFW) ? {
     networkRuleSet: {
       defaultAction: 'Deny'
@@ -267,6 +314,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
       ] : null
     }
   } : {}
+  */
 }
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
 

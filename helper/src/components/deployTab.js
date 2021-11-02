@@ -1,9 +1,10 @@
 import React from 'react';
-import { Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
+import { Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
 import { adv_stackstyle, getError } from './common'
 
-export default function ({ defaults, updateFn, tabValues, invalidArray, invalidTabs }) {
+export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs }) {
+
   const { net, addons, cluster, deploy } = tabValues
   const allok = !(invalidTabs && invalidTabs.length > 0)
   const apiips_array = deploy.apiips.split(',').filter(x => x.trim())
@@ -18,7 +19,7 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
   const params = {
     resourceName: deploy.clusterName,
     kubernetesVersion: deploy.kubernetesVersion,
-    ...(cluster.agentCount != defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
+    ...(cluster.agentCount !== defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA } ),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
@@ -28,14 +29,15 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
     ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...sericeparams }),
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
-    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(cluster.adminprincipleid && { adminprincipleid: cluster.adminprincipleid }) }),
-    ...(addons.registry !== "none" && { registries_sku: addons.registry }),
+    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(cluster.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
+    ...(addons.registry !== "none" && { registries_sku: addons.registry, ...(deploy.acrPushRole && { acrPushRoleUserId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
     ...(net.afw && { azureFirewalls: true, ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.length > 0 && { serviceEndpoints: net.serviceEndpoints.map(s => { return { service: s } }) }),
+    ...(net.vnet_opt === "custom" && net.vnetprivateend && { privateLinks: true, ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}) }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
-    ...(net.networkPlugin != defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}), 
+    ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}), 
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
@@ -45,8 +47,8 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
       ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
         appGWcount: addons.appGWcount,
         appGWsku: addons.appGWsku,
-        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall != defaults.addons.appGWenableFirewall && { appGWenableFirewall: addons.appGWenableFirewall }),
-        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall && addons.appGwFirewallMode != defaults.addons.appGwFirewallMode && { appGwFirewallMode: addons.appGwFirewallMode }),
+        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall !== defaults.addons.appGWenableFirewall && { appGWenableFirewall: addons.appGWenableFirewall }),
+        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall && addons.appGwFirewallMode !== defaults.addons.appGwFirewallMode && { appGwFirewallMode: addons.appGwFirewallMode }),
         ...(addons.appGWautoscale && { appGWmaxCount: addons.appGWmaxCount }),
         ...(addons.appgw_privateIp && { privateIpApplicationGateway: addons.appgw_privateIpAddress }),
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
@@ -233,7 +235,17 @@ EOF
           <TextField label="Kubernetes version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
 
           <Stack.Item styles={{ root: { display: (cluster.apisecurity !== "whitelist" ? "none" : "block") } }} >
-            <TextField label="Initial api server whitelisted IPs/CIDRs  (',' separated)" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+            <TextField label="AKS IPs/CIDRs whitelist (',' separated)" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+          </Stack.Item>
+
+          <Stack.Item>
+                <Label>Grant user running script (deployment user) Push Container role </Label>
+                <Checkbox disabled={addons.registry === "none"} checked={deploy.acrPushRole} onChange={(ev, v) => updateFn("acrPushRole", v)} label="Assign deployment user 'AcrPush'" />
+          </Stack.Item>
+
+          <Stack.Item>
+              <Label>Grant user running script (deployment user)  Cluster Admin Role</Label>
+              <Checkbox disabled={!cluster.enableAzureRBAC} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
           </Stack.Item>
 
         </Stack>

@@ -270,18 +270,12 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
                             <Checkbox checked={cluster.enableAzureRBAC} onChange={(ev, val) => updateFn("enableAzureRBAC", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Azure RBAC for Kubernetes Authorization <Link target='_' href='https://docs.microsoft.com/azure/aks/manage-azure-rbac'>docs</Link>**</Text>} />
 
-                            {!cluster.enableAzureRBAC ?
+                            {!cluster.enableAzureRBAC &&
                                 <>
                                     <TextField label="AAD Group objectIDs that will have admin role of the cluster ',' separated" onChange={(ev, val) => updateFn("aadgroupids", val)} value={cluster.aadgroupids} />
                                     {cluster.enable_aad && !cluster.aadgroupids &&
                                         <MessageBar messageBarType={MessageBarType.warning}>You will be forbidden to do any kubernetes options unless you add a AAD Groups here, or follow <Link target='_' href='https://docs.microsoft.com/azure/aks/azure-ad-rbac#create-the-aks-cluster-resources-for-app-devs'>this</Link> after the cluster is created</MessageBar>
                                     }
-                                </>
-                                :
-                                <>
-                                    <Label>Assign Cluster Admin Role to user (optional)</Label>
-                                    <MessageBar styles={{ root: { marginBottom: '10px' } }}>Get your user principleId by running <Label>az ad user show --id `{'<work-email>'}` --query objectId --out tsv</Label></MessageBar>
-                                    <TextField prefix="AAD PrincipleId" onChange={(ev, val) => updateFn("adminprincipleid", val)} value={cluster.adminprincipleid} />
                                 </>
                             }
                         </Stack>

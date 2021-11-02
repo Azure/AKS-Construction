@@ -9,9 +9,11 @@ const columnProps = {
 }
 
 
-export default function ({ tabValues, updateFn, invalidArray, featureFlag }) {
-    const { net, addons } = tabValues
+export default function NetworkTab ({ tabValues, updateFn, invalidArray, featureFlag }) {
+    
     const [callout1, setCallout1] = useState(false)
+
+    const { net, addons } = tabValues
     var _calloutTarget1 = React.createRef()
 
     return (
@@ -87,7 +89,7 @@ export default function ({ tabValues, updateFn, invalidArray, featureFlag }) {
             <Separator className="notopmargin" />
 
             <Stack.Item>
-                <Label>Uses a private IP address from your VNet to access your dependent Azure service, such as Azure Storage, Azure Cosmos DB, SQL</Label>
+                <Label>Uses a private IP address from your VNet to access your dependent Azure service, such as Azure KeyVault, Azure Container Registry etc</Label>
                 <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.vnetprivateend} onChange={(ev, v) => updateFn("vnetprivateend", v)} label="Enable Private Link" />
             </Stack.Item>
 
@@ -286,6 +288,10 @@ function CustomVNET({ net, addons, updateFn }) {
                     <Stack.Item align="center">
                         <TextField prefix="Cidr" disabled={addons.ingress !== 'appgw'} label="Application Gateway subnet" onChange={(ev, val) => updateFn("vnetAppGatewaySubnetAddressPrefix", val)} value={addons.ingress === 'appgw' ? net.vnetAppGatewaySubnetAddressPrefix : "N/A"} />
                         <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets these requirements <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">here</Link></MessageBar>
+                    </Stack.Item>
+
+                    <Stack.Item align="center">
+                        <TextField prefix="Cidr" disabled={!net.vnetprivateend} label="Private Endpoint subnet" onChange={(ev, val) => updateFn("privateLinkSubnetAddressPrefix", val)} value={net.vnetprivateend ? net.privateLinkSubnetAddressPrefix : "N/A"} />
                     </Stack.Item>
                 </Stack>
 

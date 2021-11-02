@@ -11,7 +11,9 @@
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
-            "disablePreviews": false
+            "disablePreviews": false,
+            "acrPushRole": true,
+            "clusterAdminRole": true
         },
         "cluster": {
             "AksPaidSkuForSLA": false,
@@ -29,7 +31,6 @@
             "use_alt_aad": false,
             "aad_tenant_id": "",
             "enableAzureRBAC": true,
-            "adminprincipleid": "",
             "aadgroupids": "",
             "availabilityZones": "no"
         },
@@ -76,6 +77,7 @@
             "vnetFirewallSubnetAddressPrefix": "10.241.130.0/26",
             "ersub": "10.242.0.0/24",
             "vnetAppGatewaySubnetAddressPrefix": "10.2.0.0/16",
+            "privateLinkSubnetAddressPrefix": "10.3.0.0/16",
             "podCidr": "10.244.0.0/16",
             "serviceCidr": "10.0.0.0/16",
             "dnsServiceIP": "10.0.0.10"

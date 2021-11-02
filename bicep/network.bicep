@@ -12,6 +12,20 @@ param vnetAksSubnetAddressPrefix string
 param vnetAppGatewaySubnetAddressPrefix string
 param aksPrincipleId string = ''
 
+param privateLinks bool = false
+param privateLinkSubnetAddressPrefix string = ''
+param privateLinkAcrId string = ''
+param privateLinkAkvId string = ''
+
+var private_link_subnet_name = 'privatelinks-sn'
+var private_link_subnet = {
+  name: private_link_subnet_name
+  properties: {
+    addressPrefix: privateLinkSubnetAddressPrefix
+    privateEndpointNetworkPolicies: 'Disabled'
+  }
+}
+
 var appgw_subnet_name = 'appgw-sn'
 var appgw_subnet = {
   name: appgw_subnet_name
@@ -72,10 +86,11 @@ var aks_subnet = azureFirewalls ? {
 }
 
 var subnets_1 = azureFirewalls ? concat(array(aks_subnet), array(fw_subnet)) : array(aks_subnet)
+var subnets_2 = privateLinks ? concat(array(subnets_1), array(private_link_subnet)) : array(subnets_1)
 
 // DONT create appgw subnet, the addon will create it for us
 
-var final_subnets = ingressApplicationGateway ? concat(array(subnets_1), array(appgw_subnet)) : array(subnets_1)
+var final_subnets = ingressApplicationGateway ? concat(array(subnets_2), array(appgw_subnet)) : array(subnets_2)
 
 var vnetName = 'vnet-${resourceName}'
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
@@ -103,5 +118,119 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
     roleDefinitionId: networkContributorRole
     principalId: aksPrincipleId
     principalType: 'ServicePrincipal'
+  }
+}
+
+
+/*   --------------------------------------------------------------------------  Private Link for ACR      */
+var privateLinkAcrName = 'vnet-pl-acr-${resourceName}'
+resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAcrId)) {
+  name: privateLinkAcrName
+  location: location
+  properties: {
+    privateLinkServiceConnections: [
+      {
+        name: 'Acr-Connection'
+        properties: {
+          privateLinkServiceId: privateLinkAcrId
+          groupIds: [ 
+            'registry' 
+          ]
+        }
+      }
+    ]
+    subnet: {
+      id: '${vnet.id}/subnets/${private_link_subnet_name}'
+    }
+  }
+}
+
+resource privateDnsAcr 'Microsoft.Network/privateDnsZones@2020-06-01' = if (!empty(privateLinkAcrId))  {
+  name: 'privatelink.azurecr.io'
+  location: 'global'
+}
+
+var privateDnsAcrLinkName = 'vnet-dnscr-${resourceName}'
+resource privateDnsAcrLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (!empty(privateLinkAcrId))  {
+  parent: privateDnsAcr
+  name: privateDnsAcrLinkName
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    } 
+  }
+}
+
+resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-03-01' = if (!empty(privateLinkAcrId))  {
+  parent: privateLinkAcr
+  name: 'default'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'vnet-pl-acr'
+        properties: {
+          privateDnsZoneId: privateDnsAcr.id
+        }
+      }
+    ]
+  }
+}
+
+
+/*   --------------------------------------------------------------------------  Private Link for KeyVault      */
+var privateLinkAkvName = 'vnet-pl-akv-${resourceName}'
+resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAkvId)) {
+  name: privateLinkAkvName
+  location: location
+  properties: {
+    privateLinkServiceConnections: [
+      {
+        name: 'Akv-Connection'
+        properties: {
+          privateLinkServiceId: privateLinkAkvId
+          groupIds: [ 
+            'registry' 
+          ]
+        }
+      }
+    ]
+    subnet: {
+      id: '${vnet.id}/subnets/${private_link_subnet_name}'
+    }
+  }
+}
+
+resource privateDnsAkv 'Microsoft.Network/privateDnsZones@2020-06-01' = if (!empty(privateLinkAkvId))  {
+  name: 'privatelink.vaultcore.azure.net'
+  location: 'global'
+}
+
+var privateDnsAkvLinkName = 'vnet-dnscr-${resourceName}'
+resource privateDnsAkvLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (!empty(privateLinkAkvId))  {
+  parent: privateDnsAkv
+  name: privateDnsAkvLinkName
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    } 
+  }
+}
+
+resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-03-01' = if (!empty(privateLinkAkvId))  {
+  parent: privateLinkAkv
+  name: 'default'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'vnet-pl-akv'
+        properties: {
+          privateDnsZoneId: privateDnsAkv.id
+        }
+      }
+    ]
   }
 }

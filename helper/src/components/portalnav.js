@@ -74,12 +74,12 @@ export default function PortalNav({ config }) {
 
     var queryString = window && window.location.search
     if (queryString) {
-      var match = queryString.match('[?&]feature=([^&]+)')
-      if (match) {
+      var match1 = queryString.match('[?&]feature=([^&]+)')
+      if (match1) {
         setFeatureFlag(true)// = match[1]
       }
-      var match = queryString.match('[?&]default=es')
-      if (match) {
+      var match2 = queryString.match('[?&]default=es')
+      if (match2) {
         setEntScale(true)// = match[1]
       }
     }
@@ -184,7 +184,7 @@ export default function PortalNav({ config }) {
     "Enter valid email for certificate generation")
   invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'),
     "Enter valid Azure KeyVault resourceId")
-  invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'),
+  invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}.){3}[0-9]{1,3}$'),
     "Enter valid IP address")
   invalidFn('addons', 'appgwKVIntegration', addons.ingress === "appgw" && addons.appgwKVIntegration && addons.csisecret !== 'akvNew',
     "KeyVault integration requires the 'CSI Secrets' 'Yes, Provision a new KeyVault' option to be selected")
