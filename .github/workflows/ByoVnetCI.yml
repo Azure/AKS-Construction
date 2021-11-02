@@ -100,7 +100,7 @@ jobs:
         if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
-          Write-Output "Checking parameter file existance/contents"
+          Write-Output "Checking parameter file existence/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
 
@@ -127,7 +127,6 @@ jobs:
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Az.KeyVault -Force
-
           
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         id: activedeps
@@ -149,7 +148,7 @@ jobs:
             #echo 'Verbose deployment list'
             #az deployment group list -g $RG --query "[].[properties.provisioningState, name]"
 
-            echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
+            echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for condition
             
       - name: Verify AKS Preview Features are available in target Subscription
         if: env.DOVERIFICATIONSTEPS == true
@@ -200,7 +199,7 @@ jobs:
             } else { Write-Output "-- Looks like $feature is registered properly" }
           }
 
-      - name: Create Parameter file imperitive override string
+      - name: Create Parameter file imperative override string
         uses: Azure/cli@1.0.4
         id: imperitiveparams
         with:
@@ -366,7 +365,7 @@ jobs:
         if: env.DOVERIFICATIONSTEPS == true
         shell: pwsh
         run: |
-          Write-Output "Checking parameter file existance/contents"
+          Write-Output "Checking parameter file existence/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
 
@@ -388,6 +387,7 @@ jobs:
         id: deployAks
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
@@ -422,6 +422,7 @@ jobs:
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
