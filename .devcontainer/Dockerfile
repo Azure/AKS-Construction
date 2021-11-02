@@ -17,3 +17,10 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 
 #cd helper/src
 #npm install
+
+#Install Kubectl as per https://v1-18.docs.kubernetes.io/docs/tasks/tools/install-kubectl/#install-using-native-package-management
+RUN sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2
+RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+RUN sudo apt-get update
+RUN sudo apt-get install -y kubectl
