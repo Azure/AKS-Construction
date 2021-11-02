@@ -51,7 +51,7 @@ jobs:
           #npm list -g
           npm ls | grep playwright
           
-          ls /home/runner/.cache/ms-playwright/chromium-920619/chrome-linux/chrome
+          ls /home/runner/.cache/ms-playwright/
           ls /home/runner/.cache/ms-playwright/chromium-920619/chrome-linux/chrome
           
       - name: Playwright - Run fragile helper tests
