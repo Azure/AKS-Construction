@@ -44,7 +44,7 @@ jobs:
         run: |
           cd helper
           
-          echo "Looking for playwright
+          echo "Looking for playwright"
           ls node_modules | grep playwright
 
           echo "Playwright version"
