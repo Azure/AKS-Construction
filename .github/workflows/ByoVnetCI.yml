@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Job parameter check
-        if: env.DODEBUGSTEPS == true
+        #if: env.DODEBUGSTEPS == true
         run: |       
           RG='${{ env.RG }}'
           echo "RG is: $RG"
