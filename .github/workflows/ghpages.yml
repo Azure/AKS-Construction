@@ -30,9 +30,12 @@ jobs:
           npm install
           REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/0.1.7-preview/main.json" npm run build
           npm run start&
-          
-      - name: Playwright - Install OS dependencies
-        run: npx playwright install-deps chromium
+
+      - name: Playwright - Install w/ OS dependencies
+        run: |
+          cd helper
+          #npx playwright install
+          npx playwright install-deps chromium
         
       - name: Test web server is up
         run: curl http://localhost:3000/Aks-Construction
@@ -41,25 +44,28 @@ jobs:
         run: |
           mkdir failscreengrabs
           mkdir alwaysscreengrabs
-          
-      - name: Playwright - Check Installed Properly
-        env:
-          filenamewordmatch: 'helper-fragile'
-        continue-on-error: true
-        run: |
-          #list packages installed
-          #npm list -g
-          npm ls | grep playwright
-          
-          ls /home/runner/.cache/ms-playwright/
-          ls /home/runner/.cache/ms-playwright/chromium-920619/chrome-linux/chrome
-          
+                    
       - name: Playwright - Run fragile helper tests
         env:
           filenamewordmatch: 'helper-fragile'
         continue-on-error: true
         run: |
           cd helper
+          
+          #debugging missing exe
+          PLAYPATH="node_modules/playwright"
+          if [[ -d $PLAYPATH ]]
+          then
+              echo "$PLAYPATH exists on your filesystem."
+          else
+              echo "$PLAYPATH does not exist on your filesystem."
+          fi
+          
+          
+          echo "Playwright version"
+          npx playwright -V
+          
+          
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter dot
         
       - name: Playwright - Run stable helper tests
