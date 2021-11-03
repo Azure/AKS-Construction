@@ -72,6 +72,7 @@ jobs:
   #Pre deployment validation of the parameters + bicep code
   Validation:
     runs-on: ubuntu-latest
+    environment: azurecirgs
 
     steps:
       - uses: actions/checkout@v2
