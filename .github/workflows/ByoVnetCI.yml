@@ -28,7 +28,7 @@ on:
         default: 'main'
       azCliVersion:
         description: 'Version of Az CLI to target [x.x.x|latest]'  
-        default: 2.29.2
+        default: '2.29.2'
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'  
         default: 'no'
