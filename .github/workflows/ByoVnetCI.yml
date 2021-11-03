@@ -226,7 +226,7 @@ jobs:
         id: edgeWhatIf
         continue-on-error: true
         with:
-          azcliversion: ${{ env.AZCLIVERSION }}
+          azcliversion: latest #${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
