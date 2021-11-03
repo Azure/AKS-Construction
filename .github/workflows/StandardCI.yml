@@ -65,7 +65,6 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: ${{ env.AZCLIVERSION }}
 
       - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
@@ -94,7 +93,6 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: ${{ env.AZCLIVERSION }}
 
       - name: Deploy Infrastructure
         id: deployAks
@@ -129,7 +127,6 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: ${{ env.AZCLIVERSION }}
           
       - name: AKS Connect
         run: |
@@ -180,7 +177,6 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: ${{ env.AZCLIVERSION }}
 
       - name: Install Pwsh modules
         shell: pwsh
