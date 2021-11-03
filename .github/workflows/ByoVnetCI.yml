@@ -26,6 +26,9 @@ on:
       minihelmbranch:
         description: 'Branch name to use from MiniHelm repo'  
         default: 'main'
+      azCliVersion:
+        description: 'Version of Az CLI to target [x.x.x|latest]'  
+        default: 2.29.2
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'  
         default: 'no'
@@ -42,7 +45,7 @@ on:
 concurrency: ci-${{ github.ref }}
 
 env:
-  AZCLIVERSION: 2.29.2
+  AZCLIVERSION: ${{ github.event.inputs.azCliVersion }}
   RG: "Automation-Actions-AksDeployCI"
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "AksByo"
