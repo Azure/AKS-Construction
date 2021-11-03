@@ -64,7 +64,6 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: ${{ env.AZCLIVERSION }}
 
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
@@ -162,7 +161,6 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: ${{ env.AZCLIVERSION }}
           
       - name: Start Runner VM
         uses: Azure/cli@1.0.4
@@ -418,7 +416,6 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: ${{ env.AZCLIVERSION }}
           
       - name: Log Analytics log table verification
         shell: pwsh
@@ -474,7 +471,6 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          azcliversion: ${{ env.AZCLIVERSION }}
 
       - name: Install Pwsh modules
         shell: pwsh
