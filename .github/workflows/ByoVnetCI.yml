@@ -665,9 +665,9 @@ jobs:
       - name: Install the Java sample app
         env:
           NAMESP: "default"
-          CERTNAME: "openjdk-demo"
+          APPNAME: "openjdk-kvssl" #Using backend cert common name
           DOMAINSUFFIX: "azdemo.co.uk"
-          DOMAINPREFIX: "openjdk-demo"
+          FRONTENDCERTNAME: "openjdk-kvssl-fe"
           
         run: |
           # REF: https://github.com/khowling/e2e-tls-java-aks
@@ -676,27 +676,30 @@ jobs:
           RG='${{ env.RG }}'
           KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           KVNAMELOWER=${KVNAME,,}
-          CERTNAME='${{ env.CERTNAME }}'
+          APPNAME='${{ env.APPNAME }}'
           KVTENANT=$(az account show --query tenantId -o tsv)
           AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          DNSNAME=${DOMAINPREFIX}.${DOMAINSUFFIX}
+          DNSNAME=${APPNAME}.${DOMAINSUFFIX}
 
           echo 'Get the identity created from the KeyVaultSecret Addon'
           export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
           echo $CSISECRET_CLIENTID
           
-          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="aspnetapp" --dry-run
-          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsappv2 --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="aspnetapp"
+          helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv2 --set nameOverride="${APPNAME}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${FRONTENDCERTNAME}",appgw.rootCertificateName="${APPNAME}" --dry-run
+          helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv2 --set nameOverride="${APPNAME}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${FRONTENDCERTNAME}",appgw.rootCertificateName="${APPNAME}"
       
       - name: Verify Java App is reachable
         env:
           NAMESP: "default"
-          INGNAME: "openjdk-demo-ingress"
+          APPNAME: "openjdk-kvssl"
+          
           URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
         run: |
           sleep 3m #Give everything a chance to work
         
+          INGNAME="${APPNAME}-ingress"
+          
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
