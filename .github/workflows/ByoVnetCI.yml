@@ -418,6 +418,7 @@ jobs:
             
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
+        if: ${{ needs.Deploy.outputs.AGNAME}} != ''
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -438,6 +439,7 @@ jobs:
             fi
           
       - name: Create AGIC role assignments (if not exist)
+        if: ${{ needs.Deploy.outputs.AGNAME}} != ''
         continue-on-error: true
         shell: pwsh
         run: |
@@ -477,23 +479,16 @@ jobs:
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
+          enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-
-      - name: Install KeyVault Pwsh module
-        shell: pwsh
-        run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name Az.KeyVault -Force
           
       - name: Add KV access policy for managing certificates as this CI action user
-        shell: pwsh
         run: |
-          $CiSpId='${{ secrets.AZURE_CREDENTIALS_OBJID }}'
-          $AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
+          CiSpId='${{ secrets.AZURE_CREDENTIALS_OBJID }}'
+          AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           
-          Set-AzKeyVaultAccessPolicy -VaultName $AKVNAME -ObjectId $CiSpId -PermissionsToCertificates all -PermissionsToSecrets get,list
+          az keyvault set-policy --name $AKVNAME --object-id $CiSpId --secret-permissions get,list --certificate-permissions all
 
       - name: Create self signed certs in Key Vault
         env:
