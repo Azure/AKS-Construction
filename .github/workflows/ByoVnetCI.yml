@@ -694,7 +694,7 @@ jobs:
           NAMESP: "default"
           APPNAME: "openjdk-kvssl"
           
-          URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
+          URLTOHIT: "https://openjdk-kvssl.azdemo.co.uk"
         run: |
           sleep 3m #Give everything a chance to work
         
