@@ -26,9 +26,6 @@ on:
       minihelmbranch:
         description: 'Branch name to use from MiniHelm repo'  
         default: 'main'
-      azCliVersion:
-        description: 'Version of Az CLI to target [x.x.x|latest]'  
-        default: '2.29.2'
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'  
         default: 'no'
@@ -45,7 +42,7 @@ on:
 concurrency: ci-${{ github.ref }}
 
 env:
-  AZCLIVERSION: ${{ github.event.inputs.azCliVersion }}
+  AZCLIVERSION: 2.29.2
   RG: "Automation-Actions-AksDeployCI"
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "AksByo"
@@ -53,7 +50,6 @@ env:
   MINIHELMBRANCHNAME: main
   DOVERIFICATIONSTEPS: ${{ github.event.inputs.doDebugSteps != 'no' }} #These are steps that will generally throw errors when things aren't there
   DODEBUGSTEPS: ${{ github.event.inputs.doVerifySteps != 'no' }} #These are steps that are purely informational
-  DOSMOKETESTS: ${{ github.event.inputs.doSmokeTests }}
 
 jobs:
   Well_Architected:
@@ -93,7 +89,6 @@ jobs:
           echo "EventTrigger name is ${{github.event_name}}"
           echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
           echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
-          echo "DOSMOKETESTS is ${{ env.DOSMOKETESTS }}"
           echo "DOVERIFICATIONSTEPS is ${{ env.DOVERIFICATIONSTEPS }}"
           echo "MINIHELMBRANCHNAME is ${{ env.MINIHELMBRANCHNAME }}"
           echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
