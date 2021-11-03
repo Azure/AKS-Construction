@@ -488,7 +488,7 @@ jobs:
           CiSpId='${{ secrets.AZURE_CREDENTIALS_OBJID }}'
           AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
           
-          az keyvault set-policy --name $AKVNAME --object-id $CiSpId --secret-permissions get list --certificate-permissions all
+          az keyvault set-policy --name $AKVNAME --object-id $CiSpId --secret-permissions get list --certificate-permissions get list delete create import update managecontacts getissuers listissuers setissuers deleteissuers manageissuers recover purge backup restore
 
       - name: Create self signed certs in Key Vault
         env:
