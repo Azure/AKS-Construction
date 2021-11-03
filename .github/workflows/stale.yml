@@ -1,0 +1,28 @@
+# This workflow warns and then closes issues and PRs that have had no activity for a specified amount of time.
+#
+# You can adjust the behavior by modifying this file.
+# For more information, see:
+# https://github.com/actions/stale
+name: Stale bot
+
+on:
+  schedule:
+  - cron: '25 9 * * *'
+
+jobs:
+  stale:
+
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+    - uses: actions/stale@v3
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        stale-issue-message: 'Issue smells stale, no activity for 20 days. Stale Label will be removed if the issue is updated, otherwise closed in a week.'
+        stale-pr-message: 'PR smells stale, no activity for 20 days. Stale Label will be removed if the PR is updated, otherwise closed in a week.'
+        stale-issue-label: 'stale'
+        stale-pr-label: 'stale'
+        days-before-stale: 20
