@@ -37,7 +37,7 @@ on:
         default: 'yes'
       skipSmokeTestRemove:
         description: 'Skip uninstall of smoke test apps tests'  
-        default: 'yes'
+        default: 'no'
         
 concurrency: ci-${{ github.ref }}
 
