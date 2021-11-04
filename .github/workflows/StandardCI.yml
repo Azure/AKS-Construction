@@ -28,7 +28,8 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-
+  AZCLIVERSION: 2.29.2 #Pinning to a specific AZ CLI version
+  
 jobs:
   Validation:
     runs-on: ubuntu-latest
@@ -68,6 +69,7 @@ jobs:
       - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
@@ -96,6 +98,7 @@ jobs:
         id: deployAks
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
