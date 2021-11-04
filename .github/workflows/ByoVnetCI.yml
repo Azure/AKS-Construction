@@ -35,7 +35,7 @@ on:
       doVerifySteps:
         description: 'Run optional verify steps'  
         default: 'yes'
-      doSmokeTestRemove:
+      doSmokeTestUninstall:
         description: 'Uninstall smoke test apps after tests'  
         default: 'yes'
         
@@ -50,7 +50,7 @@ env:
   MINIHELMBRANCHNAME: main
   DOVERIFICATIONSTEPS: ${{ github.event.inputs.doDebugSteps != 'no' }} #These are steps that will generally throw errors when things aren't there
   DODEBUGSTEPS: ${{ github.event.inputs.doVerifySteps != 'no' }} #These are steps that are purely informational
-  DOSMOKETESTREMOVEAPP: ${{ github.event.inputs.doSmokeTestRemove == 'yes' }} #These are steps that are purely informational
+  DOSMOKETESTUNINSTALL: ${{ github.event.inputs.doSmokeTestUninstall == 'yes' }} #These are steps that are purely informational
   
 jobs:
   Well_Architected:
@@ -95,7 +95,7 @@ jobs:
           echo "DODEBUGSTEPS is ${{ env.DODEBUGSTEPS }}"
           echo "MINIHELMBRANCHNAME is ${{ env.MINIHELMBRANCHNAME }}"
           echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
-          echo "DOSMOKETESTREMOVEAPP is ${{ env.DOSMOKETESTREMOVEAPP }}"
+          echo "DOSMOKETESTREMOVEAPP is ${{ env.DOSMOKETESTUNINSTALL }}"
 
       - name: Arm Parameter file check
         if: env.DOVERIFICATIONSTEPS == true
@@ -564,7 +564,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Param check
-        if: env.DODEBUGSTEPS == true
+        #if: env.DODEBUGSTEPS == true
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -574,6 +574,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
           echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
+          echo "DOSMOKETESTREMOVEAPP is ${{ env.DOSMOKETESTUNINSTALL }}"
           
       - name: Azure Login
         uses: Azure/login@v1
