@@ -742,25 +742,7 @@ jobs:
         if: env.DOSMOKETESTUNINSTALL
         env:
           APPNAME: "openjdk-kvssl"
-        run: |
-          echo "DOSMOKETESTREMOVEAPP is ${{ env.DOSMOKETESTUNINSTALL }}"
-          helm uninstall $APPNAME
-        
-      - name: Cleanup app falsey
-        if: env.DOSMOKETESTUNINSTALL == false
-        env:
-          APPNAME: "openjdk-kvssl"
-        run: |
-          echo "DOSMOKETESTUNINSTALL is ${{ env.DOSMOKETESTUNINSTALL }}"
-          helm uninstall $APPNAME
-        
-      - name: Cleanup app truey
-        if: env.DOSMOKETESTUNINSTALL == true
-        env:
-          APPNAME: "openjdk-kvssl"
-        run: |
-          echo "DOSMOKETESTUNINSTALL is ${{ env.DOSMOKETESTUNINSTALL }}"
-          helm uninstall $APPNAME
+        run: helm uninstall $APPNAME
           
   SmokeTest_PublicJavaTLSApp:
     runs-on: ubuntu-latest
@@ -966,7 +948,7 @@ jobs:
           curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
       - name: Cleanup app
-        if: ${{ env.DOSMOKETESTREMOVEAPP == true }}
+        if: env.DOSMOKETESTUNINSTALL
         run: helm uninstall e2esmokeapp
 
   SmokeTest_SimpleApp:
