@@ -45,7 +45,7 @@ env:
   AZCLIVERSION: 2.29.2
   RG: "Automation-Actions-AksDeployCI"
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
-  RESNAME: "AksByo"
+  RESNAME: "Byo"
   DEPNAME: "Dep${{ github.run_number }}"
   MINIHELMBRANCHNAME: main
   DOVERIFICATIONSTEPS: ${{ github.event.inputs.doDebugSteps != 'no' }} #These are steps that will generally throw errors when things aren't there
