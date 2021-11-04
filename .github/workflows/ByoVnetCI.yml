@@ -95,7 +95,7 @@ jobs:
           echo "DODEBUGSTEPS is ${{ env.DODEBUGSTEPS }}"
           echo "MINIHELMBRANCHNAME is ${{ env.MINIHELMBRANCHNAME }}"
           echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
-          echo "DOSMOKETESTREMOVEAPP is ${{ env.DOSMOKETESTUNINSTALL }}"
+          echo "DOSMOKETESTUNINSTALL is ${{ env.DOSMOKETESTUNINSTALL }}"
 
       - name: Arm Parameter file check
         if: env.DOVERIFICATIONSTEPS == true
@@ -574,7 +574,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
           echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
-          echo "DOSMOKETESTREMOVEAPP is ${{ env.DOSMOKETESTUNINSTALL }}"
+          echo "DOSMOKETESTUNINSTALL is ${{ env.DOSMOKETESTUNINSTALL }}"
           
       - name: Azure Login
         uses: Azure/login@v1
@@ -739,17 +739,29 @@ jobs:
           curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
       - name: Cleanup app
-        if: env.DOSMOKETESTREMOVEAPP
+        if: env.DOSMOKETESTUNINSTALL
         env:
           APPNAME: "openjdk-kvssl"
-        run: helm uninstall $APPNAME
+        run: |
+          echo "DOSMOKETESTREMOVEAPP is ${{ env.DOSMOKETESTUNINSTALL }}"
+          helm uninstall $APPNAME
         
       - name: Cleanup app falsey
-        if: env.DOSMOKETESTREMOVEAPP == false
+        if: env.DOSMOKETESTUNINSTALL == false
         env:
           APPNAME: "openjdk-kvssl"
-        run: helm uninstall $APPNAME
-
+        run: |
+          echo "DOSMOKETESTUNINSTALL is ${{ env.DOSMOKETESTUNINSTALL }}"
+          helm uninstall $APPNAME
+        
+      - name: Cleanup app truey
+        if: env.DOSMOKETESTUNINSTALL == true
+        env:
+          APPNAME: "openjdk-kvssl"
+        run: |
+          echo "DOSMOKETESTUNINSTALL is ${{ env.DOSMOKETESTUNINSTALL }}"
+          helm uninstall $APPNAME
+          
   SmokeTest_PublicJavaTLSApp:
     runs-on: ubuntu-latest
     needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PrivateJavaTLSApp]
