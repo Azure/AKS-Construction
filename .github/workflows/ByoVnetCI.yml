@@ -743,6 +743,24 @@ jobs:
         env:
           APPNAME: "openjdk-kvssl"
         run: helm uninstall $APPNAME
+        
+      - name: Cleanup app falsey
+        if: env.DOSMOKETESTREMOVEAPP == false
+        env:
+          APPNAME: "openjdk-kvssl"
+        run: helm uninstall $APPNAME
+
+      - name: Cleanup app truey
+        if: ${{ env.DOSMOKETESTREMOVEAPP == true }}
+        env:
+          APPNAME: "openjdk-kvssl"
+        run: helm uninstall $APPNAME
+        
+      - name: Cleanup app truey string
+        if: ${{ 'env.DOSMOKETESTREMOVEAPP' == 'true' }}
+        env:
+          APPNAME: "openjdk-kvssl"
+        run: helm uninstall $APPNAME
 
   SmokeTest_PublicJavaTLSApp:
     runs-on: ubuntu-latest
