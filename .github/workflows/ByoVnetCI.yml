@@ -35,9 +35,9 @@ on:
       doVerifySteps:
         description: 'Run optional verify steps'  
         default: 'yes'
-      skipSmokeTestRemove:
-        description: 'Skip uninstall of smoke test apps tests'  
-        default: 'no'
+      doSmokeTestRemove:
+        description: 'Uninstall smoke test apps after tests'  
+        default: 'yes'
         
 concurrency: ci-${{ github.ref }}
 
@@ -50,7 +50,7 @@ env:
   MINIHELMBRANCHNAME: main
   DOVERIFICATIONSTEPS: ${{ github.event.inputs.doDebugSteps != 'no' }} #These are steps that will generally throw errors when things aren't there
   DODEBUGSTEPS: ${{ github.event.inputs.doVerifySteps != 'no' }} #These are steps that are purely informational
-  skipSmokeTestRemove: ${{ github.event.inputs.skipSmokeTestRemove == 'yes' }} #These are steps that are purely informational
+  DOSMOKETESTREMOVEAPP: ${{ github.event.inputs.doSmokeTestRemove == 'yes' }} #These are steps that are purely informational
   
 jobs:
   Well_Architected:
@@ -92,6 +92,7 @@ jobs:
           echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
           echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
           echo "DOVERIFICATIONSTEPS is ${{ env.DOVERIFICATIONSTEPS }}"
+          echo "DODEBUGSTEPS is ${{ env.DODEBUGSTEPS }}"
           echo "MINIHELMBRANCHNAME is ${{ env.MINIHELMBRANCHNAME }}"
           echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
           echo "skipSmokeTestRemove is ${{ env.skipSmokeTestRemove }}"
@@ -737,7 +738,7 @@ jobs:
           curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
       - name: Cleanup app
-        if: env.skipSmokeTestRemove == false
+        if: env.DOSMOKETESTREMOVEAPP == true
         env:
           APPNAME: "openjdk-kvssl"
         run: helm uninstall $APPNAME
@@ -946,7 +947,7 @@ jobs:
           curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
       - name: Cleanup app
-        if: env.skipSmokeTestRemove == false
+        if: ${{ env.DOSMOKETESTREMOVEAPP == true }}
         run: helm uninstall e2esmokeapp
 
   SmokeTest_SimpleApp:
