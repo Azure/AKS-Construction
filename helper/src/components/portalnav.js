@@ -202,7 +202,7 @@ export default function PortalNav({ config }) {
 
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
     "Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab")
-  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null,
+  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length>19,
     "Enter valid cluster name")
 
 
