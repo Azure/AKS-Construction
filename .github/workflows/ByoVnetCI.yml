@@ -50,7 +50,7 @@ env:
   MINIHELMBRANCHNAME: main
   DOVERIFICATIONSTEPS: ${{ github.event.inputs.doDebugSteps != 'no' }} #These are steps that will generally throw errors when things aren't there
   DODEBUGSTEPS: ${{ github.event.inputs.doVerifySteps != 'no' }} #These are steps that are purely informational
-  skipSmokeTestRemove: ${{ github.event.inputs.skipSmokeTestRemove != 'yes' }} #These are steps that are purely informational
+  skipSmokeTestRemove: ${{ github.event.inputs.skipSmokeTestRemove == 'yes' }} #These are steps that are purely informational
   
 jobs:
   Well_Architected:
