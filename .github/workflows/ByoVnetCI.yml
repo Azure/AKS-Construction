@@ -94,7 +94,7 @@ jobs:
           echo "DOVERIFICATIONSTEPS is ${{ env.DOVERIFICATIONSTEPS }}"
           echo "MINIHELMBRANCHNAME is ${{ env.MINIHELMBRANCHNAME }}"
           echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
-          
+          echo "skipSmokeTestRemove is ${{ env.skipSmokeTestRemove }}"
 
       - name: Arm Parameter file check
         if: env.DOVERIFICATIONSTEPS == true
