@@ -7,6 +7,10 @@ on:
     paths: 
       - 'bicep/*'
       - ".github/workflows/bicepBuild.yml"
+    branches-ignore: main
+    
+  pull_request:
+    branches: main
 
   workflow_dispatch:
   
