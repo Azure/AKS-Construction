@@ -46,11 +46,12 @@ jobs:
 
           /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
 
-      - name: ContextCheck
+      - name: Git diff
         shell: pwsh
         run: |
-          cd bicep/compiled
-          dir
+          git diff --shortstat
+
+
           
       - name: GIT Push Json file
         uses: actions-x/commit@v2
