@@ -3,7 +3,6 @@ param location string
 param vnetAddressPrefix string
 //param vnetInternalLBSubnetAddressPrefix string = '10.241.128.0/24'
 param vnetFirewallSubnetAddressPrefix string = ''
-//param serviceEndpoints array = []
 
 param ingressApplicationGateway bool = false
 param azureFirewalls bool = false
@@ -32,7 +31,6 @@ var appgw_subnet = {
   name: appgw_subnet_name
   properties: {
     addressPrefix: vnetAppGatewaySubnetAddressPrefix
-//    serviceEndpoints: serviceEndpoints
   }
 }
 var fw_subnet_name = 'AzureFirewallSubnet' // Required by FW
@@ -81,9 +79,7 @@ var aks_subnet =  {
       routeTable: {
         id: vnet_udr.id //resourceId('Microsoft.Network/routeTables', routeFwTableName)
       }
-    } : {
-  //    serviceEndpoints: serviceEndpoints
-    })
+    }: {})
 }
 
 

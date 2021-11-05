@@ -47,46 +47,6 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
             </Stack.Item>
 
             <Separator className="notopmargin" />
-            <Stack.Item>
-                <Label>Secure Azure service resources to your virtual network by extending VNet identity to the service</Label>
-                <Checkbox styles={{ root: { marginLeft: '50px' } }} disabled={false} checked={net.serviceEndpointsEnable} onChange={(ev, v) => updateFn("serviceEndpointsEnable", v)} label="Enable Service Endpoints" />
-
-                {net.serviceEndpointsEnable &&
-
-                    <Stack styles={{ root: { marginLeft: '50px', marginTop: '10px' } }} tokens={{ childrenGap: 10 }}>
-
-                        <MessageBar messageBarType={MessageBarType.info}>No Network Address Translation (NAT) or gateway devices required to access your Azure dependencies from your pods</MessageBar>
-
-                        <Dropdown
-                            required={true}
-                            placeholder="Select options"
-                            label="Select the Azure Dependencies you would like to secure to your AKS VNET"
-                            selectedKeys={net.serviceEndpoints}
-                            // eslint-disable-next-line react/jsx-no-bind
-                            onChange={(ev, { key, selected }) => {
-                                updateFn("serviceEndpoints", selected ? arrayAdd(net.serviceEndpoints, key) : arrayDel(net.serviceEndpoints, key))
-                            }}
-                            multiSelect
-                            options={[
-                                { key: 'Microsoft.AzureActiveDirectory', text: 'Microsoft.AzureActiveDirectory' },
-                                { key: 'Microsoft.AzureCosmosDB', text: 'Microsoft.AzureCosmosDB' },
-                                { key: 'Microsoft.CognitiveServices', text: 'Microsoft.CognitiveServices' },
-                                { key: 'Microsoft.ContainerRegistry', text: 'Microsoft.ContainerRegistry' },
-                                { key: 'Microsoft.EventHub', text: 'Microsoft.EventHub' },
-                                { key: 'Microsoft.KeyVault', text: 'Microsoft.KeyVault' },
-                                { key: 'Microsoft.ServiceBus', text: 'Microsoft.ServiceBus' },
-                                { key: 'Microsoft.Sql', text: 'Microsoft.Sql' },
-                                { key: 'Microsoft.Storage', text: 'Microsoft.Storage' },
-                                { key: 'Microsoft.Web', text: 'Microsoft.Web' }
-                            ]}
-                        />
-                    </Stack>
-
-                }
-
-            </Stack.Item>
-
-            <Separator className="notopmargin" />
 
             <Stack.Item>
                 <Label>Uses a private IP address from your VNet to access your dependent Azure service, such as Azure KeyVault, Azure Container Registry etc</Label>
@@ -273,7 +233,7 @@ function CustomVNET({ net, addons, updateFn }) {
                     <Stack.Item align="start">
                         <TextField prefix="Cidr" label="VNET Address space" onChange={(ev, val) => updateFn("vnetAddressPrefix", val)} value={net.vnetAddressPrefix} />
                     </Stack.Item>
-                    <Stack.Item align="center">
+                    <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" label="AKS Nodes subnet" onChange={(ev, val) => updateFn("vnetAksSubnetAddressPrefix", val)} value={net.vnetAksSubnetAddressPrefix} />
                     </Stack.Item>
                     {/*
@@ -281,16 +241,16 @@ function CustomVNET({ net, addons, updateFn }) {
                   <TextField prefix="Cidr" label="LoadBalancer Services subnet" onChange={(ev, val) => updateFn("ilbsub", val)} value={net.ilbsub} />
                 </Stack.Item>
                 */}
-                    <Stack.Item align="center">
+                    <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" disabled={!net.afw} label="Azure Firewall subnet" onChange={(ev, val) => updateFn("vnetFirewallSubnetAddressPrefix", val)} value={net.afw ? net.vnetFirewallSubnetAddressPrefix : "No Firewall requested"} />
                     </Stack.Item>
 
-                    <Stack.Item align="center">
+                    <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" disabled={addons.ingress !== 'appgw'} label="Application Gateway subnet" onChange={(ev, val) => updateFn("vnetAppGatewaySubnetAddressPrefix", val)} value={addons.ingress === 'appgw' ? net.vnetAppGatewaySubnetAddressPrefix : "N/A"} />
-                        <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets these requirements <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">here</Link></MessageBar>
+                        <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">these</Link> requirements</MessageBar>
                     </Stack.Item>
 
-                    <Stack.Item align="center">
+                    <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" disabled={!net.vnetprivateend} label="Private Endpoint subnet" onChange={(ev, val) => updateFn("privateLinkSubnetAddressPrefix", val)} value={net.vnetprivateend ? net.privateLinkSubnetAddressPrefix : "N/A"} />
                     </Stack.Item>
                 </Stack>

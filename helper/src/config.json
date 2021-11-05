@@ -3,7 +3,8 @@
         "deploy": "Deploy",
         "cluster": "Cluster Details",
         "addons": "Addon Details",
-        "net": "Networking Details"
+        "net": "Networking Details",
+        "app": "Sameple Apps"
     },
     "defaults": {
         "deploy": {
@@ -13,8 +14,11 @@
             "demoapp": false,
             "disablePreviews": false,
             "acrPushRole": true,
+            "acrIPWhitelist": true,
             "kvCertSecretRole": true,
-            "clusterAdminRole": true
+            "kvIPWhitelist": true,
+            "clusterAdminRole": true,
+            "clusterIPWhitelist" : true
         },
         "cluster": {
             "AksPaidSkuForSLA": false,
@@ -67,8 +71,6 @@
             "networkPlugin": "azure",
             "afw": false,
             "vnetprivateend": false,
-            "serviceEndpoints": [],
-            "serviceEndpointsEnable": false,
             "vnet_opt": "default",
             "byoAKSSubnetId": "",
             "byoAGWSubnetId": "",
@@ -82,6 +84,9 @@
             "podCidr": "10.244.0.0/16",
             "serviceCidr": "10.0.0.0/16",
             "dnsServiceIP": "10.0.0.10"
+        },
+        "app": {
+            "javatls": false
         }
     },
     "defaultOps": [
@@ -190,12 +195,6 @@
                                     "set": "Premium"
                                 },
                                 {
-                                    "page": "net",
-                                    "field": "serviceEndpointsEnable",
-                                    "value": true,
-                                    "set": "Premium"
-                                },
-                                {
                                     "set": "Basic"
                                 }
                             ],
@@ -259,7 +258,6 @@
                         },
                         "net": {
                             "vnet_opt": "default",
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": false,
                             "afw": false
                         }
@@ -287,10 +285,6 @@
                             {
                                 "description": "Authorized IP address ranges",
                                 "linksrc": "https://docs.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges"
-                            },
-                            {
-                                "description": "Restrict dependencies with Service Endpoints **(ACR preview)",
-                                "linksrc": "https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-service-endpoints-overview"
                             }
                         ]
                     },
@@ -341,11 +335,6 @@
                         },
                         "net": {
                             "vnet_opt": "custom",
-                            "serviceEndpointsEnable": true,
-                            "serviceEndpoints": [
-                                "Microsoft.ContainerRegistry",
-                                "Microsoft.KeyVault"
-                            ],
                             "vnetprivateend": false,
                             "afw": false
                         }
@@ -438,7 +427,6 @@
                         },
                         "net": {
                             "vnet_opt": "custom",
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": true,
                             "afw": true
                         }
@@ -506,7 +494,6 @@
                             "csisecret": "none"
                         },
                         "net": {
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": false,
                             "vnet_opt": "default",
                             "afw": false
@@ -588,7 +575,6 @@
                             "appgwKVIntegration": true
                         },
                         "net": {
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": true,
                             "vnet_opt": "byo",
                             "afw": false
@@ -670,7 +656,6 @@
                             "appgwKVIntegration": true
                         },
                         "net": {
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": true,
                             "vnet_opt": "custom",
                             "afw": true

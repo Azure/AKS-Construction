@@ -71,7 +71,6 @@ resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01
 
 //------------------------------------------------------ Create custom vnet
 param vnetAddressPrefix string = '10.0.0.0/8'
-param serviceEndpoints array = []
 param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
 param vnetFirewallSubnetAddressPrefix string = '10.241.130.0/26'
 param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
@@ -85,7 +84,6 @@ module network './network.bicep' = if (custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
-//    serviceEndpoints: serviceEndpoints
     vnetAddressPrefix: vnetAddressPrefix
     aksPrincipleId: aks_byo_identity ? uai.properties.principalId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
@@ -149,14 +147,15 @@ param KeyVaultSoftDelete bool = true
 @description('If purge protection is enabled')
 param KeyVaultPurgeProtection bool = true
 
-param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
+@description('Add IP to firewall whitelist')
+param kvIPWhitelist string = ''
 
 var akvName = 'kv-${replace(resourceName, '-', '')}'
 
 resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
   name: akvName
   location: location
-  properties: union({
+  properties: {
     tenantId: subscription().tenantId
     sku: {
       family: 'A'
@@ -165,7 +164,11 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     networkAcls: {
       bypass: 'AzureServices' 
       defaultAction: 'Deny'
-      ipRules: []
+      ipRules: empty(kvIPWhitelist) ? [] : [
+          {
+          value: kvIPWhitelist
+        }
+      ]
       virtualNetworkRules: []
     }
     //enabledForTemplateDeployment: true
@@ -177,59 +180,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
     publicNetworkAccess: privateLinks ? 'disabled' : 'enabled' 
-    /*
-    accessPolicies: concat(azureKeyvaultSecretsProvider ? array({
-      tenantId: subscription().tenantId
-      objectId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.objectId
-      permissions: {
-        keys: [
-          'get'
-          'decrypt'
-          'unwrapKey'
-          'verify'
-        ]
-        secrets: [
-          'get'
-        ]
-        certificates: [
-          'get'
-          'getissuers'
-        ]
-      }
-    }) : [], appgwKVIntegration ? array({
-      tenantId: subscription().tenantId
-      objectId: appGwIdentity.properties.principalId
-      permissions: {
-        secrets: [
-          'get'
-          'set'
-          'delete'
-          'list'
-        ]
-      }
-    }) : [])
-  */
-  }, {}  )
-  
-  /*, !empty(AKVserviceEndpointFW) ? {
-    networkAcls: {
-      defaultAction: 'Deny'
-      virtualNetworkRules: concat(array({
-        action: 'Allow'
-        id: aksSubnetId
-      }), appgwKVIntegration ? array({
-        action: 'Allow'
-        id: appGwSubnetId
-      }) : [])
-      ipRules: AKVserviceEndpointFW != 'vnetonly' ? [
-        {
-          action: 'Allow'
-          value: AKVserviceEndpointFW
-        }
-      ] : null
-    }
-  } :*/
-  /*,*/ 
+  }
 }
 
 var keyVaultSecretsUserRole = resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
@@ -266,7 +217,7 @@ resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-0
 }
 
 
-var keyVaultCertsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
+var keyVaultCertsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'a4417e6f-fecd-4de8-b567-7b0420556985')
 resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
   scope: kv
   name: '${guid(aks.id, 'usercert', keyVaultCertsOfficerRole)}'
@@ -308,7 +259,9 @@ resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
 /__/     \__\ (__)\______|(__)| _| `._____|(__)*/
                                                
 param registries_sku string = ''
-param ACRserviceEndpointFW string = '' // either IP, or 'vnetonly'
+
+@description('Add IP to firewall whitelist')
+param acrIPWhitelist string = ''
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
@@ -318,25 +271,18 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
   sku: {
     name: registries_sku
   }
-  /*
-  properties: !empty(ACRserviceEndpointFW) ? {
+  properties: {
     networkRuleSet: {
       defaultAction: 'Deny'
-      virtualNetworkRules: [
-        {
-          action: 'Allow'
-          id: aksSubnetId
+      ipRules: empty(acrIPWhitelist) ? [] : [
+          {
+            action: 'Allow'
+            value: kvIPWhitelist
         }
       ]
-      ipRules: ACRserviceEndpointFW != 'vnetonly' ? [
-        {
-          action: 'Allow'
-          value: ACRserviceEndpointFW
-        }
-      ] : null
+      virtualNetworkRules: []
     }
-  } : {}
-  */
+  }
 }
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
 

@@ -32,15 +32,19 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(cluster.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
     ...(addons.registry !== "none" && { registries_sku: addons.registry, ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
-    ...(net.serviceEndpointsEnable && net.serviceEndpoints.length > 0 && { serviceEndpoints: net.serviceEndpoints.map(s => { return { service: s } }) }),
-    ...(net.vnet_opt === "custom" && net.vnetprivateend && { privateLinks: true, ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}) }),
+    ...(net.vnet_opt === "custom" && net.vnetprivateend && { 
+        privateLinks: true, 
+        ...(addons.registry !== "none" &&  deploy.acrIPWhitelist  && apiips_array.length > 0 && {acrIPWhitelist: apiips_array[0]}),
+        ...(addons.csisecret === 'akvNew' && deploy.kvIPWhitelist  && apiips_array.length > 0 && {kvIPWhitelist: apiips_array[0]}),
+        ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}) }
+        ),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
     ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}), 
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
-    ...(cluster.apisecurity === "whitelist" && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
+    ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
     ...(addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
     ...(addons.ingress === "appgw" && {
@@ -54,16 +58,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
       })
     }),
-    ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.KeyVault') && addons.csisecret === 'akvNew' && { AKVserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
+    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
     ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) })
   }
 
   const preview_params = {
-    // if selected service endpoints & Premium, setup ACR firewall : https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet
-    ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' && { ACRserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
     ...(addons.gitops !== "none" && { gitops: addons.gitops }),
-    // azure-keyvault-secrets-provider  - commenting out until supported by ARM template
-    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
     ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel })
   }
 
@@ -264,25 +264,26 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
           />
         </Stack>
         <Stack tokens={{ childrenGap: 20 }} styles={{ root: { width: "450px" } }}>
-          <TextField label="Kubernetes version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
+          <TextField label="Kubernetes version" prefix="Current GA Version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
+          <TextField label="Current IP Address" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
 
-          <Stack.Item styles={{ root: { display: (cluster.apisecurity !== "whitelist" ? "none" : "block") } }} >
-            <TextField label="Whitelist AKS IP Firewall to allow kubectl operations (default IP this machine)" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+
+          <Stack.Item>
+            <Label>Grant current user Container Registry Push role </Label>
+            <Checkbox disabled={addons.registry === "none"} checked={deploy.acrPushRole} onChange={(ev, v) => updateFn("acrPushRole", v)} label="Assign deployment user 'AcrPush'" />
+            <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={deploy.acrIPWhitelist} onChange={(ev, v) => updateFn("acrIPWhitelist", v)} label="Add current IP to ACR firewall (applicable to private link)" />
           </Stack.Item>
 
           <Stack.Item>
-                <Label>Grant user running script Container Registry Push role </Label>
-                <Checkbox disabled={addons.registry === "none"} checked={deploy.acrPushRole} onChange={(ev, v) => updateFn("acrPushRole", v)} label="Assign deployment user 'AcrPush'" />
+            <Label>Grant current user Key Vault Certificate and Secret Officer role <a target="_target" href="https://docs.microsoft.com/azure/key-vault/general/rbac-guide?tabs=azure-cli#azure-built-in-roles-for-key-vault-data-plane-operations">docs</a></Label>
+            <Checkbox disabled={addons.csisecret !== 'akvNew'} checked={deploy.kvCertSecretRole} onChange={(ev, v) => updateFn("kvCertSecretRole", v)} label="Assign deployment user 'AcrPush'" />
+            <Checkbox disabled={addons.csisecret !== 'akvNew' || !net.vnetprivateend} checked={deploy.kvIPWhitelist} onChange={(ev, v) => updateFn("kvIPWhitelist", v)} label="Add current IP to KeyVault firewall (applicable to private link)" />
           </Stack.Item>
 
           <Stack.Item>
-                <Label>Grant user running script Key Vault Certificate and Secret Officer role <a target="_target" href="https://docs.microsoft.com/azure/key-vault/general/rbac-guide?tabs=azure-cli#azure-built-in-roles-for-key-vault-data-plane-operations">docs</a></Label>
-                <Checkbox disabled={addons.csisecret !== 'akvNew'} checked={deploy.kvCertSecretRole} onChange={(ev, v) => updateFn("kvCertSecretRole", v)} label="Assign deployment user 'AcrPush'" />
-          </Stack.Item>
-
-          <Stack.Item>
-              <Label>Grant user running script AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
-              <Checkbox disabled={!cluster.enableAzureRBAC} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
+            <Label>Grant current user AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
+            <Checkbox disabled={!cluster.enableAzureRBAC} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
+            <Checkbox disabled={cluster.apisecurity !== "whitelist"}  onChange={(ev, val) => updateFn("clusterIPWhitelist", val)} checked={deploy.clusterIPWhitelist} label="Add current IP to AKS firewall (applicable to AKS IP ranges)"  />
           </Stack.Item>
 
         </Stack>
