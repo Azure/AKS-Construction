@@ -16,7 +16,7 @@ az acr build -r $ACRNAME -t openjdk-demo:0.0.1  https://github.com/khowling/e2e-
 # Create backend Certificate in KeyVault
 export KVNAME=$(az keyvault list -g ${deploy.rg} --query [0].name -o tsv)
 export COMMON_NAME=openjdk-demo-service 
-az keyvault certificate create --vault-name $KVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )"
+az keyvault certificate create --vault-name $KVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=$\{COMMON_NAME\}/g )"
 
 
 `
