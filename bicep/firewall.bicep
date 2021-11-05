@@ -3,6 +3,7 @@ param location string
 param workspaceDiagsId string = ''
 param fwSubnetId string
 param vnetAksSubnetAddressPrefix string
+param certManagerFW bool = false
 
 var firewallPublicIpName = 'pip-afw-${resourceName}'
 resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = {
@@ -80,8 +81,7 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
           action: {
             type: 'Allow'
           }
-          rules: [
-            {
+          rules: concat(array({
               name: 'aks'
               protocols: [
                 {
@@ -100,8 +100,48 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
               sourceAddresses: [
                 vnetAksSubnetAddressPrefix
               ]
-            }
-          ]
+            }), certManagerFW ? [
+              {
+                name: 'cetman-quay'
+                protocols: [
+                  {
+                    port: 443
+                    protocolType: 'Https'
+                  }
+                  {
+                    port: 80
+                    protocolType: 'Http'
+                  }
+                ]
+                targetFqdns: [
+                  'quay.io'
+                  '*.quay.io'
+                ]
+                sourceAddresses: [
+                  vnetAksSubnetAddressPrefix
+                ]
+              }
+              {
+                name: 'cetman-letsencrypt'
+                protocols: [
+                  {
+                    port: 443
+                    protocolType: 'Https'
+                  }
+                  {
+                    port: 80
+                    protocolType: 'Http'
+                  }
+                ]
+                targetFqdns: [
+                  'letsencrypt.org'
+                  '*.letsencrypt.org'
+                ]
+                sourceAddresses: [
+                  vnetAksSubnetAddressPrefix
+                ]
+              }
+            ] : [])
         }
       }
     ]

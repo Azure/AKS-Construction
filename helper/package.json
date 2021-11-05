@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "/Aks-Construction/",
   "scripts": {
-    "start": "REACT_APP_AZ_TEMPLATE_ARG=\"--template-file ./bicep/main.json\" react-scripts start",
+    "start": "REACT_APP_AZ_TEMPLATE_ARG=\"--template-file ./bicep/main.bicep\" react-scripts start",
     "build": "CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

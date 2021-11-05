@@ -30,8 +30,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(cluster.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
-    ...(addons.registry !== "none" && { registries_sku: addons.registry, ...(deploy.acrPushRole && { acrPushRoleUserId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
-    ...(net.afw && { azureFirewalls: true, ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
+    ...(addons.registry !== "none" && { registries_sku: addons.registry, ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
+    ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.length > 0 && { serviceEndpoints: net.serviceEndpoints.map(s => { return { service: s } }) }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && { privateLinks: true, ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}) }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
@@ -55,7 +55,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       })
     }),
     ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.KeyVault') && addons.csisecret === 'akvNew' && { AKVserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
-    ...(addons.csisecret === 'akvNew' && { createKV: true })
+    ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) })
   }
 
   const preview_params = {
@@ -116,8 +116,10 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
     //` : '') +
 
     // Get credentials
+    (cluster.apisecurity !== "private" ?
     `\n# Get credentials for your new AKS cluster
-az aks get-credentials -g ${deploy.rg} -n ${aks} ` +
+az aks get-credentials -g ${deploy.rg} -n ${aks} ` : ""
+    ) + 
     // Prometheus
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -149,25 +151,49 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 ` : '') +
     // External DNS
-    (addons.dnsZoneId ? `\n\n# Install external-dns
+    (addons.dnsZoneId ? `
+
+# Install external-dns
+# external-dns needs permissions to make changes in the Azure DNS server.
+# https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/azure.md#azure-managed-service-identity-msi
+
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdin<<EOF
 {
-  "userAssignedIdentityID": "$(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)",
-  "tenantId": "$(az account show --query tenantId -o tsv)",
-  "useManagedIdentityExtension": true,
-  "subscriptionId": "${addons.dnsZoneId.split('/')[2]}",
-  "resourceGroup": "${addons.dnsZoneId.split('/')[4]}"
+  userAssignedIdentityID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv),
+  tenantId: $(az account show --query tenantId -o tsv),
+  useManagedIdentityExtension: true,
+  subscriptionId: ${addons.dnsZoneId.split('/')[2]},
+  resourceGroup: ${addons.dnsZoneId.split('/')[4]}
 }
 EOF
+${cluster.apisecurity === "private" ? `"` : ``}
+# external-dns manifest (for clusters with RBAC) replacing {{domain-filter}} and {{proviers}} values 
+curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
+${cluster.apisecurity === "private" ? 
+  `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-ext-dns.yml" --file  /tmp/aks-ext-dns.yml` 
+: 
+  `kubectl apply -f /tmp/aks-ext-dns.yml`}
 
-curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  | kubectl apply -f -` : '') +
+` : '') +
     // Cert-Manager
-    (addons.certEmail ? `\n\n# Install cert-manager
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml
+    (addons.certMan ? `
 
+# Install cert-manager
+# https://cert-manager.io/docs/installation/
+
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.6.0/cert-manager.yaml
+${cluster.apisecurity === "private" ? `"` : ``}
+
+# Wait for cert-manager to install
 sleep 30s
 
-cat <<EOF | kubectl create -f -
+# cert-manager ACME ClusterIssuer Configuration (client owns the domain)
+# Lets Encrypt production Issuer, using either HTTP01 for external services, or DNS01 for internal
+# https://cert-manager.io/docs/configuration/acme/
+
+cat >/tmp/aks-issuer.yml<<EOF 
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -177,23 +203,29 @@ spec:
     # The ACME server URL
     server: https://acme-v02.api.letsencrypt.org/directory
     # Email address used for ACME registration
-    email: "${addons.certEmail}"
+    email: ${addons.certEmail}
     # Name of a secret used to store the ACME account private key
     privateKeySecretRef:
       name: letsencrypt-prod
     # Enable the HTTP-01 challenge provider
     solvers:
-    #- dns01:
+    - dns01:
         # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
-        #azureDNS:
-        #  clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
-        #  subscriptionID: ${addons.dnsZoneId.split('/')[2]}
-        #  resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
-        #  hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
+        azureDNS:
+          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
+          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
+          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
+          managedIdentity:
+            # client id of the node pool managed identity (can not be set at the same time as resourceID)
+            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
+            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
     - http01:
         ingress:
           class: ${(addons.ingress === 'contour' ? 'contour' : (addons.ingress === 'nginx' ? "nginx" : "azure/application-gateway"))}
 EOF
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-issuer.yml" --file  /tmp/aks-issuer.yml` 
+:
+ `kubectl apply -f /tmp/aks-issuer.yml`}
 ` : '')
 
   return (
@@ -235,16 +267,21 @@ EOF
           <TextField label="Kubernetes version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
 
           <Stack.Item styles={{ root: { display: (cluster.apisecurity !== "whitelist" ? "none" : "block") } }} >
-            <TextField label="AKS IPs/CIDRs whitelist (',' separated)" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+            <TextField label="Whitelist AKS IP Firewall to allow kubectl operations (default IP this machine)" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
           </Stack.Item>
 
           <Stack.Item>
-                <Label>Grant user running script (deployment user) Push Container role </Label>
+                <Label>Grant user running script Container Registry Push role </Label>
                 <Checkbox disabled={addons.registry === "none"} checked={deploy.acrPushRole} onChange={(ev, v) => updateFn("acrPushRole", v)} label="Assign deployment user 'AcrPush'" />
           </Stack.Item>
 
           <Stack.Item>
-              <Label>Grant user running script (deployment user)  Cluster Admin Role</Label>
+                <Label>Grant user running script Key Vault Certificate and Secret Officer role <a target="_target" href="https://docs.microsoft.com/azure/key-vault/general/rbac-guide?tabs=azure-cli#azure-built-in-roles-for-key-vault-data-plane-operations">docs</a></Label>
+                <Checkbox disabled={addons.csisecret !== 'akvNew'} checked={deploy.kvCertSecretRole} onChange={(ev, v) => updateFn("kvCertSecretRole", v)} label="Assign deployment user 'AcrPush'" />
+          </Stack.Item>
+
+          <Stack.Item>
+              <Label>Grant user running script AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
               <Checkbox disabled={!cluster.enableAzureRBAC} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
           </Stack.Item>
 

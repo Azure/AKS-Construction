@@ -3,7 +3,7 @@ param location string
 param vnetAddressPrefix string
 //param vnetInternalLBSubnetAddressPrefix string = '10.241.128.0/24'
 param vnetFirewallSubnetAddressPrefix string = ''
-param serviceEndpoints array = []
+//param serviceEndpoints array = []
 
 param ingressApplicationGateway bool = false
 param azureFirewalls bool = false
@@ -23,6 +23,7 @@ var private_link_subnet = {
   properties: {
     addressPrefix: privateLinkSubnetAddressPrefix
     privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Enabled'
   }
 }
 
@@ -31,7 +32,7 @@ var appgw_subnet = {
   name: appgw_subnet_name
   properties: {
     addressPrefix: vnetAppGatewaySubnetAddressPrefix
-    serviceEndpoints: serviceEndpoints
+//    serviceEndpoints: serviceEndpoints
   }
 }
 var fw_subnet_name = 'AzureFirewallSubnet' // Required by FW
@@ -69,21 +70,22 @@ resource vnet_udr 'Microsoft.Network/routeTables@2021-02-01' = if (azureFirewall
 }
 
 var aks_subnet_name = 'aks-sn'
-var aks_subnet = azureFirewalls ? {
+var aks_subnet =  {
   name: aks_subnet_name
-  properties: {
-    addressPrefix: vnetAksSubnetAddressPrefix
-    routeTable: {
-      id: vnet_udr.id //resourceId('Microsoft.Network/routeTables', routeFwTableName)
-    }
-  }
-} : {
-  name: aks_subnet_name
-  properties: {
-    addressPrefix: vnetAksSubnetAddressPrefix
-    serviceEndpoints: serviceEndpoints
-  }
+  properties: union({
+      addressPrefix: vnetAksSubnetAddressPrefix
+    }, privateLinks ? {
+      privateEndpointNetworkPolicies: 'Disabled'
+      privateLinkServiceNetworkPolicies: 'Enabled'
+    } : {}, azureFirewalls ? {   
+      routeTable: {
+        id: vnet_udr.id //resourceId('Microsoft.Network/routeTables', routeFwTableName)
+      }
+    } : {
+  //    serviceEndpoints: serviceEndpoints
+    })
 }
+
 
 var subnets_1 = azureFirewalls ? concat(array(aks_subnet), array(fw_subnet)) : array(aks_subnet)
 var subnets_2 = privateLinks ? concat(array(subnets_1), array(private_link_subnet)) : array(subnets_1)
@@ -191,7 +193,7 @@ resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!e
         properties: {
           privateLinkServiceId: privateLinkAkvId
           groupIds: [ 
-            'registry' 
+            'vault' 
           ]
         }
       }

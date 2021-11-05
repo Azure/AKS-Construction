@@ -13,6 +13,7 @@
             "demoapp": false,
             "disablePreviews": false,
             "acrPushRole": true,
+            "kvCertSecretRole": true,
             "clusterAdminRole": true
         },
         "cluster": {

@@ -85,7 +85,7 @@ module network './network.bicep' = if (custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
-    serviceEndpoints: serviceEndpoints
+//    serviceEndpoints: serviceEndpoints
     vnetAddressPrefix: vnetAddressPrefix
     aksPrincipleId: aks_byo_identity ? uai.properties.principalId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
@@ -176,7 +176,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     enableSoftDelete: KeyVaultSoftDelete 
     enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
-    publicNetworkAccess: 'enabled'
+    publicNetworkAccess: privateLinks ? 'disabled' : 'enabled' 
     /*
     accessPolicies: concat(azureKeyvaultSecretsProvider ? array({
       tenantId: subscription().tenantId
@@ -253,7 +253,29 @@ resource kvCSIdriverSecretsUserRole 'Microsoft.Authorization/roleAssignments@202
   }
 }
 
+param kvOfficerRolePrincipalId string = ''
+var keyVaultSecretsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
+resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
+  scope: kv
+  name: '${guid(aks.id, 'usersecret', keyVaultSecretsOfficerRole)}'
+  properties: {
+    roleDefinitionId: keyVaultSecretsOfficerRole
+    principalType: 'User'
+    principalId: kvOfficerRolePrincipalId
+  }
+}
 
+
+var keyVaultCertsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
+resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
+  scope: kv
+  name: '${guid(aks.id, 'usercert', keyVaultCertsOfficerRole)}'
+  properties: {
+    roleDefinitionId: keyVaultCertsOfficerRole
+    principalType: 'User'
+    principalId: kvOfficerRolePrincipalId
+  }
+}
 
 output keyVaultName string = createKV ? kv.name : ''
 
@@ -329,9 +351,19 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
     principalType: 'ServicePrincipal'
     principalId: KubeletObjectId
   }
-  dependsOn: [
-    aks
-  ]
+}
+
+var AcrPushRole = resourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')
+param acrPushRolePrincipalId string = ''
+
+resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku) && !empty(acrPushRolePrincipalId)) {
+  scope: acr // Use when specifying a scope that is different than the deployment scope
+  name: '${guid(aks.id, 'Acr' , AcrPushRole)}'
+  properties: {
+    roleDefinitionId: AcrPushRole
+    principalType: 'User'
+    principalId: acrPushRolePrincipalId
+  }
 }
 
 /*______  __  .______       _______ ____    __    ____  ___       __       __      
@@ -343,6 +375,7 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
 
 @description('Create an Azure Firewall')
 param azureFirewalls bool = false
+param certManagerFW bool = false
 
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
@@ -352,6 +385,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     workspaceDiagsId: aks_law.id
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
+    certManagerFW: certManagerFW
   }
 }
 

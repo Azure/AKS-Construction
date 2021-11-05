@@ -13,7 +13,7 @@ module network '../bicep/network.bicep' = {
   params: {
     resourceName: resourceName
     location: location
-    serviceEndpoints: serviceEndpoints
+//    serviceEndpoints: serviceEndpoints
     vnetAddressPrefix: vnetAddressPrefix
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     ingressApplicationGateway: true
