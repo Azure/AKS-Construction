@@ -1,0 +1,11 @@
+# Add 'helper-ui' to any changes within 'helper' folder or any subfolders
+helper-ui:
+- helper/**/*
+
+# Add 'test' label to any change to *.spec.js files
+test:
+- '*.spec.js'
+
+# Add 'documentation' label to any change to *.md files
+documentation:
+- '*.md'

@@ -9,7 +9,7 @@
             "value": "westeurope"
         },
         "resourceName": {
-            "value": "AksByo"
+            "value": "byo"
         },
         "kubernetesVersion": {
             "value": "1.21.1"
@@ -39,7 +39,7 @@
             "value": 30
         },
         "networkPolicy": {
-            "value": "calico"
+            "value": "azure"
         },
         "azurepolicy": {
             "value": "audit"
@@ -78,13 +78,16 @@
             "value" : true
         },
         "upgradeChannel" : {
-            "value" : "stable"
+            "value" : "none"
         },
         "KeyVaultSoftDelete" : {
             "value" : false
         },
         "KeyVaultPurgeProtection" : {
             "value" : false
+        },
+        "dnsZoneId" : {
+            "value" : "/this/parameter/is/overridden/in/my/script/valuefromsecrets"
         }
     }
 }

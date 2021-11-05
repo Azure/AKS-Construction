@@ -18,7 +18,6 @@ on:
         
   push:
     paths: 
-      #- ".github/workflows/ByoVnetPrivateCI.yml"
       - 'bicep/*'
       
   pull_request:
@@ -38,6 +37,7 @@ env:
   DEPNAME: 'DepPriv${{ github.run_number }}'
   DOVERIFICATIONSTEPS: github.event.inputs.doDebugSteps != 'no' #These are steps that will generally throw errors when things aren't there
   DODEBUGSTEPS:  github.event.inputs.doVerifySteps != 'no' #These are steps that are purely informational
+  AZCLIVERSION: 2.29.2 #Pinning to a specific AZ CLI version
   
 concurrency: ci-${{ github.ref }}
 
@@ -104,6 +104,7 @@ jobs:
         id: activedeps
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RUNCOUNT=$(az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name] | length(@)" -o tsv)
@@ -125,6 +126,7 @@ jobs:
       - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
@@ -136,6 +138,7 @@ jobs:
         if: env.DOVERIFICATIONSTEPS == true
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
@@ -189,6 +192,7 @@ jobs:
       - name: Start Private GitHub Runner Virtual Machine
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             #This is used in the next stage, if the VM is stopped we should start otherwise it'll never get picked up
             RunnerRG='Automation-Actions-Runner'
@@ -200,6 +204,7 @@ jobs:
         id:  deployAks
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
@@ -225,6 +230,7 @@ jobs:
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
         with:
+          azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |          
             RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
@@ -264,6 +270,8 @@ jobs:
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
           
           whoami
+          
+          az version
 
       - name: Azure Login MSI #Since we're doing this on a private agent we can use its managed identity
         run: |
