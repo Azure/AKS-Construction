@@ -48,10 +48,20 @@ jobs:
 
       - name: Git diff
         shell: pwsh
+        id: isGitDiff
         run: |
-          git diff --shortstat
+          $diff=git diff --shortstat
+          
+          if ($null -eq $diff) {
+            echo "::set-output name=GITDIFF::false" #outputting for condition
+          }
+          else {
+            echo "::set-output name=GITDIFF::true" #outputting for condition
+          }
+          
           
       - name: GIT Push Json file
+        if: ${{ steps.isGitDiff.outputs.GITDIFF}}
         uses: actions-x/commit@v2
         with:
           message: Adding auto compiled bicep json
