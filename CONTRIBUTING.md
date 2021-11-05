@@ -2,10 +2,6 @@
 
 A few important factoids to consume about the Repo, before you contribute.
 
-## Dev Container / Codespaces
-
-A dev container is present in the repo which makes dev and testing of the UI Helper component much easier.
-
 ## Action Workflows
 
 Various workflows run on Push / PR / Schedule.
@@ -21,7 +17,7 @@ Various workflows run on Push / PR / Schedule.
 | Check Markdown | PR | `Quality` Checks markdown files for spelling mistakes |
 | Infra CI - Private Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests the most secure/private parameter config |
 | Infra CI - Byo Vnet Cluster | Push / PR / Schedule | `Quality` High maturity IaC deployment example. Tests a typical production grade parameter config |
-| Infra CI - Basic Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests a sandbox grade parameter config |
+| Infra CI - Starter Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests a sandbox grade parameter config |
 | App CI | Manual | `Quality` Application deployment sample showing different application deployment practices and automation capabilities |
 
 ### Enforced PR Checks
@@ -69,3 +65,28 @@ We anticipate the use of the Develop branch is temporary.
 ## Releases
 
 Releases are used to capture a tested release (all stages, not just Validation), where there are significant new features or bugfixes. The release does not include CI Action files, just the Bicep code.
+
+## Dev Container / Codespaces
+
+A dev container is present in the repo which makes dev and testing of the UI Helper component much easier.
+
+### Commands
+
+Some helpful terminal commands for when you're getting started with DevContainer/Codespaces experience
+
+Running the Wizard GUI app
+
+```bash
+cd helper
+npm start
+#Browser should automatically open. Web app runs on port 3000 on path /Aks-Construction
+```
+
+Running the playwright tests after starting the Wizard web app
+```bash
+#Open a new terminal window
+cd helper
+#npx playwright install
+#npx playwright install-deps chromium
+npx playwright test --browser chromium .playwrighttests/ --reporter list
+```

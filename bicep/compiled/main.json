@@ -2463,6 +2463,10 @@
       "type": "string",
       "value": "[if(parameters('createKV'), variables('akvName'), '')]"
     },
+    "keyVaultId": {
+      "type": "string",
+      "value": "[if(parameters('createKV'), resourceId('Microsoft.KeyVault/vaults', variables('akvName')), '')]"
+    },
     "containerRegistryName": {
       "type": "string",
       "value": "[if(not(empty(parameters('registries_sku'))), variables('acrName'), '')]"

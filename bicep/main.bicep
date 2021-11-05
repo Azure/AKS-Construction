@@ -229,6 +229,7 @@ resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04
 }
 
 output keyVaultName string = createKV ? kv.name : ''
+output keyVaultId string = createKV ? kv.id : ''
 
 resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createKV) {
   name: 'kvDiags'
