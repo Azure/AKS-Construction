@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "12554406738050978950"
+      "templateHash": "7479922755741500161"
     }
   },
   "parameters": {
@@ -45,10 +45,6 @@
     "vnetAddressPrefix": {
       "type": "string",
       "defaultValue": "10.0.0.0/8"
-    },
-    "serviceEndpoints": {
-      "type": "array",
-      "defaultValue": []
     },
     "vnetAksSubnetAddressPrefix": {
       "type": "string",
@@ -102,9 +98,12 @@
         "description": "If purge protection is enabled"
       }
     },
-    "AKVserviceEndpointFW": {
+    "kvIPWhitelist": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "Add IP to firewall whitelist"
+      }
     },
     "kvOfficerRolePrincipalId": {
       "type": "string",
@@ -114,9 +113,12 @@
       "type": "string",
       "defaultValue": ""
     },
-    "ACRserviceEndpointFW": {
+    "acrIPWhitelist": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "Add IP to firewall whitelist"
+      }
     },
     "acrPushRolePrincipalId": {
       "type": "string",
@@ -358,7 +360,7 @@
     "akvName": "[format('kv-{0}', replace(parameters('resourceName'), '-', ''))]",
     "keyVaultSecretsUserRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
     "keyVaultSecretsOfficerRole": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
-    "keyVaultCertsOfficerRole": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
+    "keyVaultCertsOfficerRole": "[resourceId('Microsoft.Authorization/roleDefinitions', 'a4417e6f-fecd-4de8-b567-7b0420556985')]",
     "acrName": "[format('cr{0}{1}', replace(parameters('resourceName'), '-', ''), uniqueString(resourceGroup().id, parameters('resourceName')))]",
     "AcrPullRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
     "AcrPushRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')]",
@@ -461,7 +463,26 @@
       "apiVersion": "2021-06-01-preview",
       "name": "[variables('akvName')]",
       "location": "[parameters('location')]",
-      "properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'Standard'), 'networkAcls', createObject('bypass', 'AzureServices', 'defaultAction', 'Deny', 'ipRules', createArray(), 'virtualNetworkRules', createArray()), 'enableRbacAuthorization', true(), 'enabledForDeployment', false(), 'enabledForDiskEncryption', false(), 'enabledForTemplateDeployment', false(), 'enableSoftDelete', parameters('KeyVaultSoftDelete'), 'enablePurgeProtection', if(parameters('KeyVaultPurgeProtection'), true(), json('null')), 'publicNetworkAccess', if(parameters('privateLinks'), 'disabled', 'enabled')), createObject())]"
+      "properties": {
+        "tenantId": "[subscription().tenantId]",
+        "sku": {
+          "family": "A",
+          "name": "Standard"
+        },
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Deny",
+          "ipRules": "[if(empty(parameters('kvIPWhitelist')), createArray(), createArray(createObject('value', parameters('kvIPWhitelist'))))]",
+          "virtualNetworkRules": []
+        },
+        "enableRbacAuthorization": true,
+        "enabledForDeployment": false,
+        "enabledForDiskEncryption": false,
+        "enabledForTemplateDeployment": false,
+        "enableSoftDelete": "[parameters('KeyVaultSoftDelete')]",
+        "enablePurgeProtection": "[if(parameters('KeyVaultPurgeProtection'), true(), json('null'))]",
+        "publicNetworkAccess": "[if(parameters('privateLinks'), 'disabled', 'enabled')]"
+      }
     },
     {
       "condition": "[and(parameters('createKV'), parameters('appgwKVIntegration'))]",
@@ -562,6 +583,13 @@
       "location": "[parameters('location')]",
       "sku": {
         "name": "[parameters('registries_sku')]"
+      },
+      "properties": {
+        "networkRuleSet": {
+          "defaultAction": "Deny",
+          "ipRules": "[if(empty(parameters('acrIPWhitelist')), createArray(), createArray(createObject('action', 'Allow', 'value', parameters('kvIPWhitelist'))))]",
+          "virtualNetworkRules": []
+        }
       }
     },
     {
