@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
   
 jobs:
-  build:
+  Validation:
     runs-on: ubuntu-latest
   
     steps:
@@ -50,8 +50,6 @@ jobs:
         shell: pwsh
         run: |
           git diff --shortstat
-
-
           
       - name: GIT Push Json file
         uses: actions-x/commit@v2
