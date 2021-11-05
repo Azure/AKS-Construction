@@ -88,6 +88,9 @@ jobs:
           echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
           echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
           echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
+          echo "doDebugSteps is ${{ github.event.inputs.doDebugSteps }}"
+          echo "doVerifySteps is ${{ github.event.inputs.doVerifySteps }}"
+          echo "doSmokeTestUninstall is ${{ github.event.inputs.doSmokeTestUninstall }}"
 
       - name: Arm Parameter file check
         if: github.event.inputs.doVerifySteps != 'no'
