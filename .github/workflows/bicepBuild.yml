@@ -66,7 +66,7 @@ jobs:
           echo "gitdiff is ${{ steps.isGitDiff.outputs.GITDIFF}}"
           
       - name: GIT Push Json file
-        if: ${{ steps.isGitDiff.outputs.GITDIFF}}
+        if: steps.isGitDiff.outputs.GITDIFF==true
         uses: actions-x/commit@v2
         with:
           message: Adding auto compiled bicep json
