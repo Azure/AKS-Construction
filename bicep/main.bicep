@@ -210,6 +210,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
 }
 
 output keyVaultName string = createKV ? kv.name : ''
+output keyVaultId string = createKV ? kv.id : ''
 
 resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createKV) {
   name: 'kvDiags'
