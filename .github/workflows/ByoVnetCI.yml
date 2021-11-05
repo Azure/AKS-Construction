@@ -739,7 +739,7 @@ jobs:
           curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
       - name: Cleanup app
-        if: env.DOSMOKETESTUNINSTALL
+        if: github.event.inputs.doSmokeTestUninstall == 'yes'
         env:
           APPNAME: "openjdk-kvssl"
         run: helm uninstall $APPNAME
@@ -948,7 +948,7 @@ jobs:
           curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
       - name: Cleanup app
-        if: env.DOSMOKETESTUNINSTALL
+        if: github.event.inputs.doSmokeTestUninstall == 'yes'
         run: helm uninstall e2esmokeapp
 
   SmokeTest_SimpleApp:
