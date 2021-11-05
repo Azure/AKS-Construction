@@ -57,7 +57,7 @@ jobs:
             echo "::set-output name=GITDIFF::false" #outputting for condition
           }
           else {
-            write-output "No difference in compiled bicep to commit"
+            write-output "There are differences in compiled bicep to commit"
             echo "::set-output name=GITDIFF::true" #outputting for condition
           }
           
