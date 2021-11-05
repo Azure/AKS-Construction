@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "5878533485659049198"
+      "templateHash": "12554406738050978950"
     }
   },
   "parameters": {
@@ -106,11 +106,19 @@
       "type": "string",
       "defaultValue": ""
     },
+    "kvOfficerRolePrincipalId": {
+      "type": "string",
+      "defaultValue": ""
+    },
     "registries_sku": {
       "type": "string",
       "defaultValue": ""
     },
     "ACRserviceEndpointFW": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "acrPushRolePrincipalId": {
       "type": "string",
       "defaultValue": ""
     },
@@ -120,6 +128,10 @@
       "metadata": {
         "description": "Create an Azure Firewall"
       }
+    },
+    "certManagerFW": {
+      "type": "bool",
+      "defaultValue": false
     },
     "ingressApplicationGateway": {
       "type": "bool",
@@ -345,8 +357,11 @@
     "isPrivate": "[if(not(empty(parameters('dnsZoneId'))), equals(split(parameters('dnsZoneId'), '/')[7], 'privateDnsZones'), false())]",
     "akvName": "[format('kv-{0}', replace(parameters('resourceName'), '-', ''))]",
     "keyVaultSecretsUserRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
+    "keyVaultSecretsOfficerRole": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
+    "keyVaultCertsOfficerRole": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
     "acrName": "[format('cr{0}{1}', replace(parameters('resourceName'), '-', ''), uniqueString(resourceGroup().id, parameters('resourceName')))]",
     "AcrPullRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
+    "AcrPushRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')]",
     "deployAppGw": "[and(parameters('ingressApplicationGateway'), or(parameters('custom_vnet'), not(empty(parameters('byoAGWSubnetId')))))]",
     "appGWenableWafFirewall": "[if(equals(parameters('appGWsku'), 'Standard_v2'), false(), parameters('appGWenableFirewall'))]",
     "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
@@ -446,7 +461,7 @@
       "apiVersion": "2021-06-01-preview",
       "name": "[variables('akvName')]",
       "location": "[parameters('location')]",
-      "properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'Standard'), 'networkAcls', createObject('bypass', 'AzureServices', 'defaultAction', 'Deny', 'ipRules', createArray(), 'virtualNetworkRules', createArray()), 'enableRbacAuthorization', true(), 'enabledForDeployment', false(), 'enabledForDiskEncryption', false(), 'enabledForTemplateDeployment', false(), 'enableSoftDelete', parameters('KeyVaultSoftDelete'), 'enablePurgeProtection', if(parameters('KeyVaultPurgeProtection'), true(), json('null')), 'publicNetworkAccess', 'enabled'), createObject())]"
+      "properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'Standard'), 'networkAcls', createObject('bypass', 'AzureServices', 'defaultAction', 'Deny', 'ipRules', createArray(), 'virtualNetworkRules', createArray()), 'enableRbacAuthorization', true(), 'enabledForDeployment', false(), 'enabledForDiskEncryption', false(), 'enabledForTemplateDeployment', false(), 'enableSoftDelete', parameters('KeyVaultSoftDelete'), 'enablePurgeProtection', if(parameters('KeyVaultPurgeProtection'), true(), json('null')), 'publicNetworkAccess', if(parameters('privateLinks'), 'disabled', 'enabled')), createObject())]"
     },
     {
       "condition": "[and(parameters('createKV'), parameters('appgwKVIntegration'))]",
@@ -475,6 +490,38 @@
         "roleDefinitionId": "[variables('keyVaultSecretsUserRole')]",
         "principalType": "ServicePrincipal",
         "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.azureKeyvaultSecretsProvider.identity.objectId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('akvName'))]"
+      ]
+    },
+    {
+      "condition": "[and(parameters('createKV'), not(empty(parameters('kvOfficerRolePrincipalId'))))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2021-04-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('akvName'))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'usersecret', variables('keyVaultSecretsOfficerRole')))]",
+      "properties": {
+        "roleDefinitionId": "[variables('keyVaultSecretsOfficerRole')]",
+        "principalType": "User",
+        "principalId": "[parameters('kvOfficerRolePrincipalId')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('akvName'))]"
+      ]
+    },
+    {
+      "condition": "[and(parameters('createKV'), not(empty(parameters('kvOfficerRolePrincipalId'))))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2021-04-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('akvName'))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'usercert', variables('keyVaultCertsOfficerRole')))]",
+      "properties": {
+        "roleDefinitionId": "[variables('keyVaultCertsOfficerRole')]",
+        "principalType": "User",
+        "principalId": "[parameters('kvOfficerRolePrincipalId')]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
@@ -527,6 +574,22 @@
         "roleDefinitionId": "[variables('AcrPullRole')]",
         "principalType": "ServicePrincipal",
         "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).identityProfile.kubeletidentity.objectId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+      ]
+    },
+    {
+      "condition": "[and(not(empty(parameters('registries_sku'))), not(empty(parameters('acrPushRolePrincipalId'))))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2021-04-01-preview",
+      "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', variables('acrName'))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Acr', variables('AcrPushRole')))]",
+      "properties": {
+        "roleDefinitionId": "[variables('AcrPushRole')]",
+        "principalType": "User",
+        "principalId": "[parameters('acrPushRolePrincipalId')]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
@@ -820,9 +883,6 @@
           "location": {
             "value": "[parameters('location')]"
           },
-          "serviceEndpoints": {
-            "value": "[parameters('serviceEndpoints')]"
-          },
           "vnetAddressPrefix": {
             "value": "[parameters('vnetAddressPrefix')]"
           },
@@ -864,7 +924,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "6894089236102081260"
+              "templateHash": "17762655618858472429"
             }
           },
           "parameters": {
@@ -880,10 +940,6 @@
             "vnetFirewallSubnetAddressPrefix": {
               "type": "string",
               "defaultValue": ""
-            },
-            "serviceEndpoints": {
-              "type": "array",
-              "defaultValue": []
             },
             "ingressApplicationGateway": {
               "type": "bool",
@@ -927,15 +983,15 @@
               "name": "[variables('private_link_subnet_name')]",
               "properties": {
                 "addressPrefix": "[parameters('privateLinkSubnetAddressPrefix')]",
-                "privateEndpointNetworkPolicies": "Disabled"
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
               }
             },
             "appgw_subnet_name": "appgw-sn",
             "appgw_subnet": {
               "name": "[variables('appgw_subnet_name')]",
               "properties": {
-                "addressPrefix": "[parameters('vnetAppGatewaySubnetAddressPrefix')]",
-                "serviceEndpoints": "[parameters('serviceEndpoints')]"
+                "addressPrefix": "[parameters('vnetAppGatewaySubnetAddressPrefix')]"
               }
             },
             "fw_subnet_name": "AzureFirewallSubnet",
@@ -947,7 +1003,10 @@
             },
             "routeFwTableName": "[format('rt-afw-{0}', parameters('resourceName'))]",
             "aks_subnet_name": "aks-sn",
-            "aks_subnet": "[if(parameters('azureFirewalls'), createObject('name', variables('aks_subnet_name'), 'properties', createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix'), 'routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName'))))), createObject('name', variables('aks_subnet_name'), 'properties', createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix'), 'serviceEndpoints', parameters('serviceEndpoints'))))]",
+            "aks_subnet": {
+              "name": "[variables('aks_subnet_name')]",
+              "properties": "[union(createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
+            },
             "subnets_1": "[if(parameters('azureFirewalls'), concat(array(variables('aks_subnet')), array(variables('fw_subnet'))), array(variables('aks_subnet')))]",
             "subnets_2": "[if(parameters('privateLinks'), concat(array(variables('subnets_1')), array(variables('private_link_subnet'))), array(variables('subnets_1')))]",
             "final_subnets": "[if(parameters('ingressApplicationGateway'), concat(array(variables('subnets_2')), array(variables('appgw_subnet'))), array(variables('subnets_2')))]",
@@ -1095,7 +1154,7 @@
                     "properties": {
                       "privateLinkServiceId": "[parameters('privateLinkAkvId')]",
                       "groupIds": [
-                        "registry"
+                        "vault"
                       ]
                     }
                   }
@@ -1354,6 +1413,9 @@
           },
           "vnetAksSubnetAddressPrefix": {
             "value": "[parameters('vnetAksSubnetAddressPrefix')]"
+          },
+          "certManagerFW": {
+            "value": "[parameters('certManagerFW')]"
           }
         },
         "template": {
@@ -1363,7 +1425,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "10081825942747845740"
+              "templateHash": "16291078569244928548"
             }
           },
           "parameters": {
@@ -1382,6 +1444,10 @@
             },
             "vnetAksSubnetAddressPrefix": {
               "type": "string"
+            },
+            "certManagerFW": {
+              "type": "bool",
+              "defaultValue": false
             }
           },
           "functions": [],
@@ -1472,28 +1538,7 @@
                       "action": {
                         "type": "Allow"
                       },
-                      "rules": [
-                        {
-                          "name": "aks",
-                          "protocols": [
-                            {
-                              "port": 443,
-                              "protocolType": "Https"
-                            },
-                            {
-                              "port": 80,
-                              "protocolType": "Http"
-                            }
-                          ],
-                          "targetFqdns": [],
-                          "fqdnTags": [
-                            "AzureKubernetesService"
-                          ],
-                          "sourceAddresses": [
-                            "[parameters('vnetAksSubnetAddressPrefix')]"
-                          ]
-                        }
-                      ]
+                      "rules": "[concat(array(createObject('name', 'aks', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(), 'fqdnTags', createArray('AzureKubernetesService'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), if(parameters('certManagerFW'), createArray(createObject('name', 'cetman-quay', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('quay.io', '*.quay.io'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix'))), createObject('name', 'cetman-letsencrypt', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('letsencrypt.org', '*.letsencrypt.org'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()))]"
                     }
                   }
                 ],
