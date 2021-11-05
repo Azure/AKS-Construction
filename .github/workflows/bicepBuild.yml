@@ -53,12 +53,17 @@ jobs:
           $diff=git diff --shortstat
           
           if ($null -eq $diff) {
+            write-output "No difference in compiled bicep to commit"
             echo "::set-output name=GITDIFF::false" #outputting for condition
           }
           else {
+            write-output "No difference in compiled bicep to commit"
             echo "::set-output name=GITDIFF::true" #outputting for condition
           }
           
+      - name: Debug
+        run: |
+          echo "gitdiff is ${{ steps.isGitDiff.outputs.GITDIFF}}"
           
       - name: GIT Push Json file
         if: ${{ steps.isGitDiff.outputs.GITDIFF}}
