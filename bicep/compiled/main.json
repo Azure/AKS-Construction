@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "5512021043181041758"
+      "templateHash": "15343024568483163339"
     }
   },
   "parameters": {
@@ -2201,6 +2201,10 @@
     "keyVaultName": {
       "type": "string",
       "value": "[if(parameters('createKV'), variables('akvName'), '')]"
+    },
+    "keyVaultId": {
+      "type": "string",
+      "value": "[if(parameters('createKV'), resourceId('Microsoft.KeyVault/vaults', variables('akvName')), '')]"
     },
     "containerRegistryName": {
       "type": "string",
