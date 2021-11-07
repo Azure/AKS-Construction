@@ -118,7 +118,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
 output vnetId string = vnet.id
 output aksSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, aks_subnet_name)
 output fwSubnetId string = azureFirewalls ? '${vnet.id}/subnets/${fw_subnet_name}' : ''
-//output acrPoolSubnetId string = acrPrivatePool ? '${vnet.id}/subnets/${acrpool_subnet_name}' : ''
+output acrPoolSubnetId string = acrPrivatePool ? '${vnet.id}/subnets/${acrpool_subnet_name}' : ''
 output appGwSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, appgw_subnet_name)
 
 var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')

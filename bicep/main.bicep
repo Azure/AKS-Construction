@@ -291,7 +291,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
 }
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
 
-resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (!empty(registries_sku) && privateLinks && !empty(acrIPWhitelist)) {
+resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (!empty(registries_sku) && privateLinks && acrPrivatePool) {
   name: 'private-pool'
   location: location
   parent: acr
@@ -299,7 +299,7 @@ resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-p
     count: 1
     os: 'Linux'
     tier: 'S1'
-    virtualNetworkSubnetResourceId: aksSubnetId
+    virtualNetworkSubnetResourceId: network.outputs.acrPoolSubnetId
   }
 }
 
