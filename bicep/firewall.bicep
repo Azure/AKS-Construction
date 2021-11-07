@@ -4,6 +4,8 @@ param workspaceDiagsId string = ''
 param fwSubnetId string
 param vnetAksSubnetAddressPrefix string
 param certManagerFW bool = false
+param acrPrivatePool bool = false
+param acrAgentPoolSubnetAddressPrefix string = ''
 
 var firewallPublicIpName = 'pip-afw-${resourceName}'
 resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = {
@@ -81,26 +83,28 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
           action: {
             type: 'Allow'
           }
-          rules: concat(array({
-              name: 'aks'
-              protocols: [
-                {
-                  port: 443
-                  protocolType: 'Https'
-                }
-                {
-                  port: 80
-                  protocolType: 'Http'
-                }
-              ]
-              targetFqdns: []
-              fqdnTags: [
-                'AzureKubernetesService'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-            }), certManagerFW ? [
+          rules: concat([
+              {
+                name: 'aks'
+                protocols: [
+                  {
+                    port: 443
+                    protocolType: 'Https'
+                  }
+                  {
+                    port: 80
+                    protocolType: 'Http'
+                  }
+                ]
+                targetFqdns: []
+                fqdnTags: [
+                  'AzureKubernetesService'
+                ]
+                sourceAddresses: [
+                  vnetAksSubnetAddressPrefix
+                ]
+              }
+            ], certManagerFW ? [
               {
                 name: 'cetman-quay'
                 protocols: [
@@ -153,7 +157,7 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
           action: {
             type: 'Allow'
           }
-          rules: [
+          rules: concat([
             {
               name: 'ControlPlaneTCP'
               protocols: [
@@ -200,7 +204,27 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
                 '443'
               ]
             }
-          ]
+          ], acrPrivatePool ? [
+            {
+              name: 'acr-agentpool'
+              protocols: [
+                'TCP'
+              ]
+              sourceAddresses: [
+                acrAgentPoolSubnetAddressPrefix
+              ]
+              destinationAddresses: [
+                'AzureKeyVault'
+                'Storage'
+                'EventHub'
+                'AzureActiveDirectory'
+                'AzureMonitor'
+              ]
+              destinationPorts: [
+                '443'
+              ]
+            }
+          ]: [])
         }
       }
     ]

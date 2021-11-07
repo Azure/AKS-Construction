@@ -240,17 +240,24 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     options={[
                         { key: 'none', text: 'No, my application images will be on DockerHub or another registry' },
                         { key: 'Basic', text: 'Yes, setup Azure Container Registry "Basic" tier & authorise aks to pull images' },
-                        { key: 'Standard', text: 'Yes, setup Azure Container Registry "Standard" tier (recommended for production)' },
-                        { key: 'Premium', text: 'Yes, setup Azure Container Registry "Premium" tier (required for Service Endpoints & Private Link)' }
+                        { key: 'Standard', text: 'Yes, setup Azure Container Registry "Standard" tier (minimum recommended for production)' },
+                        { key: 'Premium', text: 'Yes, setup Azure Container Registry "Premium" tier (required for Private Link)' }
                     ]}
                     onChange={(ev, { key }) => updateFn("registry", key)}
                 />
                 {hasError(invalidArray, 'registry') &&
                     <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'registry')}</MessageBar>
                 }
-                {net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' &&
-                    <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.warning}>As you have selected Container Registry in Networking Service Endpoint, the template will only Allow traffic to your Registry from the AKS Subnet, and your specified IP addresses <b>{deploy.apiips.split(',')}</b> (<Link target="_t2" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet">docs</Link>) *** Preview feature</MessageBar>
-                }
+
+            </Stack.Item>
+
+            <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
+                <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label="Create ACR Private Agent Pool (applicable to private link)" />
+                <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
+                    <TextField disabled={true} label="Agent Pool" value="S1"/>  
+                    <TextField disabled={true} label="O/S" value="Linux"/>  
+                    <TextField disabled={true} label="Agent Count" value="1"/>  
+                </Stack>
             </Stack.Item>
 
             <Separator className="notopmargin" />

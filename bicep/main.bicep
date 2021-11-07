@@ -78,6 +78,8 @@ param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
 param privateLinks bool = false
 param privateLinkSubnetAddressPrefix string = '10.3.0.0/16'
 
+param acrPrivatePool bool = false
+param acrAgentPoolSubnetAddressPrefix string = '10.4.0.0/16'
 
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
@@ -95,6 +97,8 @@ module network './network.bicep' = if (custom_vnet) {
     privateLinkSubnetAddressPrefix: privateLinkSubnetAddressPrefix
     privateLinkAcrId: privateLinks && !empty(registries_sku) ? acr.id : ''
     privateLinkAkvId: privateLinks && createKV ? kv.id : ''
+    acrPrivatePool: acrPrivatePool
+    acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
   }
 }
 
@@ -287,6 +291,19 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
 }
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
 
+resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (!empty(registries_sku) && privateLinks && !empty(acrIPWhitelist)) {
+  name: 'private-pool'
+  location: location
+  parent: acr
+  properties: {
+    count: 1
+    os: 'Linux'
+    tier: 'S1'
+    virtualNetworkSubnetResourceId: aksSubnetId
+  }
+}
+
+
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
 
@@ -333,6 +350,8 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     certManagerFW: certManagerFW
+    acrPrivatePool: acrPrivatePool
+    acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
   }
 }
 

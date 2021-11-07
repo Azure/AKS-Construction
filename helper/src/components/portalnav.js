@@ -103,7 +103,7 @@ export default function PortalNav({ config }) {
     fetch('https://api.ipify.org?format=json').then(response => {
       return response.json();
     }).then((res) => {
-      setTabValues((p) => { return { ...p, deploy: { ...p.deploy, apiips: res.ip } } })
+      setTabValues((p) => { return { ...p, deploy: { ...p.deploy, apiips: `${res.ip}/32` } } })
 
     }).catch((err) => console.error('Problem fetching my IP', err))
     // eslint-disable-next-line react-hooks/exhaustive-deps

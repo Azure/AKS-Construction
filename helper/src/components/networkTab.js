@@ -4,8 +4,8 @@ import { Image, ImageFit, Link, Separator, TextField, Dropdown, DirectionalHint,
 import { arrayAdd, arrayDel, adv_stackstyle, hasError, getError } from './common'
 
 const columnProps = {
-    tokens: { childrenGap: 15 },
-    styles: { root: { width: 300 } }
+    tokens: { childrenGap: 20 },
+    styles: { root: { minWidth: 380 } }
 }
 
 
@@ -182,14 +182,14 @@ function PodServiceNetwork({ net, updateFn }) {
     return (
         <Stack {...columnProps}>
             <Label>Kubernetes Networking Configuration</Label>
-            <Stack.Item align="start">
-                <TextField prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet'} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' ? net.podCidr : "IPs from subnet"} />
+            <Stack.Item styles={{root: {width: '380px'}}} align="start">
+                <TextField  prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet'} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' ? net.podCidr : "Using CNI, POD IPs from subnet"} />
             </Stack.Item>
-            <Stack.Item align="start">
+            <Stack.Item styles={{root: {width: '380px'}}} align="start">
                 <TextField prefix="Cidr" label="Service Network" onChange={(ev, val) => updateFn("serviceCidr", val)} value={net.serviceCidr} />
                 <MessageBar messageBarType={MessageBarType.warning}>Address space that isn't in use elsewhere in your network environment <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
             </Stack.Item>
-            <Stack.Item align="start">
+            <Stack.Item styles={{root: {width: '380px'}}} align="start">
                 <TextField prefix="IP" label="Service Network" onChange={(ev, val) => updateFn("dnsServiceIP", val)} value={net.dnsServiceIP} />
                 <MessageBar messageBarType={MessageBarType.warning}>Ensure its an address within the Service CIDR above <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
             </Stack.Item>
@@ -202,12 +202,7 @@ function BYOVNET({ net, addons, updateFn, invalidArray }) {
     return (
 
         <Stack styles={adv_stackstyle}>
-            <Label>Kubernetes Network Configuration</Label>
-            <Stack horizontal tokens={{ childrenGap: 50 }} styles={{ root: { width: 650 } }}>
-                <Stack {...columnProps}></Stack>
-                <PodServiceNetwork net={net} updateFn={updateFn} />
 
-            </Stack>
             <Label>Bring your Own VNET and Subnets</Label>
             <MessageBar>Get your user subnet by running <Label>az network vnet subnet show --vnet-name `{'<net name>'}` -g `{'<vnet rg>'}` -n `{'<subnet name>'}` --query "id"</Label></MessageBar>
             <TextField value={net.byoAKSSubnetId} onChange={(ev, v) => updateFn("byoAKSSubnetId", v)} errorMessage={getError(invalidArray, 'byoAKSSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing AKS Nodes subnet ResourceId</Text>} />
@@ -217,6 +212,9 @@ function BYOVNET({ net, addons, updateFn, invalidArray }) {
 
             <TextField disabled={addons.ingress !== 'appgw'} value={net.byoAGWSubnetId} onChange={(ev, v) => updateFn("byoAGWSubnetId", v)} errorMessage={getError(invalidArray, 'byoAGWSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing Application Gateway subnet ResourceId</Text>} />
             <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets these requirements <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">here</Link></MessageBar>
+
+            <Separator/>
+            <PodServiceNetwork net={net} updateFn={updateFn} />
 
         </Stack>
     )
@@ -246,12 +244,16 @@ function CustomVNET({ net, addons, updateFn }) {
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" disabled={addons.ingress !== 'appgw'} label="Application Gateway subnet" onChange={(ev, val) => updateFn("vnetAppGatewaySubnetAddressPrefix", val)} value={addons.ingress === 'appgw' ? net.vnetAppGatewaySubnetAddressPrefix : "N/A"} />
+                        <TextField prefix="Cidr" disabled={addons.ingress !== 'appgw'} label="Application Gateway subnet" onChange={(ev, val) => updateFn("vnetAppGatewaySubnetAddressPrefix", val)} value={addons.ingress === 'appgw' ? net.vnetAppGatewaySubnetAddressPrefix : "No Application Gateway requested"} />
                         <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">these</Link> requirements</MessageBar>
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" disabled={!net.vnetprivateend} label="Private Endpoint subnet" onChange={(ev, val) => updateFn("privateLinkSubnetAddressPrefix", val)} value={net.vnetprivateend ? net.privateLinkSubnetAddressPrefix : "N/A"} />
+                        <TextField prefix="Cidr" disabled={!net.vnetprivateend} label="Private Endpoint subnet" onChange={(ev, val) => updateFn("privateLinkSubnetAddressPrefix", val)} value={net.vnetprivateend ? net.privateLinkSubnetAddressPrefix : "No Private Endpoints requested"} />
+                    </Stack.Item>
+
+                    <Stack.Item style={{ marginLeft: "20px"}}>
+                        <TextField prefix="Cidr" disabled={!net.vnetprivateend || addons.registry === "none" || !addons.acrPrivatePool  } label="ACR Private Agent Pool subnet" onChange={(ev, val) => updateFn("acrAgentPoolSubnetAddressPrefix", val)} value={net.vnetprivateend && addons.registry !== "none" && addons.acrPrivatePool  ? net.acrAgentPoolSubnetAddressPrefix : "No Agen Pool requested"} />
                     </Stack.Item>
                 </Stack>
 

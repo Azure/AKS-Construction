@@ -14,7 +14,6 @@
             "demoapp": false,
             "disablePreviews": false,
             "acrPushRole": true,
-            "acrIPWhitelist": true,
             "kvCertSecretRole": true,
             "kvIPWhitelist": true,
             "clusterAdminRole": true,
@@ -58,6 +57,7 @@
             "dns": false,
             "dnsZoneId": "",
             "registry": "none",
+            "acrPrivatePool": false,
             "podid": false,
             "podscale": false,
             "monitor": "none",
@@ -81,6 +81,7 @@
             "ersub": "10.242.0.0/24",
             "vnetAppGatewaySubnetAddressPrefix": "10.2.0.0/16",
             "privateLinkSubnetAddressPrefix": "10.3.0.0/16",
+            "acrAgentPoolSubnetAddressPrefix": "10.4.0.0/16",
             "podCidr": "10.244.0.0/16",
             "serviceCidr": "10.0.0.0/16",
             "dnsServiceIP": "10.0.0.10"
@@ -319,6 +320,7 @@
                                     "set": "none"
                                 }
                             ],
+                            "acrPrivatePool": false,
                             "azurepolicy": "audit",
                             "appgwKVIntegration": [
                                 {
@@ -411,6 +413,7 @@
                                     "set": "none"
                                 }
                             ],
+                            "acrPrivatePool": true,
                             "appgwKVIntegration": [
                                 {
                                     "page": "addons",

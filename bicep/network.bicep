@@ -16,6 +16,17 @@ param privateLinkSubnetAddressPrefix string = ''
 param privateLinkAcrId string = ''
 param privateLinkAkvId string = ''
 
+param acrPrivatePool bool = false
+param acrAgentPoolSubnetAddressPrefix string = ''
+
+var acrpool_subnet_name = 'acrpool-sn'
+var acrpool_subnet = {
+  name: acrpool_subnet_name
+  properties: {
+    addressPrefix: acrAgentPoolSubnetAddressPrefix
+  }
+}
+
 var private_link_subnet_name = 'privatelinks-sn'
 var private_link_subnet = {
   name: private_link_subnet_name
@@ -85,10 +96,11 @@ var aks_subnet =  {
 
 var subnets_1 = azureFirewalls ? concat(array(aks_subnet), array(fw_subnet)) : array(aks_subnet)
 var subnets_2 = privateLinks ? concat(array(subnets_1), array(private_link_subnet)) : array(subnets_1)
+var subnets_3 = acrPrivatePool ? concat(array(subnets_2), array(acrpool_subnet)) : array(subnets_2)
 
 // DONT create appgw subnet, the addon will create it for us
 
-var final_subnets = ingressApplicationGateway ? concat(array(subnets_2), array(appgw_subnet)) : array(subnets_2)
+var final_subnets = ingressApplicationGateway ? concat(array(subnets_3), array(appgw_subnet)) : array(subnets_3)
 
 var vnetName = 'vnet-${resourceName}'
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
@@ -106,6 +118,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
 output vnetId string = vnet.id
 output aksSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, aks_subnet_name)
 output fwSubnetId string = azureFirewalls ? '${vnet.id}/subnets/${fw_subnet_name}' : ''
+//output acrPoolSubnetId string = acrPrivatePool ? '${vnet.id}/subnets/${acrpool_subnet_name}' : ''
 output appGwSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, appgw_subnet_name)
 
 var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
