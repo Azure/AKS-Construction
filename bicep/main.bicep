@@ -183,7 +183,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     enableSoftDelete: KeyVaultSoftDelete 
     enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
-    publicNetworkAccess: privateLinks ? 'disabled' : 'enabled' 
+    publicNetworkAccess: privateLinks && empty(kvIPWhitelist) ? 'disabled' : 'enabled' 
   }
 }
 

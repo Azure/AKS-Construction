@@ -5,7 +5,9 @@ import { adv_stackstyle, getError } from './common'
 
 export default function AppsTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs }) {
 
-    const { addons, deploy, net } = tabValues
+    const { addons, deploy, net, cluster } = tabValues
+    const aks = `aks-${deploy.clusterName}`
+
     const deploycmd = `
 # Build app
 export ACRNAME=$(az acr list -g ${deploy.rg} --query [0].name -o tsv)
@@ -19,6 +21,22 @@ export COMMON_NAME=openjdk-demo-service
 az keyvault certificate create --vault-name $KVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=$\{COMMON_NAME\}/g )"
 
 
+## Create Root Cert reference in AppGW (Required for Self-Signed Cert)
+az network application-gateway root-cert create \\
+     --gateway-name $(az network application-gateway list -g ${deploy.rg} --query [0].name -o tsv)  \\
+     --resource-group ${deploy.rg} \\
+     --name $COMMON_NAME \\
+     --keyvault-secret $(az keyvault secret list-versions --vault-name $KVNAME -n $COMMON_NAME --query "[?attributes.enabled].id" -o tsv)
+
+# Install
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
+helm install java-tls-app openjdk-demo --repo https://github.com/Gordonby/minihelm/tree/main/samples/javatlsappv2  \\
+    --set image.repository=$\{ACRNAME\}.azurecr.io/openjdk-demo \\
+    --set image.tag=0.0.1 \\
+    --set csisecrets.vaultname=$KVNAME \\
+    --set csisecrets.tenantId=$(az account show --query tenantId -o tsv) \\
+    --set csisecrets.clientId=$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
+${cluster.apisecurity === "private" ? `"` : ``}
 `
 
     return (
@@ -54,7 +72,7 @@ az keyvault certificate create --vault-name $KVNAME -n $COMMON_NAME -p "$(az key
                             <Label >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</Label>
                     </Stack.Item>
                     <Stack.Item>
-                            <TextField value={""} rows={10} readOnly={true} styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  />
+                            <TextField value={""} rows={25} readOnly={true} styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  />
                     </Stack.Item>
                 </PivotItem>
                 <PivotItem headerText="Full Stack Typescript">
@@ -63,7 +81,7 @@ az keyvault certificate create --vault-name $KVNAME -n $COMMON_NAME -p "$(az key
                             <Label >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</Label>
                     </Stack.Item>
                     <Stack.Item>
-                            <TextField value={""} rows={10} readOnly={true} styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  />
+                            <TextField value={""} rows={25} readOnly={true} styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  />
                     </Stack.Item>
                 </PivotItem>
             </Pivot>
