@@ -17,9 +17,12 @@ az acr build -r $ACRNAME -t openjdk-demo:0.0.1  ${net.vnetprivateend ? "--agent-
 
 # Create backend Certificate in KeyVault
 export KVNAME=$(az keyvault list -g ${deploy.rg} --query [0].name -o tsv)
-export COMMON_NAME=openjdk-demo-service 
+export COMMON_NAME=openjdk-demo
 az keyvault certificate create --vault-name $KVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=$\{COMMON_NAME\}/g )"
 
+
+# Wait for Cert to be issued
+sleep 1m
 
 ## Create Root Cert reference in AppGW (Required for Self-Signed Cert)
 az network application-gateway root-cert create \\
@@ -29,13 +32,9 @@ az network application-gateway root-cert create \\
      --keyvault-secret $(az keyvault secret list-versions --vault-name $KVNAME -n $COMMON_NAME --query "[?attributes.enabled].id" -o tsv)
 
 # Install
+export APPNAME=openjdk-demo
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
-helm install java-tls-app openjdk-demo --repo https://github.com/Gordonby/minihelm/tree/main/samples/javatlsappv2  \\
-    --set image.repository=$\{ACRNAME\}.azurecr.io/openjdk-demo \\
-    --set image.tag=0.0.1 \\
-    --set csisecrets.vaultname=$KVNAME \\
-    --set csisecrets.tenantId=$(az account show --query tenantId -o tsv) \\
-    --set csisecrets.clientId=$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
+helm upgrade --install $APPNAME https://github.com/khowling/e2e-tls-java-aks/blob/main/openjdk-demo-3.1.0.tgz?raw=true  --set letsEncrypt.issuer=letsencrypt-prod,image.repository=$\{ACRNAME\}.azurecr.io/openjdk-demo,image.tag=0.0.1,csisecrets.vaultname=$\{KVNAME\},csisecrets.tenantId=$(az account show --query tenantId -o tsv),csisecrets.clientId=$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv),dnsname=$\{APPNAME\}.${addons.dnsZoneId.split('/')[8]}
 ${cluster.apisecurity === "private" ? `"` : ``}
 `
 
@@ -50,7 +49,7 @@ ${cluster.apisecurity === "private" ? `"` : ``}
                         <Stack.Item>
                             <Label >Simple Java Spring boot application, that uses KeyVault to generate Certs to expose Tomcat TLS endpoint, and public Ingress TLS issued by cert-manager</Label>
 
-                            <MessageBar messageBarType={MessageBarType.error}>Please ensure you select all the requirements below to run the demo app successfully</MessageBar>
+                            <MessageBar messageBarType={MessageBarType.error}>Please ensure you deployment meets all the requirements below to run the demo app successfully</MessageBar>
                             <Label>Sample App Requires</Label>
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.registry !== "none"} label="(Addons tab) Container Registry, for application container repository" />
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} disabled={!net.vnetprivateend} checked={addons.acrPrivatePool} label="(Addons tab) Container Registry Private Pool, for container build task (required for private link only)" />

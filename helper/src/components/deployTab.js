@@ -30,7 +30,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...sericeparams }),
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
-    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(cluster.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
+    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
     ...(addons.registry !== "none" && { 
         registries_sku: addons.registry, 
         ...(addons.acrPrivatePool && {acrPrivatePool: true}),
@@ -217,16 +217,16 @@ spec:
       name: letsencrypt-prod
     # Enable the HTTP-01 challenge provider
     solvers:
-    - dns01:
-        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
-        azureDNS:
-          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
-          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
-          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
-          managedIdentity:
-            # client id of the node pool managed identity (can not be set at the same time as resourceID)
-            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
-            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
+#    - dns01:
+#        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
+#        azureDNS:
+#          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
+#          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
+#          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
+#          managedIdentity:
+#            # client id of the node pool managed identity (can not be set at the same time as resourceID)
+#            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
+#            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
     - http01:
         ingress:
           class: ${(addons.ingress === 'contour' ? 'contour' : (addons.ingress === 'nginx' ? "nginx" : "azure/application-gateway"))}
@@ -303,18 +303,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
         </Stack>
 
-
-
       </Stack>
-      {/*
-          { (addons.ingress === 'none' || !addons.dns || !addons.certMan) &&
-            <MessageBar messageBarType={MessageBarType.info}>To enable the option of deploying a <b>Demo Ecommerce App</b>, go to the <b>Application Requirements</b> tab, and select an ingress option (Application Gateway or Nginx), and complete the FQDN and Certificate options</MessageBar>
-          }
-          <Toggle
-            disabled={(addons.ingress === 'none' || !addons.dns || !addons.certMan)}
-            label={<Text>Do you want to install the <Link target="_a" href="https://github.com/khowling/aks-ecomm-demo">Demo Ecommerce App</Link> into your cluster with a HTTPS FQDN exposed through an Ingress controller</Text>}
-            checked={deploy.demoapp} onText="Yes" offText="No" onChange={(ev, checked) => updateFn("demoapp", checked)} />
-        */}
 
       <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Deploy Cluster</b><Image src="./bicep.png" /> <p style={{ marginLeft: '10px' }}>powered by Bicep</p></div> </Separator>
 
@@ -328,7 +317,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
       <Pivot >
         <PivotItem headerText="Provision Environment (CLI)"  >
-          <TextField value={deploycmd} rows={deploycmd.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Commands to deploy your fully operational environment" styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline errorMessage={!allok ? "Please complete all items that need attention before running script" : ""} />
+          <TextField data-testid="deploy-deploycmd"  value={deploycmd} rows={deploycmd.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Commands to deploy your fully operational environment" styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline errorMessage={!allok ? "Please complete all items that need attention before running script" : ""} />
           <Text styles={{ root: { marginTop: "2px !important" } }} variant="medium" >
             Open a Linux shell (requires 'az cli' pre-installed), or, open the
             <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
