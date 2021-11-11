@@ -261,7 +261,12 @@ jobs:
             
             $whatIf=$jsonFileRaw | ConvertFrom-Json
             
-            Write-Output $whatif.changes[0].after.type
+            if ($null -eq $whatIf) {
+              Write-Output "What If results are null"
+              #We might want to throw an error here, after the whatif bug gets fixed https://github.com/Azure/azure-cli/issues/19850
+            } else {
+              Write-Output $whatif.changes[0].after.type
+            }
           }
 
       - name: What If Analysis Output - Pester Testing
@@ -275,36 +280,41 @@ jobs:
         run: |     
           #This is a current gap in the What-If analysis.
           $whatifpath='whatif.json'
-          
           $whatifexists=Test-Path -path $whatifpath
 
           if ($whatifexists) {
-            $paramFilePath="${{ env.ParamFilePath }}"
-            $paramFileContent=Get-Content $paramFilePath
-            $params=$paramFileContent|ConvertFrom-Json
+            $whatIf = Get-Content $whatifpath | ConvertFrom-Json
+            
+            if ($null -eq $whatIf) {
+              Write-Output "What If results are null"
+              #We might want to throw an error here, after the whatif bug gets fixed https://github.com/Azure/azure-cli/issues/19850
+            } else {          
+              $paramFilePath="${{ env.ParamFilePath }}"
+              $paramFileContent=Get-Content $paramFilePath
+              $params=$paramFileContent|ConvertFrom-Json
 
-            if($params.parameters.createKV.value -eq $true) {
-              Write-Output "Checking for already existing soft deleted KV"
+              if($params.parameters.createKV.value -eq $true) {
+                Write-Output "Checking for already existing soft deleted KV"
 
-              #lets do this properly and interrogate the whatif file for the KVNAME
-              $whatIf = Get-Content $whatifpath | ConvertFrom-Json
-              $kvafter = $whatif.changes | where-object {$_.after.type -eq 'Microsoft.KeyVault/vaults'} | where {$_.changeType -ne 'Ignore'}  | select after
-              $vaultname = $kvafter.after.name
+                #lets do this properly and interrogate the whatif file for the KVNAME
+                $kvafter = $whatif.changes | where-object {$_.after.type -eq 'Microsoft.KeyVault/vaults'} | where {$_.changeType -ne 'Ignore'}  | select after
+                $vaultname = $kvafter.after.name
 
-              write-output "Looking for KeyVault $vaultname"
-              Get-AzKeyVault -InRemovedState | ft 
+                write-output "Looking for KeyVault $vaultname"
+                Get-AzKeyVault -InRemovedState | ft 
 
-              $deletedKv = Get-AzKeyVault -InRemovedState | where-object {$_.vaultname -eq $vaultname}
+                $deletedKv = Get-AzKeyVault -InRemovedState | where-object {$_.vaultname -eq $vaultname}
 
-              if($deletedKv.length -eq 0) {
-                Write-Output "All is good, soft deleted KV not found in soft deleted list."
-              }
-              else {
-                Write-Output "Soft deleted KV output"
-                Write-Output $deletedKv.length
-                Write-Output $deletedKv
+                if($deletedKv.length -eq 0) {
+                  Write-Output "All is good, soft deleted KV not found in soft deleted list."
+                }
+                else {
+                  Write-Output "Soft deleted KV output"
+                  Write-Output $deletedKv.length
+                  Write-Output $deletedKv
 
-                Write-Error "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
+                  Write-Error "Existing soft deleted Key Vault ($vaultName) Found - Cannot proceed, as deployment will fail"
+                }
               }
             }
           }
