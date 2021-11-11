@@ -860,7 +860,7 @@ jobs:
           EMAILAD: "gdogg@microsoft.com"
         run: |
           echo "Email Address for Lets Encrypt: $EMAILAD"
-          helm upgrade --install smokecertissuer ./helmcharts/samples/certmanager --set email=$EMAILAD
+          helm upgrade --install smokecertissuer ./helmcharts/samples/certmanagerissuer --set email=$EMAILAD
 
       - name: Verify ClusterIssuer
         if: github.event.inputs.doVerifySteps != 'no'
