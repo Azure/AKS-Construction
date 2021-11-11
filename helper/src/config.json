@@ -15,7 +15,7 @@
             "disablePreviews": false,
             "acrPushRole": true,
             "kvCertSecretRole": true,
-            "kvIPWhitelist": true,
+            "kvIPWhitelist": false,
             "clusterAdminRole": true,
             "clusterIPWhitelist" : true
         },
@@ -105,6 +105,7 @@
                     "icon": "Manufacturing",
                     "values": {
                         "cluster": {
+                            "SystemPoolType": "none",
                             "autoscale": false,
                             "upgradeChannel": "none"
                         },
@@ -143,6 +144,7 @@
                     "icon": "DeveloperTools",
                     "values": {
                         "cluster": {
+                            "SystemPoolType": "Cost-Optimised",
                             "autoscale": false,
                             "upgradeChannel": "none"
                         },
@@ -184,6 +186,7 @@
                     "icon": "Touch",
                     "values": {
                         "cluster": {
+                            "SystemPoolType": "Cost-Optimised",
                             "autoscale": true,
                             "upgradeChannel": "stable"
                         },
@@ -230,6 +233,9 @@
                     },
                     "icon": "Unlock",
                     "values": {
+                        "deploy": {
+                            "kvIPWhitelist": false
+                        },
                         "cluster": {
                             "enable_aad": false,
                             "apisecurity": "none"
@@ -291,6 +297,9 @@
                     },
                     "icon": "Lock12",
                     "values": {
+                        "deploy": {
+                            "kvIPWhitelist": false
+                        },
                         "cluster": {
                             "enable_aad": true,
                             "apisecurity": "whitelist"
@@ -384,6 +393,9 @@
                     },
                     "icon": "ProtectionCenterLogo32",
                     "values": {
+                        "deploy": {
+                            "kvIPWhitelist": true
+                        },
                         "cluster": {
                             "enable_aad": true,
                             "apisecurity": "private"

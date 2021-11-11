@@ -163,18 +163,23 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     tenantId: subscription().tenantId
     sku: {
       family: 'A'
-      name: 'Standard'
+      name: 'standard'
     }
-    networkAcls: {
+    // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
+    publicNetworkAccess: privateLinks && empty(kvIPWhitelist) ? 'disabled' : 'enabled' 
+    
+    networkAcls: privateLinks && !empty(kvIPWhitelist) ? {
       bypass: 'AzureServices' 
-      defaultAction: 'Deny'
+      defaultAction: 'Deny' 
+      
       ipRules: empty(kvIPWhitelist) ? [] : [
           {
           value: kvIPWhitelist
         }
       ]
       virtualNetworkRules: []
-    }
+    } : {}
+    
     //enabledForTemplateDeployment: true
     enableRbacAuthorization: true
     enabledForDeployment: false
@@ -182,8 +187,6 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     enabledForTemplateDeployment: false
     enableSoftDelete: KeyVaultSoftDelete 
     enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
-    // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
-    publicNetworkAccess: privateLinks && empty(kvIPWhitelist) ? 'disabled' : 'enabled' 
   }
 }
 
@@ -194,7 +197,7 @@ resource kvAppGwSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole
     principalType: 'ServicePrincipal'
-    principalId: appGwIdentity.properties.principalId
+    principalId: deployAppGw ? appGwIdentity.properties.principalId : ''
   }
 }
 
@@ -235,11 +238,11 @@ resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04
 output keyVaultName string = createKV ? kv.name : ''
 output keyVaultId string = createKV ? kv.id : ''
 
-resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createKV) {
+resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && createKV) {
   name: 'kvDiags'
   scope: kv
   properties: {
-    workspaceId:workspaceId
+    workspaceId:aks_law.id
     logs: [
       {
         category: 'AuditEvent'
@@ -265,8 +268,6 @@ resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
                                                
 param registries_sku string = ''
 
-@description('Add IP to firewall whitelist')
-param acrIPWhitelist string = ''
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
@@ -277,21 +278,25 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
     name: registries_sku
   }
   properties: {
+    publicNetworkAccess: privateLinks /* && empty(acrIPWhitelist)*/ ? 'Disabled' : 'Enabled' 
+    /*
     networkRuleSet: {
-      defaultAction: 'Deny'
+      defaultAction: 'Deny' 
+      
       ipRules: empty(acrIPWhitelist) ? [] : [
           {
             action: 'Allow'
-            value: kvIPWhitelist
+            value: acrIPWhitelist
         }
       ]
       virtualNetworkRules: []
     }
+    */
   }
 }
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
 
-resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (!empty(registries_sku) && privateLinks && acrPrivatePool) {
+resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
   name: 'private-pool'
   location: location
   parent: acr
@@ -299,7 +304,7 @@ resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-p
     count: 1
     os: 'Linux'
     tier: 'S1'
-    virtualNetworkSubnetResourceId: network.outputs.acrPoolSubnetId
+    virtualNetworkSubnetResourceId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
   }
 }
 
@@ -346,7 +351,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
-    workspaceDiagsId: aks_law.id
+    workspaceDiagsId: createLaw ? aks_law.id : ''
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     certManagerFW: certManagerFW
@@ -394,7 +399,6 @@ resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11
   location: location
 }
 
-var workspaceId = aks_law.id
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
@@ -588,27 +592,26 @@ resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-previ
 }
 
 // AppGW Diagnostics
-var diagProperties = {
-  workspaceId: workspaceId
-  logs: [
-    {
-      category: 'ApplicationGatewayAccessLog'
-      enabled: true
-    }
-    {
-      category: 'ApplicationGatewayPerformanceLog'
-      enabled: true
-    }
-    {
-      category: 'ApplicationGatewayFirewallLog'
-      enabled: true
-    }
-  ]
-}
-resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (deployAppGw && !empty(workspaceId)) {
+resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && deployAppGw) {
   scope: appgw
   name: 'appgwDiag'
-  properties: diagProperties
+  properties: {
+    workspaceId: aks_law.id
+    logs: [
+      {
+        category: 'ApplicationGatewayAccessLog'
+        enabled: true
+      }
+      {
+        category: 'ApplicationGatewayPerformanceLog'
+        enabled: true
+      }
+      {
+        category: 'ApplicationGatewayFirewallLog'
+        enabled: true
+      }
+    ]
+  }
 }
 
 // =================================================
@@ -781,7 +784,7 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
 }) : aks_addons
 
 
-var aks_addons2 = omsagent ? union(aks_addons1, {
+var aks_addons2 = createLaw && omsagent ? union(aks_addons1, {
   omsagent: {
     enabled: true
     config: {
@@ -902,7 +905,7 @@ param AksDiagCategories array = [
   'guard'
 ]
 
-resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  if (omsagent)  {
+resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  if (createLaw && omsagent)  {
   name: 'aksDiags'
   scope: aks
   properties: {
@@ -936,7 +939,7 @@ var AlertFrequencyLookup = {
 }
 var AlertFrequency = AlertFrequencyLookup[AksMetricAlertMetricFrequencyModel]
 
-module aksmetricalerts './aksmetricalerts.bicep' = {
+module aksmetricalerts './aksmetricalerts.bicep' = if (createLaw) {
   name: 'aksmetricalerts'
   scope: resourceGroup()
   params: {
@@ -968,7 +971,7 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (cre
 
 //This role assignment enables AKS->LA Fast Alerting experience
 var MonitoringMetricsPublisherRole = resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb') 
-resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createLaw) {
+resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (omsagent) {
   scope: aks
   name: '${guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)}'
   properties: {
