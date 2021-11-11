@@ -245,6 +245,28 @@ jobs:
             
             echo "::set-output name=edgeSuccess::true"
 
+      - name: What If (workaround task)
+        uses: Azure/cli@1.0.4
+        continue-on-error: true #Setting to true due to bug in the AzureCLI https://github.com/Azure/azure-cli/issues/19850
+        if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
+        with:
+          azcliversion: 2.26.0
+          inlineScript: |
+            RG='${{ env.RG }}'
+            RESNAME='${{ env.RESNAME }}'
+            DEPNAME='${{ env.DEPNAME }}'
+            WHATIFPATH='whatif.json'
+            PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}'
+
+            az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS > $WHATIFPATH
+
+            if [[ -f $WHATIFPATH ]]
+            then
+                echo "The WhatIf json file was created"
+            fi
+
+            cat $WHATIFPATH
+            
       - name: What If Analysis Output - Parse output
         if: github.event.inputs.doVerifySteps != 'no'
         shell: pwsh
