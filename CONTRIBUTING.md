@@ -18,6 +18,7 @@ Various workflows run on Push / PR / Schedule.
 | Infra CI - Private Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests the most secure/private parameter config |
 | Infra CI - Byo Vnet Cluster | Push / PR / Schedule | `Quality` High maturity IaC deployment example. Tests a typical production grade parameter config |
 | Infra CI - Starter Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests a sandbox grade parameter config |
+| InfraCI - Regression Validation | Push / PR / Schedule | `Quality` Validates multiple parameter files against the bicep code to cover regression scenarios |
 | App CI | Manual | `Quality` Application deployment sample showing different application deployment practices and automation capabilities |
 
 ### Enforced PR Checks
