@@ -7,6 +7,7 @@ import NetworkTab from './networkTab'
 import AddonsTab from './addonsTab'
 import ClusterTab, { VMs } from './clusterTab'
 import DeployTab from './deployTab'
+import AppsTab from './appsTab'
 
 import { appInsights } from '../index.js'
 import { initializeIcons } from '@fluentui/react/lib/Icons';
@@ -74,12 +75,12 @@ export default function PortalNav({ config }) {
 
     var queryString = window && window.location.search
     if (queryString) {
-      var match = queryString.match('[?&]feature=([^&]+)')
-      if (match) {
+      var match1 = queryString.match('[?&]feature=([^&]+)')
+      if (match1) {
         setFeatureFlag(true)// = match[1]
       }
-      var match = queryString.match('[?&]default=es')
-      if (match) {
+      var match2 = queryString.match('[?&]default=es')
+      if (match2) {
         setEntScale(true)// = match[1]
       }
     }
@@ -102,7 +103,7 @@ export default function PortalNav({ config }) {
     fetch('https://api.ipify.org?format=json').then(response => {
       return response.json();
     }).then((res) => {
-      setTabValues((p) => { return { ...p, deploy: { ...p.deploy, apiips: res.ip } } })
+      setTabValues((p) => { return { ...p, deploy: { ...p.deploy, apiips: `${res.ip}/32` } } })
 
     }).catch((err) => console.error('Problem fetching my IP', err))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,22 +170,22 @@ export default function PortalNav({ config }) {
     }
   }
 
-  const { deploy, cluster, net, addons } = tabValues
+  const { deploy, cluster, net, addons, app } = tabValues
 
   invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph,
     "The selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache")
   invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36,
     "Enter Valid Directory ID")
 
-  invalidFn('addons', 'registry', (net.vnetprivateend || net.serviceEndpointsEnable) && (addons.registry !== 'Premium' && addons.registry !== 'none'),
-    "Premium tier is required for Service Endpoints & Private Link, either select Premium, or disable Service Endpoints and Private Link")
+  invalidFn('addons', 'registry', net.vnetprivateend && (addons.registry !== 'Premium' && addons.registry !== 'none'),
+    "Premium tier is required for Private Link, either select Premium, or disable Private Link")
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'),
     "Enter valid Azure Public or Private DNS Zone resourceId")
   invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'),
     "Enter valid email for certificate generation")
   invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'),
     "Enter valid Azure KeyVault resourceId")
-  invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'),
+  invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}.){3}[0-9]{1,3}$'),
     "Enter valid IP address")
   invalidFn('addons', 'appgwKVIntegration', addons.ingress === "appgw" && addons.appgwKVIntegration && addons.csisecret !== 'akvNew',
     "KeyVault integration requires the 'CSI Secrets' 'Yes, Provision a new KeyVault' option to be selected")
@@ -192,8 +193,8 @@ export default function PortalNav({ config }) {
     "Enter a valid Subnet Id where AKS nodes will be installed")
   invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
     "Enter a valid Subnet Id where Application Gateway is installed")
-  invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.serviceEndpointsEnable || net.afw || net.vnetprivateend),
-    "Cannot use default networking of you select Firewall, Service Endpoints, or Private Link")
+  invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.afw || net.vnetprivateend),
+    "Cannot use default networking of you select Firewall or Private Link")
   invalidFn('net', 'afw', net.afw && net.vnet_opt !== "custom",
     net.vnet_opt === "byo" ?
       "Please de-select, when using Bring your own VNET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)"
@@ -240,6 +241,9 @@ export default function PortalNav({ config }) {
           </PivotItem>
           <PivotItem headerText={tabLabels.net} itemKey="net" onRenderItemLink={(a, b) => _customRenderer('net', a, b)}>
             <NetworkTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("net", field, value)} invalidArray={invalidArray['net']} />
+          </PivotItem>
+          <PivotItem headerText={tabLabels.app} itemKey="app" onRenderItemLink={(a, b) => _customRenderer('app', a, b)}>
+            <AppsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("app", field, value)} invalidArray={invalidArray['app']} />
           </PivotItem>
         </Pivot>
 

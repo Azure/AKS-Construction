@@ -4,14 +4,16 @@ import { Image, ImageFit, Link, Separator, TextField, Dropdown, DirectionalHint,
 import { arrayAdd, arrayDel, adv_stackstyle, hasError, getError } from './common'
 
 const columnProps = {
-    tokens: { childrenGap: 15 },
-    styles: { root: { width: 300 } }
+    tokens: { childrenGap: 20 },
+    styles: { root: { minWidth: 380 } }
 }
 
 
-export default function ({ tabValues, updateFn, invalidArray, featureFlag }) {
-    const { net, addons } = tabValues
+export default function NetworkTab ({ tabValues, updateFn, invalidArray, featureFlag }) {
+    
     const [callout1, setCallout1] = useState(false)
+
+    const { net, addons } = tabValues
     var _calloutTarget1 = React.createRef()
 
     return (
@@ -45,49 +47,9 @@ export default function ({ tabValues, updateFn, invalidArray, featureFlag }) {
             </Stack.Item>
 
             <Separator className="notopmargin" />
-            <Stack.Item>
-                <Label>Secure Azure service resources to your virtual network by extending VNet identity to the service</Label>
-                <Checkbox styles={{ root: { marginLeft: '50px' } }} disabled={false} checked={net.serviceEndpointsEnable} onChange={(ev, v) => updateFn("serviceEndpointsEnable", v)} label="Enable Service Endpoints" />
-
-                {net.serviceEndpointsEnable &&
-
-                    <Stack styles={{ root: { marginLeft: '50px', marginTop: '10px' } }} tokens={{ childrenGap: 10 }}>
-
-                        <MessageBar messageBarType={MessageBarType.info}>No Network Address Translation (NAT) or gateway devices required to access your Azure dependencies from your pods</MessageBar>
-
-                        <Dropdown
-                            required={true}
-                            placeholder="Select options"
-                            label="Select the Azure Dependencies you would like to secure to your AKS VNET"
-                            selectedKeys={net.serviceEndpoints}
-                            // eslint-disable-next-line react/jsx-no-bind
-                            onChange={(ev, { key, selected }) => {
-                                updateFn("serviceEndpoints", selected ? arrayAdd(net.serviceEndpoints, key) : arrayDel(net.serviceEndpoints, key))
-                            }}
-                            multiSelect
-                            options={[
-                                { key: 'Microsoft.AzureActiveDirectory', text: 'Microsoft.AzureActiveDirectory' },
-                                { key: 'Microsoft.AzureCosmosDB', text: 'Microsoft.AzureCosmosDB' },
-                                { key: 'Microsoft.CognitiveServices', text: 'Microsoft.CognitiveServices' },
-                                { key: 'Microsoft.ContainerRegistry', text: 'Microsoft.ContainerRegistry' },
-                                { key: 'Microsoft.EventHub', text: 'Microsoft.EventHub' },
-                                { key: 'Microsoft.KeyVault', text: 'Microsoft.KeyVault' },
-                                { key: 'Microsoft.ServiceBus', text: 'Microsoft.ServiceBus' },
-                                { key: 'Microsoft.Sql', text: 'Microsoft.Sql' },
-                                { key: 'Microsoft.Storage', text: 'Microsoft.Storage' },
-                                { key: 'Microsoft.Web', text: 'Microsoft.Web' }
-                            ]}
-                        />
-                    </Stack>
-
-                }
-
-            </Stack.Item>
-
-            <Separator className="notopmargin" />
 
             <Stack.Item>
-                <Label>Uses a private IP address from your VNet to access your dependent Azure service, such as Azure Storage, Azure Cosmos DB, SQL</Label>
+                <Label>Uses a private IP address from your VNet to access your dependent Azure service, such as Azure KeyVault, Azure Container Registry etc</Label>
                 <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.vnetprivateend} onChange={(ev, v) => updateFn("vnetprivateend", v)} label="Enable Private Link" />
             </Stack.Item>
 
@@ -220,14 +182,14 @@ function PodServiceNetwork({ net, updateFn }) {
     return (
         <Stack {...columnProps}>
             <Label>Kubernetes Networking Configuration</Label>
-            <Stack.Item align="start">
-                <TextField prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet'} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' ? net.podCidr : "IPs from subnet"} />
+            <Stack.Item styles={{root: {width: '380px'}}} align="start">
+                <TextField  prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet'} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' ? net.podCidr : "Using CNI, POD IPs from subnet"} />
             </Stack.Item>
-            <Stack.Item align="start">
+            <Stack.Item styles={{root: {width: '380px'}}} align="start">
                 <TextField prefix="Cidr" label="Service Network" onChange={(ev, val) => updateFn("serviceCidr", val)} value={net.serviceCidr} />
                 <MessageBar messageBarType={MessageBarType.warning}>Address space that isn't in use elsewhere in your network environment <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
             </Stack.Item>
-            <Stack.Item align="start">
+            <Stack.Item styles={{root: {width: '380px'}}} align="start">
                 <TextField prefix="IP" label="Service Network" onChange={(ev, val) => updateFn("dnsServiceIP", val)} value={net.dnsServiceIP} />
                 <MessageBar messageBarType={MessageBarType.warning}>Ensure its an address within the Service CIDR above <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
             </Stack.Item>
@@ -240,12 +202,7 @@ function BYOVNET({ net, addons, updateFn, invalidArray }) {
     return (
 
         <Stack styles={adv_stackstyle}>
-            <Label>Kubernetes Network Configuration</Label>
-            <Stack horizontal tokens={{ childrenGap: 50 }} styles={{ root: { width: 650 } }}>
-                <Stack {...columnProps}></Stack>
-                <PodServiceNetwork net={net} updateFn={updateFn} />
 
-            </Stack>
             <Label>Bring your Own VNET and Subnets</Label>
             <MessageBar>Get your user subnet by running <Label>az network vnet subnet show --vnet-name `{'<net name>'}` -g `{'<vnet rg>'}` -n `{'<subnet name>'}` --query "id"</Label></MessageBar>
             <TextField value={net.byoAKSSubnetId} onChange={(ev, v) => updateFn("byoAKSSubnetId", v)} errorMessage={getError(invalidArray, 'byoAKSSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing AKS Nodes subnet ResourceId</Text>} />
@@ -255,6 +212,9 @@ function BYOVNET({ net, addons, updateFn, invalidArray }) {
 
             <TextField disabled={addons.ingress !== 'appgw'} value={net.byoAGWSubnetId} onChange={(ev, v) => updateFn("byoAGWSubnetId", v)} errorMessage={getError(invalidArray, 'byoAGWSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing Application Gateway subnet ResourceId</Text>} />
             <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets these requirements <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">here</Link></MessageBar>
+
+            <Separator/>
+            <PodServiceNetwork net={net} updateFn={updateFn} />
 
         </Stack>
     )
@@ -271,7 +231,7 @@ function CustomVNET({ net, addons, updateFn }) {
                     <Stack.Item align="start">
                         <TextField prefix="Cidr" label="VNET Address space" onChange={(ev, val) => updateFn("vnetAddressPrefix", val)} value={net.vnetAddressPrefix} />
                     </Stack.Item>
-                    <Stack.Item align="center">
+                    <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" label="AKS Nodes subnet" onChange={(ev, val) => updateFn("vnetAksSubnetAddressPrefix", val)} value={net.vnetAksSubnetAddressPrefix} />
                     </Stack.Item>
                     {/*
@@ -279,13 +239,21 @@ function CustomVNET({ net, addons, updateFn }) {
                   <TextField prefix="Cidr" label="LoadBalancer Services subnet" onChange={(ev, val) => updateFn("ilbsub", val)} value={net.ilbsub} />
                 </Stack.Item>
                 */}
-                    <Stack.Item align="center">
+                    <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" disabled={!net.afw} label="Azure Firewall subnet" onChange={(ev, val) => updateFn("vnetFirewallSubnetAddressPrefix", val)} value={net.afw ? net.vnetFirewallSubnetAddressPrefix : "No Firewall requested"} />
                     </Stack.Item>
 
-                    <Stack.Item align="center">
-                        <TextField prefix="Cidr" disabled={addons.ingress !== 'appgw'} label="Application Gateway subnet" onChange={(ev, val) => updateFn("vnetAppGatewaySubnetAddressPrefix", val)} value={addons.ingress === 'appgw' ? net.vnetAppGatewaySubnetAddressPrefix : "N/A"} />
-                        <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets these requirements <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">here</Link></MessageBar>
+                    <Stack.Item style={{ marginLeft: "20px"}}>
+                        <TextField prefix="Cidr" disabled={addons.ingress !== 'appgw'} label="Application Gateway subnet" onChange={(ev, val) => updateFn("vnetAppGatewaySubnetAddressPrefix", val)} value={addons.ingress === 'appgw' ? net.vnetAppGatewaySubnetAddressPrefix : "No Application Gateway requested"} />
+                        <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">these</Link> requirements</MessageBar>
+                    </Stack.Item>
+
+                    <Stack.Item style={{ marginLeft: "20px"}}>
+                        <TextField prefix="Cidr" disabled={!net.vnetprivateend} label="Private Endpoint subnet" onChange={(ev, val) => updateFn("privateLinkSubnetAddressPrefix", val)} value={net.vnetprivateend ? net.privateLinkSubnetAddressPrefix : "No Private Endpoints requested"} />
+                    </Stack.Item>
+
+                    <Stack.Item style={{ marginLeft: "20px"}}>
+                        <TextField prefix="Cidr" disabled={!net.vnetprivateend || addons.registry === "none" || !addons.acrPrivatePool  } label="ACR Private Agent Pool subnet" onChange={(ev, val) => updateFn("acrAgentPoolSubnetAddressPrefix", val)} value={net.vnetprivateend && addons.registry !== "none" && addons.acrPrivatePool  ? net.acrAgentPoolSubnetAddressPrefix : "No Agen Pool requested"} />
                     </Stack.Item>
                 </Stack>
 

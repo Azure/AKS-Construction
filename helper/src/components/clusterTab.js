@@ -48,11 +48,12 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     <Stack.Item>
                         <Label >System Pool Type <Link target='_' href='https://docs.microsoft.com/azure/aks/use-system-pools#system-and-user-node-pools'>docs</Link></Label>
                         <ChoiceGroup
+
                             selectedKey={cluster.SystemPoolType}
                             options={[
-                                { key: 'none', text: 'No separate system pool: Use a single pool for System and User workloads' },
-                                { key: 'Cost-Optimised', text: 'Cost-Optimised: use low-cost Burstable VMs, with 1-3 node autoscale' },
-                                { key: 'Standard', text: 'Standard: use standard 4-core VMs, with 2-3 node autoscale' }
+                                { "data-testid":'cluster-systempool-none', key: 'none', text: 'No separate system pool: Use a single pool for System and User workloads' },
+                                { "data-testid":'cluster-systempool-Cost-Optimised', key: 'Cost-Optimised', text: 'Cost-Optimised: use low-cost Burstable VMs, with 1-3 node autoscale' },
+                                { "data-testid":'cluster-systempool-Standard', key: 'Standard', text: 'Standard: use standard 4-core VMs, with 2-3 node autoscale' }
                             ]}
                             onChange={(ev, { key }) => updateFn("SystemPoolType", key)}
                         />
@@ -270,18 +271,12 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
                             <Checkbox checked={cluster.enableAzureRBAC} onChange={(ev, val) => updateFn("enableAzureRBAC", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Azure RBAC for Kubernetes Authorization <Link target='_' href='https://docs.microsoft.com/azure/aks/manage-azure-rbac'>docs</Link>**</Text>} />
 
-                            {!cluster.enableAzureRBAC ?
+                            {!cluster.enableAzureRBAC &&
                                 <>
                                     <TextField label="AAD Group objectIDs that will have admin role of the cluster ',' separated" onChange={(ev, val) => updateFn("aadgroupids", val)} value={cluster.aadgroupids} />
                                     {cluster.enable_aad && !cluster.aadgroupids &&
                                         <MessageBar messageBarType={MessageBarType.warning}>You will be forbidden to do any kubernetes options unless you add a AAD Groups here, or follow <Link target='_' href='https://docs.microsoft.com/azure/aks/azure-ad-rbac#create-the-aks-cluster-resources-for-app-devs'>this</Link> after the cluster is created</MessageBar>
                                     }
-                                </>
-                                :
-                                <>
-                                    <Label>Assign Cluster Admin Role to user (optional)</Label>
-                                    <MessageBar styles={{ root: { marginBottom: '10px' } }}>Get your user principleId by running <Label>az ad user show --id `{'<work-email>'}` --query objectId --out tsv</Label></MessageBar>
-                                    <TextField prefix="AAD PrincipleId" onChange={(ev, val) => updateFn("adminprincipleid", val)} value={cluster.adminprincipleid} />
                                 </>
                             }
                         </Stack>
