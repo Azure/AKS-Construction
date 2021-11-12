@@ -38,7 +38,8 @@ on:
       AZURE_CREDENTIALS:
         required: true
         
-CertificateConfig:
+jobs:
+  CertificateConfig:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
