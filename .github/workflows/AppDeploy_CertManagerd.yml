@@ -36,17 +36,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Param check
+      - name: Job parameter inspection
         if: github.event.inputs.doDebugSteps != 'no'
         run: |
-          RG='${{ inputs.RG }}'
-          echo "RG is: $RG"
-          
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
-          echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
+          echo "RG is: ${{ inputs.RG }}"
+          echo "AKS name is ${{ inputs.AKSNAME}}"
+          echo "APPNAME is ${{ inputs.APPNAME}}"
           
       - name: Azure Login
         uses: Azure/login@v1
@@ -62,13 +57,11 @@ jobs:
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
       - name: Kubectl
-        if: github.event.inputs.doDebugSteps != 'no'
         run: |
           #sudo az aks install-cli
           kubectl version
           
       - name: Observe Existing DNSConfig
-        if: github.event.inputs.doDebugSteps != 'no'
         env:
           DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
           DNSRG: "${{ inputs.DNSRG }}"
