@@ -71,17 +71,21 @@ resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01
 
 //------------------------------------------------------ Create custom vnet
 param vnetAddressPrefix string = '10.0.0.0/8'
-param serviceEndpoints array = []
 param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
 param vnetFirewallSubnetAddressPrefix string = '10.241.130.0/26'
 param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
+
+param privateLinks bool = false
+param privateLinkSubnetAddressPrefix string = '10.3.0.0/16'
+
+param acrPrivatePool bool = false
+param acrAgentPoolSubnetAddressPrefix string = '10.4.0.0/16'
 
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
   params: {
     resourceName: resourceName
     location: location
-    serviceEndpoints: serviceEndpoints
     vnetAddressPrefix: vnetAddressPrefix
     aksPrincipleId: aks_byo_identity ? uai.properties.principalId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
@@ -89,6 +93,12 @@ module network './network.bicep' = if (custom_vnet) {
     vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
     azureFirewalls: azureFirewalls
     vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
+    privateLinks: privateLinks
+    privateLinkSubnetAddressPrefix: privateLinkSubnetAddressPrefix
+    privateLinkAcrId: privateLinks && !empty(registries_sku) ? acr.id : ''
+    privateLinkAkvId: privateLinks && createKV ? kv.id : ''
+    acrPrivatePool: acrPrivatePool
+    acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
   }
 }
 
@@ -141,82 +151,98 @@ param KeyVaultSoftDelete bool = true
 @description('If purge protection is enabled')
 param KeyVaultPurgeProtection bool = true
 
-param AKVserviceEndpointFW string = '' // either IP, or 'vnetonly'
+@description('Add IP to firewall whitelist')
+param kvIPWhitelist string = ''
 
 var akvName = 'kv-${replace(resourceName, '-', '')}'
 
 resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
   name: akvName
   location: location
-  properties: union({
+  properties: {
     tenantId: subscription().tenantId
     sku: {
       family: 'A'
-      name: 'Standard'
+      name: 'standard'
     }
-    enabledForTemplateDeployment: true
+    // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
+    publicNetworkAccess: privateLinks && empty(kvIPWhitelist) ? 'disabled' : 'enabled' 
+    
+    networkAcls: privateLinks && !empty(kvIPWhitelist) ? {
+      bypass: 'AzureServices' 
+      defaultAction: 'Deny' 
+      
+      ipRules: empty(kvIPWhitelist) ? [] : [
+          {
+          value: kvIPWhitelist
+        }
+      ]
+      virtualNetworkRules: []
+    } : {}
+    
+    //enabledForTemplateDeployment: true
+    enableRbacAuthorization: true
+    enabledForDeployment: false
+    enabledForDiskEncryption: false
+    enabledForTemplateDeployment: false
     enableSoftDelete: KeyVaultSoftDelete 
     enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
-    // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
-    publicNetworkAccess: 'enabled'
-    accessPolicies: concat(azureKeyvaultSecretsProvider ? array({
-      tenantId: subscription().tenantId
-      objectId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.objectId
-      permissions: {
-        keys: [
-          'get'
-          'decrypt'
-          'unwrapKey'
-          'verify'
-        ]
-        secrets: [
-          'get'
-        ]
-        certificates: [
-          'get'
-          'getissuers'
-        ]
-      }
-    }) : [], appgwKVIntegration ? array({
-      tenantId: subscription().tenantId
-      objectId: appGwIdentity.properties.principalId
-      permissions: {
-        secrets: [
-          'get'
-          'set'
-          'delete'
-          'list'
-        ]
-      }
-    }) : [])
-  }, !empty(AKVserviceEndpointFW) ? {
-    networkAcls: {
-      defaultAction: 'Deny'
-      virtualNetworkRules: concat(array({
-        action: 'Allow'
-        id: aksSubnetId
-      }), appgwKVIntegration ? array({
-        action: 'Allow'
-        id: appGwSubnetId
-      }) : [])
-      ipRules: AKVserviceEndpointFW != 'vnetonly' ? [
-        {
-          action: 'Allow'
-          value: AKVserviceEndpointFW
-        }
-      ] : null
-    }
-  } : {})
+  }
+}
+
+var keyVaultSecretsUserRole = resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+resource kvAppGwSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && appgwKVIntegration) {
+  scope: kv
+  name: '${guid(aks.id, 'AppGw', keyVaultSecretsUserRole)}'
+  properties: {
+    roleDefinitionId: keyVaultSecretsUserRole
+    principalType: 'ServicePrincipal'
+    principalId: deployAppGw ? appGwIdentity.properties.principalId : ''
+  }
+}
+
+resource kvCSIdriverSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && azureKeyvaultSecretsProvider) {
+  scope: kv
+  name: '${guid(aks.id, 'CSIDriver', keyVaultSecretsUserRole)}'
+  properties: {
+    roleDefinitionId: keyVaultSecretsUserRole
+    principalType: 'ServicePrincipal'
+    principalId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.objectId
+  }
+}
+
+param kvOfficerRolePrincipalId string = ''
+var keyVaultSecretsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
+resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
+  scope: kv
+  name: '${guid(aks.id, 'usersecret', keyVaultSecretsOfficerRole)}'
+  properties: {
+    roleDefinitionId: keyVaultSecretsOfficerRole
+    principalType: 'User'
+    principalId: kvOfficerRolePrincipalId
+  }
+}
+
+
+var keyVaultCertsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'a4417e6f-fecd-4de8-b567-7b0420556985')
+resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
+  scope: kv
+  name: '${guid(aks.id, 'usercert', keyVaultCertsOfficerRole)}'
+  properties: {
+    roleDefinitionId: keyVaultCertsOfficerRole
+    principalType: 'User'
+    principalId: kvOfficerRolePrincipalId
+  }
 }
 
 output keyVaultName string = createKV ? kv.name : ''
 output keyVaultId string = createKV ? kv.id : ''
 
-resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createKV) {
+resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && createKV) {
   name: 'kvDiags'
   scope: kv
   properties: {
-    workspaceId:workspaceId
+    workspaceId:aks_law.id
     logs: [
       {
         category: 'AuditEvent'
@@ -241,7 +267,7 @@ resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
 /__/     \__\ (__)\______|(__)| _| `._____|(__)*/
                                                
 param registries_sku string = ''
-param ACRserviceEndpointFW string = '' // either IP, or 'vnetonly'
+
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
@@ -251,25 +277,37 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
   sku: {
     name: registries_sku
   }
-  properties: !empty(ACRserviceEndpointFW) ? {
+  properties: {
+    publicNetworkAccess: privateLinks /* && empty(acrIPWhitelist)*/ ? 'Disabled' : 'Enabled' 
+    /*
     networkRuleSet: {
-      defaultAction: 'Deny'
-      virtualNetworkRules: [
-        {
-          action: 'Allow'
-          id: aksSubnetId
+      defaultAction: 'Deny' 
+      
+      ipRules: empty(acrIPWhitelist) ? [] : [
+          {
+            action: 'Allow'
+            value: acrIPWhitelist
         }
       ]
-      ipRules: ACRserviceEndpointFW != 'vnetonly' ? [
-        {
-          action: 'Allow'
-          value: ACRserviceEndpointFW
-        }
-      ] : null
+      virtualNetworkRules: []
     }
-  } : {}
+    */
+  }
 }
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
+
+resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
+  name: 'private-pool'
+  location: location
+  parent: acr
+  properties: {
+    count: 1
+    os: 'Linux'
+    tier: 'S1'
+    virtualNetworkSubnetResourceId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
+  }
+}
+
 
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
@@ -282,9 +320,19 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
     principalType: 'ServicePrincipal'
     principalId: KubeletObjectId
   }
-  dependsOn: [
-    aks
-  ]
+}
+
+var AcrPushRole = resourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')
+param acrPushRolePrincipalId string = ''
+
+resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku) && !empty(acrPushRolePrincipalId)) {
+  scope: acr // Use when specifying a scope that is different than the deployment scope
+  name: '${guid(aks.id, 'Acr' , AcrPushRole)}'
+  properties: {
+    roleDefinitionId: AcrPushRole
+    principalType: 'User'
+    principalId: acrPushRolePrincipalId
+  }
 }
 
 /*______  __  .______       _______ ____    __    ____  ___       __       __      
@@ -296,15 +344,20 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
 
 @description('Create an Azure Firewall')
 param azureFirewalls bool = false
+param certManagerFW bool = false
 
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
   params: {
     resourceName: resourceName
     location: location
-    workspaceDiagsId: aks_law.id
+    workspaceDiagsId: createLaw ? aks_law.id : ''
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
+    certManagerFW: certManagerFW
+    appDnsZoneName: dnsZoneName
+    acrPrivatePool: acrPrivatePool
+    acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
   }
 }
 
@@ -347,7 +400,6 @@ resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11
   location: location
 }
 
-var workspaceId = aks_law.id
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
@@ -541,27 +593,26 @@ resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-previ
 }
 
 // AppGW Diagnostics
-var diagProperties = {
-  workspaceId: workspaceId
-  logs: [
-    {
-      category: 'ApplicationGatewayAccessLog'
-      enabled: true
-    }
-    {
-      category: 'ApplicationGatewayPerformanceLog'
-      enabled: true
-    }
-    {
-      category: 'ApplicationGatewayFirewallLog'
-      enabled: true
-    }
-  ]
-}
-resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (deployAppGw && !empty(workspaceId)) {
+resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && deployAppGw) {
   scope: appgw
   name: 'appgwDiag'
-  properties: diagProperties
+  properties: {
+    workspaceId: aks_law.id
+    logs: [
+      {
+        category: 'ApplicationGatewayAccessLog'
+        enabled: true
+      }
+      {
+        category: 'ApplicationGatewayPerformanceLog'
+        enabled: true
+      }
+      {
+        category: 'ApplicationGatewayFirewallLog'
+        enabled: true
+      }
+    ]
+  }
 }
 
 // =================================================
@@ -588,7 +639,7 @@ param omsagent bool = false
 param enableAzureRBAC bool = false
 param upgradeChannel string = ''
 param osDiskType string = 'Ephemeral'
-param agentVMSize string = 'Standard_DS2_v2'
+param agentVMSize string = 'Standard_DS3_v2'
 param osDiskSizeGB int = 0
 
 param agentCount int = 3
@@ -734,7 +785,7 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
 }) : aks_addons
 
 
-var aks_addons2 = omsagent ? union(aks_addons1, {
+var aks_addons2 = createLaw && omsagent ? union(aks_addons1, {
   omsagent: {
     enabled: true
     config: {
@@ -855,7 +906,7 @@ param AksDiagCategories array = [
   'guard'
 ]
 
-resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  if (omsagent)  {
+resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  if (createLaw && omsagent)  {
   name: 'aksDiags'
   scope: aks
   properties: {
@@ -889,7 +940,7 @@ var AlertFrequencyLookup = {
 }
 var AlertFrequency = AlertFrequencyLookup[AksMetricAlertMetricFrequencyModel]
 
-module aksmetricalerts './aksmetricalerts.bicep' = {
+module aksmetricalerts './aksmetricalerts.bicep' = if (createLaw) {
   name: 'aksmetricalerts'
   scope: resourceGroup()
   params: {
@@ -921,7 +972,7 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (cre
 
 //This role assignment enables AKS->LA Fast Alerting experience
 var MonitoringMetricsPublisherRole = resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb') 
-resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createLaw) {
+resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (omsagent) {
   scope: aks
   name: '${guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)}'
   properties: {
