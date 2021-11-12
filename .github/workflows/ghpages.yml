@@ -31,6 +31,7 @@ jobs:
       - uses: streetsidesoftware/cspell-action@v1.0.1
         name: Spell Check
         with:
+          github_token: ''
           config: '.'
           inline: warning
           root: 'helper'
