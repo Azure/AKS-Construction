@@ -758,7 +758,7 @@ jobs:
         run: helm uninstall $APPNAME
           
   SmokeTest_PublicJavaTLSApp:
-    needs: [CertificateConfig, SmokeTest_SimpleApp]
+    needs: [CertificateConfig, Deploy, SmokeTest_SimpleApp]
     uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd #${{GITHUB.REF_NAME}}
     with:
       RG: ${{env.RG}}
