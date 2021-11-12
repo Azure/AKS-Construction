@@ -6,8 +6,8 @@ on:
     branches: [main]
 jobs:
 
-  deploy-java-app-with-certmanager-certificate:
-    uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd
+  deploy-java-app-kvssl:
+    uses: azure/aks-construction/.github/workflows/AppDeploy_SelfSignedKV.yml@gb-privatelink-cicd
     with:
       RG: Automation-Actions-AksDeployCI
       AKSNAME: aks-Byo
@@ -16,7 +16,7 @@ jobs:
       DNSRECORDNAME: openjdk-demo
       AKVNAME: kv-Byo
       AGNAME: agw-Byo
-      APPNAME: openjdk-demo
+      APPNAME: openjdk-kvssl
 
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
