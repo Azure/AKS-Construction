@@ -34,8 +34,8 @@ jobs:
         with:
           config: './cspell.json'
           inline: warning
-          root: 'helper'
-          incremental_files_only: "false"
+          root: 'helper/'
+          #incremental_files_only: "false"
 
       - name: Build and start node app
         run: |
