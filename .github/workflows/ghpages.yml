@@ -32,7 +32,7 @@ jobs:
         name: Spell Check
         if: ${{github.event_name!='workflow_dispatch'}} 
         with:
-          config: '.'
+          config: './cspell.json'
           inline: warning
           root: 'helper'
 
