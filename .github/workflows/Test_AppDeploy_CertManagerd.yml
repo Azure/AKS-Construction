@@ -1,0 +1,21 @@
+name: Test-Java App Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  deploy-java-app-with-certmanager-certificate:
+    uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd
+    with:
+      RG: Automation-Actions-AksDeployCI
+      AKSNAME: aks-Byo
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      DNSRECORDNAME: openjdk-demo
+      AKVNAME: kv-Byo
+      AGNAME: agw-Byo
+      APPNAME: openjdk-demo
+
+    secrets:
+      token: ${{ secrets.AZURE_CREDENTIALS }}
