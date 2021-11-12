@@ -47,6 +47,7 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "Byo"
   DEPNAME: "Dep${{ github.run_number }}"
+  KVACCESS: "IAM"
 
 jobs:
   Well_Architected:
@@ -491,6 +492,7 @@ jobs:
           allow-no-subscriptions: false
           
       - name: Add KV access policy for managing certificates as this CI action user
+        if: ${{env.KVACCESS!="IAM"}}
         run: |
           CiSpId='${{ secrets.AZURE_CREDENTIALS_OBJID }}'
           AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
