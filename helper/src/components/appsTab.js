@@ -49,7 +49,7 @@ ${cluster.apisecurity === "private" ? `"` : ``}
                         <Stack.Item>
                             <Label >Simple Java Spring boot application, that uses KeyVault to generate Certs to expose Tomcat TLS endpoint, and public Ingress TLS issued by cert-manager</Label>
 
-                            <MessageBar messageBarType={MessageBarType.error}>Please ensure you deployment meets all the requirements below to run the demo app successfully</MessageBar>
+                            <MessageBar messageBarType={MessageBarType.error}>Please ensure your deployment meets all the requirements below in order to run the demo app successfully</MessageBar>
                             <Label>Sample App Requires</Label>
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.registry !== "none"} label="(Addons tab) Container Registry, for application container repository" />
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} disabled={!net.vnetprivateend} checked={addons.acrPrivatePool} label="(Addons tab) Container Registry Private Pool, for container build task (required for private link only)" />
