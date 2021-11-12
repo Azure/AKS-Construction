@@ -1,0 +1,240 @@
+on: 
+  workflow_call:
+    inputs:
+      RG:
+        required: true
+        type: string
+      AKSNAME:
+        required: true
+        type: string
+      DNSDOMAIN:
+        required: true
+        type: string
+      DNSRG:
+        required: true
+        type: string
+      DNSRECORDNAME:
+        required: true
+        type: string
+      AKVNAME:
+        required: true
+        type: string
+      AGNAME:
+        required: true
+        type: string
+      AGNAME:
+        required: true
+        type: string
+      AGNAME:
+        required: true
+        type: string
+      APPNAME:
+        default: "openjdk-demo"
+        required: true
+        type: string
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+
+jobs:
+  SmokeTest_PublicJavaTLSApp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Param check
+        if: github.event.inputs.doDebugSteps != 'no'
+        run: |
+          RG='${{ inputs.RG }}'
+          echo "RG is: $RG"
+          
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
+          echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+        
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        if: github.event.inputs.doDebugSteps != 'no'
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Observe Existing DNSConfig
+        if: github.event.inputs.doDebugSteps != 'no'
+        env:
+          DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
+          DNSRG: "${{ inputs.DNSRG }}"
+          RECORDNAME: "${{ inputs.DNSRECORDNAME }}"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
+
+      - name: Grab some Helm charts to install
+        run: |
+          git clone https://github.com/Gordonby/minihelm.git helmcharts
+
+      - name: Add a azure-config secret for use with externaldns
+        env:
+          DNSRESOURCEGROUP: "${{ inputs.DNSRG }}"
+        run: |
+          RG='${{ inputs.RG }}'
+          AKSNAME='${{ inputs.AKSNAME}}'
+
+          echo "AKS $AKSNAME"
+          echo $DNSRESOURCEGROUP
+
+          KubeletId=$(az aks show -n $AKSNAME -g  $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
+          TenantId=$(az account show --query tenantId -o tsv)
+          SubscriptionId=$(az account show --query id -o tsv)
+
+          JSONSECRETPATH="azure.json"
+          cat<<EOF>$JSONSECRETPATH
+          {
+            "userAssignedIdentityID": "$KubeletId",
+            "tenantId": "$TenantId",
+            "useManagedIdentityExtension": true,
+            "subscriptionId": "$SubscriptionId",
+            "resourceGroup": "$DNSRESOURCEGROUP"
+          }
+          EOF
+          
+          kubectl create secret generic azure-config-file --dry-run=client -o yaml --from-file=azure.json | kubectl apply -f -
+
+      - name: Add external dns config
+        env:
+          DOMAINFILTER: "${{ inputs.DNSDOMAIN }}"
+        run: |
+          echo $DOMAINFILTER
+          helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
+
+      - name: Check DNS config
+        env:
+          DNSDOMAIN:  "${{ inputs.DNSDOMAIN }}"
+          DNSRG: "${{ inputs.DNSRG }}"
+          RECORDNAME: "${{ inputs.DNSRECORDNAME }}"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
+
+      - name: Install Cert Manager
+        env:
+          MANIFESTTESTURL: "https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml"
+        run: |
+          kubectl apply -f $MANIFESTTESTURL
+          sleep 1m
+
+      - name: Install ClusterIssuer
+        env:
+          EMAILAD: "gdogg@microsoft.com"
+        run: |
+          echo "Email Address for Lets Encrypt: $EMAILAD"
+          helm upgrade --install smokecertissuer ./helmcharts/samples/certmanagerissuer --set email=$EMAILAD
+
+      - name: Verify ClusterIssuer
+        env:
+          EMAILAD: "gdogg@microsoft.com"
+        run: |
+          sleep 1m          
+          kubectl describe clusterissuer letsencrypt-staging
+
+      - name: Install the Java sample app
+        env:
+          NAMESP: "default"
+          CERTNAME: "${{ inputs.APPNAME }}"
+          DOMAINSUFFIX: "${{ inputs.DNSDOMAIN }}"
+          DOMAINPREFIX: "${{ inputs.APPNAME }}"
+          
+        run: |
+          # REF: https://github.com/khowling/e2e-tls-java-aks
+          
+          AKSNAME='${{ inputs.AKSNAME}}'
+          RG='${{ env.RG }}'
+          KVNAME='${{ inputs.AKVNAME}}'
+          KVNAMELOWER=${KVNAME,,}
+          CERTNAME='${{ env.CERTNAME }}'
+          KVTENANT=$(az account show --query tenantId -o tsv)
+          AGNAME='${{ inputs.AGNAME}}'
+          AKSNAME='${{ inputs.AKSNAME}}'
+          DNSNAME=${DOMAINPREFIX}.${DOMAINSUFFIX}
+
+          echo 'Get the identity created from the KeyVaultSecret Addon'
+          export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
+          echo $CSISECRET_CLIENTID
+          
+          helm upgrade --install ${{ inputs.APPNAME }} ./helmcharts/samples/javatlsapp --set nameOverride="${{ inputs.APPNAME }}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}" --dry-run
+          helm upgrade --install ${{ inputs.APPNAME }} ./helmcharts/samples/javatlsapp --set nameOverride="${{ inputs.APPNAME }}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
+
+      - name: Verify LetsEncrypt Certificate logs
+        run: |
+          sleep 1m
+          kubectl describe cert
+
+      - name: Verify Java App is reachable
+        env:
+          NAMESP: "default"
+          INGNAME: "${{ inputs.APPNAME }}-ingress"
+          URLTOHIT: "https://${{ inputs.APPNAME }}.${{ inputs.DNSDOMAIN }}"
+        run: |
+          sleep 2m #Give everything a chance to work
+        
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+          kubectl get ingress -n  $NAMESP
+          
+          echo "Getting public ip"
+          pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Public ip : $pubId"
+          echo "URL to hit: $URLTOHIT"
+          
+          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
+          echo $respcode   
+          
+          #TODO: This is going to need to be rewritten. #loopshambles
+          #SSH'ing on the runner shows this works, sometimes it just takes ages
+          #Needs to be investigated.
+          if [ "$respcode" != "200" ];
+          then
+              echo "going to need to wait longer i guess?"
+              sleep 3m
+              
+              respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
+              echo $respcode    
+              
+              if [ "$respcode" != "200" ];
+              then
+                echo "going to need to wait EVEN longer i guess?  (wtf)"
+                sleep 3m
+                respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
+                echo $respcode    
+                if [ "$respcode" != "200" ];
+                then
+                  echo "Non 200 response code from app - Raising error"
+                  exit 1
+                fi
+              fi
+          fi
+          
+          curl --insecure $URLTOHIT
+          
+      - name: Verify Frontend Certificate
+        env:
+          URLTOHIT: "https://${{ inputs.APPNAME }}.${{ inputs.DNSDOMAIN }}"
+        run: |
+          curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
+
+      - name: Cleanup app
+        env:
+          APPNAME: "${{ inputs.APPNAME }}"
+        run: helm uninstall $APPNAME
