@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "5791799039574965241"
+      "templateHash": "2073286484881363272"
     }
   },
   "parameters": {
@@ -225,7 +225,7 @@
     },
     "agentVMSize": {
       "type": "string",
-      "defaultValue": "Standard_DS2_v2"
+      "defaultValue": "Standard_DS3_v2"
     },
     "osDiskSizeGB": {
       "type": "int",
@@ -1478,6 +1478,9 @@
           "certManagerFW": {
             "value": "[parameters('certManagerFW')]"
           },
+          "appDnsZoneName": {
+            "value": "[variables('dnsZoneName')]"
+          },
           "acrPrivatePool": {
             "value": "[parameters('acrPrivatePool')]"
           },
@@ -1492,7 +1495,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "12187530192178252580"
+              "templateHash": "9476886646663582740"
             }
           },
           "parameters": {
@@ -1523,6 +1526,13 @@
             "acrAgentPoolSubnetAddressPrefix": {
               "type": "string",
               "defaultValue": ""
+            },
+            "appDnsZoneName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Whitelist dnsZone name (required by cert-manager validation process)"
+              }
             }
           },
           "functions": [],
@@ -1613,7 +1623,7 @@
                       "action": {
                         "type": "Allow"
                       },
-                      "rules": "[concat(createArray(createObject('name', 'aks', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(), 'fqdnTags', createArray('AzureKubernetesService'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), if(parameters('certManagerFW'), createArray(createObject('name', 'cetman-quay', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('quay.io', '*.quay.io'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix'))), createObject('name', 'cetman-letsencrypt', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('letsencrypt.org', '*.letsencrypt.org'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()))]"
+                      "rules": "[concat(createArray(createObject('name', 'aks', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(), 'fqdnTags', createArray('AzureKubernetesService'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), if(parameters('certManagerFW'), createArray(createObject('name', 'cetman-quay', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('quay.io', '*.quay.io'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix'))), createObject('name', 'cetman-letsencrypt', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('letsencrypt.org', '*.letsencrypt.org'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()), if(and(parameters('certManagerFW'), not(empty(parameters('appDnsZoneName')))), createArray(createObject('name', 'cetman-appDnsZoneName', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(parameters('appDnsZoneName'), format('*.{0}', parameters('appDnsZoneName'))), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()))]"
                     }
                   }
                 ],
