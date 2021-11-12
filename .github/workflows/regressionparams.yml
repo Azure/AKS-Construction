@@ -15,6 +15,7 @@ on:
     paths:
       - "bicep/*"
       - ".github/workflows/regressionparams.yml"
+      - ".github/workflows_dep/regressionparams/*"
 
   #Run on a weekly schedule
   schedule:
