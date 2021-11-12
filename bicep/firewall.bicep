@@ -56,6 +56,9 @@ resource fwDiags 'microsoft.insights/diagnosticSettings@2017-05-01-preview' = if
   }
 }
 
+@description('Whitelist dnsZone name (required by cert-manager validation process)')
+param appDnsZoneName string = ''
+
 var fw_name = 'afw-${resourceName}'
 resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
   name: fw_name
@@ -140,6 +143,27 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
                 targetFqdns: [
                   'letsencrypt.org'
                   '*.letsencrypt.org'
+                ]
+                sourceAddresses: [
+                  vnetAksSubnetAddressPrefix
+                ]
+              }
+            ] : [], certManagerFW && !empty(appDnsZoneName) ? [
+              {
+                name: 'cetman-appDnsZoneName'
+                protocols: [
+                  {
+                    port: 443
+                    protocolType: 'Https'
+                  }
+                  {
+                    port: 80
+                    protocolType: 'Http'
+                  }
+                ]
+                targetFqdns: [
+                  appDnsZoneName
+                  '*.${appDnsZoneName}'
                 ]
                 sourceAddresses: [
                   vnetAksSubnetAddressPrefix

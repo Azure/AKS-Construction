@@ -355,6 +355,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     certManagerFW: certManagerFW
+    appDnsZoneName: dnsZoneName
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
   }
@@ -638,7 +639,7 @@ param omsagent bool = false
 param enableAzureRBAC bool = false
 param upgradeChannel string = ''
 param osDiskType string = 'Ephemeral'
-param agentVMSize string = 'Standard_DS2_v2'
+param agentVMSize string = 'Standard_DS3_v2'
 param osDiskSizeGB int = 0
 
 param agentCount int = 3
