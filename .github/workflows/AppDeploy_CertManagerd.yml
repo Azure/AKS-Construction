@@ -52,13 +52,15 @@ jobs:
           allow-no-subscriptions: false
         
       - name: AKS Connect
+        env:
+          RG: "${{ inputs.RG }}"
+          AKSNAME: "${{ inputs.AKSNAME }}"
         run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          AKSNAME=''
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
       - name: Kubectl
         run: |
-          #sudo az aks install-cli
           kubectl version
           
       - name: Observe Existing DNSConfig
@@ -76,10 +78,9 @@ jobs:
       - name: Add a azure-config secret for use with externaldns
         env:
           DNSRESOURCEGROUP: "${{ inputs.DNSRG }}"
+          RG: "${{ inputs.RG }}"
+          AKSNAME: "${{ inputs.AKSNAME }}"
         run: |
-          RG='${{ inputs.RG }}'
-          AKSNAME='${{ inputs.AKSNAME}}'
-
           echo "AKS $AKSNAME"
           echo $DNSRESOURCEGROUP
 
@@ -147,10 +148,9 @@ jobs:
           # REF: https://github.com/khowling/e2e-tls-java-aks
           
           AKSNAME='${{ inputs.AKSNAME}}'
-          RG='${{ env.RG }}'
+          RG='${{ inputs.RG }}'
           KVNAME='${{ inputs.AKVNAME}}'
           KVNAMELOWER=${KVNAME,,}
-          CERTNAME='${{ env.CERTNAME }}'
           KVTENANT=$(az account show --query tenantId -o tsv)
           AGNAME='${{ inputs.AGNAME}}'
           AKSNAME='${{ inputs.AKSNAME}}'
