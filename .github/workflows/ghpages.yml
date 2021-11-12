@@ -18,7 +18,11 @@ on:
 
   workflow_dispatch:
 
+env:
+  templateRelease: 0.3.0-preview
+
 jobs:
+  
   Validation:
     runs-on: ubuntu-latest
     steps:
@@ -28,7 +32,7 @@ jobs:
         run: |
           cd helper
           npm install
-          REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/0.3.0-preview/main.json" npm run build
+          REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/${{env.templateRelease}}/main.json" npm run build
           npm run start&
 
       - name: Playwright - Install w/ OS dependencies
@@ -96,7 +100,7 @@ jobs:
         run: |
           cd helper
           npm install
-          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/0.3.0-preview/main.json" npm run build
+          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/${{env.templateRelease}}/main.json" npm run build
 
       - name: Deploy to GitHub Pages
         uses: crazy-max/ghaction-github-pages@v2
