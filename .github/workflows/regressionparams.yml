@@ -28,7 +28,7 @@ env:
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
   
 jobs:
-  Get_Params:
+  GetParamFiles:
     runs-on: ubuntu-latest
     name: Get Param File List
     outputs:
@@ -54,10 +54,10 @@ jobs:
           echo "::set-output name=FILELIST::$FILELISTJSON"
           
   Validation:
-    needs: [Get_Params]
+    needs: [GetParamFiles]
     strategy:
       matrix:
-        files: ${{ fromJson(needs.GetFileList.outputs.FILELIST) }} 
+        files: ${{ fromJson(needs.GetParamFiles.outputs.FILELIST) }} 
 
     runs-on: [ubuntu-latest]
     steps:
