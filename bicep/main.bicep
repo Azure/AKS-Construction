@@ -588,7 +588,7 @@ param omsagent bool = false
 param enableAzureRBAC bool = false
 param upgradeChannel string = ''
 param osDiskType string = 'Ephemeral'
-param agentVMSize string = 'Standard_DS3_v2'
+param agentVMSize string = 'Standard_DS2_v2'
 param osDiskSizeGB int = 0
 
 param agentCount int = 3
