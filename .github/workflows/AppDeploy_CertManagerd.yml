@@ -56,7 +56,6 @@ jobs:
           RG: "${{ inputs.RG }}"
           AKSNAME: "${{ inputs.AKSNAME }}"
         run: |
-          AKSNAME=''
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
       - name: Kubectl
