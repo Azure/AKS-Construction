@@ -19,4 +19,4 @@ jobs:
       APPNAME: openjdk-demo
 
     secrets:
-      token: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
