@@ -32,7 +32,6 @@ jobs:
         name: Spell Check
         if: ${{github.event_name!='workflow_dispatch'}} 
         with:
-          github_token: ''
           config: '.'
           inline: warning
           root: 'helper'
