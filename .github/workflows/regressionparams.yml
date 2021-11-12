@@ -89,13 +89,13 @@ jobs:
           $params = Get-Content $paramFilePath | ConvertFrom-Json
           
           if($params.parameters.dnsZoneId.value -ne $null) {
-            $params.parameters.dnsZoneId.value = ${{ secrets.DnsIdAzdemocouk }}
+            $params.parameters.dnsZoneId.value = "${{ secrets.DnsIdAzdemocouk }}"
           }
           if($params.parameters.byoAKSSubnetId.value -ne $null) {
-            $params.parameters.byoAKSSubnetId.value = ${{ secrets.ByoAksSubnetId }}
+            $params.parameters.byoAKSSubnetId.value = "${{ secrets.ByoAksSubnetId }}"
           }
           if($params.parameters.byoAGWSubnetId.value -ne $null) {
-            $params.parameters.byoAGWSubnetId.value = ${{ secrets.ByoAgwSubnetId }}
+            $params.parameters.byoAGWSubnetId.value = "${{ secrets.ByoAgwSubnetId }}"
           }
           
           $params | ConvertTo-Json | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
