@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceName": {
-      "value": "az-k8s-3zl9"
+      "value": "az-k8s-4chu"
     },
     "kubernetesVersion": {
       "value": "1.20.9"
@@ -20,29 +20,16 @@
     "enableAzureRBAC": {
       "value": true
     },
-    "serviceEndpoints": {
-      "value": [
-        {
-          "service": "Microsoft.ContainerRegistry"
-        },
-        {
-          "service": "Microsoft.KeyVault"
-        }
-      ]
-    },
     "networkPolicy": {
-      "value": "calico"
+      "value": "azure"
     },
     "azurepolicy": {
       "value": "audit"
     },
-    "AKVserviceEndpointFW": {
-      "value": "vnetonly"
-    },
-    "createKV": {
+    "azureKeyvaultSecretsProvider": {
       "value": true
     },
-    "azureKeyvaultSecretsProvider": {
+    "createKV": {
       "value": true
     }
   }
