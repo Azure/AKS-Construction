@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      - uses: streetsidesoftware/cspell-action@v1.0.1
+      - uses: streetsidesoftware/cspell-action@v1.3.4
         name: Spell Check
         if: ${{github.event_name!='workflow_dispatch'}} 
         with:
