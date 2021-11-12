@@ -35,7 +35,7 @@ jobs:
           config: '.'
           inline: warning
           root: 'helper'
-          incremental_files_only: ${{!github.event_name=='workflow_dispatch'}} 
+          #incremental_files_only: ${{!github.event_name=='workflow_dispatch'}} 
 
       - name: Build and start node app
         run: |
