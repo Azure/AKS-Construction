@@ -27,6 +27,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      
+      - uses: streetsidesoftware/cspell-action@v1.0.1
+        name: Spell Check
+        with:
+          config: '.'
 
       - name: Build and start node app
         run: |
