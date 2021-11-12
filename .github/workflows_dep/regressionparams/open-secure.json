@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceName": {
+      "value": "az-k8s-3zl9"
+    },
+    "kubernetesVersion": {
+      "value": "1.20.9"
+    },
+    "agentVMSize": {
+      "value": "Standard_DS3_v2"
+    },
+    "custom_vnet": {
+      "value": true
+    },
+    "enable_aad": {
+      "value": true
+    },
+    "enableAzureRBAC": {
+      "value": true
+    },
+    "serviceEndpoints": {
+      "value": [
+        {
+          "service": "Microsoft.ContainerRegistry"
+        },
+        {
+          "service": "Microsoft.KeyVault"
+        }
+      ]
+    },
+    "networkPolicy": {
+      "value": "calico"
+    },
+    "azurepolicy": {
+      "value": "audit"
+    },
+    "AKVserviceEndpointFW": {
+      "value": "vnetonly"
+    },
+    "createKV": {
+      "value": true
+    },
+    "azureKeyvaultSecretsProvider": {
+      "value": true
+    }
+  }
+}
