@@ -3,7 +3,7 @@ name: Publish Helper GitHub Page
 on:
   push:
 ## Post-PR approval, Deploy Helper to production
-    branches: [main]
+    branches: [main,gb-privatelink-cicd]
     paths:
       - ".github/workflows/ghpages.yml"
       - "helper/**"
@@ -30,12 +30,12 @@ jobs:
       
       - uses: streetsidesoftware/cspell-action@v1.0.1
         name: Spell Check
+        if: ${{github.event_name!='workflow_dispatch'}} 
         with:
           github_token: ''
           config: '.'
           inline: warning
           root: 'helper'
-          #incremental_files_only: ${{!github.event_name=='workflow_dispatch'}} 
 
       - name: Build and start node app
         run: |
