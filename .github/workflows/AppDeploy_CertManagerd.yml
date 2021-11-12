@@ -22,12 +22,6 @@ on:
       AGNAME:
         required: true
         type: string
-      AGNAME:
-        required: true
-        type: string
-      AGNAME:
-        required: true
-        type: string
       APPNAME:
         default: "openjdk-demo"
         required: true
