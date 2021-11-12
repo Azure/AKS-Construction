@@ -32,6 +32,9 @@ jobs:
         name: Spell Check
         with:
           config: '.'
+          inline: warning
+          root: 'helper'
+          incremental_files_only: ${{!github.event_name=='workflow_dispatch'}} 
 
       - name: Build and start node app
         run: |
