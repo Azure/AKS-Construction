@@ -20,7 +20,7 @@ jobs:
   deploy-java-app-certmgr:
     uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd
     with:
-      RG: ${{ env.RG }}
+      RG: $RG
       AKSNAME: aks-Byo
       DNSDOMAIN: azdemo.co.uk
       DNSRG: domainssl
