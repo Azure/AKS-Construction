@@ -33,7 +33,7 @@ on:
 jobs:
   Certs:
     runs-on: ubuntu-latest
-    environment: azurecirgs
+    concurrency: ${{ inputs.AGNAME}} #AppGateway doesn't like concurrent updates
     steps:
       - uses: actions/checkout@v2
       
