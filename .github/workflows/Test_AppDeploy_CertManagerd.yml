@@ -12,6 +12,11 @@ env:
 
 
 jobs:
+  checkenv:
+    runs-on: [ubuntu-latest]
+    steps:
+      - run: echo ${{env}}
+      
   deploy-java-app-certmgr:
     uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd
     with:
