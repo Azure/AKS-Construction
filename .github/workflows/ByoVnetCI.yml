@@ -761,7 +761,7 @@ jobs:
     needs: [CertificateConfig, Deploy, SmokeTest_SimpleApp]
     uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd #${{GITHUB.REF_NAME}}
     with:
-      RG: '${{ env.RG }}'
+      RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: azdemo.co.uk
       DNSRG: domainssl
