@@ -3,7 +3,7 @@ name: Publish Helper GitHub Page
 on:
   push:
 ## Post-PR approval, Deploy Helper to production
-    branches: [main,gb-privatelink-cicd]
+    branches: [main]
     paths:
       - ".github/workflows/ghpages.yml"
       - "helper/**"
