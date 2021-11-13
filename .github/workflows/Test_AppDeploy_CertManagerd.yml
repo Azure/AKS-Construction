@@ -17,6 +17,8 @@ jobs:
       AKVNAME: kv-Byo
       AGNAME: agw-Byo
       APPNAME: openjdk-kvssl
+      FRONTENDCERTNAME: openjdk-kvssl-fe
+      MINIHELMBRANCH: main
 
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
