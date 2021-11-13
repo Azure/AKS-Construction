@@ -491,7 +491,9 @@ jobs:
       APPNAME: openjdk-kvssl
       FRONTENDCERTNAME: openjdk-kvssl-fe
       MINIHELMBRANCH: main
-   
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      
   SmokeTest_CertMgrApp:
     needs: [Deploy, SmokeTest_KVCertApp, SmokeTest_SimpleApp]
     uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd #${{GITHUB.REF_NAME}}
@@ -504,7 +506,6 @@ jobs:
       AKVNAME: ${{ needs.Deploy.outputs.AKVNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-demo
-
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
