@@ -41,6 +41,7 @@ on:
 jobs:
   Certs:
     runs-on: ubuntu-latest
+    concurrency: ${{ inputs.AGNAME}} #AppGateway doesn't like concurrent updates
     steps:
       - uses: actions/checkout@v2
       
