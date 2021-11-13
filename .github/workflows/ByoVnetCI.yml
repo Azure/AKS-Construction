@@ -481,13 +481,13 @@ jobs:
     needs: [Deploy, SmokeTest_SimpleApp]
     uses: azure/aks-construction/.github/workflows/AppDeploy_SelfSignedKV.yml@gb-privatelink-cicd
     with:
-      RG: ${RG}
-      AKSNAME: aks-Byo
+      RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: azdemo.co.uk
       DNSRG: domainssl
-      DNSRECORDNAME: openjdk-demo
-      AKVNAME: kv-Byo
-      AGNAME: agw-Byo
+      DNSRECORDNAME: openjdk-kvssl
+      AKVNAME: ${{ needs.Deploy.outputs.AKVNAME}}
+      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-kvssl
       FRONTENDCERTNAME: openjdk-kvssl-fe
       MINIHELMBRANCH: main
