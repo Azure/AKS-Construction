@@ -39,11 +39,16 @@ on:
         required: true
         
 jobs:
-  CertificateConfig:
+  Certs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       
+      - name: Job parameter inspection
+        run: |
+          echo "RG is: ${{ inputs.RG }}"
+          echo "AKS name is ${{ inputs.AKSNAME}}"
+          
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -110,17 +115,12 @@ jobs:
           az network application-gateway ssl-cert list -g $RG --gateway-name $AGNAME --query "[].name"
           az network application-gateway root-cert list -g $RG --gateway-name $AGNAME --query "[].name"
 
-  SmokeTest_PrivateJavaTLSApp:
+  App:
     runs-on: ubuntu-latest
-    needs: [CertificateConfig]
+    needs: [Certs]
     steps:
       - uses: actions/checkout@v2
 
-      - name: Job parameter inspection
-        run: |
-          echo "RG is: ${{ inputs.RG }}"
-          echo "AKS name is ${{ inputs.AKSNAME}}"
-          
       - name: Azure Login
         uses: Azure/login@v1
         with:
