@@ -513,7 +513,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Deploy]
     environment: azurecirgs
-    concurrency: ${{ steps.deployAks.outputs.AGNAME}}
+    concurrency: ${{ needs.Deploy.outputs.AGNAME}}
     steps:
       - uses: actions/checkout@v2
 
