@@ -31,7 +31,7 @@ on:
         required: true
 
 jobs:
-  CertificateConfig:
+  Certs:
     runs-on: ubuntu-latest
     environment: azurecirgs
     steps:
@@ -69,6 +69,10 @@ jobs:
           RG='${{ inputs.RG }}'
           KVNAME='${{ inputs.AKVNAME}}'
           
+          #debug
+          az network application-gateway show -n $AGNAME -g $AGNAME
+          az network application-gateway root-cert list -g $RG --gateway-name $AGNAME --query "[].name"
+          
           echo $CERTNAMES | jq -r '.[]' | while read cert; do
              echo "getting id for $cert"; 
              versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
@@ -85,9 +89,9 @@ jobs:
           
           az network application-gateway root-cert list -g $RG --gateway-name $AGNAME --query "[].name"
 
-  SmokeTest_PublicJavaTLSApp:
+  App:
     runs-on: ubuntu-latest
-    needs: [CertificateConfig]
+    needs: [Certs]
     steps:
       - uses: actions/checkout@v2
 
