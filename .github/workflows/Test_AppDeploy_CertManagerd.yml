@@ -15,12 +15,12 @@ jobs:
   checkenv:
     runs-on: [ubuntu-latest]
     steps:
-      - run: echo ${{env}}
+      - run: echo ${{fromjson(env)}}
       
   deploy-java-app-certmgr:
     uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd
     with:
-      RG: ${RG}
+      RG: ${{RG}}
       AKSNAME: aks-Byo
       DNSDOMAIN: azdemo.co.uk
       DNSRG: domainssl
