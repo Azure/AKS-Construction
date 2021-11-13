@@ -37,6 +37,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
+      - name: Job parameter inspection
+        run: |
+          echo "RG is: ${{ inputs.RG }}"
+          echo "AKS name is ${{ inputs.AKSNAME}}"
+          echo "AGNAME is ${{ inputs.AGNAME}}"
+          echo "APPNAME is ${{ inputs.APPNAME}}"
+          
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -70,7 +77,7 @@ jobs:
           KVNAME='${{ inputs.AKVNAME}}'
           
           #debug
-          az network application-gateway show -n $AGNAME -g $AGNAME
+          az network application-gateway show -n $AGNAME -g $RG
           az network application-gateway root-cert list -g $RG --gateway-name $AGNAME --query "[].name"
           
           echo $CERTNAMES | jq -r '.[]' | while read cert; do
@@ -94,13 +101,6 @@ jobs:
     needs: [Certs]
     steps:
       - uses: actions/checkout@v2
-
-      - name: Job parameter inspection
-        if: github.event.inputs.doDebugSteps != 'no'
-        run: |
-          echo "RG is: ${{ inputs.RG }}"
-          echo "AKS name is ${{ inputs.AKSNAME}}"
-          echo "APPNAME is ${{ inputs.APPNAME}}"
           
       - name: Azure Login
         uses: Azure/login@v1
