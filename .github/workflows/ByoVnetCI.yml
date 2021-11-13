@@ -761,7 +761,7 @@ jobs:
     needs: [CertificateConfig, Deploy, SmokeTest_SimpleApp]
     uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd #${{GITHUB.REF_NAME}}
     with:
-      RG: "${RG}"
+      RG: ${{ env.RG }}
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: azdemo.co.uk
       DNSRG: domainssl
