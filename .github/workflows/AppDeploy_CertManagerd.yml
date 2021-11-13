@@ -98,7 +98,7 @@ jobs:
 
   App:
     runs-on: ubuntu-latest
-    concurrency: ${{ steps.deployAks.outputs.AGNAME}} #AGIC
+    concurrency: ${{ inputs.AGNAME}} #AGIC
     needs: [Certs]
     steps:
       - uses: actions/checkout@v2
