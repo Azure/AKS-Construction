@@ -72,6 +72,14 @@ We anticipate the use of the Develop branch is temporary.
 
 Releases are used to capture a tested release (all stages, not just Validation), where there are significant new features or bugfixes. The release does not include CI Action files, just the Bicep code.
 
+## The Wizard Web App
+
+The [configuration experience](https://azure.github.io/Aks-Construction/) is hosted in GitHub pages. It's a static web app, written in NodeJS using FluentUI.
+
+### Playwright tests
+
+Playwright is used to help verify that the app works properly, you can use Playwright in your local dev experience (see codespaces below), but crucially it's also leveraged as part of the publish process. If the tests don't pass, then the app will not publish. The `fragile` keyword should be used in any tests where you're learning how they work and run. Once the test is of sufficient quality to be considered a core test, the `fragile` keyword is removed.
+
 ## Dev Container / Codespaces
 
 A dev container is present in the repo which makes dev and testing of the UI Helper component much easier.
