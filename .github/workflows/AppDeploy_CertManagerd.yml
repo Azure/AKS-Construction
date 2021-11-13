@@ -54,7 +54,7 @@ jobs:
           
       - name: Create self signed certs in Key Vault
         env:
-          CERTNAMES: '["${{ inputs.APPNAME }}"]'
+          CERTNAMES: '["${{ inputs.APPNAME }}","openjdk-demo-service"]'
         run: |
             RG='${{ inputs.RG }}'
             AKVNAME='${{ inputs.AKVNAME}}'
