@@ -2,6 +2,11 @@
 
 A few important factoids to consume about the Repo, before you contribute.
 
+## Opportunities to contribute
+
+Start by looking through the [active issues](https://github.com/Azure/Aks-Construction/issues) for low hanging fruit. 
+Another area that will help you get more familiar with the project is by running the Helper Web App locally and writing some new [Playwright web tests](helper/.playwrighttests) to make our web publishing/testing process more robust.
+
 ## Action Workflows
 
 Various workflows run on Push / PR / Schedule.
