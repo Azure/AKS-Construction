@@ -12,8 +12,24 @@ env:
 
 
 jobs:
+  deploy-java-app-certmgr:
+    uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd
+    with:
+      RG: ${RG}
+      AKSNAME: aks-Byo
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      DNSRECORDNAME: openjdk-demo
+      AKVNAME: kv-Byo
+      AGNAME: agw-Byo
+      APPNAME: openjdk-kvssl
+      #MINIHELMBRANCH: main
+
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   deploy-java-app-kvssl:
+    needs: [deploy-java-app-certmgr]
     uses: azure/aks-construction/.github/workflows/AppDeploy_SelfSignedKV.yml@gb-privatelink-cicd
     with:
       RG: ${RG}
