@@ -6,12 +6,17 @@ on:
     branches: [main]
 
 concurrency: ci-${{ github.ref }}
+
+env:
+  RG: "Automation-Actions-AksDeployCI"
+
+
 jobs:
 
   deploy-java-app-kvssl:
     uses: azure/aks-construction/.github/workflows/AppDeploy_SelfSignedKV.yml@gb-privatelink-cicd
     with:
-      RG: Automation-Actions-AksDeployCI
+      RG: ${RG}
       AKSNAME: aks-Byo
       DNSDOMAIN: azdemo.co.uk
       DNSRG: domainssl
