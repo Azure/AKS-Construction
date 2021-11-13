@@ -91,3 +91,7 @@ cd helper
 #npx playwright install-deps chromium
 npx playwright test --browser chromium .playwrighttests/ --reporter list
 ```
+
+## Issues
+
+Issues that are inactive are marked as stale and then closed pretty agressively. We'll periodically look through the stale issues to see if any genuine issues have snuck their way through.
