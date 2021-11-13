@@ -757,7 +757,7 @@ jobs:
           APPNAME: "openjdk-kvssl"
         run: helm uninstall $APPNAME
           
-  SmokeTest_PublicJavaTLSApp:
+  SmokeTest_PublicApp:
     needs: [CertificateConfig, Deploy, SmokeTest_SimpleApp]
     uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd #${{GITHUB.REF_NAME}}
     with:
