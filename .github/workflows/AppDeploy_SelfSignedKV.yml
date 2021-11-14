@@ -116,21 +116,6 @@ jobs:
           az network application-gateway ssl-cert list -g $RG --gateway-name $AGNAME --query "[].name"
           az network application-gateway root-cert list -g $RG --gateway-name $AGNAME --query "[].name"
 
-  App:
-    runs-on: ubuntu-latest
-    concurrency: ${{ inputs.AGNAME}} #AGIC
-    needs: [Certs]
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-        
       - name: AKS Connect
         env:
           RG: "${{ inputs.RG }}"
