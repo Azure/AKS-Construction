@@ -478,7 +478,7 @@ jobs:
             }     
 
   SmokeTest_JavaApp-certmgr:
-    needs: [Deploy]
+    needs: [Deploy,SmokeTest_SimpleApp]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
     with:
       RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
@@ -495,7 +495,7 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       
   SmokeTest_JavaApp-appgw:
-    needs: [Deploy]
+    needs: [Deploy,SmokeTest_JavaApp-certmgr]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
     with:
       RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
