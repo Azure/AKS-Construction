@@ -29,11 +29,12 @@ on:
       FRONTENDCERTTYPE:
         default: "certmanager-staging"
         required: true
-        type: choice
-        options: 
-        - certmanager-staging
-        - certmanager-production
-        - appgw-selfsigned
+        type: string
+        #type: choice
+        ##options: 
+        #- certmanager-staging
+        #- certmanager-production
+        #- appgw-selfsigned
       MINIHELMBRANCH:
         default: "main"
         required: true
