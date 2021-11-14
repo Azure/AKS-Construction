@@ -65,7 +65,7 @@ jobs:
           
       - name: Create self signed certs in Key Vault
         env:
-          CERTNAMES: '["${{ inputs.APPNAME }}","${{ inputs.FRONTENDCERTNAME }}"]'
+          CERTNAMES: '["${{ inputs.APPNAME }}","${{ inputs.APPNAME }}-fe"]'
         run: |
             RG='${{ inputs.RG }}'
             AKVNAME='${{ inputs.AKVNAME}}'
@@ -98,7 +98,7 @@ jobs:
           
       - name: Create FrontEnd Cert references in AppGW
         env:
-          CERTNAMES: '["${{ inputs.FRONTENDCERTNAME }}"]'
+          CERTNAMES: '["${{ inputs.APPNAME }}-fe"]'
         run: |
           AGNAME='${{ inputs.AGNAME}}'
           RG='${{ inputs.RG }}'
@@ -199,7 +199,7 @@ jobs:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}" #Using backend cert common name
           DOMAINSUFFIX: "${{ inputs.DNSDOMAIN }}"
-          FRONTENDCERTNAME: "${{ inputs.FRONTENDCERTNAME }}"
+          FRONTENDCERTNAME: "${{ inputs.APPNAME }}-fe"
           
         run: |
           # REF: https://github.com/khowling/e2e-tls-java-aks
