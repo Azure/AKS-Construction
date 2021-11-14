@@ -476,7 +476,24 @@ jobs:
 
               az role assignment list --assignee $agicobjid
             }     
-   
+
+  SmokeTest_JavaApp-certmgr:
+    needs: [Deploy, SmokeTest_CertMgrApp, SmokeTest_SimpleApp, SmokeTest_JavaApp-appgw]
+    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
+    with:
+      RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      DNSRECORDNAME: openjdk-demo
+      AKVNAME: ${{ needs.Deploy.outputs.AKVNAME}}
+      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
+      APPNAME: openjdk-demo
+      FRONTENDCERTTYPE: certmanager-staging
+      MINIHELMBRANCH: ${{ github.event.inputs.minihelmbranch }}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      
   SmokeTest_JavaApp-appgw:
     needs: [Deploy, SmokeTest_CertMgrApp, SmokeTest_SimpleApp]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
@@ -496,6 +513,7 @@ jobs:
 
   SmokeTest_KVCertApp:
     needs: [Deploy, SmokeTest_SimpleApp]
+    if: false
     uses: azure/aks-construction/.github/workflows/AppDeploy_SelfSignedKV.yml@gb-privatelink-cicd
     with:
       RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
@@ -513,6 +531,7 @@ jobs:
       
   SmokeTest_CertMgrApp:
     needs: [Deploy, SmokeTest_KVCertApp, SmokeTest_SimpleApp]
+    if: false
     uses: azure/aks-construction/.github/workflows/AppDeploy_CertManagerd.yml@gb-privatelink-cicd #${{GITHUB.REF_NAME}}
     with:
       RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
