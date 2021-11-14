@@ -583,43 +583,35 @@ jobs:
         env:
           NAMESP: "default"
         run: |
-          sleep 2m #Give everything a chance to work
-        
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
           
-          echo "Getting public ip"
-          pubId=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          echo "Public ip : $pubId"
+          counter=1
+          $pubIp='pending'
+          while [ $counter -le 10 || $pubId != 'pending' ]
+          do
+            echo "Getting public ip [$counter]"
+            pubIp=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            echo "Public ip : $pubIp"
           
-          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
-          echo $respcode   
+            ((counter++))
+            sleep 30s
+          done
           
-          #TODO: This is going to need to be rewritten. #loopshambles
-          #SSH'ing on the runner shows this works, sometimes it just takes ages
-          #Needs to be investigated.
-          if [ "$respcode" != "200" ];
-          then
-              echo "going to need to wait longer i guess?"
-              sleep 3m
-              
-              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
-              echo $respcode    
-              
-              if [ "$respcode" != "200" ];
-              then
-                echo "going to need to wait EVEN longer i guess?  (wtf)"
-                sleep 6m
-                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
-                echo $respcode    
-                if [ "$respcode" != "200" ];
-                then
-                  echo "Non 200 response code from app - Raising error"
-                  exit 1
-                fi
-              fi
-          fi
+          counter=1
+          while [ $counter -le 20 || "$respcode" != "200" ]
+          do
+            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
+            echo $respcode   
+
+            if [ "$respcode" != "200" ];
+            then
+                echo "going to need to wait longer i guess?"
+                ((counter++))
+                sleep 30s
+            fi
+          done
           
           curl $pubId
           
