@@ -69,7 +69,7 @@ jobs:
             
       - name: Create Root Cert references in AppGW
         env:
-          CERTNAMES: '["${{ inputs.APPNAME }}"]'
+          CERTNAMES: '["${{ inputs.APPNAME }}","openjdk-demo-service"]'
         id: AppGwRootCert
         run: |
           AGNAME='${{ inputs.AGNAME}}'
