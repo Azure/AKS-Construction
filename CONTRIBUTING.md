@@ -4,7 +4,7 @@ A few important factoids to consume about the Repo, before you contribute.
 
 ## Opportunities to contribute
 
-Start by looking through the [active issues](https://github.com/Azure/Aks-Construction/issues) for low hanging fruit. 
+Start by looking through the active issues for [low hanging fruit](https://github.com/Azure/Aks-Construction/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). 
 Another area that will help you get more familiar with the project is by running the Helper Web App locally and writing some new [Playwright web tests](helper/.playwrighttests) to make our web publishing/testing process more robust.
 
 ## Action Workflows
@@ -79,6 +79,8 @@ The [configuration experience](https://azure.github.io/Aks-Construction/) is hos
 ### Playwright tests
 
 Playwright is used to help verify that the app works properly, you can use Playwright in your local dev experience (see codespaces below), but crucially it's also leveraged as part of the publish process. If the tests don't pass, then the app will not publish. The `fragile` keyword should be used in any tests where you're learning how they work and run. Once the test is of sufficient quality to be considered a core test, the `fragile` keyword is removed.
+
+We're trying to ensure that PR's that contain Web UI changes have appropriate Playwright tests that use `data-testid` for navigating the dom.
 
 ## Dev Container / Codespaces
 
