@@ -36,7 +36,7 @@ on:
         #- certmanager-production
         #- appgw-selfsigned
       MINIHELMBRANCH:
-        default: "javatlsappv3g"
+        default: "main"
         required: true
         type: string
     secrets:
