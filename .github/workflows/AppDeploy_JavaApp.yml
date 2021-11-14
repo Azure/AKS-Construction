@@ -152,7 +152,21 @@ jobs:
           fi
 
           git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
-
+          
+      - name: Check if Helm Chart already installed
+        env:
+          APPNAME: "${{ inputs.APPNAME }}"          
+        run: |
+          APPINSTALLED=$(helm list --filter $APPNAME --short)
+          if [ -z "$APPINSTALLED" ]
+          then
+                echo "App not installed"
+          else
+                echo "App already installed, forcing uninstall"
+                helm uninstall $APPNAME
+                sleep 1m
+          fi
+          
       - name: Add a azure-config secret for use with externaldns
         env:
           DNSRESOURCEGROUP: "${{ inputs.DNSRG }}"
@@ -233,46 +247,20 @@ jobs:
           APPNAME: "${{ inputs.APPNAME }}"
           URLTOHIT: "https://${{ inputs.APPNAME }}.${{ inputs.DNSDOMAIN }}"
         run: |
-          sleep 3m #Give everything a chance to work
-        
-          INGNAME="${APPNAME}-ingress"
-          
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-          
-          echo "Getting public ip"
-          pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          echo "Public ip : $pubId"
-          echo "URL to hit: $URLTOHIT"
-          
-          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
-          echo $respcode   
-          
-          #TODO: This is going to need to be rewritten. #loopshambles
-          #SSH'ing on the runner shows this works, sometimes it just takes ages
-          #Needs to be investigated.
-          if [ "$respcode" != "200" ];
-          then
-              echo "going to need to wait longer i guess?"
-              sleep 3m
+          counter=1
+          while [ $counter -le 20 ] && [ "$respcode" != "200" ]
+          do
+            echo "curl $URLTOHIT [$counter] [$(date +"%T")]"
+            respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
               
-              respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
-              echo $respcode    
-              
-              if [ "$respcode" != "200" ];
-              then
-                echo "going to need to wait EVEN longer i guess?  (wtf)"
-                sleep 3m
-                respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
-                echo $respcode    
-                if [ "$respcode" != "200" ];
-                then
-                  echo "Non 200 response code from app - Raising error"
-                  exit 1
-                fi
-              fi
-          fi
+            echo $respcode   
+            if [ "$respcode" != "200" ];
+            then
+                echo "going to wait another 30s [$counter] [$(date +"%T")]"
+                ((counter++))
+                sleep 30s
+            fi
+          done
           
           curl --insecure $URLTOHIT
 
