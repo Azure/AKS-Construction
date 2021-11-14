@@ -26,6 +26,10 @@ on:
         default: "openjdk-demo"
         required: true
         type: string
+      DOVERIFYSTEPS:
+        default: false
+        required: false
+        type: boolean
     secrets:
       AZURE_CREDENTIALS:
         required: true
@@ -258,7 +262,16 @@ jobs:
           fi
           
           curl --insecure $URLTOHIT
-          
+
+      - name: Observe Existing DNSConfig
+        if: failed() || ${{ inputs.DOVERIFYSTEPS }}
+        env:
+          DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
+          DNSRG: "${{ inputs.DNSRG }}"
+          RECORDNAME: "${{ inputs.DNSRECORDNAME }}"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
+
       - name: Verify Frontend Certificate
         env:
           URLTOHIT: "https://${{ inputs.APPNAME }}.${{ inputs.DNSDOMAIN }}"
