@@ -607,8 +607,8 @@ jobs:
           kubectl get ingress -n  $NAMESP
           
           counter=1
-          $pubIp='pending'
-          while [ $counter -le 10 || $pubId != 'pending' ]
+          pubIp="<pending>"
+          while [ $counter -le 10 || $pubId != "<pending>" ]
           do
             echo "Getting public ip [$counter]"
             pubIp=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
