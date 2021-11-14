@@ -478,7 +478,7 @@ jobs:
             }     
 
   SmokeTest_JavaApp-certmgr:
-    needs: [Deploy, SmokeTest_CertMgrApp, SmokeTest_SimpleApp, SmokeTest_JavaApp-appgw]
+    needs: [Deploy, SmokeTest_SimpleApp]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
     with:
       RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
@@ -495,7 +495,7 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       
   SmokeTest_JavaApp-appgw:
-    needs: [Deploy, SmokeTest_CertMgrApp, SmokeTest_SimpleApp]
+    needs: [Deploy, SmokeTest_JavaApp-certmgr]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
     with:
       RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
@@ -612,7 +612,7 @@ jobs:
           do
             sleep 10s
 
-            echo "Getting public ip [$counter]"
+            echo "Getting public ip [$counter] [$(date +"%T")]"
             pubIp=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
             echo "Public ip : $pubIp"
           done
@@ -620,12 +620,12 @@ jobs:
           counter=1
           while [ $counter -le 20 ] && [ "$respcode" != "200" ]
           do
+            echo "curl $pubIp [$counter]"
             respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
             echo $respcode   
-
             if [ "$respcode" != "200" ];
             then
-                echo "going to need to wait longer i guess?"
+                echo "going to wait another 30s [$counter] [$(date +"%T")]"
                 ((counter++))
                 sleep 30s
             fi
