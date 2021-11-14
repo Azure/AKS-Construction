@@ -712,7 +712,7 @@ jobs:
 
   CaptureAgicLogs:
     runs-on: ubuntu-latest
-    needs: [Deploy, SmokeTest_CertMgrApp]
+    needs: [Deploy, SmokeTest_JavaApp-certmgr, SmokeTest_JavaApp-appgw, SmokeTest_SimpleApp]
     if: ${{ always() && needs.Deploy.outputs.AGNAME != '' }}
     steps:
       - name: Azure Login
@@ -756,7 +756,7 @@ jobs:
   Infra_Destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, SmokeTest_SimpleApp, SmokeTest_KVCertApp, SmokeTest_CertMgrApp, Well_Architected, CaptureAgicLogs]
+    needs: [Validation, Deploy, InfraTests, DeployVerify, SmokeTest_SimpleApp, Well_Architected, CaptureAgicLogs]
     steps:
       - name: Azure Login
         uses: Azure/login@v1
