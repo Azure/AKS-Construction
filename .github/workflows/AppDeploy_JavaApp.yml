@@ -44,7 +44,7 @@ on:
         required: true
         
 jobs:
-  Certs:
+  App_Create:
     runs-on: ubuntu-latest
     concurrency: ${{ inputs.AGNAME}} #AppGateway doesn't like concurrent updates
     steps:
