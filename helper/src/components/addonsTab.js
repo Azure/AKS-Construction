@@ -84,9 +84,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.networkPolicy}
                     options={[
-                        { key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
+                        { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
+                        { "data-testid":'addons-netpolicy-calico', key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
+                        { "data-testid":'addons-netpolicy-azure', key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPolicy", key)}
