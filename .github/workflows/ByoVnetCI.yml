@@ -490,7 +490,7 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-kvssl
       FRONTENDCERTTYPE: appgw-selfsigned
-      MINIHELMBRANCH: main
+      MINIHELMBRANCH: ${{ github.event.inputs.minihelmbranch }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
