@@ -152,6 +152,21 @@ jobs:
 
           git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
 
+      - name: Check if Helm Chart already installed
+        env:
+          APPNAME: "${{ inputs.APPNAME }}"          
+        run: |
+          APPINSTALLED=$(helm list --filter $APPNAME --short)
+
+          if [ -z "$APPINSTALLED" ]
+          then
+                echo "App not installed"
+          else
+                echo "App already installed, forcing uninstall"
+                helm uninstall $APPNAME
+                sleep 1m
+          fi
+
       - name: Add a azure-config secret for use with externaldns
         env:
           DNSRESOURCEGROUP: "${{ inputs.DNSRG }}"
