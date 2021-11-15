@@ -288,6 +288,7 @@ jobs:
             kubectl get po
             
             secret=$(kubectl get secret $SECRETNAME --ignore-not-found)
+            kubectl get secret $SECRETNAME --ignore-not-found
             
             if [ -z "$secret" ]
             then
