@@ -26,3 +26,7 @@ jobs:
         stale-issue-label: 'stale'
         stale-pr-label: 'stale'
         days-before-stale: 20
+        days-before-close: 7
+        remove-stale-when-updated: true
+        labels-to-remove-when-unstale: 'stale'
+        labels-to-add-when-unstale: 'Keep Open'
