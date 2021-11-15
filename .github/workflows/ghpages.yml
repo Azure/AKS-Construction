@@ -35,9 +35,9 @@ jobs:
           config: './cspell.json'
           inline: warning
           root: '.'
-          #files: "**/*.{ts,js,md}"
+          files: "**/*.{ts,js,md}" #You need to respecify this setting - even though it's in the cspell.json config :(
           incremental_files_only: false
-          strict: false #allows the build to continue even if spelling mistakes are detected
+          strict: true #setting to false allows the build to continue even if spelling mistakes are detected
 
       - name: Build and start node app
         run: |
