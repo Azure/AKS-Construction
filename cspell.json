@@ -7,7 +7,6 @@
     "ignorePaths": [],
     "dictionaryDefinitions": [],
     "dictionaries": [
-        "en-GB"
     ],
     "words": [
         "aadgroupids",
@@ -94,7 +93,6 @@
     ],
     "ignoreRegExpList": [
         "\\((.*)\\)", //Markdown links
-        //"[A-Z]", //Markdown links
         "```[a-z]*\n[\\s\\S]*?\n```" //Markdown code blocks. h/t https://coderwall.com/p/r6b4xg/regex-to-match-github-s-markdown-code-blocks,
     ],
     "import": [],
