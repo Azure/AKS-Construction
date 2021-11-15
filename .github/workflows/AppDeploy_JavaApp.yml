@@ -287,9 +287,9 @@ jobs:
           do
             kubectl get po
             
-            $secret=$(kubectl get secret $SECRETNAME --ignore-not-found)
+            secret=$(kubectl get secret $SECRETNAME --ignore-not-found)
             
-            if [ -z "$BRANCH" ]
+            if [ -z "$secret" ]
             then
                   break
             fi
