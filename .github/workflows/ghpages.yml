@@ -35,7 +35,7 @@ jobs:
           config: './cspell.json'
           inline: warning
           root: '.'
-          files: "**"
+          files: "**/*.{ts,js,md}"
           incremental_files_only: false
 
       - name: Build and start node app
