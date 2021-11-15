@@ -37,7 +37,11 @@ on:
         #- appgw-selfsigned
       MINIHELMBRANCH:
         default: "main"
-        required: true
+        required: false
+        type: string
+      CERTMANAGERVERSION:  
+        default: "v1.5.3"
+        required: false
         type: string
     secrets:
       AZURE_CREDENTIALS:
@@ -79,7 +83,7 @@ jobs:
             
             sleep 2m
 
-      - name: Create Root Cert references in AppGW
+      - name: Create Root Cert references in AppGw
         env:
           CERTNAMES: '["${{ inputs.APPNAME }}"]'
         id: AppGwRootCert
@@ -97,7 +101,7 @@ jobs:
              $rootcertcmd || $rootcertcmd --verbose
           done
           
-      - name: Create FrontEnd Cert references in AppGW
+      - name: Create FrontEnd Cert references in AppGw
         if: inputs.FRONTENDCERTTYPE == 'appgw-selfsigned'
         env:
           CERTNAMES: '["${{ inputs.APPNAME }}-fe"]'
@@ -172,7 +176,7 @@ jobs:
       - name: Install Cert Manager
         if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
         env:
-          MANIFESTTESTURL: "https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml"
+          MANIFESTTESTURL: "https://github.com/jetstack/cert-manager/releases/download/${{ inputs.CERTMANAGERVERSION }}/cert-manager.yaml"
         run: |
           kubectl apply -f $MANIFESTTESTURL
           sleep 1m
@@ -184,14 +188,19 @@ jobs:
         run: |
           echo "Email Address for Lets Encrypt: $EMAILAD"
           helm upgrade --install smokecertissuer ./helmcharts/samples/certmanagerissuer --set email=$EMAILAD
+          sleep 1m     
           
       - name: Verify Cert Manager ClusterIssuer
         if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
         env:
           EMAILAD: "gdogg@microsoft.com"
         run: |
-          sleep 1m          
-          kubectl describe clusterissuer letsencrypt-staging
+          case "${{ inputs.FRONTENDCERTTYPE }}" in
+             "certmanager-staging") CERTSOURCE="letsEncrypt"; LEISSUER="letsencrypt-staging" ;;
+             "certmanager-production") CERTSOURCE="letsEncrypt" LEISSUER="letsencrypt-production" ;;
+          esac
+          
+          kubectl describe clusterissuer $LEISSUER
 
       - name: Add a azure-config secret for use with externaldns
         env:
@@ -226,14 +235,6 @@ jobs:
           echo $DOMAINFILTER
           helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
 
-      - name: Check DNS config
-        env:
-          DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
-          DNSRG: "${{ inputs.DNSRG }}"
-          RECORDNAME: "${{ inputs.DNSRECORDNAME }}"
-        run: |
-          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
-
       - name: Install the Java sample app
         env:
           NAMESP: "default"
@@ -267,14 +268,29 @@ jobs:
           helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER}"  --dry-run
           helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER}"
 
+      - name: Check for External DNS config
+        env:
+          DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
+          DNSRG: "${{ inputs.DNSRG }}"
+          RECORDNAME: "${{ inputs.DNSRECORDNAME }}"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
+
       - name: Wait for Cert Manager to issue certificate
+        env:
+          SECRETNAME: "openjdk-tls" #"${{ inputs.APPNAME }}"
         run: |
           counter=1
-          while [ $counter -le 25 ]
+          while [ $counter -le 10 ]
           do
             kubectl get po
-            kubectl describe po
-            kubectl get secret
+            
+            $secret=$(kubectl get secret openjdk-tls --ignore-not-found)
+            
+            if [ -z "$BRANCH" ]
+            then
+                  break
+            fi
             
             ((counter++))
             sleep 10s
