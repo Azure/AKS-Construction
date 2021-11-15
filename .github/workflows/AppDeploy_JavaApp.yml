@@ -277,7 +277,7 @@ jobs:
           while [ $counter -le 20 ] && [ "$respcode" != "200" ]
           do
             echo "curl $URLTOHIT [$counter] [$(date +"%T")]"
-            respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
+            respcode=$(curl --connect-timeout 5 --retry 0 -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
               
             echo $respcode   
             if [ "$respcode" != "200" ];
