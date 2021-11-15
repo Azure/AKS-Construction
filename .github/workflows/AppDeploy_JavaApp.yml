@@ -169,6 +169,7 @@ jobs:
                 echo "App not installed"
           else
                 echo "App already installed, forcing uninstall"
+                helm list --short
                 helm uninstall $APPNAME
                 sleep 1m
           fi
