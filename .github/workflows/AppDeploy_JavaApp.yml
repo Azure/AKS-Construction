@@ -269,7 +269,7 @@ jobs:
           helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER}",letsEncrypt.secretname="${APPNAME}-tls" --dry-run
           helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER},letsEncrypt.secretname="${APPNAME}-tls""
 
-      - name: Check for External DNS config
+      - name: Wait for External DNS config
         env:
           DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
           DNSRG: "${{ inputs.DNSRG }}"
@@ -287,7 +287,7 @@ jobs:
                   break 2
             fi
             
-            echo "ExternalDNS has not created Azure DNS Records not created yet [$counter] [$(date +"%T")]"
+            echo "ExternalDNS has not created Azure DNS Records yet [$counter] [$(date +"%T")]"
             
             ((counter++))
             sleep 10s
@@ -322,20 +322,11 @@ jobs:
           APPNAME: "${{ inputs.APPNAME }}"
           URLTOHIT: "https://${{ inputs.APPNAME }}.${{ inputs.DNSDOMAIN }}"
         run: |
-          counter=1
-          while [ $counter -le 5 ] && [ "$respcode" != "200" ]
-          do
-            echo "curl $URLTOHIT [$counter] [$(date +"%T")]"
-            respcode=$(curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URLTOHIT -v --trace-time)
+          echo "curl $URLTOHIT [$(date +"%T")]"
+          curlcommand=curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URLTOHIT -v --trace-time
+          respcode=$(curlcommand || curlcommand)
               
-            echo $respcode   
-            if [ "$respcode" != "200" ];
-            then
-                echo "going to wait another 30s [$counter] [$(date +"%T")]"
-                ((counter++))
-                sleep 20s
-            fi
-          done
+          echo $respcode   
           
           curl --insecure $URLTOHIT
 
