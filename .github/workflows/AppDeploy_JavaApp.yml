@@ -97,6 +97,7 @@ jobs:
           done
           
       - name: Create FrontEnd Cert references in AppGW
+        if: ${{ inputs.FRONTENDCERTTYPE == "appgw-selfsigned" }}
         env:
           CERTNAMES: '["${{ inputs.APPNAME }}-fe"]'
         run: |
@@ -153,7 +154,7 @@ jobs:
 
           git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
           
-      - name: Check if Helm Chart already installed
+      - name: Check if App Helm Chart already installed
         env:
           APPNAME: "${{ inputs.APPNAME }}"          
         run: |
@@ -166,7 +167,31 @@ jobs:
                 helm uninstall $APPNAME
                 sleep 1m
           fi
+
+      - name: Install Cert Manager
+        if: ${{ startsWith( inputs.FRONTENDCERTTYPE, certmanager ) }}
+        env:
+          MANIFESTTESTURL: "https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml"
+        run: |
+          kubectl apply -f $MANIFESTTESTURL
+          sleep 1m
           
+      - name: Install Cert Manager ClusterIssuer
+        if: ${{ startsWith( inputs.FRONTENDCERTTYPE, certmanager ) }}
+        env:
+          EMAILAD: "gdogg@microsoft.com"
+        run: |
+          echo "Email Address for Lets Encrypt: $EMAILAD"
+          helm upgrade --install smokecertissuer ./helmcharts/samples/certmanagerissuer --set email=$EMAILAD
+          
+      - name: Verify Cert Manager ClusterIssuer
+        if: ${{ startsWith( inputs.FRONTENDCERTTYPE, certmanager ) }}
+        env:
+          EMAILAD: "gdogg@microsoft.com"
+        run: |
+          sleep 1m          
+          kubectl describe clusterissuer letsencrypt-staging
+
       - name: Add a azure-config secret for use with externaldns
         env:
           DNSRESOURCEGROUP: "${{ inputs.DNSRG }}"
@@ -229,7 +254,7 @@ jobs:
           DNSNAME=${APPNAME}.${DOMAINSUFFIX}
 
           case "${{ inputs.FRONTENDCERTTYPE }}" in
-             "appGw") CERTSOURCE="appGw"; LEISSUER="" ;;
+             "appgw-selfsigned") CERTSOURCE="appGw"; LEISSUER="" ;;
              "certmanager-staging") CERTSOURCE="letsEncrypt"; LEISSUER="letsencrypt-staging" ;;
              "certmanager-production") CERTSOURCE="letsEncrypt" LEISSUER="letsencrypt-production" ;;
           esac
