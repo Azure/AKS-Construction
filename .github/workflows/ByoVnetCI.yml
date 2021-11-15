@@ -734,6 +734,11 @@ jobs:
           #sudo az aks install-cli
           kubectl version
           
+      - name: Kubectl get events
+        if: github.event.inputs.doDebugSteps != 'no'
+        run: |
+          kubectl get events
+          
       - name: Describe AGIC Pod
         env:
           NAMESP: "kube-system"
