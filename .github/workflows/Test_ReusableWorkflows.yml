@@ -17,7 +17,7 @@ env:
 
 jobs:
   deploy-java-app-certmgr:
-    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@${GITHUB_REF##*/}
+    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
     with:
       RG: Automation-Actions-AksDeployCI #$RG
       AKSNAME: aks-Byo
@@ -35,7 +35,7 @@ jobs:
 
   deploy-java-app-certmgr2:
     needs: [deploy-java-app-certmgr, deploy-java-app-kvssl]
-    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@${GITHUB_REF##*/}
+    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
     with:
       RG: Automation-Actions-AksDeployCI #$RG
       AKSNAME: aks-Byo
@@ -54,7 +54,7 @@ jobs:
   deploy-java-app-kvssl:
     needs: [deploy-java-app-certmgr]
     #uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
-    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@${GITHUB_REF##*/}
+    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
     with:
       RG: Automation-Actions-AksDeployCI #$RG
       AKSNAME: aks-Byo
