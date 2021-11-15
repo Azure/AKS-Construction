@@ -28,6 +28,7 @@ jobs:
       APPNAME: openjdk-demo
       FRONTENDCERTTYPE: certmanager-staging
       MINIHELMBRANCH: javatlsappv3g
+      UNINSTALLAFTERVERIFY: false
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -45,6 +46,7 @@ jobs:
       APPNAME: openjdk-demo2
       FRONTENDCERTTYPE: certmanager-staging
       MINIHELMBRANCH: javatlsappv3g
+      UNINSTALLAFTERVERIFY: false
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -62,6 +64,7 @@ jobs:
       APPNAME: openjdk-kvssl
       FRONTENDCERTTYPE: appgw-selfsigned
       MINIHELMBRANCH: javatlsappv3g
+      UNINSTALLAFTERVERIFY: false
 
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
