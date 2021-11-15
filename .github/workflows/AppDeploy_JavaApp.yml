@@ -290,9 +290,10 @@ jobs:
             secret=$(kubectl get secret $SECRETNAME --ignore-not-found)
             kubectl get secret $SECRETNAME --ignore-not-found
             
-            if [ -z "$secret" ]
+            if [ ! -z "$secret" ]
             then
-                  break
+                  echo "Secret $SECRETNAME has been created"
+                  break 2
             fi
             
             ((counter++))
