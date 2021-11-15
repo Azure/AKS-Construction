@@ -87,7 +87,10 @@
         "Wautoscale",
         "Wsku"
     ],
-    "ignoreWords": [],
+    "ignoreWords": [
+        "sconfiguration",
+        "bulets"
+    ],
     "ignoreRegExpList": [
         "\\((.*)\\)", //Markdown links
         //"[A-Z]", //Markdown links
