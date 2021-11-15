@@ -328,7 +328,7 @@ jobs:
         run: |
           echo "curl $URLTOHIT [$(date +"%T")]"
           curlcommand="curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URLTOHIT -v --trace-time"
-          respcode=$(curlcommand || curlcommand)
+          respcode=$($curlcommand || sleep 1m; $curlcommand)
               
           echo $respcode   
           
