@@ -1,3 +1,5 @@
+# Workflow is for testing reusable workflows to expedite the developer inner loop.
+
 name: Test-Java App Deploy
 
 on:
@@ -13,7 +15,6 @@ concurrency: ci-${{ github.ref }}
 env:
   RG: "Automation-Actions-AksDeployCI"
 
-
 jobs:
   deploy-java-app-certmgr:
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
@@ -27,7 +28,7 @@ jobs:
       AGNAME: agw-Byo
       APPNAME: openjdk-demo
       FRONTENDCERTTYPE: certmanager-staging
-      MINIHELMBRANCH: javatlsappv3g
+      MINIHELMBRANCH: main
       UNINSTALLAFTERVERIFY: false
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
@@ -45,7 +46,7 @@ jobs:
       AGNAME: agw-Byo
       APPNAME: openjdk-demo2
       FRONTENDCERTTYPE: certmanager-staging
-      MINIHELMBRANCH: javatlsappv3g
+      MINIHELMBRANCH: main
       UNINSTALLAFTERVERIFY: false
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
@@ -63,7 +64,7 @@ jobs:
       AGNAME: agw-Byo
       APPNAME: openjdk-kvssl
       FRONTENDCERTTYPE: appgw-selfsigned
-      MINIHELMBRANCH: javatlsappv3g
+      MINIHELMBRANCH: main
       UNINSTALLAFTERVERIFY: false
 
     secrets:
