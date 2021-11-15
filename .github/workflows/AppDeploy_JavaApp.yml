@@ -97,7 +97,7 @@ jobs:
           done
           
       - name: Create FrontEnd Cert references in AppGW
-        if: ${{ inputs.FRONTENDCERTTYPE == "appgw-selfsigned" }}
+        if: ${{ inputs.FRONTENDCERTTYPE }} == 'appgw-selfsigned'
         env:
           CERTNAMES: '["${{ inputs.APPNAME }}-fe"]'
         run: |
