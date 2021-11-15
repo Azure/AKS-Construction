@@ -4,7 +4,7 @@ A few important factoids to consume about the Repo, before you contribute.
 
 ## Opportunities to contribute
 
-Start by looking through the active issues for [low hanging fruit](https://github.com/Azure/Aks-Construction/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). 
+Start by looking through the active issues for [low hanging fruit](https://github.com/Azure/Aks-Construction/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 Another area that will help you get more familiar with the project is by running the Helper Web App locally and writing some new [Playwright web tests](helper/.playwrighttests) to make our web publishing/testing process more robust.
 
 ## Action Workflows
@@ -16,7 +16,7 @@ Various workflows run on Push / PR / Schedule.
 | Bicep Build | Every Push | `Quality` To run the bicep linter upon changes to the bicep files  |
 | Greetings   | Issue / PR | `Community` Greeting new contributors to the repo |
 | Stale bot   | Issue / PR | `Tidy` Marks old issues as stale |
-| Labeler   | PR | `Tidy` Adds relevant labels to PR's based on files changed |
+| Labeller   | PR | `Tidy` Adds relevant labels to PR's based on files changed |
 | Publish Helper | PR | `Quality` Tests changes to the UI work |
 | Publish Helper | Push `main` | Publishes the UI to GitHub Pages |
 | Check Markdown | PR | `Quality` Checks markdown files for spelling mistakes |
@@ -36,7 +36,7 @@ Each has a *Validate job*, that is required to pass before merging to main. PR's
 
 For the *most part* we try to use feature branches to PR to Main
 
-```
+```text
 ┌─────────────────┐         ┌───────────────┐
 │                 │         │               │
 │ Feature Branch  ├────────►│     Main      │
@@ -49,11 +49,11 @@ Branch Policies require the Validation stage of our GitHub Action Workflows to s
 
 ### The Develop Branch
 
-Where there have been significant changes and we want the full gammit of CI testing to be run on real Azure Infrastucture - then the Develop branch is used.
-It gives us the nice warm fuzzy feeling before merging into Main. 
+Where there have been significant changes and we want the full gamut of CI testing to be run on real Azure Infrastructure - then the Develop branch is used.
+It gives us the nice warm fuzzy feeling before merging into Main.
 We anticipate the use of the Develop branch is temporary.
 
-```
+```text
 ┌─────────────────┐         ┌─────────────┐       ┌────────────┐
 │                 │         │             │       │            │
 │ Feature Branch  ├────────►│   Develop   ├──────►│    Main    │
@@ -78,7 +78,7 @@ The [configuration experience](https://azure.github.io/Aks-Construction/) is hos
 
 ### Playwright tests
 
-Playwright is used to help verify that the app works properly, you can use Playwright in your local dev experience (see codespaces below), but crucially it's also leveraged as part of the publish process. If the tests don't pass, then the app will not publish. The `fragile` keyword should be used in any tests where you're learning how they work and run. Once the test is of sufficient quality to be considered a core test, the `fragile` keyword is removed.
+Playwright is used to help verify that the app works properly, you can use Playwright in your local dev experience (see Codespaces below), but crucially it's also leveraged as part of the publish process. If the tests don't pass, then the app will not publish. The `fragile` keyword should be used in any tests where you're learning how they work and run. Once the test is of sufficient quality to be considered a core test, the `fragile` keyword is removed.
 
 We're trying to ensure that PR's that contain Web UI changes have appropriate Playwright tests that use `data-testid` for navigating the dom.
 
@@ -99,6 +99,7 @@ npm start
 ```
 
 Running the playwright tests after starting the Wizard web app
+
 ```bash
 #Open a new terminal window
 cd helper

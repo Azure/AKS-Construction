@@ -1,8 +1,14 @@
 {
     "version": "0.2",
+    "language": "en-GB",
+    "files": [
+        "**/*.{ts,js,md}"
+    ],
     "ignorePaths": [],
     "dictionaryDefinitions": [],
-    "dictionaries": [],
+    "dictionaries": [
+        "en-GB"
+    ],
     "words": [
         "aadgroupids",
         "adminprincipleid",
@@ -18,6 +24,7 @@
         "BYOVNET",
         "carvals",
         "CNCF",
+        "Codespaces",
         "csisecret",
         "Daemonset",
         "demoapp",
@@ -30,12 +37,14 @@
         "gitops",
         "Grafana",
         "ilbsub",
+        "Jumpboxes",
         "kubectl",
         "kubeletidentity",
         "kubenet",
         "Kubernetes",
         "letsencrypt",
         "linksrc",
+        "Microservices",
         "monospace",
         "mounttime",
         "noopener",
@@ -43,12 +52,15 @@
         "notopmargin",
         "omsagent",
         "pagename",
+        "playwrighttests",
         "podid",
         "podscale",
         "portalnav",
         "pwsh",
         "routable",
+        "snuck",
         "stackstyle",
+        "templating",
         "testid",
         "VNET",
         "vnetonly",
@@ -57,6 +69,10 @@
         "Wsku"
     ],
     "ignoreWords": [],
+    "ignoreRegExpList": [
+        "\\((.*)\\)", //Markdown links
+        "```[a-z]*\n[\\s\\S]*?\n```" //Markdown code blocks. h/t https://coderwall.com/p/r6b4xg/regex-to-match-github-s-markdown-code-blocks,
+    ],
     "import": [],
     "enableFiletypes": [
         "!css",

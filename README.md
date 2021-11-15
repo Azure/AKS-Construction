@@ -4,7 +4,7 @@ Building Kubernetes clusters can be hard work! The AKS Bicep Accelerator focuses
 
 This project unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Well Architected Framework](https://docs.microsoft.com/en-us/azure/architecture/framework/), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
 
-The AKS Bicep Accelerator is part of the official [Enterprise Scale for AKS](https://github.com/Azure/enterprise-scale-for-aks) architectural approach. To read more about this project and how the AKS Bicep Accelerator fits with Enterprise Scale and the AKS Secure Baseline, look [here](referencearchs.md). 
+The AKS Bicep Accelerator is part of the official [Enterprise Scale for AKS](https://github.com/Azure/enterprise-scale-for-aks) architectural approach. To read more about this project and how the AKS Bicep Accelerator fits with Enterprise Scale and the AKS Secure Baseline, look [here](referencearchs.md).
 
 ## The 3 Components
 
@@ -14,7 +14,7 @@ This projects focus is split equally over 3 areas, configuration, modular templa
 
 ### Wizard experience
 
-To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/Aks-Construction/), which will provide a set of parameters and scripts to make deployment simple. It uses several preset configurations to guide configuration decisions. 
+To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/Aks-Construction/), which will provide a set of parameters and scripts to make deployment simple. It uses several preset configurations to guide configuration decisions.
 The deployment helper provides links to the official Microsoft documentation to help provide additional context for each feature.
 
 [![preview screenshot of the helper wizard](helper_preview_es.png)](https://azure.github.io/Aks-Construction/)
@@ -27,7 +27,7 @@ Releases are used to version the bicep code files, they can be leveraged directl
 
 ### DevOps - GitHub Actions
 
-A number of [GitHub actions](https://github.com/Azure/Aks-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. A robust deployment pipeline is essential when coordinating the deployment of multiple Azure services that work together, additionally there is configuration that cannot be set in the template and that needs to be automated (and tested) consistently. 
+A number of [GitHub actions](https://github.com/Azure/Aks-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. A robust deployment pipeline is essential when coordinating the deployment of multiple Azure services that work together, additionally there is configuration that cannot be set in the template and that needs to be automated (and tested) consistently.
 ![preview screenshot of the helper wizard](docassets/ghactionworkflow.jpg)
 
 CI Name | Actions Workflow | Parameter file | CI Status | Notes
@@ -44,7 +44,7 @@ For a more in depth look at the GitHub Actions used in this project, which steps
 
 If this is the first time you're using the project, follow these steps.
 
-1. Use the [Deployment Helper](https://azure.github.io/Aks-Construction/) to guide your AKS configuration. 
+1. Use the [Deployment Helper](https://azure.github.io/Aks-Construction/) to guide your AKS configuration.
 1. Run the commands in the *Provision Environment* tab to create your AKS Environment in your Azure subscription
 1. Run the commands in the *Post Configuration* tab to complete your implementation
 1. [Connect to your AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster), and deploy your applications as you see fit.
@@ -53,7 +53,7 @@ If this is the first time you're using the project, follow these steps.
 
 If you're looking to use this project as part of your deployments, follow these steps.
 
-1. Use the [Deployment Helper](https://azure.github.io/Aks-Construction/) to guide your AKS configuration. 
+1. Use the [Deployment Helper](https://azure.github.io/Aks-Construction/) to guide your AKS configuration.
 1. Capture the parameters on the *Template Parameters File* tab to a file - this is your configuration
 1. Check the *Post Configuration* tab for any commands and save them to a file
 1. Grab the [latest release](https://github.com/Azure/Aks-Construction/releases) of the bicep code
@@ -64,7 +64,8 @@ If you're looking to use this project as part of your deployments, follow these 
 ## Project Principals
 
 The guiding principal we have with this project is to focus on the the *downstream use* of the project (see [releases](https://github.com/Azure/Aks-Construction/releases)). As such, these are our specific practices.
-1. Deploy all components through a single, modular, itempotent bicep template Converge on a single bicep template, which can easily be consumed as a module
+
+1. Deploy all components through a single, modular, idempotent bicep template Converge on a single bicep template, which can easily be consumed as a module
 2. Provide best-practice defaults, then use parameters for different environment deployments
 3. Minimise "manual" steps for ease of automation
 4. Maintain quality through validation & CI/CD pipelines that also serve as working samples/docs
@@ -88,8 +89,8 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 
 ## Trademarks
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
+trademarks or logos is subject to and must follow
 [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
