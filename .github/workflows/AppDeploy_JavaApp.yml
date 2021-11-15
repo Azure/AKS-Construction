@@ -266,7 +266,20 @@ jobs:
           
           helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER}"  --dry-run
           helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER}"
-      
+
+      - name: Wait for Cert Manager to issue certificate
+        run: |
+          counter=1
+          while [ $counter -le 25 ]
+          do
+            kubectl get po
+            kubectl describe po
+            kubectl get secret
+            
+            ((counter++))
+            sleep 10s
+          done
+
       - name: Verify Java App is reachable
         env:
           NAMESP: "default"
