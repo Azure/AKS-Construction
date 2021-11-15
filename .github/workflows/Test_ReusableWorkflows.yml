@@ -31,6 +31,23 @@ jobs:
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
+  deploy-java-app-certmgr2:
+    needs: [deploy-java-app-certmgr, deploy-java-app-kvssl]
+    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
+    with:
+      RG: Automation-Actions-AksDeployCI #$RG
+      AKSNAME: aks-Byo
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      DNSRECORDNAME: openjdk-demo2
+      AKVNAME: kv-Byo
+      AGNAME: agw-Byo
+      APPNAME: openjdk-demo2
+      FRONTENDCERTTYPE: certmanager-staging
+      MINIHELMBRANCH: javatlsappv3g
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
   deploy-java-app-kvssl:
     needs: [deploy-java-app-certmgr]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
