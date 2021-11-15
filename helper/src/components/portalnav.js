@@ -29,10 +29,7 @@ function useAITracking(componentName, key) {
 
 }
 
-
 function Header({ entScale, setEntScale, featureFlag }) {
-
-
   return (
     <Stack horizontal tokens={{ childrenGap: 10 }}>
       <img src="aks.svg" alt="Kubernetes Service" style={{ width: "6%", height: "auto" }}></img>
@@ -60,50 +57,133 @@ function Header({ entScale, setEntScale, featureFlag }) {
     </Stack>
   )
 }
+
+
+
+/*
+ *   PortalNav
+ *   Main Screen of the Helper
+ *   All validation should live here
+ */
 export default function PortalNav({ config }) {
-  const [entScale, setEntScale] = useState(false)
+
+  console.log (`PortalNav`)
   const [key, setKey] = useState("0")
 
   const { tabLabels, defaults, entScaleOps, defaultOps } = config
 
   useAITracking("PortalNav", tabLabels[key])
-  const [invalidArray, setInvalidArray] = useState(Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
-  const [featureFlag, setFeatureFlag] = useState(false)
-  const [tabValues, setTabValues] = useState(defaults)
+  const urlParams = new URLSearchParams(window.location.search)
+  const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
 
-  useEffect(() => {
-
-    var queryString = window && window.location.search
-    if (queryString) {
-      var match1 = queryString.match('[?&]feature=([^&]+)')
-      if (match1) {
-        setFeatureFlag(true)// = match[1]
-      }
-      var match2 = queryString.match('[?&]default=es')
-      if (match2) {
-        setEntScale(true)// = match[1]
-      }
-    }
-  }, [])
+  const featureFlag = urlParams.has('feature')
+  const [entScale, setEntScale] = useState(() => urlParams.has('entScale'))
 
 
-  useEffect(() => {
-
-    setTabValues((p) => {
-      let name = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
-      return {
-        ...p, deploy: {
-          ...p.deploy,
-          clusterName: name,
-          rg: `${name}-rg`,
-          ...(process.env.REACT_APP_K8S_VERSION && { kubernetesVersion: process.env.REACT_APP_K8S_VERSION })
-        }
+  const sections = entScale ? entScaleOps : defaultOps
+  const [selected, setSelected] = useState(() => { return {
+        values: sections.reduce((a, s) => {
+            return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key } 
+          }, {}),
+        entScale
       }
     })
+
+  const [tabValues, setTabValues] = useState(() => {
+    const clusterName = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
+
+    //console.log (`returnTabValues: applying defaults from ${JSON.stringify(Object.keys(selectedValues))}`)
+    const tabApplySections = Object.keys(selected.values).reduce((acc,curr) => 
+      updateTabValues (acc, sections, curr, selected.values[curr])
+    , defaults)
+
+    const dynamicApplySections = {
+      ...tabApplySections,
+      deploy: {
+        ...tabApplySections.deploy,
+        clusterName,
+        rg: `${clusterName}-rg`,
+        ...(process.env.REACT_APP_K8S_VERSION && { kubernetesVersion: process.env.REACT_APP_K8S_VERSION })
+      }
+    }
+
+    // Apply url params
+    const urlApplySections = Object.keys(dynamicApplySections).reduce((acct, currt) => {  
+        return {
+          ...acct, 
+          [currt]: Object.keys(dynamicApplySections[currt]).reduce((accv, currv) => {
+            return {...accv, [currv]: urlParams.has(`${currt}.${currv}`) ? urlParams.get(`${currt}.${currv}`) : dynamicApplySections[currt][currv] }}, {})
+        }
+    }, {})
+
+
+    return  urlApplySections
+  })
+
+
+  function updateTabValues (currenttabValues, sections, sectionKey, cardKey) {
+    const card_values = sections.find(s => s.key === sectionKey).cards.find(c => c.key === cardKey).values
+    console.log (`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
+    return Object.keys(card_values).reduce((acc, curr) => {
+      return {
+        ...acc, 
+        [curr]: {
+          ...acc[curr],
+          // resolve conditional params
+          ...Object.keys(card_values[curr]).reduce((a, c) => {
+            const val = card_values[curr][c]
+            //console.log (`updateTabValues: looking for conditional value=${JSON.stringify(val)}`)
+            // if value is array with at least 1 element with a object that has a properly 'set'
+            const targetVal = Array.isArray(val) && val.length > 0 && typeof val[0] === 'object' && val[0].hasOwnProperty("set") ?
+              val.reduce((a, c) => a === undefined ? (c.page && c.field ? (currenttabValues[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
+              :
+              val
+            //console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
+            return { ...a, [c]: targetVal }
+          }, {})
+        }
+      }
+    }, currenttabValues)
+  }
+
+  function updateSelected(sectionKey, cardKey) {
+
+    if (selected.entScale !== entScale) {
+      console.log (`User changed entScale switch, and selected a new card, need to unselect old cards`)
+      defaultOps.forEach(element => {
+        urlParams.delete(element.key)
+      })
+      entScaleOps.forEach(element => {
+        urlParams.delete(element.key)
+      })
+    }
+    console.log (`updateSelected: sectionKey=${sectionKey} cardKey=${cardKey}`)
+    setSelected({entScale, values: { ...(selected.entScale === entScale && selected.values), [sectionKey]: cardKey }})
+    setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, sectionKey, cardKey))
+    
+    if (entScale) {
+      urlParams.set('entScale', 1)
+    } else {
+      urlParams.delete('entScale')
+    }
+    urlParams.set(sectionKey,cardKey)
+    window.history.replaceState(null, null, "?"+urlParams.toString())
+  }
+
+
+  useEffect(() => {
     fetch('https://api.ipify.org?format=json').then(response => {
       return response.json();
     }).then((res) => {
-      setTabValues((p) => { return { ...p, deploy: { ...p.deploy, apiips: `${res.ip}/32` } } })
+      console.log (`useEffect Get IP`)
+      setTabValues(currentTabValues => { return { 
+          ...currentTabValues, 
+          deploy: { 
+            ...currentTabValues.deploy, 
+            apiips: `${res.ip}/32` 
+          } 
+        } 
+      })
 
     }).catch((err) => console.error('Problem fetching my IP', err))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,6 +195,8 @@ export default function PortalNav({ config }) {
   }
 
   function mergeState(tab, field, value) {
+    urlParams.set(`${tab}.${field}`, value)
+    window.history.replaceState(null, null, "?"+urlParams.toString())
     setTabValues((p) => {
       return {
         ...p, [tab]: {
@@ -123,37 +205,6 @@ export default function PortalNav({ config }) {
         }
       }
     })
-  }
-
-  function updateCardValues(sectionKey, cardKey) {
-    const ops = entScale ? entScaleOps : defaultOps
-    const section = ops.find(s => s.key === sectionKey)
-    const carvals = section.cards.find(c => c.key === cardKey).values
-
-
-    for (let t of Object.keys(carvals)) {
-      console.log(`updateCardValues(${sectionKey}, ${cardKey}) -> ${t}`)
-
-      setTabValues((p) => {
-        return {
-          ...p, [t]: {
-            ...p[t],
-            // resolve conditional params
-            ...Object.keys(carvals[t]).reduce((a, c) => {
-              const val = carvals[t][c]
-              // if value is array with at least 1 element with a object that has a properly 'set'
-              const targetVal = Array.isArray(val) && val.length > 0 && typeof val[0] === 'object' && val[0].hasOwnProperty("set") ?
-                val.reduce((a, c) => a === undefined ? (c.page && c.field ? (p[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
-                :
-                val
-              console.log(`updateCardValues: setting tab=${t}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
-              return { ...a, [c]: targetVal }
-            }, {})
-          }
-        }
-      })
-
-    }
   }
 
   function getError(page, field) {
@@ -170,7 +221,7 @@ export default function PortalNav({ config }) {
     }
   }
 
-  const { deploy, cluster, net, addons, app } = tabValues
+  const { deploy, cluster, net, addons } = tabValues
 
   invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph,
     "The selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache")
@@ -225,7 +276,7 @@ export default function PortalNav({ config }) {
 
       <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
-        <Presents sections={entScale ? entScaleOps : defaultOps} updateCardValues={updateCardValues} />
+        <Presents sections={sections} selectedValues={selected.values} updateSelected={updateSelected} />
 
         <Separator styles={{ root: { marginTop: "55px !important", marginBottom: "5px" } }}><b>Deploy</b> (optionally use 'Details' tabs for additional configuration)</Separator>
 

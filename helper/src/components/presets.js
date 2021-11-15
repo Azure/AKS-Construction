@@ -1,6 +1,6 @@
 /* eslint-disable import/no-anonymous-default-export */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { MessageBar, DocumentCardActivity, DocumentCardImage, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType } from '@fluentui/react';
 
 const iconClass = mergeStyles({
@@ -9,47 +9,23 @@ const iconClass = mergeStyles({
 });
 
 
-export default function ({ sections, updateCardValues }) {
+export default function ({ sections, selectedValues, updateSelected }) {
 
-    const [selected, setSelected] = useState({})
-
-    useEffect(() => {
-        // dateValues for defaults
-        setSelected(sections.reduce((a, s) => { return { ...a, [s.key]: s.cards.find(c => c.default).key } }, {}))
-
-        for (let s of sections) {
-            const defCard = s.cards.find(c => c.default)
-            if (defCard) {
-                updateCardValues(s.key, defCard.key)
-            }
-        }
-    }, [sections])
-
-    function apply(sectionKey, cardKey) {
-        setSelected({ ...selected, [sectionKey]: cardKey })
-        updateCardValues(sectionKey, cardKey)
-    }
-
-    console.log(`presets render: selected=(${JSON.stringify(selected)})`)
-    return [].concat.apply([], sections.map(s => [
+    return sections.map(s => [
 
 
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
-        <>
+        <div key={`warn${s.key}`}>
             {s.sectionWarning &&
-                <MessageBar styles={{ root: { marginBottom: "15px", fontSize: "15px" } }} messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
+                <MessageBar key={`messg${s.key}`} styles={{ root: { marginBottom: "15px", fontSize: "15px" } }} messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
             }
-        </>,
+        </div>,
         <Stack key={`stack${s.key}`} horizontal tokens={{ childrenGap: 15 }}>
             {s.cards.map((c, i) =>
-                <DocumentCard
-                    key={c.key}
-                    onClick={() => apply(s.key, c.key)}
-                    tokens={{ childrenMargin: 12 }}
-                >
+                <DocumentCard  key={c.key}   onClick={() => updateSelected(s.key, c.key)} tokens={{ childrenMargin: 12 }}>
+                    
                     <DocumentCardDetails styles={{ root: { padding: "8px 16px", position: "relative" } }}>
-                        <Checkbox inputProps={{ 'data-testid': `portalnav-presets-${s.key}-${c.key}-Checkbox`}} checked={selected[s.key] === c.key} label={c.title} styles={{ label: { fontWeight: selected[s.key] === c.key ? '500' : 'normal' } }} />
-
+                        <Checkbox inputProps={{ 'data-testid': `portalnav-presets-${s.key}-${c.key}-Checkbox`}} checked={selectedValues[s.key] === c.key} label={c.title} styles={{ label: { fontWeight: selectedValues[s.key] === c.key ? '500' : 'normal' } }} />
                     </DocumentCardDetails>
 
                     {c.imageSrc &&
@@ -90,5 +66,5 @@ export default function ({ sections, updateCardValues }) {
                 </DocumentCard>
             )}
         </Stack>
-    ]))
+    ])
 }

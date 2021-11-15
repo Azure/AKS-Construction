@@ -5,7 +5,7 @@ import { adv_stackstyle, hasError, getError } from './common'
 
 
 export default function ({ tabValues, updateFn, invalidArray }) {
-    const { addons, net, deploy } = tabValues
+    const { addons, net } = tabValues
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 

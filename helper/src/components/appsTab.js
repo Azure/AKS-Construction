@@ -1,9 +1,9 @@
 import React from 'react';
-import { Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
+import { Checkbox, Pivot, PivotItem, Image, TextField, Separator, Stack,  Label, MessageBar, MessageBarType } from '@fluentui/react';
 
-import { adv_stackstyle, getError } from './common'
+import { adv_stackstyle } from './common'
 
-export default function AppsTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs }) {
+export default function AppsTab({  tabValues }) {
 
     const { addons, deploy, net, cluster } = tabValues
     const aks = `aks-${deploy.clusterName}`
