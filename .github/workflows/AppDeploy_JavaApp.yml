@@ -170,7 +170,7 @@ jobs:
           fi
 
       - name: Install Cert Manager
-        if: startsWith( "${{ inputs.FRONTENDCERTTYPE }}", "certmanager" )
+        if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
         env:
           MANIFESTTESTURL: "https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml"
         run: |
@@ -178,7 +178,7 @@ jobs:
           sleep 1m
           
       - name: Install Cert Manager ClusterIssuer
-        if: startsWith( "${{ inputs.FRONTENDCERTTYPE }}", "certmanager" )
+        if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
         env:
           EMAILAD: "gdogg@microsoft.com"
         run: |
@@ -186,7 +186,7 @@ jobs:
           helm upgrade --install smokecertissuer ./helmcharts/samples/certmanagerissuer --set email=$EMAILAD
           
       - name: Verify Cert Manager ClusterIssuer
-        if: startsWith( "${{ inputs.FRONTENDCERTTYPE }}", "certmanager" )
+        if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
         env:
           EMAILAD: "gdogg@microsoft.com"
         run: |
