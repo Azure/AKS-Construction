@@ -253,7 +253,7 @@ function CustomVNET({ net, addons, updateFn }) {
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" disabled={!net.vnetprivateend || addons.registry === "none" || !addons.acrPrivatePool  } label="ACR Private Agent Pool subnet" onChange={(ev, val) => updateFn("acrAgentPoolSubnetAddressPrefix", val)} value={net.vnetprivateend && addons.registry !== "none" && addons.acrPrivatePool  ? net.acrAgentPoolSubnetAddressPrefix : "No Agen Pool requested"} />
+                        <TextField prefix="Cidr" disabled={!net.vnetprivateend || addons.registry === "none" || !addons.acrPrivatePool  } label="ACR Private Agent Pool subnet" onChange={(ev, val) => updateFn("acrAgentPoolSubnetAddressPrefix", val)} value={net.vnetprivateend && addons.registry !== "none" && addons.acrPrivatePool  ? net.acrAgentPoolSubnetAddressPrefix : "No Agent Pool requested"} />
                     </Stack.Item>
                 </Stack>
 
