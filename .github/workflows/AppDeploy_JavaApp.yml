@@ -167,7 +167,7 @@ jobs:
         env:
           APPNAME: "${{ inputs.APPNAME }}"          
         run: |
-          APPINSTALLED=$(helm list --filter $APPNAME --short)
+          APPINSTALLED=$(helm list --filter ^$APPNAME$ --short)
           if [ -z "$APPINSTALLED" ]
           then
                 echo "App not installed"
