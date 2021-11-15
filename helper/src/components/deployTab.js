@@ -96,8 +96,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az deployment group create -g ${deploy.rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
-  const promethous_namespace = 'monitoring'
-  const promethous_helm_release_name = 'monitoring'
+  const prometheus_namespace = 'monitoring'
+  const prometheus_helm_release_name = 'monitoring'
   const nginx_namespace = 'ingress-basic'
   const nginx_helm_release_name = 'nginx-ingress'
 
@@ -131,8 +131,8 @@ az aks get-credentials -g ${deploy.rg} -n ${aks} ` : ""
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-kubectl create namespace ${promethous_namespace}
-helm install ${promethous_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${promethous_namespace}` : '') +
+kubectl create namespace ${prometheus_namespace}
+helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}` : '') +
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `\n\n# Create a namespace for your ingress resources
 kubectl create namespace ${nginx_namespace}
@@ -150,8 +150,8 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
       (addons.monitor === 'oss' ?
         `  --set controller.metrics.enabled=true \\
   --set controller.metrics.serviceMonitor.enabled=true \\
-  --set controller.metrics.serviceMonitor.namespace=${promethous_namespace} \\
-  --set controller.metrics.serviceMonitor.additionalLabels.release=${promethous_helm_release_name} \\
+  --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \\
+  --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \\
 ` : '') +
       `  --namespace ${nginx_namespace}` : '') +
     (addons.ingress === 'contour' ? `\n\n# Install Contour Ingress Controller
