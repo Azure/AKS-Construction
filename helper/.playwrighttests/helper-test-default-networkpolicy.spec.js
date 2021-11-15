@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-test('ingress-options-test', async ({ page }) => {
+test('networkpolicy-test-defaul-is-azure', async ({ page }) => {
   
   await page.goto('http://localhost:3000/Aks-Construction');
   
