@@ -4,7 +4,7 @@ import { Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdown
 
 import { adv_stackstyle, getError } from './common'
 
-export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs }) {
+export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
 
   const { net, addons, cluster, deploy } = tabValues
   const allok = !(invalidTabs && invalidTabs.length > 0)
@@ -53,7 +53,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
-    ...(addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
+    ...(addons.ingress !== "none" && addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
     ...(addons.ingress === "appgw" && {
       ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
         appGWcount: addons.appGWcount,
@@ -158,7 +158,7 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 ` : '') +
     // External DNS
-    (addons.dnsZoneId ? `
+    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
 
 # Install external-dns
 # external-dns needs permissions to make changes in the Azure DNS server.
@@ -184,7 +184,7 @@ ${cluster.apisecurity === "private" ?
 
 ` : '') +
     // Cert-Manager
-    (addons.certMan ? `
+    (addons.ingress !== 'none' && addons.certMan ? `
 
 # Install cert-manager
 # https://cert-manager.io/docs/installation/
@@ -313,6 +313,8 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
       }
 
+      
+
       <Pivot >
         <PivotItem headerText="Provision Environment (CLI)"  >
           <TextField data-testid="deploy-deploycmd"  value={deploycmd} rows={deploycmd.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Commands to deploy your fully operational environment" styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline errorMessage={!allok ? "Please complete all items that need attention before running script" : ""} />
@@ -357,6 +359,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
         </PivotItem>
       </Pivot>
+      <Text variant="xSmall"><b>URL Parameters : </b>{urlParams.toString()}</Text>
     </Stack>
   )
 }

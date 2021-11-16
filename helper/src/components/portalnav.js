@@ -73,7 +73,7 @@ export default function PortalNav({ config }) {
   const { tabLabels, defaults, entScaleOps, defaultOps } = config
 
   useAITracking("PortalNav", tabLabels[key])
-  const urlParams = new URLSearchParams(window.location.search)
+  const [urlParams, setUrlParams] = useState(new URLSearchParams(window.location.search))
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
 
   const featureFlag = urlParams.has('feature')
@@ -92,11 +92,12 @@ export default function PortalNav({ config }) {
   const [tabValues, setTabValues] = useState(() => {
     const clusterName = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
 
-    //console.log (`returnTabValues: applying defaults from ${JSON.stringify(Object.keys(selectedValues))}`)
+    // Apply selected presets to tab vlues
     const tabApplySections = Object.keys(selected.values).reduce((acc,curr) => 
       updateTabValues (acc, sections, curr, selected.values[curr])
     , defaults)
 
+    // Apply dynamic presets to tab vlues
     const dynamicApplySections = {
       ...tabApplySections,
       deploy: {
@@ -106,16 +107,20 @@ export default function PortalNav({ config }) {
         ...(process.env.REACT_APP_K8S_VERSION && { kubernetesVersion: process.env.REACT_APP_K8S_VERSION })
       }
     }
-
-    // Apply url params
+    // Apply url params to tab vlues
     const urlApplySections = Object.keys(dynamicApplySections).reduce((acct, currt) => {  
         return {
           ...acct, 
           [currt]: Object.keys(dynamicApplySections[currt]).reduce((accv, currv) => {
-            return {...accv, [currv]: urlParams.has(`${currt}.${currv}`) ? urlParams.get(`${currt}.${currv}`) : dynamicApplySections[currt][currv] }}, {})
+            const urlname = `${currt}.${currv}`
+            let valres =  dynamicApplySections[currt][currv]
+            if (urlParams.has(urlname)) {
+              let val = urlParams.get(urlname)
+              valres = val === "true" ? true : val === "false" ? false : isNaN(val) ? val : parseInt(val)
+            }
+            return {...accv, [currv]: valres }}, {})
         }
     }, {})
-
 
     return  urlApplySections
   })
@@ -148,26 +153,33 @@ export default function PortalNav({ config }) {
 
   function updateSelected(sectionKey, cardKey) {
 
-    if (selected.entScale !== entScale) {
-      console.log (`User changed entScale switch, and selected a new card, need to unselect old cards`)
-      defaultOps.forEach(element => {
-        urlParams.delete(element.key)
-      })
-      entScaleOps.forEach(element => {
-        urlParams.delete(element.key)
-      })
-    }
+    setUrlParams((currrentUrlParams) => {
+
+      if (selected.entScale !== entScale) {
+        console.log (`User changed entScale switch, and selected a new card, need to unselect old cards`)
+        defaultOps.forEach(element => {
+          currrentUrlParams.delete(element.key)
+        })
+        entScaleOps.forEach(element => {
+          currrentUrlParams.delete(element.key)
+        })
+      }
+  
+      if (entScale) {
+        currrentUrlParams.set('entScale', 1)
+      } else {
+        currrentUrlParams.delete('entScale')
+      }
+      currrentUrlParams.set(sectionKey,cardKey)
+      return currrentUrlParams
+    })
+
+
     console.log (`updateSelected: sectionKey=${sectionKey} cardKey=${cardKey}`)
     setSelected({entScale, values: { ...(selected.entScale === entScale && selected.values), [sectionKey]: cardKey }})
     setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, sectionKey, cardKey))
     
-    if (entScale) {
-      urlParams.set('entScale', 1)
-    } else {
-      urlParams.delete('entScale')
-    }
-    urlParams.set(sectionKey,cardKey)
-    window.history.replaceState(null, null, "?"+urlParams.toString())
+    //window.history.replaceState(null, null, "?"+urlParams.toString())
   }
 
 
@@ -196,7 +208,7 @@ export default function PortalNav({ config }) {
 
   function mergeState(tab, field, value) {
     urlParams.set(`${tab}.${field}`, value)
-    window.history.replaceState(null, null, "?"+urlParams.toString())
+    //window.history.replaceState(null, null, "?"+urlParams.toString())
     setTabValues((p) => {
       return {
         ...p, [tab]: {
@@ -282,7 +294,7 @@ export default function PortalNav({ config }) {
 
         <Pivot selectedKey={key} onLinkClick={_handleLinkClick} focusZoneProps={{ 'data-testid': `portalnav-Pivot`}}>
           <PivotItem headerText={tabLabels.deploy} itemKey="deploy" onRenderItemLink={(a, b) => _customRenderer('deploy', a, b)}>
-            <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} />
+            <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} urlParams={urlParams} />
           </PivotItem>
           <PivotItem headerText={tabLabels.cluster} itemKey="cluster" onRenderItemLink={(a, b) => _customRenderer('cluster', a, b)} >
             <ClusterTab tabValues={tabValues} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
