@@ -313,7 +313,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
       }
 
-      
+      <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>{urlParams.toString()}</a></Text>
 
       <Pivot >
         <PivotItem headerText="Provision Environment (CLI)"  >
@@ -359,7 +359,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
         </PivotItem>
       </Pivot>
-      <Text variant="xSmall"><b>URL Parameters : </b>{urlParams.toString()}</Text>
+      
     </Stack>
   )
 }
