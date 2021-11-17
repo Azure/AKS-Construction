@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text } from '@fluentui/react';
+import { ThemeProvider, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text } from '@fluentui/react';
 import Presents from './presets'
 
 import NetworkTab from './networkTab'
@@ -67,12 +67,13 @@ function Header({ entScale, setEntScale, featureFlag }) {
  */
 export default function PortalNav({ config }) {
 
-  console.log (`PortalNav`)
-  const [key, setKey] = useState("0")
-
+  console.log (`PortalNav: ${JSON.stringify(Object.keys(config))}`)
+  
   const { tabLabels, defaults, entScaleOps, defaultOps } = config
+  const [pivotkey, setPivotkey] = useState(Object.keys(tabLabels)[0])
 
-  useAITracking("PortalNav", tabLabels[key])
+  useAITracking("PortalNav", tabLabels[pivotkey])
+
   const [urlParams, setUrlParams] = useState(new URLSearchParams(window.location.search))
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
 
@@ -203,7 +204,7 @@ export default function PortalNav({ config }) {
 
 
   function _handleLinkClick(item) {
-    setKey(item.props.itemKey)
+    setPivotkey(item.props.itemKey)
   }
 
   function mergeState(tab, field, value) {
@@ -264,10 +265,10 @@ export default function PortalNav({ config }) {
       :
       "Template can only deploy Azure Firewall in single VNET with Custom Networking")
 
-  invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
-    "Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab")
-  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length>19,
-    "Enter valid cluster name")
+    invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
+      "Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab")
+    invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length>19,
+      "Enter valid cluster name")
 
 
   function _customRenderer(page, link, defaultRenderer) {
@@ -283,34 +284,36 @@ export default function PortalNav({ config }) {
 
   return (
     <main id="mainContent" className="wrapper">
-      <Header entScale={entScale} setEntScale={setEntScale} featureFlag={featureFlag} />
+      <ThemeProvider>
+        <Header entScale={entScale} setEntScale={setEntScale} featureFlag={featureFlag} />
 
 
-      <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
+        <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
-        <Presents sections={sections} selectedValues={selected.values} updateSelected={updateSelected} />
+          <Presents sections={sections} selectedValues={selected.values} updateSelected={updateSelected} />
 
-        <Separator styles={{ root: { marginTop: "55px !important", marginBottom: "5px" } }}><b>Deploy</b> (optionally use 'Details' tabs for additional configuration)</Separator>
+          <Separator styles={{ root: { marginTop: "55px !important", marginBottom: "5px" } }}><b>Deploy</b> (optionally use 'Details' tabs for additional configuration)</Separator>
 
-        <Pivot selectedKey={key} onLinkClick={_handleLinkClick} focusZoneProps={{ 'data-testid': `portalnav-Pivot`}}>
-          <PivotItem headerText={tabLabels.deploy} itemKey="deploy" onRenderItemLink={(a, b) => _customRenderer('deploy', a, b)}>
-            <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} urlParams={urlParams} />
-          </PivotItem>
-          <PivotItem headerText={tabLabels.cluster} itemKey="cluster" onRenderItemLink={(a, b) => _customRenderer('cluster', a, b)} >
-            <ClusterTab tabValues={tabValues} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
-          </PivotItem>
-          <PivotItem headerText={tabLabels.addons} itemKey="addons" onRenderItemLink={(a, b) => _customRenderer('addons', a, b)} >
-            <AddonsTab tabValues={tabValues} updateFn={(field, value) => mergeState("addons", field, value)} invalidArray={invalidArray['addons']} />
-          </PivotItem>
-          <PivotItem headerText={tabLabels.net} itemKey="net" onRenderItemLink={(a, b) => _customRenderer('net', a, b)}>
-            <NetworkTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("net", field, value)} invalidArray={invalidArray['net']} />
-          </PivotItem>
-          <PivotItem headerText={tabLabels.app} itemKey="app" onRenderItemLink={(a, b) => _customRenderer('app', a, b)}>
-            <AppsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("app", field, value)} invalidArray={invalidArray['app']} />
-          </PivotItem>
-        </Pivot>
+          <Pivot selectedKey={pivotkey} onLinkClick={_handleLinkClick} focusZoneProps={{ 'data-testid': `portalnav-Pivot`}}>
+            <PivotItem headerText={tabLabels.deploy} itemKey="deploy" onRenderItemLink={(a, b) => _customRenderer('deploy', a, b)}>
+              <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} urlParams={urlParams} />
+            </PivotItem>
+            <PivotItem headerText={tabLabels.cluster} itemKey="cluster" onRenderItemLink={(a, b) => _customRenderer('cluster', a, b)} >
+              <ClusterTab tabValues={tabValues} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
+            </PivotItem>
+            <PivotItem headerText={tabLabels.addons} itemKey="addons" onRenderItemLink={(a, b) => _customRenderer('addons', a, b)} >
+              <AddonsTab tabValues={tabValues} updateFn={(field, value) => mergeState("addons", field, value)} invalidArray={invalidArray['addons']} />
+            </PivotItem>
+            <PivotItem headerText={tabLabels.net} itemKey="net" onRenderItemLink={(a, b) => _customRenderer('net', a, b)}>
+              <NetworkTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("net", field, value)} invalidArray={invalidArray['net']} />
+            </PivotItem>
+            <PivotItem headerText={tabLabels.app} itemKey="app" onRenderItemLink={(a, b) => _customRenderer('app', a, b)}>
+              <AppsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("app", field, value)} invalidArray={invalidArray['app']} />
+            </PivotItem>
+          </Pivot>
 
-      </Stack>
+        </Stack>
+      </ThemeProvider>
     </main >
   )
 }

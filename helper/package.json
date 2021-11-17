@@ -6,7 +6,7 @@
   "scripts": {
     "start": "REACT_APP_AZ_TEMPLATE_ARG=\"--template-file ./bicep/main.bicep\" react-scripts start",
     "build": "CI=false react-scripts build",
-    "test": "react-scripts test",
+    "test": "playwright test .playwrighttests/helper-fragile-test-fullsecure.spec.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

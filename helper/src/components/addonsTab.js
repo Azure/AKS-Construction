@@ -254,9 +254,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
                 <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label="Create ACR Private Agent Pool (applicable to private link)" />
                 <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
-                    <TextField disabled={true} label="Agent Pool" value="S1"/>  
-                    <TextField disabled={true} label="O/S" value="Linux"/>  
-                    <TextField disabled={true} label="Agent Count" value="1"/>  
+                    <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>  
+                    <TextField disabled={true} label="O/S" defaultValue="Linux"/>  
+                    <TextField disabled={true} label="Agent Count" defaultValue="1"/>  
                 </Stack>
             </Stack.Item>
 
