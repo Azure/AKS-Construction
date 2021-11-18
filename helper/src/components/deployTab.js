@@ -4,7 +4,7 @@ import { Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdown
 
 import { adv_stackstyle, getError } from './common'
 
-export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs }) {
+export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
 
   const { net, addons, cluster, deploy } = tabValues
   const allok = !(invalidTabs && invalidTabs.length > 0)
@@ -53,7 +53,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
-    ...(addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
+    ...(addons.ingress !== "none" && addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
     ...(addons.ingress === "appgw" && {
       ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
         appGWcount: addons.appGWcount,
@@ -158,7 +158,7 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 ` : '') +
     // External DNS
-    (addons.dnsZoneId ? `
+    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
 
 # Install external-dns
 # external-dns needs permissions to make changes in the Azure DNS server.
@@ -184,7 +184,7 @@ ${cluster.apisecurity === "private" ?
 
 ` : '') +
     // Cert-Manager
-    (addons.certMan ? `
+    (addons.ingress !== 'none' && addons.certMan ? `
 
 # Install cert-manager
 # https://cert-manager.io/docs/installation/
@@ -284,7 +284,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
           <Stack.Item>
             <Label>Grant AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
-            <Checkbox disabled={cluster.enable_aad == false || cluster.enableAzureRBAC == false} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
+            <Checkbox disabled={cluster.enable_aad === false || cluster.enableAzureRBAC === false} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
             <Checkbox disabled={cluster.apisecurity !== "whitelist"}  onChange={(ev, val) => updateFn("clusterIPWhitelist", val)} checked={deploy.clusterIPWhitelist} label="Add current IP to AKS firewall (applicable to AKS IP ranges)"  />
           </Stack.Item>
 
@@ -311,6 +311,10 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
           <Toggle styles={{ root: { marginTop: "10px" } }} onText='preview enabled' offText="preview disabled" checked={!deploy.disablePreviews} onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
         </MessageBar>
 
+      }
+      
+      { urlParams.toString() !== "" && 
+        <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>{urlParams.toString()}</a></Text>
       }
 
       <Pivot >
@@ -357,6 +361,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
         </PivotItem>
       </Pivot>
+      
     </Stack>
   )
 }
