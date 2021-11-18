@@ -1,0 +1,347 @@
+on: 
+  workflow_call:
+    inputs:
+      RG:
+        required: true
+        type: string
+      AKSNAME:
+        required: true
+        type: string
+      DNSDOMAIN:
+        required: true
+        type: string
+      DNSRG:
+        required: true
+        type: string
+      DNSRECORDNAME:
+        required: true
+        type: string
+      AKVNAME:
+        required: true
+        type: string
+      AGNAME:
+        required: true
+        type: string
+      APPNAME:
+        default: "openjdk-kvssl"
+        required: true
+        type: string
+      FRONTENDCERTTYPE:
+        default: "certmanager-staging"
+        required: true
+        type: string
+        #type: choice
+        ##options: 
+        #- certmanager-staging
+        #- certmanager-production
+        #- appgw-selfsigned
+      MINIHELMBRANCH:
+        default: "main"
+        required: false
+        type: string
+      CERTMANAGERVERSION:  
+        default: "v1.5.3"
+        required: false
+        type: string
+      UNINSTALLAFTERVERIFY:
+        description: 'Uninstall app after tests  [yes|no]'  
+        type: boolean
+        default: true
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+        
+jobs:
+  App_Create:
+    runs-on: ubuntu-latest
+    concurrency: ${{ inputs.AGNAME}} #AppGateway doesn't like concurrent updates
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Job parameter inspection
+        run: |
+          echo "RG is ${{ inputs.RG }}"
+          echo "AKS name is ${{ inputs.AKSNAME }}"
+          echo "FrontendCert type is ${{ inputs.FRONTENDCERTTYPE }}"
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: false
+          environment: azurecloud
+          allow-no-subscriptions: false
+          
+      - name: Create self signed certs in Key Vault
+        env:
+          CERTNAMES: '["${{ inputs.APPNAME }}","${{ inputs.APPNAME }}-fe"]'
+        run: |
+            RG='${{ inputs.RG }}'
+            AKVNAME='${{ inputs.AKVNAME}}'
+
+            echo $CERTNAMES | jq -r '.[]' | while read cert; do
+             echo "creating $cert"; 
+             COMMON_NAME=$cert;
+             az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )";
+            done
+            
+            sleep 2m
+
+      - name: Create Root Cert references in AppGw
+        env:
+          CERTNAMES: '["${{ inputs.APPNAME }}"]'
+        id: AppGwRootCert
+        run: |
+          AGNAME='${{ inputs.AGNAME}}'
+          RG='${{ inputs.RG }}'
+          KVNAME='${{ inputs.AKVNAME}}'
+
+          echo $CERTNAMES | jq -r '.[]' | while read cert; do
+             echo "getting id for $cert"; 
+             versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
+             unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
+             echo $unversionedSecretId;
+             rootcertcmd="az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $cert --keyvault-secret $unversionedSecretId";
+             $rootcertcmd || $rootcertcmd --verbose
+          done
+          
+      - name: Create FrontEnd Cert references in AppGw
+        if: inputs.FRONTENDCERTTYPE == 'appgw-selfsigned'
+        env:
+          CERTNAMES: '["${{ inputs.APPNAME }}-fe"]'
+        run: |
+          AGNAME='${{ inputs.AGNAME}}'
+          RG='${{ inputs.RG }}'
+          KVNAME='${{ inputs.AKVNAME}}'
+            
+          echo $CERTNAMES | jq -r '.[]' | while read cert; do
+             echo "getting id for $cert"; 
+             versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
+             unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
+             echo $unversionedSecretId;
+             fecertcmd="az network application-gateway ssl-cert create -n $cert --gateway-name $AGNAME -g $RG --key-vault-secret-id $unversionedSecretId";
+             $fecertcmd || $fecertcmd --verbose
+          done
+
+      - name: Confirm certificates registered in AppGw
+        run: |
+          AGNAME='${{ inputs.AGNAME}}'
+          RG='${{ inputs.RG }}'
+
+          az network application-gateway ssl-cert list -g $RG --gateway-name $AGNAME --query "[].name"
+          az network application-gateway root-cert list -g $RG --gateway-name $AGNAME --query "[].name"
+        
+      - name: AKS Connect
+        env:
+          RG: "${{ inputs.RG }}"
+          AKSNAME: "${{ inputs.AKSNAME }}"
+        run: |
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+      - name: Kubectl
+        run: |
+          #sudo az aks install-cli
+          kubectl version
+          
+      - name: Observe Existing DNSConfig
+        env:
+          DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
+          DNSRG: "${{ inputs.DNSRG }}"
+          RECORDNAME: "${{ inputs.DNSRECORDNAME }}"
+        run: |
+          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
+
+      - name: Grab some Helm charts to install
+        run: |
+          BRANCH='${{ inputs.MINIHELMBRANCH }}'
+          echo "$BRANCH"
+
+          if [ -z "$BRANCH" ]
+          then
+                BRANCH='main'
+          fi
+
+          git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
+          
+      - name: Check if App Helm Chart already installed
+        env:
+          APPNAME: "${{ inputs.APPNAME }}"          
+        run: |
+          APPINSTALLED=$(helm list --filter ^$APPNAME$ --short)
+          if [ -z "$APPINSTALLED" ]
+          then
+                echo "App not installed"
+          else
+                echo "App already installed, forcing uninstall"
+                helm list --short
+                helm uninstall $APPNAME
+                sleep 1m
+          fi
+
+      - name: Install Cert Manager
+        if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
+        env:
+          MANIFESTTESTURL: "https://github.com/jetstack/cert-manager/releases/download/${{ inputs.CERTMANAGERVERSION }}/cert-manager.yaml"
+        run: |
+          kubectl apply -f $MANIFESTTESTURL
+          sleep 1m
+          
+      - name: Install Cert Manager ClusterIssuer
+        if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
+        env:
+          EMAILAD: "gdogg@microsoft.com"
+        run: |
+          echo "Email Address for Lets Encrypt: $EMAILAD"
+          helm upgrade --install smokecertissuer ./helmcharts/samples/certmanagerissuer --set email=$EMAILAD
+          sleep 1m     
+          
+      - name: Verify Cert Manager ClusterIssuer
+        if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
+        env:
+          EMAILAD: "gdogg@microsoft.com"
+        run: |
+          case "${{ inputs.FRONTENDCERTTYPE }}" in
+             "certmanager-staging") CERTSOURCE="letsEncrypt"; LEISSUER="letsencrypt-staging" ;;
+             "certmanager-production") CERTSOURCE="letsEncrypt" LEISSUER="letsencrypt-production" ;;
+          esac
+          
+          kubectl describe clusterissuer $LEISSUER
+
+      - name: Add a azure-config secret for use with externaldns
+        env:
+          DNSRESOURCEGROUP: "${{ inputs.DNSRG }}"
+          RG: "${{ inputs.RG }}"
+          AKSNAME: "${{ inputs.AKSNAME }}"
+        run: |
+          echo "AKS $AKSNAME"
+          echo $DNSRESOURCEGROUP
+
+          KubeletId=$(az aks show -n $AKSNAME -g  $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
+          TenantId=$(az account show --query tenantId -o tsv)
+          SubscriptionId=$(az account show --query id -o tsv)
+
+          JSONSECRETPATH="azure.json"
+          cat<<EOF>$JSONSECRETPATH
+          {
+            "userAssignedIdentityID": "$KubeletId",
+            "tenantId": "$TenantId",
+            "useManagedIdentityExtension": true,
+            "subscriptionId": "$SubscriptionId",
+            "resourceGroup": "$DNSRESOURCEGROUP"
+          }
+          EOF
+          
+          kubectl create secret generic azure-config-file --dry-run=client -o yaml --from-file=azure.json | kubectl apply -f -
+
+      - name: Add external dns config
+        env:
+          DOMAINFILTER: "${{ inputs.DNSDOMAIN }}"
+        run: |
+          echo $DOMAINFILTER
+          helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
+
+      - name: Install the Java sample app
+        env:
+          NAMESP: "default"
+          APPNAME: "${{ inputs.APPNAME }}" #Using backend cert common name
+          DOMAINSUFFIX: "${{ inputs.DNSDOMAIN }}"
+          FRONTENDCERTNAME: "${{ inputs.APPNAME }}-fe"
+          
+        run: |
+          # REF: https://github.com/khowling/e2e-tls-java-aks
+          
+          AKSNAME='${{ inputs.AKSNAME}}'
+          RG='${{ inputs.RG }}'
+          KVNAME='${{ inputs.AKVNAME}}'
+          KVNAMELOWER=${KVNAME,,}
+          APPNAME='${{ inputs.APPNAME }}'
+          KVTENANT=$(az account show --query tenantId -o tsv)
+          AGNAME='${{ inputs.AGNAME}}'
+          AKSNAME='${{ inputs.AKSNAME}}'
+          DNSNAME=${APPNAME}.${DOMAINSUFFIX}
+
+          case "${{ inputs.FRONTENDCERTTYPE }}" in
+             "appgw-selfsigned") CERTSOURCE="appGw"; LEISSUER="" ;;
+             "certmanager-staging") CERTSOURCE="letsEncrypt"; LEISSUER="letsencrypt-staging" ;;
+             "certmanager-production") CERTSOURCE="letsEncrypt" LEISSUER="letsencrypt-production" ;;
+          esac
+
+          echo 'Get the identity created from the KeyVaultSecret Addon'
+          export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
+          echo $CSISECRET_CLIENTID
+          
+          helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER}",letsEncrypt.secretname="${APPNAME}-tls" --dry-run
+          helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER},letsEncrypt.secretname="${APPNAME}-tls""
+
+      - name: Wait for External DNS config
+        env:
+          DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
+          DNSRG: "${{ inputs.DNSRG }}"
+          RECORDNAME: "${{ inputs.DNSRECORDNAME }}"
+        run: |
+          counter=1
+          while [ $counter -le 10 ]
+          do
+            dnsrecords=$(az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]")
+            
+            if [ "$dnsrecords" != "[]" ]
+            then
+                  echo "DNS Records have been created [$counter] [$(date +"%T")]"
+                  echo $dnsrecords
+                  break 2
+            fi
+            
+            echo "ExternalDNS has not created Azure DNS Records yet [$counter] [$(date +"%T")]"
+            
+            ((counter++))
+            sleep 10s
+          done
+          
+      - name: Wait for Cert Manager to issue certificate
+        if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
+        env:
+          SECRETNAME: "${{ inputs.APPNAME }}-tls"
+        run: |
+          counter=1
+          while [ $counter -le 10 ]
+          do
+            kubectl get po
+            
+            secret=$(kubectl get secret $SECRETNAME --ignore-not-found)
+            kubectl get secret $SECRETNAME --ignore-not-found
+            
+            if [ ! -z "$secret" ]
+            then
+                  echo "Secret $SECRETNAME has been created"
+                  break 2
+            fi
+            
+            ((counter++))
+            sleep 10s
+          done
+
+      - name: Verify Java App is reachable
+        env:
+          NAMESP: "default"
+          APPNAME: "${{ inputs.APPNAME }}"
+          URLTOHIT: "https://${{ inputs.APPNAME }}.${{ inputs.DNSDOMAIN }}"
+        run: |
+          echo "curl $URLTOHIT [$(date +"%T")]"
+          curlcommand="curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URLTOHIT -v --trace-time"
+          respcode=$($curlcommand || sleep 1m; $curlcommand)
+              
+          echo $respcode   
+          
+          curl --insecure $URLTOHIT
+
+      - name: Verify Frontend Certificate
+        env:
+          URLTOHIT: "https://${{ inputs.APPNAME }}.${{ inputs.DNSDOMAIN }}"
+        run: |
+          curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
+
+      - name: Cleanup app
+        if: inputs.UNINSTALLAFTERVERIFY
+        env:
+          APPNAME: "${{ inputs.APPNAME }}"
+        run: helm uninstall $APPNAME

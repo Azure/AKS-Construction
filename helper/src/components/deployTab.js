@@ -4,7 +4,7 @@ import { Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdown
 
 import { adv_stackstyle, getError } from './common'
 
-export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs }) {
+export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
 
   const { net, addons, cluster, deploy } = tabValues
   const allok = !(invalidTabs && invalidTabs.length > 0)
@@ -13,7 +13,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnetAddressPrefix !== defaults.net.vnetAddressPrefix && { vnetAddressPrefix: net.vnetAddressPrefix }),
     ...(net.vnetAksSubnetAddressPrefix !== defaults.net.vnetAksSubnetAddressPrefix && { vnetAksSubnetAddressPrefix: net.vnetAksSubnetAddressPrefix })
   }
-  const sericeparams = {
+  const serviceparams = {
     ...(net.serviceCidr !== defaults.net.serviceCidr && { serviceCidr: net.serviceCidr }),
     ...(net.dnsServiceIP !== defaults.net.dnsServiceIP && { dnsServiceIP: net.dnsServiceIP })
   }
@@ -26,8 +26,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
-    ...(net.vnet_opt === "custom" && { custom_vnet: true, ...sericeparams, ...aksvnetparams }),
-    ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...sericeparams }),
+    ...(net.vnet_opt === "custom" && { custom_vnet: true, ...serviceparams, ...aksvnetparams }),
+    ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...serviceparams }),
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
@@ -53,7 +53,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
-    ...(addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
+    ...(addons.ingress !== "none" && addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
     ...(addons.ingress === "appgw" && {
       ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
         appGWcount: addons.appGWcount,
@@ -96,8 +96,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az deployment group create -g ${deploy.rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
-  const promethous_namespace = 'monitoring'
-  const promethous_helm_release_name = 'monitoring'
+  const prometheus_namespace = 'monitoring'
+  const prometheus_helm_release_name = 'monitoring'
   const nginx_namespace = 'ingress-basic'
   const nginx_helm_release_name = 'nginx-ingress'
 
@@ -131,8 +131,8 @@ az aks get-credentials -g ${deploy.rg} -n ${aks} ` : ""
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-kubectl create namespace ${promethous_namespace}
-helm install ${promethous_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${promethous_namespace}` : '') +
+kubectl create namespace ${prometheus_namespace}
+helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}` : '') +
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `\n\n# Create a namespace for your ingress resources
 kubectl create namespace ${nginx_namespace}
@@ -150,15 +150,15 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
       (addons.monitor === 'oss' ?
         `  --set controller.metrics.enabled=true \\
   --set controller.metrics.serviceMonitor.enabled=true \\
-  --set controller.metrics.serviceMonitor.namespace=${promethous_namespace} \\
-  --set controller.metrics.serviceMonitor.additionalLabels.release=${promethous_helm_release_name} \\
+  --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \\
+  --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \\
 ` : '') +
       `  --namespace ${nginx_namespace}` : '') +
     (addons.ingress === 'contour' ? `\n\n# Install Contour Ingress Controller
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 ` : '') +
     // External DNS
-    (addons.dnsZoneId ? `
+    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
 
 # Install external-dns
 # external-dns needs permissions to make changes in the Azure DNS server.
@@ -175,7 +175,7 @@ kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdi
 }
 EOF
 ${cluster.apisecurity === "private" ? `"` : ``}
-# external-dns manifest (for clusters with RBAC) replacing {{domain-filter}} and {{proviers}} values 
+# external-dns manifest (for clusters with RBAC) replacing {{domain-filter}} and {{providers}} values 
 curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
 ${cluster.apisecurity === "private" ? 
   `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-ext-dns.yml" --file  /tmp/aks-ext-dns.yml` 
@@ -184,7 +184,7 @@ ${cluster.apisecurity === "private" ?
 
 ` : '') +
     // Cert-Manager
-    (addons.certMan ? `
+    (addons.ingress !== 'none' && addons.certMan ? `
 
 # Install cert-manager
 # https://cert-manager.io/docs/installation/
@@ -284,7 +284,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
           <Stack.Item>
             <Label>Grant AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
-            <Checkbox disabled={cluster.enable_aad == false || cluster.enableAzureRBAC == false} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
+            <Checkbox disabled={cluster.enable_aad === false || cluster.enableAzureRBAC === false} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
             <Checkbox disabled={cluster.apisecurity !== "whitelist"}  onChange={(ev, val) => updateFn("clusterIPWhitelist", val)} checked={deploy.clusterIPWhitelist} label="Add current IP to AKS firewall (applicable to AKS IP ranges)"  />
           </Stack.Item>
 
@@ -311,6 +311,10 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
           <Toggle styles={{ root: { marginTop: "10px" } }} onText='preview enabled' offText="preview disabled" checked={!deploy.disablePreviews} onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
         </MessageBar>
 
+      }
+      
+      { urlParams.toString() !== "" && 
+        <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>{urlParams.toString()}</a></Text>
       }
 
       <Pivot >
@@ -357,6 +361,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
         </PivotItem>
       </Pivot>
+      
     </Stack>
   )
 }

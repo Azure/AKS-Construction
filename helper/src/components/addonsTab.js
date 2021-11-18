@@ -5,7 +5,7 @@ import { adv_stackstyle, hasError, getError } from './common'
 
 
 export default function ({ tabValues, updateFn, invalidArray }) {
-    const { addons, net, deploy } = tabValues
+    const { addons, net } = tabValues
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -84,9 +84,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.networkPolicy}
                     options={[
-                        { key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
+                        { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
+                        { "data-testid":'addons-netpolicy-calico', key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
+                        { "data-testid":'addons-netpolicy-azure', key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPolicy", key)}
@@ -254,9 +254,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
                 <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label="Create ACR Private Agent Pool (applicable to private link)" />
                 <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
-                    <TextField disabled={true} label="Agent Pool" value="S1"/>  
-                    <TextField disabled={true} label="O/S" value="Linux"/>  
-                    <TextField disabled={true} label="Agent Count" value="1"/>  
+                    <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>  
+                    <TextField disabled={true} label="O/S" defaultValue="Linux"/>  
+                    <TextField disabled={true} label="Agent Count" defaultValue="1"/>  
                 </Stack>
             </Stack.Item>
 
