@@ -72,6 +72,7 @@ jobs:
 
       - name: Arm Parameter file check
         shell: pwsh
+        id: paramfile
         run: |
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamDir }}${{ matrix.files }}"
@@ -80,6 +81,12 @@ jobs:
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
+
+            Write-Output "Checking for PSrule template link metadata"
+            $params=$paramFileContent|ConvertFrom-Json
+            if ($null != $params.metadata.template.value) {
+              echo "::set-output name=DOPSRULE::true"
+            }
           }
           
       - name: Replace subnet and dnszone param values from secret
@@ -115,3 +122,16 @@ jobs:
           inlineScript: |
             RG='${{ env.RG }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamDir }}${{ matrix.files }}
+
+    
+      # PSRule does this cool thing where it traverse the parameter file through to the arm template
+      # PSRule performs IaC recommendations of the template.
+      # https://azure.github.io/PSRule.Rules.Azure/
+      - name: PSRule - Analyze Azure parameter file
+        if: ${{ needs.paramfile.outputs.DOPSRULE}} != ''
+        uses: Microsoft/ps-rule@main
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
+        with:
+          modules: 'PSRule.Rules.Azure' 
+          inputPath: "${{ matrix.files }}"
+          prerelease: true

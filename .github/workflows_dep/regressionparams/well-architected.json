@@ -1,0 +1,85 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "metadata": {
+        "template": "bicep/compiled/main.json",
+        "config" : "https://azure.github.io/Aks-Construction?secure=normal&net.dnsServiceIP=172.10.0.10&ops=managed&cluster.SystemPoolType=Standard&cluster.availabilityZones=yes&cluster.apisecurity=whitelist&addons.ingress=appgw&addons.registry=Premium&addons.appGWcount=2"
+    },
+    "parameters": {
+        "resourceName": {
+            "value": "az-k8s-4wmn"
+          },
+          "kubernetesVersion": {
+            "value": "1.21.2"
+          },
+          "SystemPoolType": {
+            "value": "Standard"
+          },
+          "agentVMSize": {
+            "value": "Standard_DS3_v2"
+          },
+          "agentCountMax": {
+            "value": 20
+          },
+          "custom_vnet": {
+            "value": true
+          },
+          "enable_aad": {
+            "value": true
+          },
+          "enableAzureRBAC": {
+            "value": true
+          },
+          "registries_sku": {
+            "value": "Premium"
+          },
+          "omsagent": {
+            "value": true
+          },
+          "retentionInDays": {
+            "value": 30
+          },
+          "networkPolicy": {
+            "value": "azure"
+          },
+          "azurepolicy": {
+            "value": "audit"
+          },
+          "availabilityZones": {
+            "value": [
+              "1",
+              "2",
+              "3"
+            ]
+          },
+          "authorizedIPRanges": {
+            "value": [
+              "20.36.64.0/32"
+            ]
+          },
+          "ingressApplicationGateway": {
+            "value": true
+          },
+          "appGWcount": {
+            "value": 2
+          },
+          "appGWsku": {
+            "value": "WAF_v2"
+          },
+          "appGWmaxCount": {
+            "value": 10
+          },
+          "appgwKVIntegration": {
+            "value": true
+          },
+          "azureKeyvaultSecretsProvider": {
+            "value": true
+          },
+          "createKV": {
+            "value": true
+          },
+          "upgradeChannel": {
+            "value": "stable"
+          }
+    }
+}
