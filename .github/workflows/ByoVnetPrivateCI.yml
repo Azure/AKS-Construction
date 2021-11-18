@@ -288,15 +288,6 @@ jobs:
           #sudo az aks install-cli
           kubectl version
           
-      - name: Deny all network traffic
-        if: false
-        env:
-          MANIFESTPATH: "k8smanifests/networkpolicy-deny-all.yml"
-        run: |
-          echo $MANIFESTPATH
-          
-          kubectl apply -f $MANIFESTPATH
-          
       - name: Deploy AGIC Public Facing Workload
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
@@ -342,7 +333,25 @@ jobs:
           pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
          
           PLAYTESTURL="http://${pubIp}/" npx playwright test --browser chromium .github/workflows_dep/ -g '${{ env.filenamewordmatch }}' --reporter list
-        
+
+      - name: Deny all network traffic
+        if: false
+        env:
+          MANIFESTPATH: "k8smanifests/networkpolicy-deny-all.yml"
+        run: |
+          echo $MANIFESTPATH
+          
+          kubectl apply -f $MANIFESTPATH
+
+      - name: Playwright - Run helper tests (again)
+        env:
+          filenamewordmatch: 'playwright-azurevote'
+        run: |
+          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+         
+          PLAYTESTURL="http://${pubIp}/" npx playwright test --browser chromium .github/workflows_dep/ -g '${{ env.filenamewordmatch }}' --reporter list
+
+
       - name: Delete AGIC Public Facing Workload
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
