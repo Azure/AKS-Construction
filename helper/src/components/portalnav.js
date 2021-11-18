@@ -93,12 +93,12 @@ export default function PortalNav({ config }) {
   const [tabValues, setTabValues] = useState(() => {
     const clusterName = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
 
-    // Apply selected presets to tab vlues
+    // Apply selected presets to tab values
     const tabApplySections = Object.keys(selected.values).reduce((acc,curr) => 
       updateTabValues (acc, sections, curr, selected.values[curr])
     , defaults)
 
-    // Apply dynamic presets to tab vlues
+    // Apply dynamic presets to tab values
     const dynamicApplySections = {
       ...tabApplySections,
       deploy: {
@@ -108,7 +108,7 @@ export default function PortalNav({ config }) {
         ...(process.env.REACT_APP_K8S_VERSION && { kubernetesVersion: process.env.REACT_APP_K8S_VERSION })
       }
     }
-    // Apply url params to tab vlues
+    // Apply url params to tab values
     const urlApplySections = Object.keys(dynamicApplySections).reduce((acct, currt) => {  
         return {
           ...acct, 
@@ -154,25 +154,25 @@ export default function PortalNav({ config }) {
 
   function updateSelected(sectionKey, cardKey) {
 
-    setUrlParams((currrentUrlParams) => {
+    setUrlParams((currentUrlParams) => {
 
       if (selected.entScale !== entScale) {
         console.log (`User changed entScale switch, and selected a new card, need to unselect old cards`)
         defaultOps.forEach(element => {
-          currrentUrlParams.delete(element.key)
+          currentUrlParams.delete(element.key)
         })
         entScaleOps.forEach(element => {
-          currrentUrlParams.delete(element.key)
+          currentUrlParams.delete(element.key)
         })
       }
   
       if (entScale) {
-        currrentUrlParams.set('entScale', 1)
+        currentUrlParams.set('entScale', 1)
       } else {
-        currrentUrlParams.delete('entScale')
+        currentUrlParams.delete('entScale')
       }
-      currrentUrlParams.set(sectionKey,cardKey)
-      return currrentUrlParams
+      currentUrlParams.set(sectionKey,cardKey)
+      return currentUrlParams
     })
 
 

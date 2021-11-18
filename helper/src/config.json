@@ -4,7 +4,7 @@
         "cluster": "Cluster Details",
         "addons": "Addon Details",
         "net": "Networking Details",
-        "app": "Sameple Apps"
+        "app": "Sample Apps"
     },
     "defaults": {
         "deploy": {
@@ -305,7 +305,7 @@
                             "apisecurity": "whitelist"
                         },
                         "addons": {
-                            "networkPolicy": "calico",
+                            "networkPolicy": "azure",
                             "registry": [
                                 {
                                     "page": "addons",
@@ -401,7 +401,7 @@
                             "apisecurity": "private"
                         },
                         "addons": {
-                            "networkPolicy": "calico",
+                            "networkPolicy": "azure",
                             "registry": [
                                 {
                                     "page": "addons",
@@ -581,7 +581,7 @@
                             "upgradeChannel": "none"
                         },
                         "addons": {
-                            "networkPolicy": "calico",
+                            "networkPolicy": "azure",
                             "registry": "Premium",
                             "azurepolicy": "audit",
                             "ingress": "appgw",
@@ -662,7 +662,7 @@
                             "upgradeChannel": "none"
                         },
                         "addons": {
-                            "networkPolicy": "calico",
+                            "networkPolicy": "azure",
                             "registry": "Premium",
                             "azurepolicy": "audit",
                             "ingress": "appgw",

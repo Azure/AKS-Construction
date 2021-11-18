@@ -13,7 +13,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnetAddressPrefix !== defaults.net.vnetAddressPrefix && { vnetAddressPrefix: net.vnetAddressPrefix }),
     ...(net.vnetAksSubnetAddressPrefix !== defaults.net.vnetAksSubnetAddressPrefix && { vnetAksSubnetAddressPrefix: net.vnetAksSubnetAddressPrefix })
   }
-  const sericeparams = {
+  const serviceparams = {
     ...(net.serviceCidr !== defaults.net.serviceCidr && { serviceCidr: net.serviceCidr }),
     ...(net.dnsServiceIP !== defaults.net.dnsServiceIP && { dnsServiceIP: net.dnsServiceIP })
   }
@@ -26,8 +26,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
-    ...(net.vnet_opt === "custom" && { custom_vnet: true, ...sericeparams, ...aksvnetparams }),
-    ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...sericeparams }),
+    ...(net.vnet_opt === "custom" && { custom_vnet: true, ...serviceparams, ...aksvnetparams }),
+    ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...serviceparams }),
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
@@ -96,8 +96,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az deployment group create -g ${deploy.rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
-  const promethous_namespace = 'monitoring'
-  const promethous_helm_release_name = 'monitoring'
+  const prometheus_namespace = 'monitoring'
+  const prometheus_helm_release_name = 'monitoring'
   const nginx_namespace = 'ingress-basic'
   const nginx_helm_release_name = 'nginx-ingress'
 
@@ -131,8 +131,8 @@ az aks get-credentials -g ${deploy.rg} -n ${aks} ` : ""
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-kubectl create namespace ${promethous_namespace}
-helm install ${promethous_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${promethous_namespace}` : '') +
+kubectl create namespace ${prometheus_namespace}
+helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}` : '') +
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `\n\n# Create a namespace for your ingress resources
 kubectl create namespace ${nginx_namespace}
@@ -150,8 +150,8 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
       (addons.monitor === 'oss' ?
         `  --set controller.metrics.enabled=true \\
   --set controller.metrics.serviceMonitor.enabled=true \\
-  --set controller.metrics.serviceMonitor.namespace=${promethous_namespace} \\
-  --set controller.metrics.serviceMonitor.additionalLabels.release=${promethous_helm_release_name} \\
+  --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \\
+  --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \\
 ` : '') +
       `  --namespace ${nginx_namespace}` : '') +
     (addons.ingress === 'contour' ? `\n\n# Install Contour Ingress Controller
@@ -175,7 +175,7 @@ kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdi
 }
 EOF
 ${cluster.apisecurity === "private" ? `"` : ``}
-# external-dns manifest (for clusters with RBAC) replacing {{domain-filter}} and {{proviers}} values 
+# external-dns manifest (for clusters with RBAC) replacing {{domain-filter}} and {{providers}} values 
 curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
 ${cluster.apisecurity === "private" ? 
   `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-ext-dns.yml" --file  /tmp/aks-ext-dns.yml` 

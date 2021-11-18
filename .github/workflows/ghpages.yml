@@ -18,17 +18,32 @@ on:
 
   workflow_dispatch:
 
+env:
+  templateRelease: 0.3.0-preview
+
 jobs:
+  
   Validation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      
+      - uses: streetsidesoftware/cspell-action@v1.3.4
+        name: Spell Check
+        if: ${{github.event_name!='workflow_dispatch'}} 
+        with:
+          config: './cspell.json'
+          inline: warning
+          root: '.'
+          files: "**/*.{ts,js,md}" #You need to respecify this setting - even though it's in the cspell.json config :(
+          incremental_files_only: false
+          strict: true #setting to false allows the build to continue even if spelling mistakes are detected
 
       - name: Build and start node app
         run: |
           cd helper
           npm install
-          REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/0.3.0-preview/main.json" npm run build
+          REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/${{env.templateRelease}}/main.json" npm run build
           npm run start&
 
       - name: Playwright - Install w/ OS dependencies
@@ -96,7 +111,7 @@ jobs:
         run: |
           cd helper
           npm install
-          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/0.3.0-preview/main.json" npm run build
+          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/${{env.templateRelease}}/main.json" npm run build
 
       - name: Deploy to GitHub Pages
         uses: crazy-max/ghaction-github-pages@v2

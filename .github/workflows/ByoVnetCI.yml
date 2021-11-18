@@ -47,6 +47,7 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "Byo"
   DEPNAME: "Dep${{ github.run_number }}"
+  KVACCESS: "IAM"
 
 jobs:
   Well_Architected:
@@ -84,6 +85,7 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "Ref is ${{ github.ref }}"
+          echo "Ref name is ${{GITHUB.REF_NAME}}"
           echo "EventTrigger name is ${{github.event_name}}"
           echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
           echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
@@ -474,499 +476,46 @@ jobs:
 
               az role assignment list --assignee $agicobjid
             }     
-            
-  CertificateConfig:
-    runs-on: ubuntu-latest
-    needs: [Deploy]
-    environment: azurecirgs
-    steps:
-      - uses: actions/checkout@v2
+
+  SmokeTest_JavaApp-certmgr:
+    needs: [Deploy,SmokeTest_SimpleApp]
+    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+    with:
+      RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      DNSRECORDNAME: openjdk-demo
+      AKVNAME: ${{ needs.Deploy.outputs.AKVNAME}}
+      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
+      APPNAME: openjdk-demo
+      FRONTENDCERTTYPE: certmanager-staging
+      MINIHELMBRANCH: ${{ github.event.inputs.minihelmbranch }}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: false
-          environment: azurecloud
-          allow-no-subscriptions: false
-          
-      - name: Add KV access policy for managing certificates as this CI action user
-        run: |
-          CiSpId='${{ secrets.AZURE_CREDENTIALS_OBJID }}'
-          AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          
-          az keyvault set-policy --name $AKVNAME --object-id $CiSpId --secret-permissions get list --certificate-permissions get list delete create import update managecontacts getissuers listissuers setissuers deleteissuers manageissuers recover purge backup restore
-
-      - name: Create self signed certs in Key Vault
-        env:
-          CERTNAMES: '["openjdk-demo","openjdk-demo-service","openjdk-kvssl","openjdk-kvssl-fe","aspnetapp"]'
-        run: |
-            RG='${{ env.RG }}'
-            AKVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-
-            echo $CERTNAMES
-            
-            jq --version
-
-            echo $CERTNAMES | jq -r
-
-            echo $CERTNAMES | jq -r '.[]' | while read cert; do
-             echo "creating $cert"; 
-             COMMON_NAME=$cert;
-             az keyvault certificate create --vault-name $AKVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=${COMMON_NAME}/g )";
-            done
-            
-            sleep 2m
-
-      - name: Create Root Cert references in AppGW
-        env:
-          CERTNAMES: '["openjdk-demo","openjdk-demo-service","openjdk-kvssl"]'
-        id: AppGwRootCert
-        run: |
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-
-          echo $CERTNAMES | jq -r '.[]' | while read cert; do
-             echo "getting id for $cert"; 
-             versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
-             unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
-             echo $unversionedSecretId;
-             rootcertcmd="az network application-gateway root-cert create --gateway-name $AGNAME  -g $RG -n $cert --keyvault-secret $unversionedSecretId";
-             $rootcertcmd || $rootcertcmd --verbose
-          done
-          
-      - name: Create FrontEnd Cert references in AppGW
-        env:
-          CERTNAMES: '["aspnetapp","openjdk-kvssl-fe"]'
-        run: |
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-            
-          echo $CERTNAMES | jq -r '.[]' | while read cert; do
-             echo "getting id for $cert"; 
-             versionedSecretId=$(az keyvault certificate show -n $cert --vault-name $KVNAME --query "sid" -o tsv);
-             unversionedSecretId=$(echo $versionedSecretId | cut -d'/' -f-5) # remove the version from the url;
-             echo $unversionedSecretId;
-             fecertcmd="az network application-gateway ssl-cert create -n $cert --gateway-name $AGNAME -g $RG --key-vault-secret-id $unversionedSecretId";
-             $fecertcmd || $fecertcmd --verbose
-          done
-
-      - name: Confirm certificates registered in AppGw
-        if: github.event.inputs.doVerifySteps != 'no'
-        run: |
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          RG='${{ env.RG }}'
-
-          az network application-gateway ssl-cert list -g $RG --gateway-name $AGNAME --query "[].name"
-          az network application-gateway root-cert list -g $RG --gateway-name $AGNAME --query "[].name"
-
-  SmokeTest_PrivateJavaTLSApp:
-    runs-on: ubuntu-latest
-    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp]
-    environment: azurecirgs
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Param check
-        if: github.event.inputs.doVerifySteps != 'no'
-        run: |
-          RG='${{ env.RG }}'
-          echo "RG is: $RG"
-          
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
-          echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
-          
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-        
-      - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
-      - name: Kubectl
-        if: github.event.inputs.doDebugSteps != 'no'
-        run: |
-          #sudo az aks install-cli
-          kubectl version
-          
-      - name: Observe Existing DNSConfig
-        if: github.event.inputs.doDebugSteps != 'no'
-        env:
-          DNSDOMAIN: "azdemo.co.uk"
-          DNSRG: "domainssl"
-          RECORDNAME: "openjdk-demo"
-        run: |
-          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
-
-      - name: Grab some Helm charts to install
-        run: |
-          BRANCH='${{ github.event.inputs.minihelmbranch }}'
-          echo "$BRANCH"
-
-          if [ -z "$BRANCH" ]
-          then
-                BRANCH='main'
-          fi
-
-          git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
-
-      - name: Add a azure-config secret for use with externaldns
-        env:
-          DNSRESOURCEGROUP: "domainssl"
-        run: |
-          RG='${{ env.RG }}'
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-
-          echo "AKS $AKSNAME"
-          echo $DNSRESOURCEGROUP
-
-          KubeletId=$(az aks show -n $AKSNAME -g  $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
-          TenantId=$(az account show --query tenantId -o tsv)
-          SubscriptionId=$(az account show --query id -o tsv)
-
-          JSONSECRETPATH="azure.json"
-          cat<<EOF>$JSONSECRETPATH
-          {
-            "userAssignedIdentityID": "$KubeletId",
-            "tenantId": "$TenantId",
-            "useManagedIdentityExtension": true,
-            "subscriptionId": "$SubscriptionId",
-            "resourceGroup": "$DNSRESOURCEGROUP"
-          }
-          EOF
-          
-          kubectl create secret generic azure-config-file --dry-run=client -o yaml --from-file=azure.json | kubectl apply -f -
-
-      - name: Add external dns config
-        env:
-          DOMAINFILTER: "azdemo.co.uk"
-        run: |
-          echo $DOMAINFILTER
-          helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
-
-      - name: Check DNS config
-        if: github.event.inputs.doVerifySteps != 'no'
-        env:
-          DNSDOMAIN: "azdemo.co.uk"
-          DNSRG: "domainssl"
-          RECORDNAME: "openjdk-demo"
-        run: |
-          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
-
-      - name: Install the Java sample app
-        env:
-          NAMESP: "default"
-          APPNAME: "openjdk-kvssl" #Using backend cert common name
-          DOMAINSUFFIX: "azdemo.co.uk"
-          FRONTENDCERTNAME: "openjdk-kvssl-fe"
-          
-        run: |
-          # REF: https://github.com/khowling/e2e-tls-java-aks
-          
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          KVNAMELOWER=${KVNAME,,}
-          APPNAME='${{ env.APPNAME }}'
-          KVTENANT=$(az account show --query tenantId -o tsv)
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          DNSNAME=${APPNAME}.${DOMAINSUFFIX}
-
-          echo 'Get the identity created from the KeyVaultSecret Addon'
-          export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
-          echo $CSISECRET_CLIENTID
-          
-          helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv2 --set nameOverride="${APPNAME}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${FRONTENDCERTNAME}",appgw.rootCertificateName="${APPNAME}" --dry-run
-          helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv2 --set nameOverride="${APPNAME}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${FRONTENDCERTNAME}",appgw.rootCertificateName="${APPNAME}"
+  SmokeTest_JavaApp-appgw:
+    needs: [Deploy,SmokeTest_JavaApp-certmgr]
+    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+    with:
+      RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      DNSRECORDNAME: openjdk-kvssl
+      AKVNAME: ${{ needs.Deploy.outputs.AKVNAME}}
+      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
+      APPNAME: openjdk-kvssl
+      FRONTENDCERTTYPE: appgw-selfsigned
+      MINIHELMBRANCH: ${{ github.event.inputs.minihelmbranch }}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       
-      - name: Verify Java App is reachable
-        env:
-          NAMESP: "default"
-          APPNAME: "openjdk-kvssl"
-          
-          URLTOHIT: "https://openjdk-kvssl.azdemo.co.uk"
-        run: |
-          sleep 3m #Give everything a chance to work
-        
-          INGNAME="${APPNAME}-ingress"
-          
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-          
-          echo "Getting public ip"
-          pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          echo "Public ip : $pubId"
-          echo "URL to hit: $URLTOHIT"
-          
-          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
-          echo $respcode   
-          
-          #TODO: This is going to need to be rewritten. #loopshambles
-          #SSH'ing on the runner shows this works, sometimes it just takes ages
-          #Needs to be investigated.
-          if [ "$respcode" != "200" ];
-          then
-              echo "going to need to wait longer i guess?"
-              sleep 3m
-              
-              respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
-              echo $respcode    
-              
-              if [ "$respcode" != "200" ];
-              then
-                echo "going to need to wait EVEN longer i guess?  (wtf)"
-                sleep 3m
-                respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
-                echo $respcode    
-                if [ "$respcode" != "200" ];
-                then
-                  echo "Non 200 response code from app - Raising error"
-                  exit 1
-                fi
-              fi
-          fi
-          
-          curl --insecure $URLTOHIT
-
-      - name: Verify Frontend Certificate
-        if: github.event.inputs.doVerifySteps != 'no'
-        env:
-          URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
-        run: |
-          curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
-
-      - name: Cleanup app
-        if: github.event.inputs.doSmokeTestUninstall == 'yes'
-        env:
-          APPNAME: "openjdk-kvssl"
-        run: helm uninstall $APPNAME
-          
-  SmokeTest_PublicJavaTLSApp:
-    runs-on: ubuntu-latest
-    needs: [Deploy, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PrivateJavaTLSApp]
-    environment: azurecirgs
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Param check
-        if: github.event.inputs.doDebugSteps != 'no'
-        run: |
-          RG='${{ env.RG }}'
-          echo "RG is: $RG"
-          
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
-          echo "ACR name is ${{ needs.Deploy.outputs.ACRNAME}}"
-          
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-        
-      - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
-      - name: Kubectl
-        if: github.event.inputs.doDebugSteps != 'no'
-        run: |
-          #sudo az aks install-cli
-          kubectl version
-          
-      - name: Observe Existing DNSConfig
-        if: github.event.inputs.doDebugSteps != 'no'
-        env:
-          DNSDOMAIN: "azdemo.co.uk"
-          DNSRG: "domainssl"
-          RECORDNAME: "openjdk-demo"
-        run: |
-          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
-
-      - name: Grab some Helm charts to install
-        run: |
-          git clone https://github.com/Gordonby/minihelm.git helmcharts
-
-      - name: Add a azure-config secret for use with externaldns
-        env:
-          DNSRESOURCEGROUP: "domainssl"
-        run: |
-          RG='${{ env.RG }}'
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-
-          echo "AKS $AKSNAME"
-          echo $DNSRESOURCEGROUP
-
-          KubeletId=$(az aks show -n $AKSNAME -g  $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
-          TenantId=$(az account show --query tenantId -o tsv)
-          SubscriptionId=$(az account show --query id -o tsv)
-
-          JSONSECRETPATH="azure.json"
-          cat<<EOF>$JSONSECRETPATH
-          {
-            "userAssignedIdentityID": "$KubeletId",
-            "tenantId": "$TenantId",
-            "useManagedIdentityExtension": true,
-            "subscriptionId": "$SubscriptionId",
-            "resourceGroup": "$DNSRESOURCEGROUP"
-          }
-          EOF
-          
-          kubectl create secret generic azure-config-file --dry-run=client -o yaml --from-file=azure.json | kubectl apply -f -
-
-      - name: Add external dns config
-        env:
-          DOMAINFILTER: "azdemo.co.uk"
-        run: |
-          echo $DOMAINFILTER
-          helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
-
-      - name: Check DNS config
-        if: github.event.inputs.doVerifySteps != 'no'
-        env:
-          DNSDOMAIN: "azdemo.co.uk"
-          DNSRG: "domainssl"
-          RECORDNAME: "openjdk-demo"
-        run: |
-          az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
-
-      - name: Install Cert Manager
-        env:
-          MANIFESTTESTURL: "https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml"
-        run: |
-          kubectl apply -f $MANIFESTTESTURL
-          sleep 1m
-
-      - name: Install ClusterIssuer
-        env:
-          EMAILAD: "gdogg@microsoft.com"
-        run: |
-          echo "Email Address for Lets Encrypt: $EMAILAD"
-          helm upgrade --install smokecertissuer ./helmcharts/samples/certmanagerissuer --set email=$EMAILAD
-
-      - name: Verify ClusterIssuer
-        if: github.event.inputs.doVerifySteps != 'no'
-        env:
-          EMAILAD: "gdogg@microsoft.com"
-        run: |
-          sleep 1m          
-          kubectl describe clusterissuer letsencrypt-staging
-
-      - name: Install the Java sample app
-        env:
-          NAMESP: "default"
-          CERTNAME: "openjdk-demo"
-          DOMAINSUFFIX: "azdemo.co.uk"
-          DOMAINPREFIX: "openjdk-demo"
-          
-        run: |
-          # REF: https://github.com/khowling/e2e-tls-java-aks
-          
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          RG='${{ env.RG }}'
-          KVNAME='${{ needs.Deploy.outputs.AKVNAME}}'
-          KVNAMELOWER=${KVNAME,,}
-          CERTNAME='${{ env.CERTNAME }}'
-          KVTENANT=$(az account show --query tenantId -o tsv)
-          AGNAME='${{ needs.Deploy.outputs.AGNAME}}'
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          DNSNAME=${DOMAINPREFIX}.${DOMAINSUFFIX}
-
-          echo 'Get the identity created from the KeyVaultSecret Addon'
-          export CSISECRET_CLIENTID=$(az aks show -g $RG --name $AKSNAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
-          echo $CSISECRET_CLIENTID
-          
-          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsapp --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}" --dry-run
-          helm upgrade --install e2esmokeapp ./helmcharts/samples/javatlsapp --set nameOverride="openjdk-demo",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}"
-
-      - name: Verify LetsEncrypt Certificate logs
-        if: github.event.inputs.doVerifySteps != 'no'
-        run: |
-          sleep 1m
-          kubectl describe cert
-
-      - name: Verify Java App is reachable
-        env:
-          NAMESP: "default"
-          INGNAME: "openjdk-demo-ingress"
-          URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
-        run: |
-          sleep 2m #Give everything a chance to work
-        
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-          
-          echo "Getting public ip"
-          pubId=$(kubectl get ing -n $NAMESP $INGNAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          echo "Public ip : $pubId"
-          echo "URL to hit: $URLTOHIT"
-          
-          respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
-          echo $respcode   
-          
-          #TODO: This is going to need to be rewritten. #loopshambles
-          #SSH'ing on the runner shows this works, sometimes it just takes ages
-          #Needs to be investigated.
-          if [ "$respcode" != "200" ];
-          then
-              echo "going to need to wait longer i guess?"
-              sleep 3m
-              
-              respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
-              echo $respcode    
-              
-              if [ "$respcode" != "200" ];
-              then
-                echo "going to need to wait EVEN longer i guess?  (wtf)"
-                sleep 3m
-                respcode=$(curl -X GET --insecure --write-out %{http_code} --silent --output /dev/null $URLTOHIT)
-                echo $respcode    
-                if [ "$respcode" != "200" ];
-                then
-                  echo "Non 200 response code from app - Raising error"
-                  exit 1
-                fi
-              fi
-          fi
-          
-          curl --insecure $URLTOHIT
-          
-      - name: Verify Frontend Certificate
-        if: github.event.inputs.doVerifySteps != 'no'
-        env:
-          URLTOHIT: "https://openjdk-demo.azdemo.co.uk"
-        run: |
-          curl --insecure -vvI $URLTOHIT 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
-
-      - name: Cleanup app
-        if: github.event.inputs.doSmokeTestUninstall == 'yes'
-        env:
-          APPNAME: "e2esmokeapp"
-        run: helm uninstall $APPNAME
-
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
     needs: [Deploy]
     environment: azurecirgs
+    concurrency: ${{ needs.Deploy.outputs.AGNAME}}
     steps:
       - uses: actions/checkout@v2
 
@@ -1019,45 +568,36 @@ jobs:
         env:
           NAMESP: "default"
         run: |
-          sleep 2m #Give everything a chance to work
-        
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
           
-          echo "Getting public ip"
-          pubId=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          echo "Public ip : $pubId"
+          counter=1
+          pubIp="<pending>"
+          while [ $counter -le 20 ] && [ "$pubIp" == "<pending>" ]
+          do
+            sleep 10s
+
+            echo "Getting public ip [$counter] [$(date +"%T")]"
+            pubIp=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            echo "Public ip : $pubIp"
+          done
           
-          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
-          echo $respcode   
+          counter=1
+          while [ $counter -le 20 ] && [ "$respcode" != "200" ]
+          do
+            echo "curl $pubIp [$counter]"
+            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
+            echo $respcode   
+            if [ "$respcode" != "200" ];
+            then
+                echo "going to wait another 30s [$counter] [$(date +"%T")]"
+                ((counter++))
+                sleep 30s
+            fi
+          done
           
-          #TODO: This is going to need to be rewritten. #loopshambles
-          #SSH'ing on the runner shows this works, sometimes it just takes ages
-          #Needs to be investigated.
-          if [ "$respcode" != "200" ];
-          then
-              echo "going to need to wait longer i guess?"
-              sleep 3m
-              
-              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
-              echo $respcode    
-              
-              if [ "$respcode" != "200" ];
-              then
-                echo "going to need to wait EVEN longer i guess?  (wtf)"
-                sleep 6m
-                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubId)
-                echo $respcode    
-                if [ "$respcode" != "200" ];
-                then
-                  echo "Non 200 response code from app - Raising error"
-                  exit 1
-                fi
-              fi
-          fi
-          
-          curl $pubId
+          curl $pubIp
           
       - name: Remove App from cluster
         env:
@@ -1172,8 +712,8 @@ jobs:
 
   CaptureAgicLogs:
     runs-on: ubuntu-latest
-    needs: [Deploy, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp]
-    if: always() && ${{ needs.Deploy.outputs.AGNAME != '' }}
+    needs: [Deploy, SmokeTest_JavaApp-certmgr, SmokeTest_JavaApp-appgw, SmokeTest_SimpleApp]
+    if: ${{ always() && needs.Deploy.outputs.AGNAME != '' }}
     steps:
       - name: Azure Login
         uses: Azure/login@v1
@@ -1193,6 +733,11 @@ jobs:
         run: |
           #sudo az aks install-cli
           kubectl version
+          
+      - name: Kubectl get events
+        if: github.event.inputs.doDebugSteps != 'no'
+        run: |
+          kubectl get events
           
       - name: Describe AGIC Pod
         env:
@@ -1216,7 +761,7 @@ jobs:
   Infra_Destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, CertificateConfig, SmokeTest_SimpleApp, SmokeTest_PublicJavaTLSApp, Well_Architected, CaptureAgicLogs]
+    needs: [Validation, Deploy, InfraTests, DeployVerify, SmokeTest_SimpleApp, Well_Architected, CaptureAgicLogs]
     steps:
       - name: Azure Login
         uses: Azure/login@v1

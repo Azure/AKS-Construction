@@ -49,13 +49,13 @@ ${cluster.apisecurity === "private" ? `"` : ``}
                         <Stack.Item>
                             <Label >Simple Java Spring boot application, that uses KeyVault to generate Certs to expose Tomcat TLS endpoint, and public Ingress TLS issued by cert-manager</Label>
 
-                            <MessageBar messageBarType={MessageBarType.error}>Please ensure you deployment meets all the requirements below to run the demo app successfully</MessageBar>
+                            <MessageBar messageBarType={MessageBarType.error}>Please ensure your deployment meets all the requirements below in order to run the demo app successfully</MessageBar>
                             <Label>Sample App Requires</Label>
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.registry !== "none"} label="(Addons tab) Container Registry, for application container repository" />
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} disabled={!net.vnetprivateend} checked={addons.acrPrivatePool} label="(Addons tab) Container Registry Private Pool, for container build task (required for private link only)" />
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={deploy.kvCertSecretRole} label="(Deploy tab) Grant Key Vault Certificate and Secret Officer" />
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.csisecret === 'akvNew'} label="(Addons tab) CSI Secrets, for tomcat TLS certificates" />
-                            <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.ingress !== 'none'} label="(Addons Tab) Ingress, for securly exposing app" />
+                            <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.ingress !== 'none'} label="(Addons Tab) Ingress, for securely exposing app" />
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.dns} label="(Addons Tab) external-dns, for application hostname resolution" />
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.certMan} label="(Addons Tab) cert-manager, to generate the frontend CA signed Cert" />
                             
@@ -68,7 +68,7 @@ ${cluster.apisecurity === "private" ? `"` : ``}
                 <PivotItem headerText=".NET Microservices"  >
                     <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>TBC</b><Image  height="80px" src="https://img.stackshare.io/service/11331/asp.net-core.png" /></div> </Separator>
                     <Stack.Item>
-                            <Label >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</Label>
+                            <Label >.</Label>
                     </Stack.Item>
                     <Stack.Item>
                             <TextField value={""} rows={25} readOnly={true} styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  />
@@ -77,7 +77,7 @@ ${cluster.apisecurity === "private" ? `"` : ``}
                 <PivotItem headerText="Full Stack Typescript">
                     <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>TBC</b><Image height="80px" src="https://sdtimes.com/wp-content/uploads/2020/06/ts-logo-256.png" /></div> </Separator>
                     <Stack.Item>
-                            <Label >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</Label>
+                            <Label >.</Label>
                     </Stack.Item>
                     <Stack.Item>
                             <TextField value={""} rows={25} readOnly={true} styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  />
