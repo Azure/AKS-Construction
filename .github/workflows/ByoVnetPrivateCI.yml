@@ -37,7 +37,7 @@ env:
   DEPNAME: 'DepPriv${{ github.run_number }}'
   DOVERIFICATIONSTEPS: github.event.inputs.doDebugSteps != 'no' #These are steps that will generally throw errors when things aren't there
   DODEBUGSTEPS:  github.event.inputs.doVerifySteps != 'no' #These are steps that are purely informational
-  AZCLIVERSION: 2.29.2 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
   
 concurrency: ci-${{ github.ref }}
 
@@ -289,6 +289,7 @@ jobs:
           kubectl version
           
       - name: Deny all network traffic
+        if: false
         env:
           MANIFESTPATH: "k8smanifests/networkpolicy-deny-all.yml"
         run: |
