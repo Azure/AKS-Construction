@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Image, ImageFit, Link, Separator, TextField, Dropdown, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
-import { arrayAdd, arrayDel, adv_stackstyle, hasError, getError } from './common'
+import { Image, ImageFit, Link, Separator, TextField, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
+import { adv_stackstyle, hasError, getError } from './common'
 
 const columnProps = {
     tokens: { childrenGap: 20 },
