@@ -5,7 +5,7 @@ import { adv_stackstyle, hasError, getError } from './common'
 
 
 export default function ({ tabValues, updateFn, invalidArray }) {
-    const { addons, net, deploy } = tabValues
+    const { addons, net } = tabValues
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -84,9 +84,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.networkPolicy}
                     options={[
-                        { key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
+                        { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
+                        { "data-testid":'addons-netpolicy-calico', key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
+                        { "data-testid":'addons-netpolicy-azure', key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPolicy", key)}
@@ -206,7 +206,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
                     {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") &&
                         <>
-                            <Checkbox checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
+                            <Checkbox inputProps={{ "data-testid": "addons-dns"}} checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
                                 <Text>Create FQDN URLs for your applications using
                                     <Link target="_t1" href="https://github.com/kubernetes-sigs/external-dns"> <b>external-dns</b> </Link>
                                     (requires Azure <Link href="https://docs.microsoft.com/en-us/azure/dns/dns-getstarted-portal#create-a-dns-zone" target="_t1"> <b>Public</b> </Link> or <Link href="https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal" target="_t1"> <b>Private</b> </Link> DNS Zone)
@@ -214,12 +214,12 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                             {addons.dns &&
                                 <>
                                     <MessageBar messageBarType={MessageBarType.warning}>If using a Public DNS Zone, you need to own a custom domain, you can easily purchase a custom domain through Azure <Link target="_t1" href="https://docs.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain"> <b>details here</b></Link></MessageBar>
-                                    <TextField value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Public or Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
+                                    <TextField inputProps={{ "data-testid": "addons-dnsZoneId"}} value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Public or Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
 
 
-                                    <Checkbox disabled={hasError(invalidArray, 'dnsZoneId')} checked={addons.certMan} onChange={(ev, v) => updateFn("certMan", v)} label="Automatically Issue Certificates for HTTPS using cert-manager (with Lets Encrypt - requires email" />
+                                    <Checkbox inputProps={{ "data-testid": "addons-certMan"}} disabled={hasError(invalidArray, 'dnsZoneId')} checked={addons.certMan} onChange={(ev, v) => updateFn("certMan", v)} label="Automatically Issue Certificates for HTTPS using cert-manager (with Lets Encrypt - requires email" />
                                     {addons.certMan &&
-                                        <TextField value={addons.certEmail} onChange={(ev, v) => updateFn("certEmail", v)} errorMessage={getError(invalidArray, 'certEmail') ? "Enter valid email" : ''} label="Enter mail address for certificate notification:" required />
+                                        <TextField inputProps={{ "data-testid": "addons-certEmail"}}  value={addons.certEmail} onChange={(ev, v) => updateFn("certEmail", v)} errorMessage={getError(invalidArray, 'certEmail') ? "Enter valid email" : ''} label="Enter mail address for certificate notification:" required />
                                     }
                                 </>
                             }
@@ -240,17 +240,24 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     options={[
                         { key: 'none', text: 'No, my application images will be on DockerHub or another registry' },
                         { key: 'Basic', text: 'Yes, setup Azure Container Registry "Basic" tier & authorise aks to pull images' },
-                        { key: 'Standard', text: 'Yes, setup Azure Container Registry "Standard" tier (recommended for production)' },
-                        { key: 'Premium', text: 'Yes, setup Azure Container Registry "Premium" tier (required for Service Endpoints & Private Link)' }
+                        { key: 'Standard', text: 'Yes, setup Azure Container Registry "Standard" tier (minimum recommended for production)' },
+                        { key: 'Premium', text: 'Yes, setup Azure Container Registry "Premium" tier (required for Private Link)' }
                     ]}
                     onChange={(ev, { key }) => updateFn("registry", key)}
                 />
                 {hasError(invalidArray, 'registry') &&
                     <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'registry')}</MessageBar>
                 }
-                {net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' &&
-                    <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.warning}>As you have selected Container Registry in Networking Service Endpoint, the template will only Allow traffic to your Registry from the AKS Subnet, and your specified IP addresses <b>{deploy.apiips.split(',')}</b> (<Link target="_t2" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet">docs</Link>) *** Preview feature</MessageBar>
-                }
+
+            </Stack.Item>
+
+            <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
+                <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label="Create ACR Private Agent Pool (applicable to private link)" />
+                <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
+                    <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>  
+                    <TextField disabled={true} label="O/S" defaultValue="Linux"/>  
+                    <TextField disabled={true} label="Agent Count" defaultValue="1"/>  
+                </Stack>
             </Stack.Item>
 
             <Separator className="notopmargin" />

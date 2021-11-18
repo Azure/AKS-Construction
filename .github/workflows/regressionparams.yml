@@ -1,0 +1,117 @@
+name: InfraCI - Regression Validation
+
+on:
+  #Run on Manual execution
+  workflow_dispatch:
+
+  #Run when our bicep code changes 
+  push:
+    paths:
+      - "bicep/*"
+
+  #Run when PR's are made to main, where the changes are in the bicep directory or this workflow file itself
+  pull_request:
+    branches: [main]
+    paths:
+      - "bicep/*"
+      - ".github/workflows/regressionparams.yml"
+      - ".github/workflows_dep/regressionparams/*"
+
+  #Run on a weekly schedule
+  schedule:
+    # At 11:00pm, every Thursday week
+    - cron: "0 23 * * 4"
+    
+env:
+  RG: "Automation-Actions-AksPureValidation" #The resource group we're deploying to.
+  ParamDir: ".github/workflows_dep/regressionparams/" #Path to parameter file
+  AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
+  
+jobs:
+  GetParamFiles:
+    runs-on: ubuntu-latest
+    name: Get Param File List
+    outputs:
+      FILELIST: ${{ steps.getfiles.outputs.FILELIST}}
+    steps:
+      #Get the code files from the repo
+      - uses: actions/checkout@v2
+
+      - name: Job parameter check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          echo "Param dir path is: ${{ env.ParamDir }}"
+          
+      - name: Get List of json files
+        id: getfiles
+        shell: pwsh
+        run: |
+          $FilePath="${{ env.ParamDir }}"
+          
+          $FILELISTJSON=get-ChildItem -Path $FilePath -File '*.json' | select-object -ExpandProperty Name | ConvertTo-Json -Compress
+          Write-Output $FILELISTJSON
+          echo "::set-output name=FILELIST::$FILELISTJSON"
+          
+  Validation:
+    needs: [GetParamFiles]
+    strategy:
+      matrix:
+        files: ${{ fromJson(needs.GetParamFiles.outputs.FILELIST) }} 
+
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Job parameter check
+        run: |
+          RG='${{ env.RG }}'
+          echo "RG is: $RG"
+          echo "Param dir path is: ${{ env.ParamDir }}"
+          echo "Param file is ${{ matrix.files }}"
+
+      - name: Arm Parameter file check
+        shell: pwsh
+        run: |
+          Write-Output "Checking parameter file existance/contents"
+          $paramFilePath="${{ env.ParamDir }}${{ matrix.files }}"
+          Test-Path $paramFilePath
+          
+          if (Test-Path $paramFilePath) {
+            $paramFileContent=Get-Content $paramFilePath
+            Write-Output $paramFileContent
+          }
+          
+      - name: Replace subnet and dnszone param values from secret
+        shell: pwsh
+        run: |
+          $paramFilePath="${{ env.ParamDir }}${{ matrix.files }}"
+          $params = Get-Content $paramFilePath | ConvertFrom-Json
+          
+          if($params.parameters.dnsZoneId.value -ne $null) {
+            $params.parameters.dnsZoneId.value = "${{ secrets.DnsIdAzdemocouk }}"
+          }
+          if($params.parameters.byoAKSSubnetId.value -ne $null) {
+            $params.parameters.byoAKSSubnetId.value = "${{ secrets.ByoAksSubnetId }}"
+          }
+          if($params.parameters.byoAGWSubnetId.value -ne $null) {
+            $params.parameters.byoAGWSubnetId.value = "${{ secrets.ByoAgwSubnetId }}"
+          }
+          
+          $params | ConvertTo-Json | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
+          
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: false
+          environment: azurecloud
+          allow-no-subscriptions: false
+
+      - name: Validate Infrastructure deployment
+        uses: Azure/cli@1.0.4
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+            RG='${{ env.RG }}'
+            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamDir }}${{ matrix.files }}

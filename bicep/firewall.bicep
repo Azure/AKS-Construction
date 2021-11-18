@@ -3,6 +3,9 @@ param location string
 param workspaceDiagsId string = ''
 param fwSubnetId string
 param vnetAksSubnetAddressPrefix string
+param certManagerFW bool = false
+param acrPrivatePool bool = false
+param acrAgentPoolSubnetAddressPrefix string = ''
 
 var firewallPublicIpName = 'pip-afw-${resourceName}'
 resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = {
@@ -53,6 +56,9 @@ resource fwDiags 'microsoft.insights/diagnosticSettings@2017-05-01-preview' = if
   }
 }
 
+@description('Whitelist dnsZone name (required by cert-manager validation process)')
+param appDnsZoneName string = ''
+
 var fw_name = 'afw-${resourceName}'
 resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
   name: fw_name
@@ -80,28 +86,90 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
           action: {
             type: 'Allow'
           }
-          rules: [
-            {
-              name: 'aks'
-              protocols: [
-                {
-                  port: 443
-                  protocolType: 'Https'
-                }
-                {
-                  port: 80
-                  protocolType: 'Http'
-                }
-              ]
-              targetFqdns: []
-              fqdnTags: [
-                'AzureKubernetesService'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-            }
-          ]
+          rules: concat([
+              {
+                name: 'aks'
+                protocols: [
+                  {
+                    port: 443
+                    protocolType: 'Https'
+                  }
+                  {
+                    port: 80
+                    protocolType: 'Http'
+                  }
+                ]
+                targetFqdns: []
+                fqdnTags: [
+                  'AzureKubernetesService'
+                ]
+                sourceAddresses: [
+                  vnetAksSubnetAddressPrefix
+                ]
+              }
+            ], certManagerFW ? [
+              {
+                name: 'cetman-quay'
+                protocols: [
+                  {
+                    port: 443
+                    protocolType: 'Https'
+                  }
+                  {
+                    port: 80
+                    protocolType: 'Http'
+                  }
+                ]
+                targetFqdns: [
+                  'quay.io'
+                  '*.quay.io'
+                ]
+                sourceAddresses: [
+                  vnetAksSubnetAddressPrefix
+                ]
+              }
+              {
+                name: 'cetman-letsencrypt'
+                protocols: [
+                  {
+                    port: 443
+                    protocolType: 'Https'
+                  }
+                  {
+                    port: 80
+                    protocolType: 'Http'
+                  }
+                ]
+                targetFqdns: [
+                  'letsencrypt.org'
+                  '*.letsencrypt.org'
+                ]
+                sourceAddresses: [
+                  vnetAksSubnetAddressPrefix
+                ]
+              }
+            ] : [], certManagerFW && !empty(appDnsZoneName) ? [
+              {
+                name: 'cetman-appDnsZoneName'
+                protocols: [
+                  {
+                    port: 443
+                    protocolType: 'Https'
+                  }
+                  {
+                    port: 80
+                    protocolType: 'Http'
+                  }
+                ]
+                targetFqdns: [
+                  appDnsZoneName
+                  '*.${appDnsZoneName}'
+                ]
+                sourceAddresses: [
+                  vnetAksSubnetAddressPrefix
+                ]
+              }
+            ] : [])
         }
       }
     ]
@@ -113,7 +181,7 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
           action: {
             type: 'Allow'
           }
-          rules: [
+          rules: concat([
             {
               name: 'ControlPlaneTCP'
               protocols: [
@@ -160,7 +228,27 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
                 '443'
               ]
             }
-          ]
+          ], acrPrivatePool ? [
+            {
+              name: 'acr-agentpool'
+              protocols: [
+                'TCP'
+              ]
+              sourceAddresses: [
+                acrAgentPoolSubnetAddressPrefix
+              ]
+              destinationAddresses: [
+                'AzureKeyVault'
+                'Storage'
+                'EventHub'
+                'AzureActiveDirectory'
+                'AzureMonitor'
+              ]
+              destinationPorts: [
+                '443'
+              ]
+            }
+          ]: [])
         }
       }
     ]

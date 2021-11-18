@@ -3,7 +3,8 @@
         "deploy": "Deploy",
         "cluster": "Cluster Details",
         "addons": "Addon Details",
-        "net": "Networking Details"
+        "net": "Networking Details",
+        "app": "Sample Apps"
     },
     "defaults": {
         "deploy": {
@@ -11,7 +12,12 @@
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
-            "disablePreviews": false
+            "disablePreviews": false,
+            "acrPushRole": true,
+            "kvCertSecretRole": true,
+            "kvIPWhitelist": false,
+            "clusterAdminRole": true,
+            "clusterIPWhitelist" : true
         },
         "cluster": {
             "AksPaidSkuForSLA": false,
@@ -29,7 +35,6 @@
             "use_alt_aad": false,
             "aad_tenant_id": "",
             "enableAzureRBAC": true,
-            "adminprincipleid": "",
             "aadgroupids": "",
             "availabilityZones": "no"
         },
@@ -52,6 +57,7 @@
             "dns": false,
             "dnsZoneId": "",
             "registry": "none",
+            "acrPrivatePool": false,
             "podid": false,
             "podscale": false,
             "monitor": "none",
@@ -65,8 +71,6 @@
             "networkPlugin": "azure",
             "afw": false,
             "vnetprivateend": false,
-            "serviceEndpoints": [],
-            "serviceEndpointsEnable": false,
             "vnet_opt": "default",
             "byoAKSSubnetId": "",
             "byoAGWSubnetId": "",
@@ -76,9 +80,14 @@
             "vnetFirewallSubnetAddressPrefix": "10.241.130.0/26",
             "ersub": "10.242.0.0/24",
             "vnetAppGatewaySubnetAddressPrefix": "10.2.0.0/16",
+            "privateLinkSubnetAddressPrefix": "10.3.0.0/16",
+            "acrAgentPoolSubnetAddressPrefix": "10.4.0.0/16",
             "podCidr": "10.244.0.0/16",
             "serviceCidr": "10.0.0.0/16",
             "dnsServiceIP": "10.0.0.10"
+        },
+        "app": {
+            "javatls": false
         }
     },
     "defaultOps": [
@@ -96,6 +105,7 @@
                     "icon": "Manufacturing",
                     "values": {
                         "cluster": {
+                            "SystemPoolType": "none",
                             "autoscale": false,
                             "upgradeChannel": "none"
                         },
@@ -134,6 +144,7 @@
                     "icon": "DeveloperTools",
                     "values": {
                         "cluster": {
+                            "SystemPoolType": "Cost-Optimised",
                             "autoscale": false,
                             "upgradeChannel": "none"
                         },
@@ -175,6 +186,7 @@
                     "icon": "Touch",
                     "values": {
                         "cluster": {
+                            "SystemPoolType": "Cost-Optimised",
                             "autoscale": true,
                             "upgradeChannel": "stable"
                         },
@@ -183,12 +195,6 @@
                                 {
                                     "page": "net",
                                     "field": "vnetprivateend",
-                                    "value": true,
-                                    "set": "Premium"
-                                },
-                                {
-                                    "page": "net",
-                                    "field": "serviceEndpointsEnable",
                                     "value": true,
                                     "set": "Premium"
                                 },
@@ -227,6 +233,9 @@
                     },
                     "icon": "Unlock",
                     "values": {
+                        "deploy": {
+                            "kvIPWhitelist": false
+                        },
                         "cluster": {
                             "enable_aad": false,
                             "apisecurity": "none"
@@ -256,7 +265,6 @@
                         },
                         "net": {
                             "vnet_opt": "default",
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": false,
                             "afw": false
                         }
@@ -284,21 +292,20 @@
                             {
                                 "description": "Authorized IP address ranges",
                                 "linksrc": "https://docs.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges"
-                            },
-                            {
-                                "description": "Restrict dependencies with Service Endpoints **(ACR preview)",
-                                "linksrc": "https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-service-endpoints-overview"
                             }
                         ]
                     },
                     "icon": "Lock12",
                     "values": {
+                        "deploy": {
+                            "kvIPWhitelist": false
+                        },
                         "cluster": {
                             "enable_aad": true,
                             "apisecurity": "whitelist"
                         },
                         "addons": {
-                            "networkPolicy": "calico",
+                            "networkPolicy": "azure",
                             "registry": [
                                 {
                                     "page": "addons",
@@ -322,6 +329,7 @@
                                     "set": "none"
                                 }
                             ],
+                            "acrPrivatePool": false,
                             "azurepolicy": "audit",
                             "appgwKVIntegration": [
                                 {
@@ -338,11 +346,6 @@
                         },
                         "net": {
                             "vnet_opt": "custom",
-                            "serviceEndpointsEnable": true,
-                            "serviceEndpoints": [
-                                "Microsoft.ContainerRegistry",
-                                "Microsoft.KeyVault"
-                            ],
                             "vnetprivateend": false,
                             "afw": false
                         }
@@ -390,12 +393,15 @@
                     },
                     "icon": "ProtectionCenterLogo32",
                     "values": {
+                        "deploy": {
+                            "kvIPWhitelist": true
+                        },
                         "cluster": {
                             "enable_aad": true,
                             "apisecurity": "private"
                         },
                         "addons": {
-                            "networkPolicy": "calico",
+                            "networkPolicy": "azure",
                             "registry": [
                                 {
                                     "page": "addons",
@@ -419,6 +425,7 @@
                                     "set": "none"
                                 }
                             ],
+                            "acrPrivatePool": true,
                             "appgwKVIntegration": [
                                 {
                                     "page": "addons",
@@ -435,7 +442,6 @@
                         },
                         "net": {
                             "vnet_opt": "custom",
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": true,
                             "afw": true
                         }
@@ -503,7 +509,6 @@
                             "csisecret": "none"
                         },
                         "net": {
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": false,
                             "vnet_opt": "default",
                             "afw": false
@@ -576,7 +581,7 @@
                             "upgradeChannel": "none"
                         },
                         "addons": {
-                            "networkPolicy": "calico",
+                            "networkPolicy": "azure",
                             "registry": "Premium",
                             "azurepolicy": "audit",
                             "ingress": "appgw",
@@ -585,7 +590,6 @@
                             "appgwKVIntegration": true
                         },
                         "net": {
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": true,
                             "vnet_opt": "byo",
                             "afw": false
@@ -658,7 +662,7 @@
                             "upgradeChannel": "none"
                         },
                         "addons": {
-                            "networkPolicy": "calico",
+                            "networkPolicy": "azure",
                             "registry": "Premium",
                             "azurepolicy": "audit",
                             "ingress": "appgw",
@@ -667,7 +671,6 @@
                             "appgwKVIntegration": true
                         },
                         "net": {
-                            "serviceEndpointsEnable": false,
                             "vnetprivateend": true,
                             "vnet_opt": "custom",
                             "afw": true

@@ -1,10 +1,11 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import { Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
+import { Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
 import { adv_stackstyle, getError } from './common'
 
-export default function ({ defaults, updateFn, tabValues, invalidArray, invalidTabs }) {
+export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
+
   const { net, addons, cluster, deploy } = tabValues
   const allok = !(invalidTabs && invalidTabs.length > 0)
   const apiips_array = deploy.apiips.split(',').filter(x => x.trim())
@@ -12,57 +13,64 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
     ...(net.vnetAddressPrefix !== defaults.net.vnetAddressPrefix && { vnetAddressPrefix: net.vnetAddressPrefix }),
     ...(net.vnetAksSubnetAddressPrefix !== defaults.net.vnetAksSubnetAddressPrefix && { vnetAksSubnetAddressPrefix: net.vnetAksSubnetAddressPrefix })
   }
-  const sericeparams = {
+  const serviceparams = {
     ...(net.serviceCidr !== defaults.net.serviceCidr && { serviceCidr: net.serviceCidr }),
     ...(net.dnsServiceIP !== defaults.net.dnsServiceIP && { dnsServiceIP: net.dnsServiceIP })
   }
   const params = {
     resourceName: deploy.clusterName,
     kubernetesVersion: deploy.kubernetesVersion,
-    ...(cluster.agentCount != defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
+    ...(cluster.agentCount !== defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA } ),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
-    ...(net.vnet_opt === "custom" && { custom_vnet: true, ...sericeparams, ...aksvnetparams }),
-    ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...sericeparams }),
+    ...(net.vnet_opt === "custom" && { custom_vnet: true, ...serviceparams, ...aksvnetparams }),
+    ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...serviceparams }),
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
-    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(cluster.adminprincipleid && { adminprincipleid: cluster.adminprincipleid }) }),
-    ...(addons.registry !== "none" && { registries_sku: addons.registry }),
-    ...(net.afw && { azureFirewalls: true, ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
-    ...(net.serviceEndpointsEnable && net.serviceEndpoints.length > 0 && { serviceEndpoints: net.serviceEndpoints.map(s => { return { service: s } }) }),
+    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
+    ...(addons.registry !== "none" && { 
+        registries_sku: addons.registry, 
+        ...(addons.acrPrivatePool && {acrPrivatePool: true}),
+        ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
+    ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
+    ...(net.vnet_opt === "custom" && net.vnetprivateend && {
+        privateLinks: true, 
+        ...(addons.csisecret === 'akvNew' && deploy.kvIPWhitelist  && apiips_array.length > 0 && {kvIPWhitelist: `"${apiips_array[0]}"`}),
+        ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
+        ...(addons.registry !== "none" && {
+          ...(addons.acrPrivatePool !== defaults.addons.acrPrivatePool && {acrPrivatePool: addons.acrPrivatePool}),
+          ...(addons.acrPrivatePool && defaults.net.acrAgentPoolSubnetAddressPrefix !== net.acrAgentPoolSubnetAddressPrefix && {acrAgentPoolSubnetAddressPrefix: net.acrAgentPoolSubnetAddressPrefix})
+        }),
+    }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
-    ...(net.networkPlugin != defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}), 
+    ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}), 
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
-    ...(cluster.apisecurity === "whitelist" && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
+    ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
-    ...(addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
+    ...(addons.ingress !== "none" && addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
     ...(addons.ingress === "appgw" && {
       ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
         appGWcount: addons.appGWcount,
         appGWsku: addons.appGWsku,
-        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall != defaults.addons.appGWenableFirewall && { appGWenableFirewall: addons.appGWenableFirewall }),
-        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall && addons.appGwFirewallMode != defaults.addons.appGwFirewallMode && { appGwFirewallMode: addons.appGwFirewallMode }),
+        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall !== defaults.addons.appGWenableFirewall && { appGWenableFirewall: addons.appGWenableFirewall }),
+        ...(addons.appGWsku === 'WAF_v2' && addons.appGWenableFirewall && addons.appGwFirewallMode !== defaults.addons.appGwFirewallMode && { appGwFirewallMode: addons.appGwFirewallMode }),
         ...(addons.appGWautoscale && { appGWmaxCount: addons.appGWmaxCount }),
         ...(addons.appgw_privateIp && { privateIpApplicationGateway: addons.appgw_privateIpAddress }),
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
       })
     }),
-    ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.KeyVault') && addons.csisecret === 'akvNew' && { AKVserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
-    ...(addons.csisecret === 'akvNew' && { createKV: true })
+    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
+    ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) })
   }
 
   const preview_params = {
-    // if selected service endpoints & Premium, setup ACR firewall : https://docs.microsoft.com/en-us/azure/container-registry/container-registry-vnet
-    ...(net.serviceEndpointsEnable && net.serviceEndpoints.includes('Microsoft.ContainerRegistry') && addons.registry === 'Premium' && { ACRserviceEndpointFW: apiips_array.length > 0 ? apiips_array[0] : "vnetonly" }),
     ...(addons.gitops !== "none" && { gitops: addons.gitops }),
-    // azure-keyvault-secrets-provider  - commenting out until supported by ARM template
-    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
     ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel })
   }
 
@@ -88,8 +96,8 @@ export default function ({ defaults, updateFn, tabValues, invalidArray, invalidT
     `az deployment group create -g ${deploy.rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
-  const promethous_namespace = 'monitoring'
-  const promethous_helm_release_name = 'monitoring'
+  const prometheus_namespace = 'monitoring'
+  const prometheus_helm_release_name = 'monitoring'
   const nginx_namespace = 'ingress-basic'
   const nginx_helm_release_name = 'nginx-ingress'
 
@@ -115,14 +123,16 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
     //` : '') +
 
     // Get credentials
+    (cluster.apisecurity !== "private" ?
     `\n# Get credentials for your new AKS cluster
-az aks get-credentials -g ${deploy.rg} -n ${aks} ` +
+az aks get-credentials -g ${deploy.rg} -n ${aks} ` : ""
+    ) + 
     // Prometheus
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-kubectl create namespace ${promethous_namespace}
-helm install ${promethous_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${promethous_namespace}` : '') +
+kubectl create namespace ${prometheus_namespace}
+helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}` : '') +
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `\n\n# Create a namespace for your ingress resources
 kubectl create namespace ${nginx_namespace}
@@ -140,33 +150,58 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
       (addons.monitor === 'oss' ?
         `  --set controller.metrics.enabled=true \\
   --set controller.metrics.serviceMonitor.enabled=true \\
-  --set controller.metrics.serviceMonitor.namespace=${promethous_namespace} \\
-  --set controller.metrics.serviceMonitor.additionalLabels.release=${promethous_helm_release_name} \\
+  --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \\
+  --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \\
 ` : '') +
       `  --namespace ${nginx_namespace}` : '') +
     (addons.ingress === 'contour' ? `\n\n# Install Contour Ingress Controller
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 ` : '') +
     // External DNS
-    (addons.dnsZoneId ? `\n\n# Install external-dns
+    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
+
+# Install external-dns
+# external-dns needs permissions to make changes in the Azure DNS server.
+# https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/azure.md#azure-managed-service-identity-msi
+
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdin<<EOF
 {
-  "userAssignedIdentityID": "$(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)",
-  "tenantId": "$(az account show --query tenantId -o tsv)",
-  "useManagedIdentityExtension": true,
-  "subscriptionId": "${addons.dnsZoneId.split('/')[2]}",
-  "resourceGroup": "${addons.dnsZoneId.split('/')[4]}"
+  userAssignedIdentityID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv),
+  tenantId: $(az account show --query tenantId -o tsv),
+  useManagedIdentityExtension: true,
+  subscriptionId: ${addons.dnsZoneId.split('/')[2]},
+  resourceGroup: ${addons.dnsZoneId.split('/')[4]}
 }
 EOF
+${cluster.apisecurity === "private" ? `"` : ``}
+# external-dns manifest (for clusters with RBAC) replacing {{domain-filter}} and {{providers}} values 
+curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
+${cluster.apisecurity === "private" ? 
+  `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-ext-dns.yml" --file  /tmp/aks-ext-dns.yml` 
+: 
+  `kubectl apply -f /tmp/aks-ext-dns.yml`}
 
-curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  | kubectl apply -f -` : '') +
+` : '') +
     // Cert-Manager
-    (addons.certEmail ? `\n\n# Install cert-manager
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml
+    (addons.ingress !== 'none' && addons.certMan ? `
 
+# Install cert-manager
+# https://cert-manager.io/docs/installation/
+# Cannot use 1.6.0 with AGIC https://github.com/jetstack/cert-manager/issues/4547
+
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml
+${cluster.apisecurity === "private" ? `"` : ``}
+
+# Wait for cert-manager to install
 sleep 30s
 
-cat <<EOF | kubectl create -f -
+# cert-manager ACME ClusterIssuer Configuration (client owns the domain)
+# Lets Encrypt production Issuer, using either HTTP01 for external services, or DNS01 for internal
+# https://cert-manager.io/docs/configuration/acme/
+
+cat >/tmp/aks-issuer.yml<<EOF 
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -176,23 +211,29 @@ spec:
     # The ACME server URL
     server: https://acme-v02.api.letsencrypt.org/directory
     # Email address used for ACME registration
-    email: "${addons.certEmail}"
+    email: ${addons.certEmail}
     # Name of a secret used to store the ACME account private key
     privateKeySecretRef:
       name: letsencrypt-prod
     # Enable the HTTP-01 challenge provider
     solvers:
-    #- dns01:
-        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
-        #azureDNS:
-        #  clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
-        #  subscriptionID: ${addons.dnsZoneId.split('/')[2]}
-        #  resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
-        #  hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
+#    - dns01:
+#        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
+#        azureDNS:
+#          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
+#          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
+#          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
+#          managedIdentity:
+#            # client id of the node pool managed identity (can not be set at the same time as resourceID)
+#            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
+#            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
     - http01:
         ingress:
           class: ${(addons.ingress === 'contour' ? 'contour' : (addons.ingress === 'nginx' ? "nginx" : "azure/application-gateway"))}
 EOF
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-issuer.yml" --file  /tmp/aks-issuer.yml` 
+:
+ `kubectl apply -f /tmp/aks-issuer.yml`}
 ` : '')
 
   return (
@@ -203,10 +244,15 @@ EOF
           <Text >Configuration not complete, please correct the tabs with the warning symbol <b>({invalidTabs.join(' & ')})</b> before deploying</Text>
         </MessageBar>
       }
-      <Stack horizontal styles={{ root: { width: "100%" } }} tokens={{ childrenGap: 150 }}>
-        <Stack styles={{ root: { width: "300px" } }}>
-          <TextField label="Resource Group" onChange={(ev, val) => updateFn('rg', val)} required errorMessage={getError(invalidArray, 'rg')} value={deploy.rg} />
+      <Stack horizontal styles={{ root: { width: "100%" } }} tokens={{ childrenGap: 50 }}>
+        <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: "400px" } }}>
+
+          <Separator ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Environment Name & Location</b></div> </Separator>
+
           <TextField label="Cluster Name" onChange={(ev, val) => updateFn('clusterName', val)} required errorMessage={getError(invalidArray, 'clusterName')} value={deploy.clusterName} />
+          <TextField label="Resource Group" onChange={(ev, val) => updateFn('rg', val)} required errorMessage={getError(invalidArray, 'rg')} value={deploy.rg} />
+          <TextField label="Kubernetes version" prefix="Current GA Version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
+
           <Dropdown
             data-testid="deploy-location-Dropdown"
             label="Location"
@@ -230,27 +276,32 @@ EOF
             styles={{ dropdown: { width: 300 } }}
           />
         </Stack>
-        <Stack tokens={{ childrenGap: 20 }} styles={{ root: { width: "450px" } }}>
-          <TextField label="Kubernetes version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
+        <Stack tokens={{ childrenGap: 20 }} styles={{ root: { width: "400px" } }}>
 
-          <Stack.Item styles={{ root: { display: (cluster.apisecurity !== "whitelist" ? "none" : "block") } }} >
-            <TextField label="Initial api server whitelisted IPs/CIDRs  (',' separated)" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+          <Separator ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Environment Access & Build Agents</b></div> </Separator>
+
+          <TextField label="Current IP Address" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+
+          <Stack.Item>
+            <Label>Grant AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
+            <Checkbox disabled={cluster.enable_aad === false || cluster.enableAzureRBAC === false} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
+            <Checkbox disabled={cluster.apisecurity !== "whitelist"}  onChange={(ev, val) => updateFn("clusterIPWhitelist", val)} checked={deploy.clusterIPWhitelist} label="Add current IP to AKS firewall (applicable to AKS IP ranges)"  />
+          </Stack.Item>
+
+          <Stack.Item>
+            <Label>Grant Azure Container Registry (ACR) Push role </Label>
+            <Checkbox disabled={addons.registry === "none"} checked={deploy.acrPushRole} onChange={(ev, v) => updateFn("acrPushRole", v)} label="Assign deployment user 'AcrPush'" />
+          </Stack.Item>
+
+          <Stack.Item>
+            <Label>Grant Key Vault Certificate and Secret Officer role <a target="_target" href="https://docs.microsoft.com/azure/key-vault/general/rbac-guide?tabs=azure-cli#azure-built-in-roles-for-key-vault-data-plane-operations">docs</a></Label>
+            <Checkbox disabled={addons.csisecret !== 'akvNew'} checked={deploy.kvCertSecretRole} onChange={(ev, v) => updateFn("kvCertSecretRole", v)} label="Assign deployment user Certificate and Secret Officer" />
+            <Checkbox disabled={addons.csisecret !== 'akvNew' || !net.vnetprivateend} checked={deploy.kvIPWhitelist} onChange={(ev, v) => updateFn("kvIPWhitelist", v)} label="Add current IP to KeyVault firewall (applicable to private link)" />
           </Stack.Item>
 
         </Stack>
 
-
-
       </Stack>
-      {/*
-          { (addons.ingress === 'none' || !addons.dns || !addons.certMan) &&
-            <MessageBar messageBarType={MessageBarType.info}>To enable the option of deploying a <b>Demo Ecommerce App</b>, go to the <b>Application Requirements</b> tab, and select an ingress option (Application Gateway or Nginx), and complete the FQDN and Certificate options</MessageBar>
-          }
-          <Toggle
-            disabled={(addons.ingress === 'none' || !addons.dns || !addons.certMan)}
-            label={<Text>Do you want to install the <Link target="_a" href="https://github.com/khowling/aks-ecomm-demo">Demo Ecommerce App</Link> into your cluster with a HTTPS FQDN exposed through an Ingress controller</Text>}
-            checked={deploy.demoapp} onText="Yes" offText="No" onChange={(ev, checked) => updateFn("demoapp", checked)} />
-        */}
 
       <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Deploy Cluster</b><Image src="./bicep.png" /> <p style={{ marginLeft: '10px' }}>powered by Bicep</p></div> </Separator>
 
@@ -261,10 +312,14 @@ EOF
         </MessageBar>
 
       }
+      
+      { urlParams.toString() !== "" && 
+        <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>{urlParams.toString()}</a></Text>
+      }
 
       <Pivot >
         <PivotItem headerText="Provision Environment (CLI)"  >
-          <TextField value={deploycmd} rows={deploycmd.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Commands to deploy your fully operational environment" styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline errorMessage={!allok ? "Please complete all items that need attention before running script" : ""} />
+          <TextField data-testid="deploy-deploycmd"  value={deploycmd} rows={deploycmd.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Commands to deploy your fully operational environment" styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline errorMessage={!allok ? "Please complete all items that need attention before running script" : ""} />
           <Text styles={{ root: { marginTop: "2px !important" } }} variant="medium" >
             Open a Linux shell (requires 'az cli' pre-installed), or, open the
             <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
@@ -306,6 +361,7 @@ EOF
 
         </PivotItem>
       </Pivot>
+      
     </Stack>
   )
 }
