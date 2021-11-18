@@ -5,68 +5,77 @@
         "template": "bicep/compiled/main.json"
     },
     "parameters": {
-        "location" : {
-            "value": "westeurope"
-        },
         "resourceName": {
-            "value": "AksPriv"
-        },
-        "kubernetesVersion": {
-            "value": "1.21.1"
-        },
-        "agentCount": {
-            "value": 1
-        },
-        "agentVMSize": {
+            "value": "priv"
+          },
+          "kubernetesVersion": {
+            "value": "1.21.2"
+          },
+          "agentVMSize": {
             "value": "Standard_DS3_v2"
-        },
-        "agentCountMax": {
-            "value": 2
-        },
-        "enable_aad": {
+          },
+          "agentCountMax": {
+            "value": 3
+          },
+          "custom_vnet": {
             "value": true
-        },
-        "enableAzureRBAC" : {
+          },
+          "enable_aad": {
             "value": true
-        },
-        "registries_sku": {
+          },
+          "enableAzureRBAC": {
+            "value": true
+          },
+          "registries_sku": {
             "value": "Premium"
-        },
-        "omsagent": {
+          },
+          "acrPrivatePool": {
             "value": true
-        },
-        "retentionInDays": {
+          },
+          "azureFirewalls": {
+            "value": true
+          },
+          "privateLinks": {
+            "value": true
+          },
+          "omsagent": {
+            "value": true
+          },
+          "retentionInDays": {
             "value": 30
-        },
-        "networkPolicy": {
-            "value": "calico"
-        },
-        "azurepolicy": {
-            "value": "audit"
-        },
-        "availabilityZones": {
-            "value": ["1","2","3"]
-        },
-        "ingressApplicationGateway": {
+          },
+          "networkPolicy": {
+            "value": "azure"
+          },
+          "azurepolicy": {
+            "value": "deny"
+          },
+          "enablePrivateCluster": {
             "value": true
-        },
-        "privateIpApplicationGateway": {
-            "value": "172.21.1.26"
-        },
-        "enablePrivateCluster" : {
+          },
+          "ingressApplicationGateway": {
             "value": true
-        },
-        "byoAKSSubnetId": {
-            "value": "/this/parameter/is/overridden/in/my/script/value/from/secrets"
-        },
-        "byoAGWSubnetId": {
-            "value": "/this/parameter/is/overridden/in/my/script/value/from/secrets"
-        },
-        "serviceCidr" : {
-            "value" : "172.10.0.0/16"
-        },
-        "dnsServiceIP" : {
-            "value" : "172.10.0.10"
-        }
+          },
+          "appGWcount": {
+            "value": 0
+          },
+          "appGWsku": {
+            "value": "WAF_v2"
+          },
+          "appGWmaxCount": {
+            "value": 2
+          },
+          "appgwKVIntegration": {
+            "value": true
+          },
+          "azureKeyvaultSecretsProvider": {
+            "value": true
+          },
+          "createKV": {
+            "value": true
+          },
+          "upgradeChannel": {
+            "value": "stable"
+          }
     }
 }

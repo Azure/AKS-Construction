@@ -70,16 +70,17 @@ resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01
 }
 
 //------------------------------------------------------ Create custom vnet
-param vnetAddressPrefix string = '10.0.0.0/8'
-param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
-param vnetFirewallSubnetAddressPrefix string = '10.241.130.0/26'
-param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
+param vnetAddressPrefix string = '10.240.0.0/16'
+param vnetAksSubnetAddressPrefix string = '10.240.0.0/22'
+param vnetAppGatewaySubnetAddressPrefix string = '10.240.4.0/26'
+param acrAgentPoolSubnetAddressPrefix string = '10.240.4.64/26'
+param bastionSubnetAddressPrefix string = '10.240.4.128/26'
+param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
+param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 
 param privateLinks bool = false
-param privateLinkSubnetAddressPrefix string = '10.3.0.0/16'
-
 param acrPrivatePool bool = false
-param acrAgentPoolSubnetAddressPrefix string = '10.4.0.0/16'
+param bastion bool = false
 
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
@@ -99,6 +100,8 @@ module network './network.bicep' = if (custom_vnet) {
     privateLinkAkvId: privateLinks && createKV ? kv.id : ''
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
+    bastion: bastion
+    bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
   }
 }
 
@@ -629,7 +632,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 |__|\__\  \______/  |______/  |_______|| _| `._____||__| \__| |_______|    |__|     |_______||_______/ */
 
 param dnsPrefix string = '${resourceName}-dns'
-param kubernetesVersion string = '1.20.9'
+param kubernetesVersion string = '1.21.2'
 param enable_aad bool = false
 param aad_tenant_id string = ''
 
@@ -657,9 +660,9 @@ param availabilityZones array = []
 
 param AksPaidSkuForSLA bool = false
 
-param podCidr string = '10.244.0.0/16'
-param serviceCidr string = '10.0.0.0/16'
-param dnsServiceIP string = '10.0.0.10'
+param podCidr string = '10.240.100.0/24'
+param serviceCidr string = '172.10.0.0/16'
+param dnsServiceIP string = '172.10.0.10'
 param dockerBridgeCidr string = '172.17.0.1/16'
 
 param JustUseSystemPool bool = false
