@@ -146,3 +146,4 @@ jobs:
           modules: 'PSRule.Rules.Azure' 
           inputPath: "${{ env.ParamDir }}${{ matrix.files }}"
           prerelease: false
+          baseline: 'Azure.Preview'
