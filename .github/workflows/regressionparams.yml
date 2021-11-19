@@ -85,6 +85,8 @@ jobs:
             Write-Output "Checking for PSrule template link metadata"
             $params=$paramFileContent|ConvertFrom-Json
             if ($null -ne $params.metadata.template.value) {
+              echo $params.metadata.template.value
+
               echo "::set-output name=DOPSRULE::true"
             }
           }
@@ -123,6 +125,10 @@ jobs:
             RG='${{ env.RG }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamDir }}${{ matrix.files }}
 
+      - name: Debug
+        run: |
+          echo "Input path is "${{ matrix.files }}"
+          echo "Do PS Rule is ${{ needs.paramfile.outputs.DOPSRULE}}"
     
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
