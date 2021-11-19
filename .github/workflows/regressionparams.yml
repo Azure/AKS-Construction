@@ -83,12 +83,11 @@ jobs:
             Write-Output $paramFileContent
 
             Write-Output "Checking for PSrule template link metadata"
-            $params=$paramFileContent|ConvertFrom-Json
-            if ($null -ne $params.metadata.template.value) {
-              Write-Output "Temnplate value found"
-              Write-Output $params.metadata.template.value
-              Write-Output $params.metadata.template.value.length
-              
+            $paramfile=$paramFileContent|ConvertFrom-Json
+            if ($null -ne $paramfile.metadata.template) {
+             Write-Output "Temnplate value found"
+              Write-Output $paramfile.metadata.template
+              Write-Output $paramfile.metadata.template.length
 
               echo "::set-output name=DOPSRULE::true"
             }
