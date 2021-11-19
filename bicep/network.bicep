@@ -259,7 +259,7 @@ resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
   }
 }
 
-param bastionHostName string = 'Bastion'
+param bastionHostName string = 'bas-${resourceName}'
 var publicIpAddressName = 'pip-${bastionHostName}'
 
 resource bastionPip 'Microsoft.Network/publicIpAddresses@2020-05-01' = {
