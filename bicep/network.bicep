@@ -258,3 +258,37 @@ resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
     ]
   }
 }
+
+param bastionHostName string = 'Bastion'
+var publicIpAddressName = 'pip-${bastionHostName}'
+
+resource bastionPip 'Microsoft.Network/publicIpAddresses@2020-05-01' = {
+  name: publicIpAddressName
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+}
+
+resource bastionHost 'Microsoft.Network/bastionHosts@2020-05-01' = if(bastion) {
+  name: bastionHostName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'IpConf'
+        properties: {
+          subnet: {
+            id: '${vnet.id}/subnets/${bastion_subnet_name}'
+          }
+          publicIPAddress: {
+            id: bastionPip.id
+          }
+        }
+      }
+    ]
+  }
+}

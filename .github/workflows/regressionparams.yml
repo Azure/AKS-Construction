@@ -134,4 +134,4 @@ jobs:
         with:
           modules: 'PSRule.Rules.Azure' 
           inputPath: "${{ matrix.files }}"
-          prerelease: true
+          prerelease: false

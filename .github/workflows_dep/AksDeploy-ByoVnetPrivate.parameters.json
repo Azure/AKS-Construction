@@ -56,6 +56,9 @@
           "ingressApplicationGateway": {
             "value": true
           },
+          "bastion" : {
+            "value": true
+          },
           "appGWcount": {
             "value": 0
           },
