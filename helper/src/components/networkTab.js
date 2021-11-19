@@ -53,6 +53,11 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                 <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.vnetprivateend} onChange={(ev, v) => updateFn("vnetprivateend", v)} label="Enable Private Link" />
             </Stack.Item>
 
+            <Stack.Item>
+                <Label>Use Azure Bastion to facilitate RDP/SSH public internet inbound access into your virtual network</Label>
+                <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.bastion} onChange={(ev, v) => updateFn("bastion", v)} label="Enable Azure Bastion" />
+            </Stack.Item>
+
             <Separator className="notopmargin" />
 
             <Stack.Item>
@@ -253,13 +258,12 @@ function CustomVNET({ net, addons, updateFn }) {
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" disabled={!net.vnetprivateend} label="Azure Bastion subnet" onChange={(ev, val) => updateFn("bastionSubnetAddressPrefix", val)} value={net.vnetprivateend !== "none" ? net.bastionSubnetAddressPrefix : "No bastion subnet requested"} />
+                        <TextField prefix="Cidr" disabled={!net.bastion} label="Azure Bastion subnet" onChange={(ev, val) => updateFn("bastionSubnetAddressPrefix", val)} value={net.bastion ? net.bastionSubnetAddressPrefix : "No bastion subnet requested"} />
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" disabled={!net.vnetprivateend} label="Private Endpoint subnet" onChange={(ev, val) => updateFn("privateLinkSubnetAddressPrefix", val)} value={net.vnetprivateend ? net.privateLinkSubnetAddressPrefix : "No Private Endpoints requested"} />
                     </Stack.Item>
-
 
                 </Stack>
 
