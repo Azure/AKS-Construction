@@ -4,6 +4,8 @@ const { matchers } = require('playwright-expect');
 // add custom matchers
 expect.extend(matchers);
 
+const chk = '+ label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark' //dom hack
+
 test('networkpolicy-test-defaul-is-azure', async ({ page }) => {
  
   await page.goto('http://localhost:3000/Aks-Construction');
@@ -14,7 +16,8 @@ test('networkpolicy-test-defaul-is-azure', async ({ page }) => {
   
   //It shouldn't yet contain the bastion text
   await page.waitForSelector('[data-testid="deploy-deploycmd"]')
-  var clitextbox = await page.$('[data-testid="deploy-deploycmd"]')
+  const clitextbox = await page.$('[data-testid="deploy-deploycmd"]')
+  await expect(clitextbox).toBeVisible()
   await expect(clitextbox).not.toContainText('bastion');
 
   //But i am expecting customvnet to be there
@@ -23,26 +26,25 @@ test('networkpolicy-test-defaul-is-azure', async ({ page }) => {
   // Click the 4rd Tab in the portal Navigation Pivot (networking) 
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(4)')
 
-
+  //Inspect the bastion checkbox
   await page.waitForSelector('[data-testid="network-bastion-Checkbox"]')
   const bastioncheckbox = await page.$('[data-testid="network-bastion-Checkbox"]')
-  expect(bastioncheckbox).not.toBeChecked();
+  await expect(bastioncheckbox).not.toBeChecked();
+  await expect(bastioncheckbox).toBeVisible();
 
-  //await page.waitForSelector('[data-testid="network-bastion-subnet"]')
-  const bastionsubnet = await page.$('[data-testid="network-bastion-subnet"]')
-  //expect(bastionsubnet).toBeVisible();
-  //expect(bastionsubnet).not.toBeEditable();
-
-  //Enable Bastion
-  //await page.click('[data-testid="network-bastion-Checkbox"]')
+  //Enable Bastion Checkbox
+  //await page.click('[data-testid="network-bastion-Checkbox"]')  //This doesn't work.. :(
+  //await page.check('[data-testid="network-bastion-Checkbox"]')  //This doesn't work.. :(
+  //await bastioncheckbox.check()  //This doesn't work.. :(
+  //await page.click('.ms-StackItem:nth-child(6) > .ms-Checkbox > .ms-Checkbox-label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark') //This works
+  //await page.click('[data-testid="network-bastion-Checkbox"] + label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark') //works
+  await page.click('[data-testid="network-bastion-Checkbox"]' + chk)
+  await expect(bastioncheckbox).toBeChecked();
  
   //Go back to the deploy tab.
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(1)')
 
-  clitextbox = await page.$('[data-testid="deploy-deploycmd"]')
-  await expect(clitextbox).not.toContainText('bastion');
-
-  //But i am expecting bastion to be there
-  await expect(clitextbox).toContainText('bastion=true')
+  //The setting for bastion should be there now
+  await expect(clitextbox).toContainText('bastion');
 
 });
