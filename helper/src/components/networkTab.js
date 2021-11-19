@@ -55,7 +55,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
 
             <Stack.Item>
                 <Label>Use Azure Bastion to facilitate RDP/SSH public internet inbound access into your virtual network</Label>
-                <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.bastion} onChange={(ev, v) => updateFn("bastion", v)} label="Enable Azure Bastion" />
+                <Checkbox inputProps={{ "data-testid": "network-bastion-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.bastion} onChange={(ev, v) => updateFn("bastion", v)} label="Enable Azure Bastion" />
             </Stack.Item>
 
             <Separator className="notopmargin" />
@@ -258,7 +258,7 @@ function CustomVNET({ net, addons, updateFn }) {
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" disabled={!net.bastion} label="Azure Bastion subnet" onChange={(ev, val) => updateFn("bastionSubnetAddressPrefix", val)} value={net.bastion ? net.bastionSubnetAddressPrefix : "No bastion subnet requested"} />
+                        <TextField inputProps={{ "data-testid": "network-bastion-subnet"}} prefix="Cidr" disabled={!net.bastion} label="Azure Bastion subnet" onChange={(ev, val) => updateFn("bastionSubnetAddressPrefix", val)} value={net.bastion ? net.bastionSubnetAddressPrefix : "No bastion subnet requested"} />
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
