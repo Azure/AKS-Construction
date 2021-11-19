@@ -127,7 +127,7 @@ jobs:
 
       - name: Debug
         run: |
-          echo "Input path is "${{ matrix.files }}"
+          echo "Input path is "${{ env.ParamDir }}${{ matrix.files }}"
           echo "Do PS Rule is ${{ needs.paramfile.outputs.DOPSRULE}}"
     
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
