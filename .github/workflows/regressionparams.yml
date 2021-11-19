@@ -105,7 +105,7 @@ jobs:
             $params.parameters.byoAGWSubnetId.value = "${{ secrets.ByoAgwSubnetId }}"
           }
           
-          $params | ConvertTo-Json | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
+          $params | ConvertTo-Json -Depth 4 | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
           
       - name: Azure Login
         uses: Azure/login@v1
