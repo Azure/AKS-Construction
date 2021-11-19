@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "966348497534398"
+      "templateHash": "14876801590545221402"
     }
   },
   "parameters": {
@@ -979,7 +979,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "2928079120291182662"
+              "templateHash": "13806531235751718167"
             }
           },
           "parameters": {
@@ -1045,6 +1045,10 @@
             "bastionSubnetAddressPrefix": {
               "type": "string",
               "defaultValue": ""
+            },
+            "bastionHostName": {
+              "type": "string",
+              "defaultValue": "Bastion"
             }
           },
           "functions": [],
@@ -1102,7 +1106,8 @@
             "privateLinkAcrName": "[format('vnet-pl-acr-{0}', parameters('resourceName'))]",
             "privateDnsAcrLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]",
             "privateLinkAkvName": "[format('vnet-pl-akv-{0}', parameters('resourceName'))]",
-            "privateDnsAkvLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]"
+            "privateDnsAkvLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]",
+            "publicIpAddressName": "[format('pip-{0}', parameters('bastionHostName'))]"
           },
           "resources": [
             {
@@ -1296,6 +1301,44 @@
               "dependsOn": [
                 "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.vaultcore.azure.net')]",
                 "[resourceId('Microsoft.Network/privateEndpoints', variables('privateLinkAkvName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2020-05-01",
+              "name": "[variables('publicIpAddressName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "condition": "[parameters('bastion')]",
+              "type": "Microsoft.Network/bastionHosts",
+              "apiVersion": "2020-05-01",
+              "name": "[parameters('bastionHostName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "IpConf",
+                    "properties": {
+                      "subnet": {
+                        "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('bastion_subnet_name'))]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
               ]
             },
             {
