@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "14876801590545221402"
+      "templateHash": "9319148015451109543"
     }
   },
   "parameters": {
@@ -979,7 +979,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "13806531235751718167"
+              "templateHash": "15111295381841954366"
             }
           },
           "parameters": {
@@ -1048,7 +1048,7 @@
             },
             "bastionHostName": {
               "type": "string",
-              "defaultValue": "Bastion"
+              "defaultValue": "[format('bas-{0}', parameters('resourceName'))]"
             }
           },
           "functions": [],
