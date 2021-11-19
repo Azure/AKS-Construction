@@ -136,7 +136,7 @@ jobs:
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
       - name: PSRule - Analyze Azure parameter file
-        if: ${{ steps.paramfile.outputs.DOPSRULE}} != ''
+        if: ${{ steps.paramfile.outputs.DOPSRULE}} == 'true'
         uses: Microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
