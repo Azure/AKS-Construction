@@ -4,7 +4,7 @@ const { matchers } = require('playwright-expect');
 // add custom matchers
 expect.extend(matchers);
 
-const chk = '+ label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark' //dom hack
+const chk = '+ label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark' //dom hack to get to the checkbox
 
 test('networkpolicy-test-defaul-is-azure', async ({ page }) => {
  

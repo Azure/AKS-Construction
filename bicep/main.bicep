@@ -74,12 +74,16 @@ param vnetAddressPrefix string = '10.240.0.0/16'
 param vnetAksSubnetAddressPrefix string = '10.240.0.0/22'
 param vnetAppGatewaySubnetAddressPrefix string = '10.240.4.0/26'
 param acrAgentPoolSubnetAddressPrefix string = '10.240.4.64/26'
+
+@description('The address range for Azure Bastion in your custom vnet')
 param bastionSubnetAddressPrefix string = '10.240.4.128/26'
 param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
 param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 
 param privateLinks bool = false
 param acrPrivatePool bool = false
+
+@description('Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)')
 param bastion bool = false
 
 module network './network.bicep' = if (custom_vnet) {
