@@ -36,7 +36,7 @@ jobs:
           
       - name: Getting nodes (Run cmd invoke)
         run: |
-          echo "Connecting to $AKSNAME in $RG (output not specified)"
+          echo "Connecting to $AKSNAME in $RG"
           
           az aks command invoke -g $RG -n $AKSNAME --command "
           kubectl get nodes
@@ -65,22 +65,6 @@ jobs:
           echo "Retrieving result from id $commandId"
           nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId)
           echo $nodes
-
-      - name: Install the Vote app (run cmd)
-        env:
-          NAMESP: "default"
-        run: |
-          echo "Connecting to $AKSNAME in $RG"
-
-          cmdout=$(az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get nodes
-          ")
-          echo $cmdout
-
-          echo "Retrieving nodes"
-          nodes=$(az aks command result  -g $RG -n $AKSNAME)
-          echo $nodes
-
 
   deploy-azure-vote-app:
     needs: test-run-cmd
