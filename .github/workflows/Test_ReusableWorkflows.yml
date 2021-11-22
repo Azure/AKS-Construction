@@ -36,7 +36,7 @@ jobs:
         run: |
           az version
           
-      - name: Getting notes (run cmd)
+      - name: Getting nodes (run cmd)
         env:
           NAMESP: "default"
         run: |
@@ -52,9 +52,9 @@ jobs:
         run: |
           echo "Connecting to $AKSNAME in $RG"
 
-          cmdout=$(az aks command invoke -g $RG -n $AKSNAME --no-wait --command "
+          cmdout=$(az aks command invoke -g $RG -n $AKSNAME --no-wait -o json --command "
           kubectl get nodes
-          " -o json)
+          ")
           
           echo $cmdout
 
