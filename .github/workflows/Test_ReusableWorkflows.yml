@@ -54,7 +54,8 @@ jobs:
 
           cmdout=$(az aks command invoke -g $RG -n $AKSNAME --no-wait --command "
           kubectl get nodes
-          ")
+          " -o json)
+          
           echo $cmdout
 
           echo "Retrieving nodes"
