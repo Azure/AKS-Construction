@@ -61,26 +61,35 @@ jobs:
           nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId -o json --query logs)
           echo $nodes > nodes.json
           
+      - name: Getting nodes json (Run cmd retrieve)
+        run: |
+          echo "Connecting to $AKSNAME in $RG"
+          
+          command="kubectl get svc -n $NAMESP azure-vote-front -ojson"
+          logs=$(az aks command invoke -g $RG -n $AKSNAME --query logs --command "${command}")
+          
+          echo $logs
+          
       - name: Save Nodes Json as Artifact
         uses: actions/upload-artifact@v2
         with:
           name: Nodes Config
           path: nodes.json
 
-  deploy-azure-vote-app:
-    needs: test-run-cmd
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
-    with:
-      RG: Automation-Actions-AksDeployCI #$RG
-      AKSNAME: aks-AksPriv
-      AGNAME: agw-AksPriv
-      APPNAME: azure-vote-public
-      #MINIHELMBRANCH: main #main is the default
-      INGRESSTYPE: "PublicLoadBalancer"
-      UNINSTALLAFTERVERIFY: false
-      USERUNCOMMAND: true
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+#  deploy-azure-vote-app:
+#    needs: test-run-cmd
+#    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
+#    with:
+#      RG: Automation-Actions-AksDeployCI #$RG
+#      AKSNAME: aks-AksPriv
+#      AGNAME: agw-AksPriv
+#      APPNAME: azure-vote-public
+#      #MINIHELMBRANCH: main #main is the default
+#      INGRESSTYPE: "PublicLoadBalancer"
+#      UNINSTALLAFTERVERIFY: false
+#      USERUNCOMMAND: true
+#    secrets:
+#      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
 
   # deploy-java-app-certmgr:
