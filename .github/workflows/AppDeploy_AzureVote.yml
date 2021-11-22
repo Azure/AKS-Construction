@@ -149,6 +149,11 @@ jobs:
           az aks command invoke -g $RG -n $AKSNAME --command "
           kubectl get svc -n $NAMESP
           "
+          
+          az aks command invoke -g $RG -n $AKSNAME --command "
+          kubectl get svc -n $NAMESP
+          "
+
 
       - name: Verify App is reachable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
@@ -191,10 +196,15 @@ jobs:
 
           AKSNAME='${{ inputs.AKSNAME}}'
           RG='${{ inputs.RG }}'
-          
+
           echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
+          az aks command invoke -g $RG -n $AKSNAME --command "
+          kubectl get svc -n $NAMESP azure-vote-front
+          "
+          
+          
           $logs=$(az aks command invoke -g $RG -n $AKSNAME -o json --query logs --command "
-          kubectl get svc -n $NAMESP azure-vote-front -ojson
+          kubectl get svc -n $NAMESP  azure-vote-front -ojson
           ")
           
           echo "Run command completed : $logs"
