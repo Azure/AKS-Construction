@@ -55,16 +55,20 @@ jobs:
           commandId=$(az aks command invoke -g $RG -n $AKSNAME -o tsv --query id --command "
           kubectl get nodes -ojson
           ")
-          
-          echo "CmdOut"
-          echo $cmdout
+          echo $commandId
           
           #commandId=$(echo $cmdout | jq -r '.id')
           echo $commandId
           
           echo "Retrieving result from id $commandId"
-          nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId)
-          echo $nodes
+          nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId -o json --query logs)
+          echo $nodes > nodes.json
+          
+      - name: Save Nodes Json as Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Nodes Config
+          path: nodes.json
 
   deploy-azure-vote-app:
     needs: test-run-cmd
