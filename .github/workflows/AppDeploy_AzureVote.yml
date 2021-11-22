@@ -141,7 +141,7 @@ jobs:
 
       - name: Verify App is reachable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
-        if: inputs.INGRESSTYPE == 'PublicLoadBalancer'
+        if: inputs.INGRESSTYPE == 'PublicLoadBalancer' && inputs.USERUNCOMMAND == false
         env:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}"
@@ -151,6 +151,39 @@ jobs:
           
           pubIp=$(kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo "Public ip : $pubIp"
+          
+          counter=1
+          while [ $counter -le 20 ] && [ "$respcode" != "200" ]
+          do
+            echo "curl $pubIp [$counter]"
+            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
+            echo $respcode   
+            if [ "$respcode" != "200" ];
+            then
+                echo "going to wait another 30s [$counter] [$(date +"%T")]"
+                ((counter++))
+                sleep 30s
+            fi
+          done
+          
+          curl $pubIp
+
+      - name: Verify App is reachable (run cmd)
+        #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
+        if: inputs.INGRESSTYPE == 'PublicLoadBalancer' && inputs.USERUNCOMMAND == true
+        env:
+          NAMESP: "default"
+          APPNAME: "${{ inputs.APPNAME }}"
+        run: |
+          echo "Waiting on IP allocation"
+          sleep 2m
+          
+          az aks command invoke -g $RG -n $AKSNAME --command "
+          pubIp=$(kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}'); echo $pubIp
+          "
+
+          pubIp=$(az aks command result  -g $RG -n $AKSNAME)
+          echo $result
           
           counter=1
           while [ $counter -le 20 ] && [ "$respcode" != "200" ]
