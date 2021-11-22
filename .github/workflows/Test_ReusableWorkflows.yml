@@ -1,6 +1,6 @@
 # Workflow is for testing reusable workflows to expedite the developer inner loop.
 
-name: Test-Java App Deploy
+name: Test Harness for Reusable workflows
 
 on:
   workflow_dispatch: 
