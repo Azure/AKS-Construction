@@ -56,14 +56,15 @@ jobs:
         run: |
           echo "Connecting to $AKSNAME in $RG"
 
-          cmdout=$(az aks command invoke -g $RG -n $AKSNAME --no-wait -o json --command "
-          kubectl get nodes -ojson
+          cmdout=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "
+          kubectl get nodes
           ")
           
           echo $cmdout
           
           commandId=$(echo $cmdout | jq -r '.id')
-
+          echo $commandId
+          
           echo "Retrieving result from id $commandId"
           nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId)
           echo $nodes
