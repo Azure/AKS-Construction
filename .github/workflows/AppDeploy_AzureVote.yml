@@ -11,25 +11,24 @@ on:
         required: true
         type: string
       APPNAME:
-        default: "azurevote"
         required: true
         type: string
       NAMESPACE:
         default: "default"
-        required: true
+        required: false
         type: string
       INGRESSTYPE:
         default: "PublicLoadBalancer"
-        required: true
+        required: false
         type: string  # - 'PublicLoadBalancer'/InternalLoadBalancer/AGIC-Public-Ingress/AGIC-Private-Ingress
       UNINSTALLAFTERVERIFY:
         description: 'Uninstall app after tests  [yes|no]'  
         type: boolean
-        default: true
+        default: false
         required: true
       MINIHELMBRANCH:
         default: "main"
-        required: true
+        required: false
         type: string
         description: "The branch of MINIHELM to use"
     secrets:
