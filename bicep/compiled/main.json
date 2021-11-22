@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "9319148015451109543"
+      "templateHash": "11206451883072178501"
     }
   },
   "parameters": {
@@ -60,7 +60,10 @@
     },
     "bastionSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.4.128/26"
+      "defaultValue": "10.240.4.128/26",
+      "metadata": {
+        "description": "The address range for Azure Bastion in your custom vnet"
+      }
     },
     "privateLinkSubnetAddressPrefix": {
       "type": "string",
@@ -80,7 +83,10 @@
     },
     "bastion": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)"
+      }
     },
     "dnsZoneId": {
       "type": "string",
