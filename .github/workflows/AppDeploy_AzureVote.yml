@@ -203,7 +203,7 @@ jobs:
           "
           
           
-          $logs=$(az aks command invoke -g $RG -n $AKSNAME -o json --query logs --command "
+          $logs=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "
           kubectl get svc -n $NAMESP  azure-vote-front -ojson
           ")
           
