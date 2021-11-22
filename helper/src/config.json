@@ -58,7 +58,6 @@
             "dnsZoneId": "",
             "registry": "none",
             "acrPrivatePool": false,
-            "bastion": false,
             "podid": false,
             "podscale": false,
             "monitor": "none",
@@ -71,6 +70,7 @@
         "net": {
             "networkPlugin": "azure",
             "afw": false,
+            "bastion": false,
             "vnetprivateend": false,
             "vnet_opt": "default",
             "byoAKSSubnetId": "",
@@ -331,7 +331,6 @@
                             ],
                             "acrPrivatePool": false,
                             "azurepolicy": "audit",
-                            "bastion": false,
                             "appgwKVIntegration": [
                                 {
                                     "page": "addons",
@@ -348,7 +347,8 @@
                         "net": {
                             "vnet_opt": "custom",
                             "vnetprivateend": false,
-                            "afw": false
+                            "afw": false,
+                            "bastion": false
                         }
                     }
                 },

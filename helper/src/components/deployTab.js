@@ -30,8 +30,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
          custom_vnet: true, 
          ...serviceparams, 
          ...aksvnetparams,
-         ...(addons.bastion !== defaults.addons.bastion && {bastion: addons.bastion}),
-         ...(addons.bastion && defaults.net.bastionSubnetAddressPrefix !== net.bastionSubnetAddressPrefix && {bastionSubnetAddressPrefix: net.bastionSubnetAddressPrefix})
+         ...(net.bastion !== defaults.net.bastion && {bastion: net.bastion}),
+         ...(net.bastion && defaults.net.bastionSubnetAddressPrefix !== net.bastionSubnetAddressPrefix && {bastionSubnetAddressPrefix: net.bastionSubnetAddressPrefix})
        }),
     ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...serviceparams }),
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),

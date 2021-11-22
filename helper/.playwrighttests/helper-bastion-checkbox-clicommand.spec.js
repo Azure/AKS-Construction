@@ -45,6 +45,6 @@ test('networkpolicy-test-defaul-is-azure', async ({ page }) => {
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(1)')
 
   //The setting for bastion should be there now
-  await expect(clitextbox).toContainText('bastion');
-
+  const clitextboxrevisted = await page.$('[data-testid="deploy-deploycmd"]')
+  await expect(clitextboxrevisted).toContainText('bastion');
 });
