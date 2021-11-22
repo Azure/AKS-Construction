@@ -26,6 +26,12 @@ on:
         description: 'Uninstall app after tests  [yes|no]'  
         type: boolean
         default: true
+        required: true
+      MINIHELMBRANCH:
+        default: "main"
+        required: true
+        type: string
+        description: "The branch of MINIHELM to use"
     secrets:
       AZURE_CREDENTIALS:
         required: true
