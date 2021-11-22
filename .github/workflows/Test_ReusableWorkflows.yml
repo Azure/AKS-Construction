@@ -30,14 +30,41 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
+      - name: Verify Az Command
+        env:
+          NAMESP: "default"
+        run: |
+          az version
+          
+      - name: Getting notes (run cmd)
+        env:
+          NAMESP: "default"
+        run: |
+          echo "Connecting to $AKSNAME in $RG"
+
+          az aks command invoke -g $RG -n $AKSNAME --command "
+          kubectl get nodes
+          "
+          
+      - name: Getting nodes --nowait (run cmd)
+        env:
+          NAMESP: "default"
+        run: |
+          echo "Connecting to $AKSNAME in $RG"
+
+          cmdout=$(az aks command invoke -g $RG -n $AKSNAME --no-wait --command "
+          kubectl get nodes
+          ")
+          echo $cmdout
+
+          echo "Retrieving nodes"
+          nodes=$(az aks command result  -g $RG -n $AKSNAME -i $cmdout)
+          echo $nodes
+
       - name: Install the Vote app (run cmd)
         env:
           NAMESP: "default"
-          
         run: |
-          echo "AZ CLI Version"
-          echo $(az version)
-
           echo "Connecting to $AKSNAME in $RG"
 
           cmdout=$(az aks command invoke -g $RG -n $AKSNAME --command "
