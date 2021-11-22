@@ -134,6 +134,21 @@ jobs:
           az aks command invoke -g $RG -n $AKSNAME --command "
           helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.1.0.tgz --set service.azureLbInternal=false
           "
+      - name: Checking deployment (Run cmd invoke)
+        if: inputs.USERUNCOMMAND == true
+        env:
+          NAMESP: "default"
+        run: |
+          RG='${{ inputs.RG }}'
+          APPNAME='${{ inputs.APPNAME }}'
+
+          az aks command invoke -g $RG -n $AKSNAME --command "
+          kubectl get po -n $NAMESP
+          "
+          
+          az aks command invoke -g $RG -n $AKSNAME --command "
+          kubectl get svc -n $NAMESP
+          "
 
       - name: Verify App is reachable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
