@@ -197,7 +197,7 @@ ${cluster.apisecurity === "private" ?
 # Cannot use 1.6.0 with AGIC https://github.com/jetstack/cert-manager/issues/4547
 
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${addons.ingress === 'appgw' ? 'v1.5.3' : 'v1.6.0'}/cert-manager.yaml
 ${cluster.apisecurity === "private" ? `"` : ``}
 
 # Wait for cert-manager to install
