@@ -177,6 +177,9 @@ jobs:
         run: |
           echo "Waiting on IP allocation"
           sleep 2m
+
+          AKSNAME='${{ inputs.AKSNAME}}'
+          RG='${{ inputs.RG }}'
           
           az aks command invoke -g $RG -n $AKSNAME --command "
           pubIp=$(kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}'); echo $pubIp
