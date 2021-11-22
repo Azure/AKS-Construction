@@ -36,14 +36,14 @@ jobs:
           
         run: |
           echo "AZ CLI Version"
-          echo az version
+          echo $(az version)
 
           echo "Connecting to $AKSNAME in $RG"
 
-          $cmd = $(az aks command invoke -g $RG -n $AKSNAME --command "
+          cmdout=$(az aks command invoke -g $RG -n $AKSNAME --command "
           kubectl get nodes
           ")
-          echo $cmd
+          echo $cmdout
 
           echo "Retrieving nodes"
           nodes=$(az aks command result  -g $RG -n $AKSNAME)
