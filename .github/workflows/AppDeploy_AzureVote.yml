@@ -103,22 +103,35 @@ jobs:
           APPNAME='${{ inputs.APPNAME }}'
           AGNAME='${{ inputs.AGNAME}}'
           
-          helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER}",letsEncrypt.secretname="${APPNAME}-tls" --dry-run
-          helm upgrade --install $APPNAME ./helmcharts/samples/javatlsappv3 --set nameOverride="${APPNAME}",frontendCertificateSource="${CERTSOURCE}",csisecrets.vaultname="${KVNAMELOWER}",csisecrets.tenantId="${KVTENANT}",csisecrets.clientId="${CSISECRET_CLIENTID}",dnsname="${DNSNAME}",appgw.frontendCertificateName="${APPNAME}-fe",appgw.rootCertificateName="${APPNAME}",letsEncrypt.issuer="${LEISSUER},letsEncrypt.secretname="${APPNAME}-tls""
+          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set service.azureLbInternal="false" --dry-run
+          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set service.azureLbInternal="false"
 
       - name: Verify App is reachable
         env:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}"
-          URLTOHIT: "https://${{ inputs.APPNAME }}.${{ inputs.DNSDOMAIN }}"
         run: |
-          echo "curl $URLTOHIT [$(date +"%T")]"
-          curlcommand="curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URLTOHIT -v --trace-time"
-          respcode=$($curlcommand || sleep 1m; $curlcommand)
-              
-          echo $respcode   
+          echo "Waiting on IP allocation"
+          sleep 1m
           
-          curl --insecure $URLTOHIT
+          pubIp=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Public ip : $pubIp"
+          
+          counter=1
+          while [ $counter -le 20 ] && [ "$respcode" != "200" ]
+          do
+            echo "curl $pubIp [$counter]"
+            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
+            echo $respcode   
+            if [ "$respcode" != "200" ];
+            then
+                echo "going to wait another 30s [$counter] [$(date +"%T")]"
+                ((counter++))
+                sleep 30s
+            fi
+          done
+          
+          curl $pubIp
 
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY
