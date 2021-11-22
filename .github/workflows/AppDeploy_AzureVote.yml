@@ -194,10 +194,12 @@ jobs:
           
           echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
           $logs=$(az aks command invoke -g $RG -n $AKSNAME -o json --query logs --command "
-          kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          kubectl get svc -n $NAMESP azure-vote-front -ojson
           ")
           
           echo "Run command completed : $logs"
+          
+          echo $($logs | jq -r '.status.loadBalancer.ingress')
 
           pubIp=$logs
           echo $pubIp
