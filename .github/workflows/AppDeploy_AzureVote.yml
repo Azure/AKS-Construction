@@ -140,7 +140,7 @@ jobs:
           NAMESP: "default"
         run: |
           RG='${{ inputs.RG }}'
-          APPNAME='${{ inputs.APPNAME }}'
+          AKSNAME='${{ inputs.AKSNAME}}'
 
           az aks command invoke -g $RG -n $AKSNAME --command "
           kubectl get po -n $NAMESP
