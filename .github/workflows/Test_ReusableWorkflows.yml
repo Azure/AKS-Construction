@@ -40,9 +40,13 @@ jobs:
         env:
           NAMESP: "default"
         run: |
-          echo "Connecting to $AKSNAME in $RG"
-
+          echo "Connecting to $AKSNAME in $RG (output not specified)"
           az aks command invoke -g $RG -n $AKSNAME --command "
+          kubectl get nodes
+          "
+          
+          echo "Connecting to $AKSNAME in $RG (json output)"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "
           kubectl get nodes
           "
           
