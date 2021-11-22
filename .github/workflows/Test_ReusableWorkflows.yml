@@ -35,15 +35,22 @@ jobs:
           NAMESP: "default"
           
         run: |
+          echo "AZ CLI Version"
+          echo az version
+
+          echo "Connecting to $AKSNAME in $RG"
+
           az aks command invoke -g $RG -n $AKSNAME --command "
           kubectl get nodes
           "
 
+          echo "Retrieving nodes"
           nodes=$(az aks command result  -g $RG -n $AKSNAME)
           echo $nodes
 
 
   deploy-azure-vote-app:
+    needs: test-run-cmd
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: Automation-Actions-AksDeployCI #$RG
