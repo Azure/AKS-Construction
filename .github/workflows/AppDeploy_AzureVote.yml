@@ -124,9 +124,7 @@ jobs:
         if: inputs.USERUNCOMMAND == true
         env:
           NAMESP: "default"
-          APPNAME: "${{ inputs.APPNAME }}" #Using backend cert common name
-          DOMAINSUFFIX: "${{ inputs.DNSDOMAIN }}"
-          
+          APPNAME: "${{ inputs.APPNAME }}"
         run: |
           AKSNAME='${{ inputs.AKSNAME}}'
           RG='${{ inputs.RG }}'
@@ -136,7 +134,6 @@ jobs:
           az aks command invoke -g $RG -n $AKSNAME --command "
           helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.1.0.tgz --set service.azureLbInternal=false
           "
-
 
       - name: Verify App is reachable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
@@ -180,11 +177,13 @@ jobs:
           AKSNAME='${{ inputs.AKSNAME}}'
           RG='${{ inputs.RG }}'
           
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          pubIp=$(kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}'); echo $pubIp
-          "
+          $logs=$(az aks command invoke -g $RG -n $AKSNAME -o json --query logs --command "
+          kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          ")
+          
+          echo $logs
 
-          pubIp=$(az aks command result  -g $RG -n $AKSNAME)
+          pubIp=$logs
           echo $pubIp
           
           counter=1
