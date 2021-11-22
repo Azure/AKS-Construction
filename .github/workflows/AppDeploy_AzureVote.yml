@@ -177,11 +177,12 @@ jobs:
           AKSNAME='${{ inputs.AKSNAME}}'
           RG='${{ inputs.RG }}'
           
+          echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
           $logs=$(az aks command invoke -g $RG -n $AKSNAME -o json --query logs --command "
           kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           ")
           
-          echo $logs
+          echo "Run command completed : $logs"
 
           pubIp=$logs
           echo $pubIp
