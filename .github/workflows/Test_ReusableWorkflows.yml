@@ -57,9 +57,6 @@ jobs:
           ")
           echo $commandId
           
-          #commandId=$(echo $cmdout | jq -r '.id')
-          echo $commandId
-          
           echo "Retrieving result from id $commandId"
           nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId -o json --query logs)
           echo $nodes > nodes.json
