@@ -266,7 +266,8 @@
                         "net": {
                             "vnet_opt": "default",
                             "vnetprivateend": false,
-                            "afw": false
+                            "afw": false,
+                            "bastion": false
                         }
                     }
                 },
@@ -439,13 +440,13 @@
                                 }
                             ],
                             "azurepolicy": "deny",
-                            "bastion": true,
                             "csisecret": "akvNew"
                         },
                         "net": {
                             "vnet_opt": "custom",
                             "vnetprivateend": true,
-                            "afw": true
+                            "afw": true,
+                            "bastion": true
                         }
                     }
                 }
