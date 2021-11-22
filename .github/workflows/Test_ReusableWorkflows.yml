@@ -26,6 +26,7 @@ jobs:
       #MINIHELMBRANCH: main #main is the default
       INGRESSTYPE: "PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: false
+      USERUNCOMMAND: true
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 

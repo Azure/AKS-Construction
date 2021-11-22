@@ -31,6 +31,11 @@ on:
         required: false
         type: string
         description: "The branch of MINIHELM to use"
+      USERUNCOMMAND:
+        description: 'Use the AKS Run Command to install App'  
+        type: boolean
+        default: true
+        required: true
     secrets:
       AZURE_CREDENTIALS:
         required: true
@@ -56,6 +61,7 @@ jobs:
           allow-no-subscriptions: false
 
       - name: AKS Connect
+        if: inputs.USERUNCOMMAND == false
         env:
           RG: "${{ inputs.RG }}"
           AKSNAME: "${{ inputs.AKSNAME }}"
@@ -63,11 +69,13 @@ jobs:
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
       - name: Kubectl
+        if: inputs.USERUNCOMMAND == false
         run: |
           #sudo az aks install-cli
           kubectl version
 
       - name: Grab Helm chart to install
+        if: inputs.USERUNCOMMAND == false
         run: |
           BRANCH='${{ inputs.MINIHELMBRANCH }}'
           echo "$BRANCH"
@@ -80,6 +88,7 @@ jobs:
           git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
           
       - name: Check if App Helm Chart already installed
+        if: inputs.USERUNCOMMAND == false
         env:
           APPNAME: "${{ inputs.APPNAME }}"          
         run: |
@@ -95,6 +104,7 @@ jobs:
           fi
 
       - name: Install the Vote app
+        if: inputs.USERUNCOMMAND == false
         env:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}" #Using backend cert common name
@@ -110,6 +120,24 @@ jobs:
           
           helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set service.azureLbInternal="false" --dry-run
           helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set service.azureLbInternal="false"
+
+      - name: Install the Vote app
+        if: inputs.USERUNCOMMAND == true
+        env:
+          NAMESP: "default"
+          APPNAME: "${{ inputs.APPNAME }}" #Using backend cert common name
+          DOMAINSUFFIX: "${{ inputs.DNSDOMAIN }}"
+          
+        run: |
+          AKSNAME='${{ inputs.AKSNAME}}'
+          RG='${{ inputs.RG }}'
+          APPNAME='${{ inputs.APPNAME }}'
+          #AGNAME='${{ inputs.AGNAME}}'
+          
+          az aks command invoke -g $RG -n $AKSNAME --command "
+          helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.1.0.tgz --set service.azureLbInternal=false
+          "
+
 
       - name: Verify App is reachable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
