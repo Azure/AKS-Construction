@@ -30,34 +30,30 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-      - name: Verify Az Command
-        env:
-          NAMESP: "default"
-        run: |
-          az version
           
-      - name: Getting nodes (run cmd)
-        env:
-          NAMESP: "default"
+      - name: Verify Az Version
+        run: az version
+          
+      - name: Getting nodes (Run cmd invoke)
         run: |
           echo "Connecting to $AKSNAME in $RG (output not specified)"
+          
           az aks command invoke -g $RG -n $AKSNAME --command "
           kubectl get nodes
           "
           
           echo "Connecting to $AKSNAME in $RG (json output)"
+          
           az aks command invoke -g $RG -n $AKSNAME -o json --command "
           kubectl get nodes
           "
           
-      - name: Getting nodes json (run cmd)
-        env:
-          NAMESP: "default"
+      - name: Getting nodes json (Run cmd retrieve)
         run: |
           echo "Connecting to $AKSNAME in $RG"
 
           cmdout=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "
-          kubectl get nodes
+          kubectl get nodes -ojson
           ")
           
           echo "CmdOut"
