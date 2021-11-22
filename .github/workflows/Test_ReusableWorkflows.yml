@@ -61,7 +61,7 @@ jobs:
           nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId -o json --query logs)
           echo $nodes > nodes.json
           
-      - name: Getting nodes json (Run cmd retrieve)
+      - name: Getting service ip (Run cmd retrieve)
         run: |
           echo "Connecting to $AKSNAME in $RG"
           
