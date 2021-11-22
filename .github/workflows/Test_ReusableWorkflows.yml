@@ -61,14 +61,14 @@ jobs:
           nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId -o json --query logs)
           echo $nodes > nodes.json
           
-      - name: Getting service ip (Run cmd retrieve)
+      - name: Getting service json (Run cmd retrieve)
         run: |
           echo "Connecting to $AKSNAME in $RG"
           
           command="kubectl get svc -n $NAMESP azure-vote-front -ojson"
           logs=$(az aks command invoke -g $RG -n $AKSNAME --query logs --command "${command}")
           
-          echo $logs
+          echo $logs | jq -r '.status.loadBalancer.ingress[0].ip'
           
       - name: Save Nodes Json as Artifact
         uses: actions/upload-artifact@v2
