@@ -204,7 +204,7 @@ jobs:
           
           
           $logs=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "
-          kubectl get svc -n $NAMESP  azure-vote-front -ojson
+          kubectl get svc -n $NAMESP azure-vote-front
           ")
           
           echo "Run command completed : $logs"
