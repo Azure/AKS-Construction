@@ -60,6 +60,7 @@ jobs:
           kubectl get nodes
           ")
           
+          echo "CmdOut"
           echo $cmdout
           
           commandId=$(echo $cmdout | jq -r '.id')
