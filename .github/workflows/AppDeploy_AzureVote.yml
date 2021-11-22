@@ -19,7 +19,7 @@ on:
         required: true
         type: string
       INGRESSTYPE:
-        default: "default"
+        default: "PublicLoadBalancer"
         required: true
         type: string  # - 'PublicLoadBalancer'/InternalLoadBalancer/AGIC-Public-Ingress/AGIC-Private-Ingress
       UNINSTALLAFTERVERIFY:
@@ -107,6 +107,8 @@ jobs:
           helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set service.azureLbInternal="false"
 
       - name: Verify App is reachable
+        #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
+        if: inputs.INGRESSTYPE == 'PublicLoadBalancer'
         env:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}"
@@ -114,7 +116,7 @@ jobs:
           echo "Waiting on IP allocation"
           sleep 1m
           
-          pubIp=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          pubIp=$(kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo "Public ip : $pubIp"
           
           counter=1
