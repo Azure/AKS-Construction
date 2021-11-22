@@ -16,6 +16,33 @@ env:
   RG: "Automation-Actions-AksDeployCI"
 
 jobs:
+  test-run-cmd:
+    runs-on: ubuntu-latest
+    env:
+      AKSNAME: aks-AksPriv
+      AGNAME: agw-AksPriv
+      APPNAME: azure-vote-public
+    steps:
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: false
+          environment: azurecloud
+          allow-no-subscriptions: false
+      - name: Install the Vote app (run cmd)
+        env:
+          NAMESP: "default"
+          
+        run: |
+          az aks command invoke -g $RG -n $AKSNAME --command "
+          kubectl get nodes
+          "
+
+          nodes=$(az aks command result  -g $RG -n $AKSNAME)
+          echo $nodes
+
+
   deploy-azure-vote-app:
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
@@ -29,6 +56,7 @@ jobs:
       USERUNCOMMAND: true
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
 
   # deploy-java-app-certmgr:
   #   uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
