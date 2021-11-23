@@ -198,27 +198,18 @@ jobs:
           RG='${{ inputs.RG }}'
 
           echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get svc -n $NAMESP azure-vote-front
-          "
-          
-          
-          $logs=$(az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get svc -n $NAMESP azure-vote-front -ojson
-          ")
-          
-          echo "Run command completed : $logs"
-          
-          echo $($logs | jq -r '.status.loadBalancer.ingress')
 
-          pubIp=$logs
-          echo $pubIp
+          command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          
+          ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
+          echo "IPAddress is $ipAddress"
           
           counter=1
           while [ $counter -le 20 ] && [ "$respcode" != "200" ]
           do
             echo "curl $pubIp [$counter]"
-            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
+            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $ipAddress)
             echo $respcode   
             if [ "$respcode" != "200" ];
             then
@@ -228,7 +219,7 @@ jobs:
             fi
           done
           
-          curl $pubIp
+          curl $ipAddress
 
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY
