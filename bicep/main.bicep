@@ -685,7 +685,6 @@ var systemPoolPresets = {
     minCount: 1
     maxCount: 3
     enableAutoScaling: true
-    //osDiskType: 'Ephemeral' //default
   }
   'Standard' : {
     vmSize: 'Standard_D4s_v3'
@@ -693,7 +692,13 @@ var systemPoolPresets = {
     minCount: 2
     maxCount: 3
     enableAutoScaling: true
-    //osDiskType: 'Ephemeral' //default
+  }
+  'JustSystemPool' : {
+    vmSize: agentVMSize
+    count: agentCount
+    minCount: autoScale ? agentCount : json('null')
+    maxCount: autoScale ? agentCountMax : json('null')
+    enableAutoScaling: autoScale
   }
 }
 
@@ -713,7 +718,7 @@ var systemPoolBase = {
   ]
 }
 
-var agentPoolProfileSystem = union(systemPoolBase, systemPoolPresets[SystemPoolType])
+var agentPoolProfileSystem = JustUseSystemPool ? union(systemPoolBase, systemPoolPresets['JustSystemPool']) : union(systemPoolBase, systemPoolPresets[SystemPoolType])
 
 var agentPoolProfileUser = {
   name: 'npuser01'
