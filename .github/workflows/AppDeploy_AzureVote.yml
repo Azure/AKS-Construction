@@ -209,7 +209,12 @@ jobs:
           while [ $counter -le 20 ] && [ "$respcode" != "200" ]
           do
             echo "curl $ipAddress for response code [$counter]"
-            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $ipAddress)
+
+            command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+            respcode=$(echo $cmdOut | jq -r '.logs')
+
+            #respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $ipAddress)
             echo $respcode   
             if [ "$respcode" != "200" ];
             then
