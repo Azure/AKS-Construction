@@ -24,6 +24,10 @@ jobs:
       APPNAME: azure-vote-public
       NAMESP: default
     steps:
+              
+      - name: File system prep
+        run: mkdir jsonout
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -35,7 +39,7 @@ jobs:
       - name: Verify Az Version
         run: az version
           
-      - name: Getting nodes (Run cmd invoke)
+      - name: Getting nodes (Invoke)
         run: |
           echo "Connecting to $AKSNAME in $RG"
           
@@ -48,11 +52,8 @@ jobs:
           az aks command invoke -g $RG -n $AKSNAME -o json --command "
           kubectl get nodes
           "
-          
-      - name: File system prep
-        run: mkdir jsonout
 
-      - name: Getting nodes json (Run cmd retrieve)
+      - name: Getting nodes json (Invoke and Result)
         run: |
           echo "Connecting to $AKSNAME in $RG"
 
@@ -65,7 +66,7 @@ jobs:
           nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId -o json --query logs)
           echo $nodes > jsonout/nodes.json
           
-      - name: Getting service json (Run cmd retrieve)
+      - name: Getting service Ip via jsonpath
         run: |
           echo "Connecting to $AKSNAME in $RG"
           
@@ -74,7 +75,7 @@ jobs:
           
           echo $loadbalancerIngressIp 
 
-      - name: Getting service json (Run cmd retrieve) + jq
+      - name: Getting service json via jq
         run: |
           echo "Connecting to $AKSNAME in $RG"
           
@@ -85,10 +86,10 @@ jobs:
           #Debug
           echo $cmdOut > jsonout/svc.json
           
-          $ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
+          ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
           echo "IPAddress is $ipAddress"
           
-      - name: Save Json as Artifact
+      - name: Save Json output as Artifact
         if: always()
         uses: actions/upload-artifact@v2
         with:
