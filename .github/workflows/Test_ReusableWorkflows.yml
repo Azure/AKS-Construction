@@ -49,6 +49,9 @@ jobs:
           kubectl get nodes
           "
           
+      - name: File system prep
+        run: mkdir jsonout
+
       - name: Getting nodes json (Run cmd retrieve)
         run: |
           echo "Connecting to $AKSNAME in $RG"
@@ -60,7 +63,7 @@ jobs:
           
           echo "Retrieving result from id $commandId"
           nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId -o json --query logs)
-          echo $nodes > nodes.json
+          echo $nodes > jsonout/nodes.json
           
       - name: Getting service json (Run cmd retrieve)
         run: |
@@ -79,15 +82,18 @@ jobs:
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
           
-          echo $cmdOut > svc.json
-          $cmdOut | jq -rnf '.logs.status.loadBalancer.ingress[0].ip'
+          #Debug
+          echo $cmdOut > jsonout/svc.json
+          
+          $ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
+          echo "IPAddress is $ipAddress"
           
       - name: Save Json as Artifact
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: Json out
-          path: svc.json
+          path: jsonout/*.json
 
   deploy-azure-vote-app:
     #needs: test-run-cmd
