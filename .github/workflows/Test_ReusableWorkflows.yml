@@ -76,12 +76,13 @@ jobs:
           echo "Connecting to $AKSNAME in $RG"
           
           command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
-          logs=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          echo $cmdOut
           
-          echo $logs > svc.json
-          $logs | jq -rnf '.status.loadBalancer.ingress[0].ip'
+          echo $cmdOut > svc.json
+          $cmdOut | jq -rnf '.logs.status.loadBalancer.ingress[0].ip'
           
-      - name: Save Nodes Json as Artifact
+      - name: Save Json as Artifact
         if: always()
         uses: actions/upload-artifact@v2
         with:
