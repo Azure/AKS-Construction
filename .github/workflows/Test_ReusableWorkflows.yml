@@ -76,7 +76,7 @@ jobs:
         run: |
           echo "Connecting to $AKSNAME in $RG"
           
-          command="kubectl get svc azure-vote-front -n $NAMESP"
+          command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
           logs=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           
           echo $logs > svc.json
