@@ -184,7 +184,7 @@ jobs:
           
           curl $pubIp
 
-      - name: Verify App is reachable (run cmd)
+      - name: Verify Public LB App is reachable via IP (run cmd)
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
         if: inputs.INGRESSTYPE == 'PublicLoadBalancer' && inputs.USERUNCOMMAND == true
         env:
@@ -208,7 +208,7 @@ jobs:
           counter=1
           while [ $counter -le 20 ] && [ "$respcode" != "200" ]
           do
-            echo "curl $pubIp [$counter]"
+            echo "curl $ipAddress for response code [$counter]"
             respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $ipAddress)
             echo $respcode   
             if [ "$respcode" != "200" ];
@@ -219,6 +219,7 @@ jobs:
             fi
           done
           
+          echo "curl $ipAddress for content [$counter attempts for 200]"
           curl $ipAddress
 
       - name: Cleanup app
