@@ -1,5 +1,7 @@
 param resourceName string
 param location string
+param shortLocation string
+param environment string
 param workspaceDiagsId string = ''
 param fwSubnetId string
 param vnetAksSubnetAddressPrefix string
@@ -7,7 +9,7 @@ param certManagerFW bool = false
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 
-var firewallPublicIpName = 'pip-afw-${resourceName}'
+var firewallPublicIpName = '${environment}-pip-${shortLocation}-${resourceName}-fw-01'
 resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = {
   name: firewallPublicIpName
   location: location
@@ -59,7 +61,7 @@ resource fwDiags 'microsoft.insights/diagnosticSettings@2017-05-01-preview' = if
 @description('Whitelist dnsZone name (required by cert-manager validation process)')
 param appDnsZoneName string = ''
 
-var fw_name = 'afw-${resourceName}'
+var fw_name = '${environment}-fw-${shortLocation}-${resourceName}-01'
 resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
   name: fw_name
   location: location

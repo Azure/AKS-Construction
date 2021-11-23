@@ -1,5 +1,7 @@
 param resourceName string
 param location string
+param shortLocation string
+param environment string
 param vnetAddressPrefix string
 //param vnetInternalLBSubnetAddressPrefix string = '10.241.128.0/24'
 param vnetFirewallSubnetAddressPrefix string = ''
@@ -71,7 +73,7 @@ module calcAzFwIp './calcAzFwIp.bicep' = if (azureFirewalls) {
   }
 }
 
-var routeFwTableName = 'rt-afw-${resourceName}'
+var routeFwTableName = '${environment}-route-${shortLocation}-${resourceName}-01'
 resource vnet_udr 'Microsoft.Network/routeTables@2021-02-01' = if (azureFirewalls) {
   name: routeFwTableName
   location: location
@@ -115,7 +117,7 @@ var subnets_4 = bastion ? concat(array(subnets_3), array(bastion_subnet)) : arra
 
 var final_subnets = ingressApplicationGateway ? concat(array(subnets_4), array(appgw_subnet)) : array(subnets_4)
 
-var vnetName = 'vnet-${resourceName}'
+var vnetName = '${environment}-vnet-${shortLocation}-${resourceName}-01'
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   name: vnetName
   location: location
@@ -147,7 +149,7 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
 
 
 /*   --------------------------------------------------------------------------  Private Link for ACR      */
-var privateLinkAcrName = 'vnet-pl-acr-${resourceName}'
+var privateLinkAcrName = '${environment}-pl-${shortLocation}-${resourceName}-acr-01'
 resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAcrId)) {
   name: privateLinkAcrName
   location: location
@@ -174,7 +176,7 @@ resource privateDnsAcr 'Microsoft.Network/privateDnsZones@2020-06-01' = if (!emp
   location: 'global'
 }
 
-var privateDnsAcrLinkName = 'vnet-dnscr-${resourceName}'
+var privateDnsAcrLinkName = '${environment}-dns-${shortLocation}-${resourceName}-acr-01'
 resource privateDnsAcrLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (!empty(privateLinkAcrId))  {
   parent: privateDnsAcr
   name: privateDnsAcrLinkName
@@ -204,7 +206,7 @@ resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
 
 
 /*   --------------------------------------------------------------------------  Private Link for KeyVault      */
-var privateLinkAkvName = 'vnet-pl-akv-${resourceName}'
+var privateLinkAkvName ='${environment}-pl-${shortLocation}-${resourceName}-kv-01'
 resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAkvId)) {
   name: privateLinkAkvName
   location: location
@@ -231,7 +233,7 @@ resource privateDnsAkv 'Microsoft.Network/privateDnsZones@2020-06-01' = if (!emp
   location: 'global'
 }
 
-var privateDnsAkvLinkName = 'vnet-dnscr-${resourceName}'
+var privateDnsAkvLinkName = '${environment}-dns-${shortLocation}-${resourceName}-kv-01'
 resource privateDnsAkvLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (!empty(privateLinkAkvId))  {
   parent: privateDnsAkv
   name: privateDnsAkvLinkName
@@ -259,8 +261,8 @@ resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
   }
 }
 
-param bastionHostName string = 'bas-${resourceName}'
-var publicIpAddressName = 'pip-${bastionHostName}'
+param bastionHostName string = '${environment}-bas-${shortLocation}-${resourceName}-01'
+var publicIpAddressName = '${environment}-pip-${shortLocation}-${resourceName}-bas-01'
 
 resource bastionPip 'Microsoft.Network/publicIpAddresses@2020-05-01' = {
   name: publicIpAddressName

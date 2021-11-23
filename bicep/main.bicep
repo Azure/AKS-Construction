@@ -1,9 +1,13 @@
 param location string = resourceGroup().location
 
+param environment string = 'nonprod'
+
 @minLength(3)
 @maxLength(20)
 @description('Used to name all resources')
 param resourceName string
+
+var shortLocation = location =~ 'Central US' || location =~ 'CentralUS' ? 'cus' : location =~ 'East US 2' || location =~ 'EastUS2' ? 'eus2' : ''
 
 /*
 Resource sections
@@ -38,7 +42,7 @@ param byoAGWSubnetId string = ''
 //--- Custom or BYO networking requires BYO AKS User Identity
 var aks_byo_identity = custom_vnet || !empty(byoAKSSubnetId)
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (aks_byo_identity) {
-  name: 'id-aks-${resourceName}'
+  name: '${environment}-id-${shortLocation}-${resourceName}-01'
   location: location
 }
 
@@ -91,6 +95,8 @@ module network './network.bicep' = if (custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
+    shortLocation: shortLocation
+    environment: environment
     vnetAddressPrefix: vnetAddressPrefix
     aksPrincipleId: aks_byo_identity ? uai.properties.principalId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
@@ -161,7 +167,7 @@ param KeyVaultPurgeProtection bool = true
 @description('Add IP to firewall whitelist')
 param kvIPWhitelist string = ''
 
-var akvName = 'kv-${replace(resourceName, '-', '')}'
+var akvName = '${environment}-kv-${shortLocation}-${resourceName}-01'
 
 resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
   name: akvName
@@ -276,7 +282,7 @@ resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
 param registries_sku string = ''
 
 
-var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
+var acrName = '${environment}acr${shortLocation}${replace(resourceName, '-', '')}01'
 
 resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!empty(registries_sku)) {
   name: acrName
@@ -358,6 +364,8 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
+    shortLocation: shortLocation
+    environment: environment
     workspaceDiagsId: createLaw ? aks_law.id : ''
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
@@ -403,15 +411,15 @@ var appGWenableWafFirewall = appGWsku=='Standard_v2' ? false : appGWenableFirewa
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed: 
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
 resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (deployAppGw) {
-  name: 'id-appgw-${resourceName}'
+  name: '${environment}-id-${shortLocation}-${resourceName}-agw-01'
   location: location
 }
 
-var appgwName = 'agw-${resourceName}'
+var appgwName = '${environment}-agw-${shortLocation}-${resourceName}-01'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
 resource appgwpip 'Microsoft.Network/publicIPAddresses@2021-02-01' = if (deployAppGw) {
-  name: 'pip-agw-${resourceName}'
+  name: '${environment}-pip-${shortLocation}-${resourceName}-agw-01'
   location: location
   sku: {
     name: 'Standard'
@@ -635,7 +643,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 |  .  \  |  `--'  | |  |_)  | |  |____ |  |\  \----.|  |\   | |  |____     |  |     |  |____ .----)   |   
 |__|\__\  \______/  |______/  |_______|| _| `._____||__| \__| |_______|    |__|     |_______||_______/ */
 
-param dnsPrefix string = '${resourceName}-dns'
+var dnsPrefix = '${environment}-aks-${shortLocation}-${resourceName}-01-dns'
 param kubernetesVersion string = '1.21.2'
 param enable_aad bool = false
 param aad_tenant_id string = ''
@@ -843,7 +851,7 @@ var aks_identity = {
 }
 
 resource aks 'Microsoft.ContainerService/managedClusters@2021-07-01' = {
-  name: 'aks-${resourceName}'
+  name: '${environment}-aks-${shortLocation}-${resourceName}-01'
   location: location
   properties: aks_properties2
   identity: aks_byo_identity ? aks_identity : {
@@ -859,7 +867,7 @@ output aksClusterName string = aks.name
 // https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json
 var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
 resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
-  name: '${resourceName}-baseline'
+  name: '${environment}-id-${shortLocation}-${resourceName}-01-baseline'
   location: location
   properties: {
     //scope: resourceGroup().id
@@ -965,7 +973,7 @@ module aksmetricalerts './aksmetricalerts.bicep' = if (createLaw) {
 @description('The Log Analytics retention period')
 param retentionInDays int = 30
 
-var aks_law_name = 'log-${resourceName}'
+var aks_law_name = '${environment}-la-${shortLocation}-${resourceName}-01'
 
 var createLaw = (omsagent || deployAppGw || azureFirewalls) 
 
