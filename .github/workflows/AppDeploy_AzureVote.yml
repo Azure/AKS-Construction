@@ -174,7 +174,11 @@ jobs:
             echo "curl $pubIp [$counter]"
             respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
             echo $respcode   
-            if [ "$respcode" != "200" ];
+
+            cleanResponseCode=$(echo $respcode|tr -d '\n')
+            echo $cleanResponseCode
+
+            if [ "$cleanResponseCode" != "200" ];
             then
                 echo "going to wait another 30s [$counter] [$(date +"%T")]"
                 ((counter++))
