@@ -70,21 +70,21 @@
         "net": {
             "networkPlugin": "azure",
             "afw": false,
+            "bastion": false,
             "vnetprivateend": false,
             "vnet_opt": "default",
             "byoAKSSubnetId": "",
             "byoAGWSubnetId": "",
-            "vnetAddressPrefix": "10.0.0.0/8",
-            "vnetAksSubnetAddressPrefix": "10.240.0.0/16",
-            "ilbsub": "10.241.0.0/24",
-            "vnetFirewallSubnetAddressPrefix": "10.241.130.0/26",
-            "ersub": "10.242.0.0/24",
-            "vnetAppGatewaySubnetAddressPrefix": "10.2.0.0/16",
-            "privateLinkSubnetAddressPrefix": "10.3.0.0/16",
-            "acrAgentPoolSubnetAddressPrefix": "10.4.0.0/16",
-            "podCidr": "10.244.0.0/16",
-            "serviceCidr": "10.0.0.0/16",
-            "dnsServiceIP": "10.0.0.10"
+            "vnetAddressPrefix": "10.240.0.0/16",
+            "vnetAksSubnetAddressPrefix": "10.240.0.0/22",
+            "vnetAppGatewaySubnetAddressPrefix": "10.240.4.0/26",
+            "acrAgentPoolSubnetAddressPrefix": "10.240.4.64/26",
+            "bastionSubnetAddressPrefix": "10.240.4.128/26",
+            "privateLinkSubnetAddressPrefix": "10.240.4.192/26",
+            "vnetFirewallSubnetAddressPrefix": "10.240.50.0/24",
+            "podCidr": "10.240.100.0/24",
+            "serviceCidr": "172.10.0.0/16",
+            "dnsServiceIP": "172.10.0.10"
         },
         "app": {
             "javatls": false
@@ -266,7 +266,8 @@
                         "net": {
                             "vnet_opt": "default",
                             "vnetprivateend": false,
-                            "afw": false
+                            "afw": false,
+                            "bastion": false
                         }
                     }
                 },
@@ -347,7 +348,8 @@
                         "net": {
                             "vnet_opt": "custom",
                             "vnetprivateend": false,
-                            "afw": false
+                            "afw": false,
+                            "bastion": false
                         }
                     }
                 },
@@ -443,7 +445,8 @@
                         "net": {
                             "vnet_opt": "custom",
                             "vnetprivateend": true,
-                            "afw": true
+                            "afw": true,
+                            "bastion": true
                         }
                     }
                 }

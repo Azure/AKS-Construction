@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
 
 env:
-  templateRelease: 0.3.0-preview
+  templateRelease: 0.3.2
 
 jobs:
   
@@ -51,6 +51,7 @@ jobs:
           cd helper
           npx playwright install #https://github.com/microsoft/playwright/issues/4033
           npx playwright install-deps chromium
+          npm i -D playwright-expect
         
       - name: Test web server is up
         run: curl http://localhost:3000/Aks-Construction

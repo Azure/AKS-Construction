@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "2073286484881363272"
+      "templateHash": "11206451883072178501"
     }
   },
   "parameters": {
@@ -44,35 +44,49 @@
     },
     "vnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.0.0.0/8"
+      "defaultValue": "10.240.0.0/16"
     },
     "vnetAksSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.0.0/16"
-    },
-    "vnetFirewallSubnetAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.241.130.0/26"
+      "defaultValue": "10.240.0.0/22"
     },
     "vnetAppGatewaySubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.2.0.0/16"
+      "defaultValue": "10.240.4.0/26"
+    },
+    "acrAgentPoolSubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.240.4.64/26"
+    },
+    "bastionSubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.240.4.128/26",
+      "metadata": {
+        "description": "The address range for Azure Bastion in your custom vnet"
+      }
+    },
+    "privateLinkSubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.240.4.192/26"
+    },
+    "vnetFirewallSubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.240.50.0/24"
     },
     "privateLinks": {
       "type": "bool",
       "defaultValue": false
     },
-    "privateLinkSubnetAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.3.0.0/16"
-    },
     "acrPrivatePool": {
       "type": "bool",
       "defaultValue": false
     },
-    "acrAgentPoolSubnetAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.4.0.0/16"
+    "bastion": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)"
+      }
     },
     "dnsZoneId": {
       "type": "string",
@@ -194,7 +208,7 @@
     },
     "kubernetesVersion": {
       "type": "string",
-      "defaultValue": "1.20.9"
+      "defaultValue": "1.21.2"
     },
     "enable_aad": {
       "type": "bool",
@@ -277,15 +291,15 @@
     },
     "podCidr": {
       "type": "string",
-      "defaultValue": "10.244.0.0/16"
+      "defaultValue": "10.240.100.0/24"
     },
     "serviceCidr": {
       "type": "string",
-      "defaultValue": "10.0.0.0/16"
+      "defaultValue": "172.10.0.0/16"
     },
     "dnsServiceIP": {
       "type": "string",
-      "defaultValue": "10.0.0.10"
+      "defaultValue": "172.10.0.10"
     },
     "dockerBridgeCidr": {
       "type": "string",
@@ -956,6 +970,12 @@
           },
           "acrAgentPoolSubnetAddressPrefix": {
             "value": "[parameters('acrAgentPoolSubnetAddressPrefix')]"
+          },
+          "bastion": {
+            "value": "[parameters('bastion')]"
+          },
+          "bastionSubnetAddressPrefix": {
+            "value": "[parameters('bastionSubnetAddressPrefix')]"
           }
         },
         "template": {
@@ -965,7 +985,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "5010923935109066595"
+              "templateHash": "15111295381841954366"
             }
           },
           "parameters": {
@@ -1023,10 +1043,29 @@
             "acrAgentPoolSubnetAddressPrefix": {
               "type": "string",
               "defaultValue": ""
+            },
+            "bastion": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "bastionSubnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "bastionHostName": {
+              "type": "string",
+              "defaultValue": "[format('bas-{0}', parameters('resourceName'))]"
             }
           },
           "functions": [],
           "variables": {
+            "bastion_subnet_name": "AzureBastionSubnet",
+            "bastion_subnet": {
+              "name": "[variables('bastion_subnet_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('bastionSubnetAddressPrefix')]"
+              }
+            },
             "acrpool_subnet_name": "acrpool-sn",
             "acrpool_subnet": {
               "name": "[variables('acrpool_subnet_name')]",
@@ -1066,13 +1105,15 @@
             "subnets_1": "[if(parameters('azureFirewalls'), concat(array(variables('aks_subnet')), array(variables('fw_subnet'))), array(variables('aks_subnet')))]",
             "subnets_2": "[if(parameters('privateLinks'), concat(array(variables('subnets_1')), array(variables('private_link_subnet'))), array(variables('subnets_1')))]",
             "subnets_3": "[if(parameters('acrPrivatePool'), concat(array(variables('subnets_2')), array(variables('acrpool_subnet'))), array(variables('subnets_2')))]",
-            "final_subnets": "[if(parameters('ingressApplicationGateway'), concat(array(variables('subnets_3')), array(variables('appgw_subnet'))), array(variables('subnets_3')))]",
+            "subnets_4": "[if(parameters('bastion'), concat(array(variables('subnets_3')), array(variables('bastion_subnet'))), array(variables('subnets_3')))]",
+            "final_subnets": "[if(parameters('ingressApplicationGateway'), concat(array(variables('subnets_4')), array(variables('appgw_subnet'))), array(variables('subnets_4')))]",
             "vnetName": "[format('vnet-{0}', parameters('resourceName'))]",
             "networkContributorRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
             "privateLinkAcrName": "[format('vnet-pl-acr-{0}', parameters('resourceName'))]",
             "privateDnsAcrLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]",
             "privateLinkAkvName": "[format('vnet-pl-akv-{0}', parameters('resourceName'))]",
-            "privateDnsAkvLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]"
+            "privateDnsAkvLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]",
+            "publicIpAddressName": "[format('pip-{0}', parameters('bastionHostName'))]"
           },
           "resources": [
             {
@@ -1266,6 +1307,44 @@
               "dependsOn": [
                 "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.vaultcore.azure.net')]",
                 "[resourceId('Microsoft.Network/privateEndpoints', variables('privateLinkAkvName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2020-05-01",
+              "name": "[variables('publicIpAddressName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "condition": "[parameters('bastion')]",
+              "type": "Microsoft.Network/bastionHosts",
+              "apiVersion": "2020-05-01",
+              "name": "[parameters('bastionHostName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "IpConf",
+                    "properties": {
+                      "subnet": {
+                        "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('bastion_subnet_name'))]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
               ]
             },
             {
