@@ -89,20 +89,20 @@ jobs:
           name: Json out
           path: svc.json
 
-#  deploy-azure-vote-app:
-#    needs: test-run-cmd
-#    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
-#    with:
-#      RG: Automation-Actions-AksDeployCI #$RG
-#      AKSNAME: aks-AksPriv
-#      AGNAME: agw-AksPriv
-#      APPNAME: azure-vote-public
-#      #MINIHELMBRANCH: main #main is the default
-#      INGRESSTYPE: "PublicLoadBalancer"
-#      UNINSTALLAFTERVERIFY: false
-#      USERUNCOMMAND: true
-#    secrets:
-#      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+  deploy-azure-vote-app:
+    #needs: test-run-cmd
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
+    with:
+      RG: Automation-Actions-AksDeployCI #$RG
+      AKSNAME: aks-AksPriv
+      AGNAME: agw-AksPriv
+      APPNAME: azure-vote-public
+      #MINIHELMBRANCH: main #main is the default
+      INGRESSTYPE: "PublicLoadBalancer"
+      UNINSTALLAFTERVERIFY: false
+      USERUNCOMMAND: true
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
 
   # deploy-java-app-certmgr:
