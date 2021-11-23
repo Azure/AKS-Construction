@@ -23,6 +23,9 @@
         "agentCountMax": {
             "value": 2
         },
+        "JustUseSystemPool": {
+          "value": true
+        },
         "enable_aad": {
             "value": true
         },
