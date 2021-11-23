@@ -91,6 +91,7 @@ jobs:
 
   deploy-azure-vote-app:
     #needs: test-run-cmd
+    if: false
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: Automation-Actions-AksDeployCI #$RG
