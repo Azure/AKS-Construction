@@ -22,6 +22,7 @@ jobs:
       AKSNAME: aks-AksPriv
       AGNAME: agw-AksPriv
       APPNAME: azure-vote-public
+      NAMESP: default
     steps:
       - name: Azure Login
         uses: Azure/login@v1
