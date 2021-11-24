@@ -235,6 +235,7 @@ jobs:
                 ((counter++))
                 sleep 15
             else
+                echo "200 response code received after $counter trys"
                 break 2
             fi
           done
