@@ -49,7 +49,7 @@ jobs:
           then
             echo 'wtf';
           else
-            echo $netpolicycmd
+            echo $netpolicycmd;
           fi
           
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
