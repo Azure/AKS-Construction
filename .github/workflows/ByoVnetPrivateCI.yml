@@ -243,8 +243,8 @@ jobs:
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: 'Automation-Actions-AksDeployCI'  #${{ env.RG }} #Seems to be a bug with reusable workflows, not able to pass ENV variables down. https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111
-      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
-      AGNAME: ${{ steps.deployAks.outputs.AGNAME}}
+      AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
+      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: azure-vote-public
       INGRESSTYPE: "PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: false
