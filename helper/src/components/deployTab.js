@@ -21,6 +21,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     resourceName: deploy.clusterName,
     kubernetesVersion: deploy.kubernetesVersion,
     ...(cluster.agentCount !== defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
+    ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel }),
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA } ),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
@@ -66,7 +67,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const preview_params = {
     ...(addons.gitops !== "none" && { gitops: addons.gitops }),
-    ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
       ...(addons.registry !== "none" && {
         ...(addons.acrPrivatePool !== defaults.addons.acrPrivatePool && {acrPrivatePool: addons.acrPrivatePool}),
