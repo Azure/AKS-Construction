@@ -139,6 +139,10 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 kubectl create namespace ${prometheus_namespace}
 helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}` : '') +
+    // Default Deny All Network Policy, east-west traffic in cluster
+    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `\n\n# Create a default network policy in your cluster to deny all traffic
+kubectl create -f https://github.com/Azure/Aks-Construction/blob/main/k8smanifests/networkpolicy-deny-all.yml?raw=true`
+    : '') +
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `\n\n# Create a namespace for your ingress resources
 kubectl create namespace ${nginx_namespace}
