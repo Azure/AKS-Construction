@@ -246,7 +246,6 @@ jobs:
           inlineScript: |          
             RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-            AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
             
             az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
             kubectl apply -f k8smanifests/networkpolicy-deny-all.yml
