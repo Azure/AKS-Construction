@@ -240,15 +240,12 @@ jobs:
             fi
             
       - name: Create Default Deny NetworkPolicy
-        uses: Azure/cli@1.0.4
-        with:
-          azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |          
-            RG='${{ env.RG }}'
-            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-            
-            az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-            kubectl apply -f k8smanifests/networkpolicy-deny-all.yml
+        run: 
+          RG='${{ env.RG }}'
+          AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+
+          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          kubectl apply -f k8smanifests/networkpolicy-deny-all.yml
             
   SmokeTest_KnownGoodApp:
     needs: [Deploy]
