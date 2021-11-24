@@ -245,6 +245,9 @@ jobs:
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
 
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          
+          az aks install-cli
+          
           kubectl apply -f k8smanifests/networkpolicy-deny-all.yml
             
   SmokeTest_KnownGoodApp:
