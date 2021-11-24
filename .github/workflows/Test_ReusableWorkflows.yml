@@ -18,7 +18,7 @@ env:
 jobs:
   test-run-cmd:
     runs-on: ubuntu-latest
-    if: false
+    if: true
     env:
       AKSNAME: aks-AksPriv
       AGNAME: agw-AksPriv
@@ -115,7 +115,7 @@ jobs:
 
   deploy-azure-vote-app:
     #needs: test-run-cmd
-    if: true
+    if: false
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: Automation-Actions-AksDeployCI #$RG
