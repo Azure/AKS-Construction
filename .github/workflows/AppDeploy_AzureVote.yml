@@ -222,7 +222,7 @@ jobs:
 
             #respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $ipAddress)
             echo $respcode   
-            if [ "$respcode" != "200" ];
+            if [ "$respcode" == "200*" ];
             then
                 echo "going to wait another 30s [$counter] [$(date +"%T")]"
                 ((counter++))
