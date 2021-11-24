@@ -685,7 +685,6 @@ var systemPoolPresets = {
     minCount: 1
     maxCount: 3
     enableAutoScaling: true
-    //osDiskType: 'Ephemeral' //default
   }
   'Standard' : {
     vmSize: 'Standard_D4s_v3'
@@ -693,7 +692,6 @@ var systemPoolPresets = {
     minCount: 2
     maxCount: 3
     enableAutoScaling: true
-    //osDiskType: 'Ephemeral' //default
   }
 }
 
@@ -713,29 +711,30 @@ var systemPoolBase = {
   ]
 }
 
-var agentPoolProfileSystem = union(systemPoolBase, systemPoolPresets[SystemPoolType])
+var userPoolVmProfile = {
+  vmSize: agentVMSize
+  count: agentCount
+  minCount: autoScale ? agentCount : json('null')
+  maxCount: autoScale ? agentCountMax : json('null')
+  enableAutoScaling: autoScale
+}
 
-var agentPoolProfileUser = {
+var agentPoolProfileUser = union({
   name: 'npuser01'
   mode: 'User'
   osDiskType: osDiskType
   osDiskSizeGB: osDiskSizeGB
-  count: agentCount
-  vmSize: agentVMSize
   osType: 'Linux'
   maxPods: maxPods
   type: 'VirtualMachineScaleSets'
-  enableAutoScaling: autoScale
   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
-  minCount: autoScale ? agentCount : json('null')
-  maxCount: autoScale ? agentCountMax : json('null')
   upgradeSettings: {
     maxSurge: '33%'
   }
-}
+}, userPoolVmProfile)
 
-var agentPoolProfiles = JustUseSystemPool ? array(agentPoolProfileSystem) : concat(array(agentPoolProfileSystem), array(agentPoolProfileUser))
+var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 

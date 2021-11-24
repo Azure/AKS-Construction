@@ -191,7 +191,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Cluster Auto-upgrade
+                    Cluster Auto-upgrade <Link target="_" href="https://docs.microsoft.com/azure/aks/upgrade-cluster#set-auto-upgrade-channel">docs</Link>
                 </Label>
                 <ChoiceGroup
                     selectedKey={cluster.upgradeChannel}
@@ -213,7 +213,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                 <Stack.Item>
                     <ChoiceGroup
                         styles={{ root: { marginLeft: '50px' } }}
-                        label={<Label>Cluster User Authentication <Link target="_" href="https://docs.microsoft.com/en-gb/azure/aks/managed-aad">docs</Link></Label>}
+                        label={<Label>Cluster User Authentication <Link target="_" href="https://docs.microsoft.com/azure/aks/managed-aad">docs</Link></Label>}
                         selectedKey={cluster.enable_aad}
                         onChange={(ev, { key }) => updateFn("enable_aad", key)}
                         options={[
