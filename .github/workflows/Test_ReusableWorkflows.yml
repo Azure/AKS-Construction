@@ -39,7 +39,23 @@ jobs:
           
       - name: Verify Az Version
         run: az version
+
+      - name: Create Default Deny NetworkPolicy
+        run: 
+        
+          netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true";
           
+          if [ -z "$netpolicycmd" ];
+          then
+            echo 'wtf';
+          else
+            echo $netpolicycmd
+          fi
+          
+          echo "Sending command $netpolicycmd to $AKSNAME in $RG"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}")
+          echo cmdOut
+
       - name: Getting nodes (Invoke)
         run: |
           echo "Connecting to $AKSNAME in $RG"
