@@ -239,23 +239,15 @@ jobs:
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
             
-      - name: Kubectl
-        if: github.event.inputs.doDebugSteps != 'no'
-        continue-on-error: true
-        run: |
-          #sudo az aks install-cli
-          kubectl version
-          
       - name: Create Default Deny NetworkPolicy
         run: 
           RG='${{ env.RG }}'
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
-          sudo az aks install-cli
-          
-          kubectl apply -f k8smanifests/networkpolicy-deny-all.yml
+          command="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true"
+          echo "Sending command $command to $AKSNAME in $RG"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          echo cmdOut
             
   SmokeTest_KnownGoodApp:
     needs: [Deploy]
