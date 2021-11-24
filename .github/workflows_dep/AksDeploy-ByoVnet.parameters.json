@@ -12,7 +12,7 @@
             "value": "byo"
         },
         "kubernetesVersion": {
-            "value": "1.21.1"
+            "value": "1.21.2"
         },
         "agentCount": {
             "value": 1
