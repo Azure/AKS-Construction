@@ -248,7 +248,9 @@ jobs:
           
           if [ -z "$netpolicycmd" ]
           then
-                echo 'wtf'
+            echo 'wtf'
+          else
+            echo $netpolicycmd
           fi
           
           echo "Sending command $netpolicycmd to $AKSNAME in $RG"
