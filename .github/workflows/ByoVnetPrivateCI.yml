@@ -255,7 +255,7 @@ jobs:
           
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
-          echo cmdOut;
+          echo $cmdOut;
             
   SmokeTest_KnownGoodApp:
     needs: [Deploy]
