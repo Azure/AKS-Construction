@@ -244,7 +244,7 @@ jobs:
           RG='${{ env.RG }}'
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
           
-          command="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true"
+          command='kubectl apply -f "https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true"'
           echo "Sending command $command to $AKSNAME in $RG"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo cmdOut
