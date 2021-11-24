@@ -215,6 +215,8 @@ jobs:
             echo "curl $ipAddress for response code [$counter]"
 
             command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
+            echo "Sending command to AKS : $command"
+            
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
             respcode=$(echo $cmdOut | jq -r '.logs')
 
