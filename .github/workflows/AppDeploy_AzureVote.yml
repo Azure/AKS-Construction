@@ -217,12 +217,9 @@ jobs:
             command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             echo "Sending command to AKS : $command"
             
-            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
-            echo $cmdOut
-            
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")           
             respcode=$(echo $cmdOut | jq -r '.logs')
 
-            #respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $ipAddress)
             echo $respcode   
             if [ "$respcode" == "200*" ];
             then
@@ -233,7 +230,11 @@ jobs:
           done
           
           echo "curl $ipAddress for content [$counter attempts for 200]"
-          curl $ipAddress
+          command="curl $ipAddress"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}") 
+          cmdLogs=$(echo $cmdOut | jq -r '.logs')
+          
+          echo $cmdLogs
 
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY
