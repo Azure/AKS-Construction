@@ -228,15 +228,15 @@ jobs:
             echo $cmdOut > debug.json
             respcode=$(echo $cmdOut | jq -r '.logs')
 
-            echo $respcode   
+            echo $respcode
             if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
             then
+                echo "200 response code received after $counter trys"
+                break 2
+            else
                 echo "going to wait another 15s [$counter] [$(date +"%T")]"
                 ((counter++))
                 sleep 15
-            else
-                echo "200 response code received after $counter trys"
-                break 2
             fi
           done
           
