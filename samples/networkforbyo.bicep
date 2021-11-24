@@ -1,11 +1,11 @@
 param resourceName string
 param location string
-param vnetAddressPrefix string = '10.0.0.0/8'
+param vnetAddressPrefix string = '10.240.0.0/16'
 param serviceEndpoints array = []
-param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
-param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
+param vnetAksSubnetAddressPrefix string = '10.240.0.0/22'
+param vnetAppGatewaySubnetAddressPrefix string = '10.240.4.0/26'
 param privateLinks bool = true
-param privateLinkSubnetAddressPrefix string = '10.3.0.0/16'
+param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
 param privateLinkAcrId string
 
 module network '../bicep/network.bicep' = {
