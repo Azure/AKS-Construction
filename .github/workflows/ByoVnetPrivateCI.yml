@@ -248,8 +248,8 @@ jobs:
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
             AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
             
-           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-           kubectl apply -f k8smanifests/networkpolicy-deny-all.yml
+            az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+            kubectl apply -f k8smanifests/networkpolicy-deny-all.yml
             
   SmokeTest_KnownGoodApp:
     needs: [Deploy]
