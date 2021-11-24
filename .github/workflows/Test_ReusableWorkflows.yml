@@ -52,9 +52,9 @@ jobs:
             echo $netpolicycmd
           fi
           
-          echo "Sending command $netpolicycmd to $AKSNAME in $RG"
-          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}")
-          echo cmdOut
+          echo "Sending command $netpolicycmd to $AKSNAME in $RG";
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
+          echo cmdOut;
 
       - name: Getting nodes (Invoke)
         run: |
