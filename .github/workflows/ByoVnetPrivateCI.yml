@@ -188,17 +188,6 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          
-      - name: Start Private GitHub Runner Virtual Machine
-        uses: Azure/cli@1.0.4
-        with:
-          azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |
-            #This is used in the next stage, if the VM is stopped we should start otherwise it'll never get picked up
-            RunnerRG='Automation-Actions-Runner'
-            RunnerVM='GHRunnerWE'
-
-            az vm start --name $RunnerVM --no-wait --resource-group $RunnerRG
             
       - name: Deploy Infrastructure
         id:  deployAks
@@ -252,165 +241,17 @@ jobs:
 
   #PRIVATE AGENT RUNNING THIS JOB
   SmokeTest_KnownGoodApp:
-    runs-on: [self-hosted, linux]
-    needs: [Deploy]
-    environment: azurecirgs
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Job parameter check
-        if: env.DODEBUGSTEPS == true
-        run: |
-          RG='${{ env.RG }}'
-          echo "RG is: $RG"
-          
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
-          
-          whoami
-          
-          az version
-
-      - name: Azure Login MSI #Since we're doing this on a private agent we can use its managed identity
-        run: |
-          az login --identity
-
-      - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
-      - name: Kubectl
-        if: env.DODEBUGSTEPS == true
-        run: |
-          #sudo az aks install-cli
-          kubectl version
-          
-      - name: Deploy AGIC Public Facing Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
-          NAMESP: "default"
-        run: |
-          kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-          
-          echo $MANIFESTTESTURL
-          kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-          
-      - name: Verify AGIC Public Facing Workload
-        env:
-          NAMESP: "default"
-        run: |
-          sleep 2m #Give everything a chance to work
-        
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-        
-          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
-          
-          curl -o /dev/null -s -w "%{http_code}\n" $pubIp
-          curl $pubIp       
-          
-      - uses: actions/setup-node@v2
-        name: Playwright - Install Node
-        with:
-          node-version: '14'
-          
-      - name: Playwright - Install OS dependencies
-        run: npx playwright install-deps chromium
-        
-      - name: Playwright - Run helper tests
-        env:
-          filenamewordmatch: 'playwright-azurevote'
-        run: |
-          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-         
-          PLAYTESTURL="http://${pubIp}/" npx playwright test --browser chromium .github/workflows_dep/ -g '${{ env.filenamewordmatch }}' --reporter list
-
-      - name: Deny all network traffic
-        if: false
-        env:
-          MANIFESTPATH: "k8smanifests/networkpolicy-deny-all.yml"
-        run: |
-          echo $MANIFESTPATH
-          
-          kubectl apply -f $MANIFESTPATH
-
-      - name: Playwright - Run helper tests (again)
-        env:
-          filenamewordmatch: 'playwright-azurevote'
-        run: |
-          pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-         
-          PLAYTESTURL="http://${pubIp}/" npx playwright test --browser chromium .github/workflows_dep/ -g '${{ env.filenamewordmatch }}' --reporter list
-
-
-      - name: Delete AGIC Public Facing Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
-          NAMESP: "default"
-        run: |
-          kubectl delete -f $MANIFESTTESTURL -n  $NAMESP
-
-      - name: Deploy AGIC Private Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AgicPrivate-NetPolicy.yaml"
-          NAMESP: "default"
-        run: |
-          kubectl create -f $MANIFESTTESTURL -n  $NAMESP
-          
-      - name: Verify AGIC Private Workload
-        env:
-          NAMESP: "default"
-        run: |
-          sleep 2m #Give everything a chance to work
-        
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-          
-          echo "Getting private ip"
-          privIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo "Private ip : $privIp"
-          
-          respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
-          echo $respcode   
-          
-          #TODO: This is going to need to be rewritten. #loopshambles
-          #SSH'ing on the runner shows this works, sometimes it just takes ages
-          #Needs to be investigated.
-          if [ "$respcode" != "200" ];
-          then
-              echo "going to need to wait longer i guess?"
-              sleep 3m
-              
-              respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
-              echo $respcode    
-              
-              if [ "$respcode" != "200" ];
-              then
-                echo "going to need to wait EVEN longer i guess?  (wtf)"
-                sleep 6m
-
-                respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
-                echo $respcode    
-
-                if [ "$respcode" != "200" ];
-                then
-                  echo "Non 200 response code from app - Raising error"
-                  exit 1
-                fi
-              fi
-          fi
-          
-          curl $privIp
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
+    with:
+      RG: ${{ env.RG }}
+      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
+      AGNAME: ${{ steps.deployAks.outputs.AGNAME}}
+      APPNAME: azure-vote-public
+      INGRESSTYPE: "PublicLoadBalancer"
+      UNINSTALLAFTERVERIFY: false
+      USERUNCOMMAND: true
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   InfraTests:
     runs-on: ubuntu-latest
