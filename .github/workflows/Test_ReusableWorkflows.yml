@@ -110,6 +110,7 @@ jobs:
       INGRESSTYPE: "PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: false
       USERUNCOMMAND: true
+      CURLRETRIES: 2
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
