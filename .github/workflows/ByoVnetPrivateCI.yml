@@ -238,7 +238,19 @@ jobs:
             then
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
-
+            
+      - name: Create Default Deny NetworkPolicy
+        uses: Azure/cli@1.0.4
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |          
+            RG='${{ env.RG }}'
+            AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+            AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
+            
+           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+           kubectl apply -f k8smanifests/networkpolicy-deny-all.yml
+            
   SmokeTest_KnownGoodApp:
     needs: [Deploy]
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
