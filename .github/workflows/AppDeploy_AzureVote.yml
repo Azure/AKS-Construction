@@ -218,7 +218,8 @@ jobs:
             echo "Sending command to AKS : $command"
             
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")  
-            $cmdOut > debug.json
+
+            echo $cmdOut > debug.json
             respcode=$(echo $cmdOut | jq -r '.logs')
 
             echo $respcode   
