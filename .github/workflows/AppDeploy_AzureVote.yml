@@ -36,6 +36,11 @@ on:
         type: boolean
         default: true
         required: true
+      CURLRETRIES:
+        description: 'How many retry attempts when verifying deployed App Url'  
+        type: number
+        default: 20
+        required: true
     secrets:
       AZURE_CREDENTIALS:
         required: true
@@ -169,7 +174,7 @@ jobs:
           echo "Public ip : $pubIp"
           
           counter=1
-          while [ $counter -le 20 ] && [ "$respcode" != "200" ]
+          while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
           do
             echo "curl $pubIp [$counter]"
             respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
@@ -211,7 +216,7 @@ jobs:
           echo "IPAddress is $ipAddress"
           
           counter=1
-          while [ $counter -le 20 ] && [ "$respcode" != "200" ]
+          while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
           do
             echo "curl $ipAddress for response code [$counter]"
 
@@ -226,9 +231,9 @@ jobs:
             echo $respcode   
             if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
             then
-                echo "going to wait another 30s [$counter] [$(date +"%T")]"
+                echo "going to wait another 15s [$counter] [$(date +"%T")]"
                 ((counter++))
-                sleep 30s
+                sleep 15
             else
                 break 2
             fi
