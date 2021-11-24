@@ -40,7 +40,7 @@ on:
         description: 'How many retry attempts when verifying deployed App Url'  
         type: number
         default: 20
-        required: true
+        required: false
     secrets:
       AZURE_CREDENTIALS:
         required: true
