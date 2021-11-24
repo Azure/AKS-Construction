@@ -221,7 +221,7 @@ jobs:
             respcode=$(echo $cmdOut | jq -r '.logs')
 
             echo $respcode   
-            if [ "$respcode" == "200*" ];
+            if [ "$respcode" == 200* ];
             then
                 echo "going to wait another 30s [$counter] [$(date +"%T")]"
                 ((counter++))
