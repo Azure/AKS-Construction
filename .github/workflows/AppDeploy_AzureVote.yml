@@ -204,6 +204,7 @@ jobs:
           echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
 
           command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
+          echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           
           ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
@@ -228,6 +229,8 @@ jobs:
                 echo "going to wait another 30s [$counter] [$(date +"%T")]"
                 ((counter++))
                 sleep 30s
+            else
+                break 2
             fi
           done
           
