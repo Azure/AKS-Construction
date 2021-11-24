@@ -240,6 +240,7 @@ jobs:
             fi
 
   SmokeTest_KnownGoodApp:
+    needs: [Deploy]
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: 'Automation-Actions-AksDeployCI'  #${{ env.RG }} #Seems to be a bug with reusable workflows, not able to pass ENV variables down. https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111
