@@ -217,7 +217,8 @@ jobs:
             command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             echo "Sending command to AKS : $command"
             
-            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")           
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")  
+            $cmdOut > debug.json
             respcode=$(echo $cmdOut | jq -r '.logs')
 
             echo $respcode   
@@ -241,3 +242,10 @@ jobs:
         env:
           APPNAME: "${{ inputs.APPNAME }}"
         run: helm uninstall $APPNAME
+        
+      - name: Debug Artifact
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Json out
+          path: debug.json
