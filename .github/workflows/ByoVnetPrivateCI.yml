@@ -239,26 +239,27 @@ jobs:
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
             
-      - name: Kubectl
-        if: github.event.inputs.doDebugSteps != 'no'
-        continue-on-error: true
-        run: |
-          #sudo az aks install-cli
-          kubectl version
-          
       - name: Create Default Deny NetworkPolicy
         run: 
           RG='${{ env.RG }}'
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
           
-          sudo az aks install-cli
+          netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true";
           
-          kubectl apply -f k8smanifests/networkpolicy-deny-all.yml
+          if [ -z "$netpolicycmd" ];
+          then
+            echo 'capturing strange issue... wtf';
+          else
+            echo $netpolicycmd;
+          fi
+          
+          echo "Sending command $netpolicycmd to $AKSNAME in $RG";
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
+          echo $cmdOut;
             
   SmokeTest_KnownGoodApp:
     needs: [Deploy]
+    #This points to a specific branch, because of a limitation around targetting @${{ github.sha }} isn't supported yet. https://github.community/t/ref-head-in-reusable-workflows/203690/6
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: 'Automation-Actions-AksDeployCI'  #${{ env.RG }} #Seems to be a bug with reusable workflows, not able to pass ENV variables down. https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111
