@@ -39,7 +39,7 @@ on:
       CURLRETRIES:
         description: 'How many retry attempts when verifying deployed App Url'  
         type: number
-        default: 20
+        default: 10
         required: false
     secrets:
       AZURE_CREDENTIALS:
@@ -220,7 +220,8 @@ jobs:
           do
             echo "curl $ipAddress for response code [$counter]"
 
-            command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
+            #command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
+            #command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             echo "Sending command to AKS : $command"
             
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")  
