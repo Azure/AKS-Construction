@@ -279,6 +279,7 @@ jobs:
       #INGRESSTYPE: "PublicLoadBalancer" (This is default as its the only one supported in the helm chart right now)
       UNINSTALLAFTERVERIFY: false
       USERUNCOMMAND: true
+      CURLRETRIES: 3
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
