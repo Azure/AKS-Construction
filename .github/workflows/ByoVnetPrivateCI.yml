@@ -76,7 +76,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Job parameter check
-        if: github.event.inputs.doVerifySteps == true
+        if: github.event.inputs.doVerifySteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -144,7 +144,7 @@ jobs:
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
             
       - name: What If
-        if: github.event.inputs.doDebugSteps == true
+        if: github.event.inputs.doDebugSteps == 'true'
         uses: Azure/cli@1.0.4
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -168,7 +168,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Job parameter check
-        if: github.event.inputs.doVerifySteps == true
+        if: github.event.inputs.doVerifySteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -178,7 +178,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Parameter file dependency check
-        if: github.event.inputs.doDebugSteps == true
+        if: github.event.inputs.doDebugSteps == 'true'
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -287,7 +287,7 @@ jobs:
     needs: [Deploy]
     steps:
       - name: Job parameter check
-        if: github.event.inputs.doVerifySteps == true
+        if: github.event.inputs.doVerifySteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -338,7 +338,7 @@ jobs:
     environment: azurecirgs
     steps:
       - name: Job parameter check
-        if: github.event.inputs.doVerifySteps == true
+        if: github.event.inputs.doVerifySteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
