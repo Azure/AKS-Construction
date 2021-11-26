@@ -249,12 +249,19 @@ jobs:
             fi
           done
           
-          echo "curl $ipAddress for content [$counter attempts for 200]"
-          command="curl $ipAddress"
-          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}") 
-          cmdLogs=$(echo $cmdOut | jq -r '.logs')
-          
-          echo $cmdLogs
+          if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
+          then
+            echo "curl $ipAddress for content [$counter attempts for 200]"
+            command="curl $ipAddress"
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}") 
+            cmdLogs=$(echo $cmdOut | jq -r '.logs')
+
+            echo $cmdLogs
+          else
+              echo "$respcode not 200 - failing"
+             exit 1
+          fi
+
 
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY
