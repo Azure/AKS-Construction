@@ -88,7 +88,7 @@ jobs:
           echo "Default Deny is ${{ github.event.inputs.defaultdeny }}"
 
       - name: Arm Parameter file check
-        if: github.event.inputs.doDebugSteps == true
+        if: github.event.inputs.doDebugSteps == 'true'
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -109,7 +109,7 @@ jobs:
           allow-no-subscriptions: false
           
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
-        if: github.event.inputs.doDebugSteps == true
+        if: github.event.inputs.doDebugSteps == 'true'
         id: activedeps
         uses: Azure/cli@1.0.4
         with:
