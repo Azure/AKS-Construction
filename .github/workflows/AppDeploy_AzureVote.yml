@@ -39,7 +39,7 @@ on:
       CURLRETRIES:
         description: 'How many retry attempts when verifying deployed App Url'  
         type: number
-        default: 20
+        default: 10
         required: false
     secrets:
       AZURE_CREDENTIALS:
@@ -148,17 +148,12 @@ jobs:
           AKSNAME='${{ inputs.AKSNAME}}'
 
           az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get po -n $NAMESP
+          kubectl get po -n $NAMESP -o wide
           "
           
           az aks command invoke -g $RG -n $AKSNAME --command "
           kubectl get svc -n $NAMESP
           "
-          
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get svc -n $NAMESP
-          "
-
 
       - name: Verify App is reachable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
@@ -200,27 +195,41 @@ jobs:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}"
         run: |
-          echo "Waiting on IP allocation"
-          sleep 2m
-
           AKSNAME='${{ inputs.AKSNAME}}'
           RG='${{ inputs.RG }}'
 
           echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
-
-          command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
-          echo "Sending command $command to AKS"
-          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           
-          ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
-          echo "IPAddress is $ipAddress"
+          counter=1
+          while [ $counter -le 10 ]
+          do
+            echo "curl $ipAddress for response code [$counter]"
+
+            command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
+            echo "Sending command $command to AKS"
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+
+            ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
+            echo "IPAddress is $ipAddress"
+
+            echo $ipAddress
+            if [ "$ipAddress" != "" ];
+            then
+                break 2
+            else
+                echo "going to wait another 10s [$counter] [$(date +"%T")]"
+                ((counter++))
+                sleep 10
+            fi
+          done
           
           counter=1
           while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
           do
             echo "curl $ipAddress for response code [$counter]"
 
-            command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
+            #command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
+            command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             echo "Sending command to AKS : $command"
             
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")  
@@ -240,12 +249,19 @@ jobs:
             fi
           done
           
-          echo "curl $ipAddress for content [$counter attempts for 200]"
-          command="curl $ipAddress"
-          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}") 
-          cmdLogs=$(echo $cmdOut | jq -r '.logs')
-          
-          echo $cmdLogs
+          if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
+          then
+            echo "curl $ipAddress for content [$counter attempts for 200]"
+            command="curl $ipAddress"
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}") 
+            cmdLogs=$(echo $cmdOut | jq -r '.logs')
+
+            echo $cmdLogs
+          else
+              echo "$respcode not 200 - failing"
+             exit 1
+          fi
+
 
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY

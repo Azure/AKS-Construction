@@ -8,13 +8,24 @@ on:
     inputs:
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'  
-        default: 'no'
+        default: 'false'
+        type: boolean
+        required: false
       doDebugSteps:
         description: 'Run informational steps'  
-        default: 'no'
+        default: 'true'
+        type: boolean
+        required: false
       doVerifySteps:
         description: 'Run optional verify steps'  
-        default: 'no'
+        default: 'true'
+        type: boolean
+        required: false
+      defaultdeny:
+        description: 'Default Deny NetworkPolicy?'  
+        default: 'true'
+        type: boolean
+        required: false
         
   push:
     paths: 
@@ -35,8 +46,6 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json"
   RESNAME: 'AksPriv'
   DEPNAME: 'DepPriv${{ github.run_number }}'
-  DOVERIFICATIONSTEPS: github.event.inputs.doDebugSteps != 'no' #These are steps that will generally throw errors when things aren't there
-  DODEBUGSTEPS:  github.event.inputs.doVerifySteps != 'no' #These are steps that are purely informational
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
   
 concurrency: ci-${{ github.ref }}
@@ -67,7 +76,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Job parameter check
-        if: env.DODEBUGSTEPS == true
+        if: github.event.inputs.doVerifySteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -76,10 +85,10 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "EventTrigger name is ${{github.event_name}}"
-          echo "Actor name is ${{ github.actor}}"
+          echo "Default Deny is ${{ github.event.inputs.defaultdeny }}"
 
       - name: Arm Parameter file check
-        if: env.DOVERIFICATIONSTEPS == true
+        if: github.event.inputs.doDebugSteps == 'true'
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -100,7 +109,7 @@ jobs:
           allow-no-subscriptions: false
           
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
-        if: env.DOVERIFICATIONSTEPS == true
+        if: github.event.inputs.doDebugSteps == 'true'
         id: activedeps
         uses: Azure/cli@1.0.4
         with:
@@ -135,7 +144,7 @@ jobs:
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
             
       - name: What If
-        if: env.DOVERIFICATIONSTEPS == true
+        if: github.event.inputs.doDebugSteps == 'true'
         uses: Azure/cli@1.0.4
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -159,7 +168,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Job parameter check
-        if: env.DODEBUGSTEPS == true
+        if: github.event.inputs.doVerifySteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -169,7 +178,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Parameter file dependency check
-        if: env.DOVERIFICATIONSTEPS == true
+        if: github.event.inputs.doDebugSteps == 'true'
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existance/contents"
@@ -240,6 +249,7 @@ jobs:
             fi
             
       - name: Create Default Deny NetworkPolicy
+        if: github.event.inputs.defaultdeny == 'true'
         run: 
           RG='${{ env.RG }}'
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
@@ -269,6 +279,7 @@ jobs:
       #INGRESSTYPE: "PublicLoadBalancer" (This is default as its the only one supported in the helm chart right now)
       UNINSTALLAFTERVERIFY: false
       USERUNCOMMAND: true
+      CURLRETRIES: 3
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -277,7 +288,7 @@ jobs:
     needs: [Deploy]
     steps:
       - name: Job parameter check
-        if: env.DODEBUGSTEPS == true
+        if: github.event.inputs.doVerifySteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -328,7 +339,7 @@ jobs:
     environment: azurecirgs
     steps:
       - name: Job parameter check
-        if: env.DODEBUGSTEPS == true
+        if: github.event.inputs.doVerifySteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
