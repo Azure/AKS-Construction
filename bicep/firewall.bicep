@@ -113,7 +113,7 @@ resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-
   parent: fwPolicy
   name: 'AKSConstructionRuleGroup'
   properties: {
-    priority: 300
+    priority: 200
     ruleCollections:  [
       {
         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
@@ -198,7 +198,7 @@ resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-
       {
         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
         name: 'CoreAksHttpEgress'
-        priority: 101
+        priority: 200
         action: {
           type: 'Allow'
         }
