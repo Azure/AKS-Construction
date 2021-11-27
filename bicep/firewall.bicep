@@ -109,12 +109,92 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2020-11-01' = {
   }
 }
 
-resource fwpAppRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
+resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
   parent: fwPolicy
-  name: 'DefaultApplicationRuleCollectionGroup'
+  name: 'AKSConstructionRuleGroup'
   properties: {
     priority: 300
     ruleCollections:  [
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'CoreAksNetEgress'
+        priority: 100
+        action: {
+          type: 'Allow'
+        }
+        rules: concat([
+          {
+            name: 'ControlPlaneTCP'
+            ruleType: 'NetworkRule'
+            ipProtocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              vnetAksSubnetAddressPrefix
+            ]
+            destinationAddresses: [
+              'AzureCloud.${location}'
+            ]
+            destinationPorts: [
+              '9000' /* For tunneled secure communication between the nodes and the control plane. */
+              '22'
+            ]
+          }
+          {
+            name: 'ControlPlaneUDP'
+            ruleType: 'NetworkRule'
+            ipProtocols: [
+              'UDP'
+            ]
+            sourceAddresses: [
+              vnetAksSubnetAddressPrefix
+            ]
+            destinationAddresses: [
+              'AzureCloud.${location}'
+            ]
+            destinationPorts: [
+              '1194' /* For tunneled secure communication between the nodes and the control plane. */
+            ]
+          }
+          {
+            name: 'AzureMonitorForContainers'
+            ruleType: 'NetworkRule'
+            ipProtocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              vnetAksSubnetAddressPrefix
+            ]
+            destinationAddresses: [
+              'AzureMonitor'
+            ]
+            destinationPorts: [
+              '443'
+            ]
+          }
+        ], acrPrivatePool ? [
+          {
+            name: 'acr-agentpool'
+            ruleType: 'NetworkRule'
+            ipProtocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              acrAgentPoolSubnetAddressPrefix
+            ]
+            destinationAddresses: [
+              'AzureKeyVault'
+              'Storage'
+              'EventHub'
+              'AzureActiveDirectory'
+              'AzureMonitor'
+            ]
+            destinationPorts: [
+              '443'
+            ]
+          }
+        ]:[])
+      }
       {
         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
         name: 'CoreAksHttpEgress'
@@ -211,102 +291,9 @@ resource fwpAppRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@20
             }
           ] : [])
       }
-    ]
-  }
-}
-
-resource fwpNetRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
-  parent: fwPolicy
-  dependsOn: [  //We need to explictly define dependsOn here, as AzFw Policy getings into a sequencing conflict.
-    fwpAppRules //FirewallPolicyRuleCollectionGroupUpdateNotAllowed","message": "Rule Collection Group DefaultNetworkRuleCollectionGroup can not be updated because Parent Firewall Policy afwp-priv is in Updating state"
-  ]
-  name: 'DefaultNetworkRuleCollectionGroup'
-  properties: {
-    priority: 200
-    ruleCollections: [
       {
         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-        name: 'CoreAksNetEgress'
-        priority: 100
-        action: {
-          type: 'Allow'
-        }
-        rules: concat([
-          {
-            name: 'ControlPlaneTCP'
-            ruleType: 'NetworkRule'
-            ipProtocols: [
-              'TCP'
-            ]
-            sourceAddresses: [
-              vnetAksSubnetAddressPrefix
-            ]
-            destinationAddresses: [
-              'AzureCloud.${location}'
-            ]
-            destinationPorts: [
-              '9000' /* For tunneled secure communication between the nodes and the control plane. */
-              '22'
-            ]
-          }
-          {
-            name: 'ControlPlaneUDP'
-            ruleType: 'NetworkRule'
-            ipProtocols: [
-              'UDP'
-            ]
-            sourceAddresses: [
-              vnetAksSubnetAddressPrefix
-            ]
-            destinationAddresses: [
-              'AzureCloud.${location}'
-            ]
-            destinationPorts: [
-              '1194' /* For tunneled secure communication between the nodes and the control plane. */
-            ]
-          }
-          {
-            name: 'AzureMonitorForContainers'
-            ruleType: 'NetworkRule'
-            ipProtocols: [
-              'TCP'
-            ]
-            sourceAddresses: [
-              vnetAksSubnetAddressPrefix
-            ]
-            destinationAddresses: [
-              'AzureMonitor'
-            ]
-            destinationPorts: [
-              '443'
-            ]
-          }
-        ], acrPrivatePool ? [
-          {
-            name: 'acr-agentpool'
-            ruleType: 'NetworkRule'
-            ipProtocols: [
-              'TCP'
-            ]
-            sourceAddresses: [
-              acrAgentPoolSubnetAddressPrefix
-            ]
-            destinationAddresses: [
-              'AzureKeyVault'
-              'Storage'
-              'EventHub'
-              'AzureActiveDirectory'
-              'AzureMonitor'
-            ]
-            destinationPorts: [
-              '443'
-            ]
-          }
-        ]:[])
-      }
-      {
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-        name: 'CoreAksNetIngress'
+        name: 'AksNetIngress'
         priority: 300
         action: {
           type: 'Allow'
@@ -351,5 +338,5 @@ resource fwpNetRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@20
         ]:[])
       }
     ]
-  } 
+  }
 }
