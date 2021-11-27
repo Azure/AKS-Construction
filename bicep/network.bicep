@@ -152,7 +152,7 @@ resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!e
   name: privateLinkAcrName
   location: location
   properties: {
-    customNetworkInterfaceName: 'nic-${privateLinkAcrName}'
+    //customNetworkInterfaceName: 'nic-${privateLinkAcrName}' needs AllowPrivateEndpointCustomNicName registered in subscription
     privateLinkServiceConnections: [
       {
         name: 'Acr-Connection'
@@ -210,7 +210,7 @@ resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!e
   name: privateLinkAkvName
   location: location
   properties: {
-    customNetworkInterfaceName: 'nic-${privateLinkAkvName}'
+    //customNetworkInterfaceName: 'nic-${privateLinkAkvName}' needs AllowPrivateEndpointCustomNicName registered in subscription
     privateLinkServiceConnections: [
       {
         name: 'Akv-Connection'
