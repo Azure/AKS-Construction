@@ -10,7 +10,7 @@ param certManagerFW bool = false
   'AllowAcrSubnetIn'
   ''
 ])
-param inboundHttpRule string = 'AllowAllIn'
+param inboundHttpFW string = 'AllowAllIn'
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 
@@ -108,47 +108,6 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2020-11-01' = {
     }
   }
 }
-
-// resource fwpAppRules2 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
-//   parent: fwPolicy
-//   name: 'DefaultApplicationRuleCollectionGroup'
-//   properties: {
-//     priority: 250
-//     ruleCollections: [
-//       {
-//         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-//         name: 'CoreAksHttpEgress'
-//         priority: 101
-//         action: {
-//           type: 'Allow'
-//         }
-//         rules: [
-//           {
-//             name: 'aks'
-//             ruleType: 'ApplicationRule'
-//             protocols: [
-//               {
-//                 port: 443
-//                 protocolType: 'Https'
-//               }
-//               {
-//                 port: 80
-//                 protocolType: 'Http'
-//               }
-//             ]
-//             targetFqdns: []
-//             fqdnTags: [
-//               'AzureKubernetesService'
-//             ]
-//             sourceAddresses: [
-//               vnetAksSubnetAddressPrefix
-//             ]
-//           }
-//         ]
-//       }
-//     ]
-//   }
-// }
 
 resource fwpAppRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
   parent: fwPolicy
@@ -258,12 +217,17 @@ resource fwpAppRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@20
 
 resource fwpNetRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
   parent: fwPolicy
+  dependsOn: [  //We need to explictly define dependsOn here, as AzFw Policy getings into a sequencing conflict.
+    fwpAppRules //FirewallPolicyRuleCollectionGroupUpdateNotAllowed","message": "Rule Collection Group DefaultNetworkRuleCollectionGroup can not be updated because Parent Firewall Policy afwp-priv is in Updating state"
+  ]
   name: 'DefaultNetworkRuleCollectionGroup'
   properties: {
     priority: 200
     ruleCollections: [
       {
         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'CoreAksNetEgress'
+        priority: 100
         action: {
           type: 'Allow'
         }
@@ -338,39 +302,37 @@ resource fwpNetRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@20
               '443'
             ]
           }
-        ]: [])
-        name: 'CoreAksNetEgress'
-        priority: 100
+        ]:[])
       }
       {
         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'CoreAksNetIngress'
+        priority: 300
         action: {
           type: 'Allow'
         }
-        rules: [
-          inboundHttpRule=='AllowAllIn' ? {
+        rules: concat(inboundHttpFW=='AllowAllIn' ? [
+          {
             ruleType: 'NetworkRule'
-            name: 'InternetInHttp'
+            name: inboundHttpFW
             ipProtocols: [
               'TCP'
             ]
             sourceAddresses: [
               '*'
             ]
-            sourceIpGroups: []
             destinationAddresses: [
               vnetAksSubnetAddressPrefix
             ]
-            destinationIpGroups: []
-            destinationFqdns: []
             destinationPorts: [
               '80'
               '443'
             ]
-          } : {}
-          inboundHttpRule=='AllowAcrSubnetIn' ? {
+          }
+        ]:[], acrPrivatePool && inboundHttpFW=='AllowAcrSubnetIn' ? [
+          {
             ruleType: 'NetworkRule'
-            name: 'AcrTasksInHttp'
+            name: inboundHttpFW
             ipProtocols: [
               'TCP'
               'ICMP'
@@ -378,21 +340,16 @@ resource fwpNetRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@20
             sourceAddresses: [
               acrAgentPoolSubnetAddressPrefix
             ]
-            sourceIpGroups: []
             destinationAddresses: [
               vnetAksSubnetAddressPrefix
             ]
-            destinationIpGroups: []
-            destinationFqdns: []
             destinationPorts: [
               '80'
               '443'
             ]
-          } : {}
-        ]
-        name: 'WebTrafficIn'
-        priority: 200
+          }
+        ]:[])
       }
     ]
-  }
+  } 
 }

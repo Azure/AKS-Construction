@@ -147,11 +147,12 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
 
 
 /*   --------------------------------------------------------------------------  Private Link for ACR      */
-var privateLinkAcrName = 'vnet-pl-acr-${resourceName}'
+var privateLinkAcrName = 'pl-acr-${resourceName}'
 resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAcrId)) {
   name: privateLinkAcrName
   location: location
   properties: {
+    customNetworkInterfaceName: 'nic-${privateLinkAcrName}'
     privateLinkServiceConnections: [
       {
         name: 'Acr-Connection'
@@ -204,11 +205,12 @@ resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
 
 
 /*   --------------------------------------------------------------------------  Private Link for KeyVault      */
-var privateLinkAkvName = 'vnet-pl-akv-${resourceName}'
+var privateLinkAkvName = 'pl-akv-${resourceName}'
 resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAkvId)) {
   name: privateLinkAkvName
   location: location
   properties: {
+    customNetworkInterfaceName: 'nic-${privateLinkAkvName}'
     privateLinkServiceConnections: [
       {
         name: 'Akv-Connection'

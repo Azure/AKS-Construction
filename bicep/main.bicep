@@ -373,7 +373,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     appDnsZoneName: dnsZoneName
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
-    inboundHttpRule: inboundHttpFW
+    inboundHttpFW: inboundHttpFW
   }
 }
 
