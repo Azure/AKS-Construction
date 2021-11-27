@@ -4,6 +4,13 @@ param workspaceDiagsId string = ''
 param fwSubnetId string
 param vnetAksSubnetAddressPrefix string
 param certManagerFW bool = false
+
+@allowed([
+  'AllowAllIn'
+  'AllowAcrSubnetIn'
+  ''
+])
+param inboundHttpRule string = 'AllowAllIn'
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 
@@ -60,7 +67,7 @@ resource fwDiags 'microsoft.insights/diagnosticSettings@2017-05-01-preview' = if
 param appDnsZoneName string = ''
 
 var fw_name = 'afw-${resourceName}'
-resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
+resource fw 'Microsoft.Network/azureFirewalls@2021-03-01' = {
   name: fw_name
   location: location
   properties: {
@@ -78,178 +85,313 @@ resource fw 'Microsoft.Network/azureFirewalls@2019-04-01' = {
       }
     ]
     threatIntelMode: 'Alert'
-    applicationRuleCollections: [
+    firewallPolicy: {
+      id: fwPolicy.id
+
+    }
+    applicationRuleCollections: []
+    networkRuleCollections: []
+  }
+}
+
+resource fwPolicy 'Microsoft.Network/firewallPolicies@2020-11-01' = {
+  name: 'afwp-${resourceName}'
+  location: 'westeurope'
+  properties: {
+    sku: {
+      tier: 'Standard'
+    }
+    threatIntelMode: 'Alert'
+    threatIntelWhitelist: {
+      fqdns: []
+      ipAddresses: []
+    }
+  }
+}
+
+// resource fwpAppRules2 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
+//   parent: fwPolicy
+//   name: 'DefaultApplicationRuleCollectionGroup'
+//   properties: {
+//     priority: 250
+//     ruleCollections: [
+//       {
+//         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+//         name: 'CoreAksHttpEgress'
+//         priority: 101
+//         action: {
+//           type: 'Allow'
+//         }
+//         rules: [
+//           {
+//             name: 'aks'
+//             ruleType: 'ApplicationRule'
+//             protocols: [
+//               {
+//                 port: 443
+//                 protocolType: 'Https'
+//               }
+//               {
+//                 port: 80
+//                 protocolType: 'Http'
+//               }
+//             ]
+//             targetFqdns: []
+//             fqdnTags: [
+//               'AzureKubernetesService'
+//             ]
+//             sourceAddresses: [
+//               vnetAksSubnetAddressPrefix
+//             ]
+//           }
+//         ]
+//       }
+//     ]
+//   }
+// }
+
+resource fwpAppRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
+  parent: fwPolicy
+  name: 'DefaultApplicationRuleCollectionGroup'
+  properties: {
+    priority: 300
+    ruleCollections:  [
       {
-        name: 'clusterRc1'
-        properties: {
-          priority: 101
-          action: {
-            type: 'Allow'
-          }
-          rules: concat([
-              {
-                name: 'aks'
-                protocols: [
-                  {
-                    port: 443
-                    protocolType: 'Https'
-                  }
-                  {
-                    port: 80
-                    protocolType: 'Http'
-                  }
-                ]
-                targetFqdns: []
-                fqdnTags: [
-                  'AzureKubernetesService'
-                ]
-                sourceAddresses: [
-                  vnetAksSubnetAddressPrefix
-                ]
-              }
-            ], certManagerFW ? [
-              {
-                name: 'cetman-quay'
-                protocols: [
-                  {
-                    port: 443
-                    protocolType: 'Https'
-                  }
-                  {
-                    port: 80
-                    protocolType: 'Http'
-                  }
-                ]
-                targetFqdns: [
-                  'quay.io'
-                  '*.quay.io'
-                ]
-                sourceAddresses: [
-                  vnetAksSubnetAddressPrefix
-                ]
-              }
-              {
-                name: 'cetman-letsencrypt'
-                protocols: [
-                  {
-                    port: 443
-                    protocolType: 'Https'
-                  }
-                  {
-                    port: 80
-                    protocolType: 'Http'
-                  }
-                ]
-                targetFqdns: [
-                  'letsencrypt.org'
-                  '*.letsencrypt.org'
-                ]
-                sourceAddresses: [
-                  vnetAksSubnetAddressPrefix
-                ]
-              }
-            ] : [], certManagerFW && !empty(appDnsZoneName) ? [
-              {
-                name: 'cetman-appDnsZoneName'
-                protocols: [
-                  {
-                    port: 443
-                    protocolType: 'Https'
-                  }
-                  {
-                    port: 80
-                    protocolType: 'Http'
-                  }
-                ]
-                targetFqdns: [
-                  appDnsZoneName
-                  '*.${appDnsZoneName}'
-                ]
-                sourceAddresses: [
-                  vnetAksSubnetAddressPrefix
-                ]
-              }
-            ] : [])
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'CoreAksHttpEgress'
+        priority: 101
+        action: {
+          type: 'Allow'
         }
+        rules: concat([
+            {
+              name: 'aks'
+              ruleType: 'ApplicationRule'
+              protocols: [
+                {
+                  port: 443
+                  protocolType: 'Https'
+                }
+                {
+                  port: 80
+                  protocolType: 'Http'
+                }
+              ]
+              targetFqdns: []
+              fqdnTags: [
+                'AzureKubernetesService'
+              ]
+              sourceAddresses: [
+                vnetAksSubnetAddressPrefix
+              ]
+            }
+          ], certManagerFW ? [
+            {
+              name: 'certman-quay'
+              ruleType: 'ApplicationRule'
+              protocols: [
+                {
+                  port: 443
+                  protocolType: 'Https'
+                }
+                {
+                  port: 80
+                  protocolType: 'Http'
+                }
+              ]
+              targetFqdns: [
+                'quay.io'
+                '*.quay.io'
+              ]
+              sourceAddresses: [
+                vnetAksSubnetAddressPrefix
+              ]
+            }
+            {
+              name: 'certman-letsencrypt'
+              ruleType: 'ApplicationRule'
+              protocols: [
+                {
+                  port: 443
+                  protocolType: 'Https'
+                }
+                {
+                  port: 80
+                  protocolType: 'Http'
+                }
+              ]
+              targetFqdns: [
+                'letsencrypt.org'
+                '*.letsencrypt.org'
+              ]
+              sourceAddresses: [
+                vnetAksSubnetAddressPrefix
+              ]
+            }
+          ] : [], certManagerFW && !empty(appDnsZoneName) ? [
+            {
+              name: 'certman-appDnsZoneName'
+              ruleType: 'ApplicationRule'
+              protocols: [
+                {
+                  port: 443
+                  protocolType: 'Https'
+                }
+                {
+                  port: 80
+                  protocolType: 'Http'
+                }
+              ]
+              targetFqdns: [
+                appDnsZoneName
+                '*.${appDnsZoneName}'
+              ]
+              sourceAddresses: [
+                vnetAksSubnetAddressPrefix
+              ]
+            }
+          ] : [])
       }
     ]
-    networkRuleCollections: [
+  }
+}
+
+resource fwpNetRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
+  parent: fwPolicy
+  name: 'DefaultNetworkRuleCollectionGroup'
+  properties: {
+    priority: 200
+    ruleCollections: [
       {
-        name: 'netRc1'
-        properties: {
-          priority: 100
-          action: {
-            type: 'Allow'
-          }
-          rules: concat([
-            {
-              name: 'ControlPlaneTCP'
-              protocols: [
-                'TCP'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-              destinationAddresses: [
-                'AzureCloud.${location}'
-              ]
-              destinationPorts: [
-                '9000' /* For tunneled secure communication between the nodes and the control plane. */
-                '22'
-              ]
-            }
-            {
-              name: 'ControlPlaneUDP'
-              protocols: [
-                'UDP'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-              destinationAddresses: [
-                'AzureCloud.${location}'
-              ]
-              destinationPorts: [
-                '1194' /* For tunneled secure communication between the nodes and the control plane. */
-              ]
-            }
-            {
-              name: 'AzureMonitorForContainers'
-              protocols: [
-                'TCP'
-              ]
-              sourceAddresses: [
-                vnetAksSubnetAddressPrefix
-              ]
-              destinationAddresses: [
-                'AzureMonitor'
-              ]
-              destinationPorts: [
-                '443'
-              ]
-            }
-          ], acrPrivatePool ? [
-            {
-              name: 'acr-agentpool'
-              protocols: [
-                'TCP'
-              ]
-              sourceAddresses: [
-                acrAgentPoolSubnetAddressPrefix
-              ]
-              destinationAddresses: [
-                'AzureKeyVault'
-                'Storage'
-                'EventHub'
-                'AzureActiveDirectory'
-                'AzureMonitor'
-              ]
-              destinationPorts: [
-                '443'
-              ]
-            }
-          ]: [])
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        action: {
+          type: 'Allow'
         }
+        rules: concat([
+          {
+            name: 'ControlPlaneTCP'
+            ruleType: 'NetworkRule'
+            ipProtocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              vnetAksSubnetAddressPrefix
+            ]
+            destinationAddresses: [
+              'AzureCloud.${location}'
+            ]
+            destinationPorts: [
+              '9000' /* For tunneled secure communication between the nodes and the control plane. */
+              '22'
+            ]
+          }
+          {
+            name: 'ControlPlaneUDP'
+            ruleType: 'NetworkRule'
+            ipProtocols: [
+              'UDP'
+            ]
+            sourceAddresses: [
+              vnetAksSubnetAddressPrefix
+            ]
+            destinationAddresses: [
+              'AzureCloud.${location}'
+            ]
+            destinationPorts: [
+              '1194' /* For tunneled secure communication between the nodes and the control plane. */
+            ]
+          }
+          {
+            name: 'AzureMonitorForContainers'
+            ruleType: 'NetworkRule'
+            ipProtocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              vnetAksSubnetAddressPrefix
+            ]
+            destinationAddresses: [
+              'AzureMonitor'
+            ]
+            destinationPorts: [
+              '443'
+            ]
+          }
+        ], acrPrivatePool ? [
+          {
+            name: 'acr-agentpool'
+            ruleType: 'NetworkRule'
+            ipProtocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              acrAgentPoolSubnetAddressPrefix
+            ]
+            destinationAddresses: [
+              'AzureKeyVault'
+              'Storage'
+              'EventHub'
+              'AzureActiveDirectory'
+              'AzureMonitor'
+            ]
+            destinationPorts: [
+              '443'
+            ]
+          }
+        ]: [])
+        name: 'CoreAksNetEgress'
+        priority: 100
+      }
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+          inboundHttpRule=='AllowAllIn' ? {
+            ruleType: 'NetworkRule'
+            name: 'InternetInHttp'
+            ipProtocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              '*'
+            ]
+            sourceIpGroups: []
+            destinationAddresses: [
+              vnetAksSubnetAddressPrefix
+            ]
+            destinationIpGroups: []
+            destinationFqdns: []
+            destinationPorts: [
+              '80'
+              '443'
+            ]
+          } : {}
+          inboundHttpRule=='AllowAcrSubnetIn' ? {
+            ruleType: 'NetworkRule'
+            name: 'AcrTasksInHttp'
+            ipProtocols: [
+              'TCP'
+              'ICMP'
+            ]
+            sourceAddresses: [
+              acrAgentPoolSubnetAddressPrefix
+            ]
+            sourceIpGroups: []
+            destinationAddresses: [
+              vnetAksSubnetAddressPrefix
+            ]
+            destinationIpGroups: []
+            destinationFqdns: []
+            destinationPorts: [
+              '80'
+              '443'
+            ]
+          } : {}
+        ]
+        name: 'WebTrafficIn'
+        priority: 200
       }
     ]
   }
