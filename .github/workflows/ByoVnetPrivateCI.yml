@@ -273,7 +273,7 @@ jobs:
           RG='${{ env.RG }}'
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
           
-          netpolicycmd="kubectl networkpolicy -A";
+          netpolicycmd="kubectl get networkpolicy -A";
                     
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
