@@ -262,6 +262,76 @@ jobs:
              exit 1
           fi
 
+      - name: Verify Public LB App is reachable
+        if: inputs.INGRESSTYPE == 'PublicLoadBalancer' || inputs.INGRESSTYPE == 'AGIC-Public-Ingress'
+        env:
+          NAMESP: "default"
+          APPNAME: "${{ inputs.APPNAME }}"
+        run: |
+          AKSNAME='${{ inputs.AKSNAME}}'
+          RG='${{ inputs.RG }}'
+
+          echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
+          
+          counter=1
+          while [ $counter -le 10 ]
+          do
+            echo "curl $ipAddress for response code [$counter]"
+
+            command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
+            echo "Sending command $command to AKS"
+            cmdOut=$(command)
+
+            ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
+            echo "IPAddress is $ipAddress"
+
+            echo $ipAddress
+            if [ "$ipAddress" != "" ];
+            then
+                break 2
+            else
+                echo "going to wait another 10s [$counter] [$(date +"%T")]"
+                ((counter++))
+                sleep 10
+            fi
+          done
+          
+          counter=1
+          while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
+          do
+            echo "curl $ipAddress for response code [$counter]"
+
+            command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
+            cmdOut=$(command)  
+
+            echo $cmdOut > debug.json
+            respcode=$(echo $cmdOut | jq -r '.logs')
+
+            echo $respcode
+            if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
+            then
+                echo "200 response code received after $counter trys"
+                break 2
+            else
+                echo "going to wait another 15s [$counter] [$(date +"%T")]"
+                ((counter++))
+                sleep 15
+            fi
+          done
+          
+          if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
+          then
+            echo "curl $ipAddress for content [$counter attempts for 200]"
+            command="curl $ipAddress"
+            cmdOut=$(command) 
+            cmdLogs=$(echo $cmdOut | jq -r '.logs')
+
+            echo $cmdLogs
+          else
+              echo "$respcode not 200 - failing"
+             exit 1
+          fi
+
 
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY
