@@ -53,7 +53,7 @@ concurrency: ci-${{ github.ref }}
 jobs:
   Well_Architected:
     runs-on: ubuntu-latest
-    if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected != 'no'
+    if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
     steps:
       - uses: actions/checkout@v2
       
