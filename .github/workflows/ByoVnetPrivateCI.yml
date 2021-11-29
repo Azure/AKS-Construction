@@ -266,7 +266,19 @@ jobs:
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
-            
+
+      - name: Verify Default Deny NetworkPolicy
+        if: github.event.inputs.doVerifySteps == 'true'
+        run:
+          RG='${{ env.RG }}'
+          AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
+          
+          netpolicycmd="kubectl networkpolicy -A";
+                    
+          echo "Sending command $netpolicycmd to $AKSNAME in $RG";
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
+          echo $cmdOut;
+
   SmokeTest_KnownGoodApp:
     needs: [Deploy]
     #This points to a specific branch, because of a limitation around targetting @${{ github.sha }} isn't supported yet. https://github.community/t/ref-head-in-reusable-workflows/203690/6
