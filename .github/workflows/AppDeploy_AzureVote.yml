@@ -189,6 +189,7 @@ jobs:
           curl $pubIp
 
       - name: Verify Public LB App is reachable via IP (run cmd)
+        id: verifyAppAvailable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
         if: inputs.INGRESSTYPE == 'PublicLoadBalancer' && inputs.USERUNCOMMAND == true
         env:
@@ -222,6 +223,8 @@ jobs:
                 sleep 10
             fi
           done
+
+          echo "::set-output name=IPADDRESS::$ipAddress"
           
           counter=1
           while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
@@ -273,28 +276,7 @@ jobs:
 
           echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
           
-          counter=1
-          while [ $counter -le 10 ]
-          do
-            echo "curl $ipAddress for response code [$counter]"
-
-            command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
-            echo "Sending command $command to AKS"
-            cmdOut=$(command)
-
-            ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
-            echo "IPAddress is $ipAddress"
-
-            echo $ipAddress
-            if [ "$ipAddress" != "" ];
-            then
-                break 2
-            else
-                echo "going to wait another 10s [$counter] [$(date +"%T")]"
-                ((counter++))
-                sleep 10
-            fi
-          done
+          ipAddress='${{ steps.verifyAppAvailable.outputs.IPADDRESS}}'
           
           counter=1
           while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
