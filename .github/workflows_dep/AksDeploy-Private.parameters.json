@@ -60,7 +60,7 @@
             "value": true
           },
           "privateIpApplicationGateway" : {
-            "value": "10.240.4.63"
+            "value": "10.240.4.60"
           },
           "bastion" : {
             "value": true
