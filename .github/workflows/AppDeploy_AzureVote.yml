@@ -281,9 +281,7 @@ jobs:
           do
             echo "curl $ipAddress for response code [$counter]"
 
-            command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
-            cmdOut=$(command)  
-            echo $cmdOut
+            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
 
             echo $respcode
             if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
