@@ -288,10 +288,10 @@ jobs:
       AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: azure-vote-public
-      #INGRESSTYPE: "PublicLoadBalancer" (This is default as its the only one supported in the helm chart right now)
+      INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer" (If you're using AzFw, then you gotta be using AGIC or doing the NAT dance on the Fw)
       UNINSTALLAFTERVERIFY: false
       USERUNCOMMAND: true
-      CURLRETRIES: 3
+      CURLRETRIES: 10
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
