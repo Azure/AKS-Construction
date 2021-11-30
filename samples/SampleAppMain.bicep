@@ -59,8 +59,8 @@ var environmentConfigurationMap = {
       AksPaidSkuForSLA: false
       JustUseSystemPool: true
       privateCluster: false
-      agentCount:6
-      agentCountMax:12
+      agentCount:1
+      agentCountMax:3
       networkPolicy: ''
       agentVMSize: 'Standard_DS3_v2'
     }
