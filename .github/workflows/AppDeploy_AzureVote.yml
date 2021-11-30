@@ -274,8 +274,6 @@ jobs:
           AKSNAME='${{ inputs.AKSNAME}}'
           RG='${{ inputs.RG }}'
 
-          echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
-          
           ipAddress='${{ steps.verifyAppAvailable.outputs.IPADDRESS}}'
           
           counter=1
@@ -286,7 +284,7 @@ jobs:
             command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             cmdOut=$(command)  
 
-            echo $cmdOut > debug.json
+            echo $cmdOut > debug$counter.json
             respcode=$(echo $cmdOut | jq -r '.logs')
 
             echo $respcode
@@ -311,6 +309,7 @@ jobs:
             echo $cmdLogs
           else
               echo "$respcode not 200 - failing"
+              curl $ipAddress
              exit 1
           fi
 
@@ -326,4 +325,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: Json out
-          path: debug.json
+          path: debug*.json
