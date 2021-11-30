@@ -283,9 +283,7 @@ jobs:
 
             command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             cmdOut=$(command)  
-
-            echo $cmdOut > debug$counter.json
-            respcode=$(echo $cmdOut | jq -r '.logs')
+            echo $cmdOut
 
             echo $respcode
             if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
