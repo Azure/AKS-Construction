@@ -36,7 +36,7 @@
             "value": true
           },
           "azureFirewalls": {
-            "value": true
+            "value": false
           },
           "privateLinks": {
             "value": true
