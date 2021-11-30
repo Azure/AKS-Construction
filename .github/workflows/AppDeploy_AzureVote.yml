@@ -107,7 +107,38 @@ jobs:
                 helm uninstall $APPNAME
                 sleep 1m
           fi
+      - name: Resolve Helm Parameters
+        id: helmparams
+        run: |
+          echo ${{ inputs.INGRESSTYPE }} #== 'PublicLoadBalancer'
+          
+          case "${{ inputs.INGRESSTYPE }}" in
+          PublicLoadBalancer)
+            echo "::set-output name=SERVICETYPE::LoadBalancer"
+            echo "::set-output name=AZURELBINT::false"
+            echo "::set-output name=INGRESS::false"
+            ;;
 
+          InternalLoadBalancer)
+            echo "::set-output name=SERVICETYPE::LoadBalancer"
+            echo "::set-output name=AZURELBINT::true"
+            echo "::set-output name=INGRESS::false"
+            ;;
+
+          AGIC-Public-Ingress)
+            echo "::set-output name=SERVICETYPE::ClusterIP"
+            echo "::set-output name=AZURELBINT::true"
+            echo "::set-output name=INGRESS::true"
+            ;;
+
+          AGIC-Private-Ingress)
+            echo "::set-output name=SERVICETYPE::ClusterIP"
+            echo "::set-output name=AZURELBINT::true"
+            echo "::set-output name=INGRESS::true"
+            ;;
+          esac
+          
+          
       - name: Install the Vote app
         if: inputs.USERUNCOMMAND == false
         env:
@@ -122,8 +153,8 @@ jobs:
           APPNAME='${{ inputs.APPNAME }}'
           #AGNAME='${{ inputs.AGNAME}}'
           
-          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set service.azureLbInternal="false" --dry-run
-          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set service.azureLbInternal="false"
+          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set ingress.enabled=${{ steps.helmparams.outputs.INGRESS == 'true' }}, service.azureLbInternal=${{ steps.helmparams.outputs.AZURELBINT}}, service.type="${{ steps.helmparams.outputs.SERVICETYPE}}" --dry-run
+          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set ingress.enabled=${{ steps.helmparams.outputs.INGRESS == 'true' }}, service.azureLbInternal=${{ steps.helmparams.outputs.AZURELBINT}}, service.type="${{ steps.helmparams.outputs.SERVICETYPE}}"
 
       - name: Install the Vote app (run cmd)
         if: inputs.USERUNCOMMAND == true
@@ -137,7 +168,7 @@ jobs:
           #AGNAME='${{ inputs.AGNAME}}'
           
           az aks command invoke -g $RG -n $AKSNAME --command "
-          helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.1.0.tgz --set service.azureLbInternal=false
+          helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.1.0.tgz --set ingress.enabled=${{ steps.helmparams.outputs.INGRESS == 'true' }}, service.azureLbInternal=${{ steps.helmparams.outputs.AZURELBINT}}, service.type="${{ steps.helmparams.outputs.SERVICETYPE}}"
           "
       - name: Checking deployment (Run cmd invoke)
         if: inputs.USERUNCOMMAND == true
@@ -189,6 +220,7 @@ jobs:
           curl $pubIp
 
       - name: Verify Public LB App is reachable via IP (run cmd)
+        id: verifyAppAvailable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
         if: inputs.INGRESSTYPE == 'PublicLoadBalancer' && inputs.USERUNCOMMAND == true
         env:
@@ -222,6 +254,8 @@ jobs:
                 sleep 10
             fi
           done
+
+          echo "::set-output name=IPADDRESS::$ipAddress"
           
           counter=1
           while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
@@ -262,6 +296,50 @@ jobs:
              exit 1
           fi
 
+      - name: Verify Public LB App is reachable
+        if: inputs.INGRESSTYPE == 'PublicLoadBalancer' || inputs.INGRESSTYPE == 'AGIC-Public-Ingress'
+        env:
+          NAMESP: "default"
+          APPNAME: "${{ inputs.APPNAME }}"
+        run: |
+          AKSNAME='${{ inputs.AKSNAME}}'
+          RG='${{ inputs.RG }}'
+
+          ipAddress='${{ steps.verifyAppAvailable.outputs.IPADDRESS}}'
+          
+          counter=1
+          while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
+          do
+            echo "curl $ipAddress for response code [$counter]"
+
+            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $ipAddress)
+
+            echo $respcode
+            if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
+            then
+                echo "200 response code received after $counter trys"
+                break 2
+            else
+                echo "going to wait another 15s [$counter] [$(date +"%T")]"
+                ((counter++))
+                sleep 15
+            fi
+          done
+          
+          if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
+          then
+            echo "curl $ipAddress for content [$counter attempts for 200]"
+            command="curl $ipAddress"
+            cmdOut=$(command) 
+            cmdLogs=$(echo $cmdOut | jq -r '.logs')
+
+            echo $cmdLogs
+          else
+              echo "$respcode not 200 - failing"
+              curl $ipAddress
+             exit 1
+          fi
+
 
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY
@@ -274,4 +352,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: Json out
-          path: debug.json
+          path: debug*.json

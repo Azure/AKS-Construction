@@ -198,7 +198,7 @@ resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-
       {
         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
         name: 'CoreAksHttpEgress'
-        priority: 200
+        priority: 400
         action: {
           type: 'Allow'
         }
