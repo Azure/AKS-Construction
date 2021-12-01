@@ -74,12 +74,16 @@ param vnetAddressPrefix string = '10.240.0.0/16'
 param vnetAksSubnetAddressPrefix string = '10.240.0.0/22'
 param vnetAppGatewaySubnetAddressPrefix string = '10.240.4.0/26'
 param acrAgentPoolSubnetAddressPrefix string = '10.240.4.64/26'
+
+@description('The address range for Azure Bastion in your custom vnet')
 param bastionSubnetAddressPrefix string = '10.240.4.128/26'
 param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
 param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 
 param privateLinks bool = false
 param acrPrivatePool bool = false
+
+@description('Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)')
 param bastion bool = false
 
 module network './network.bicep' = if (custom_vnet) {
@@ -681,7 +685,6 @@ var systemPoolPresets = {
     minCount: 1
     maxCount: 3
     enableAutoScaling: true
-    //osDiskType: 'Ephemeral' //default
   }
   'Standard' : {
     vmSize: 'Standard_D4s_v3'
@@ -689,7 +692,6 @@ var systemPoolPresets = {
     minCount: 2
     maxCount: 3
     enableAutoScaling: true
-    //osDiskType: 'Ephemeral' //default
   }
 }
 
@@ -709,29 +711,30 @@ var systemPoolBase = {
   ]
 }
 
-var agentPoolProfileSystem = union(systemPoolBase, systemPoolPresets[SystemPoolType])
+var userPoolVmProfile = {
+  vmSize: agentVMSize
+  count: agentCount
+  minCount: autoScale ? agentCount : json('null')
+  maxCount: autoScale ? agentCountMax : json('null')
+  enableAutoScaling: autoScale
+}
 
-var agentPoolProfileUser = {
+var agentPoolProfileUser = union({
   name: 'npuser01'
   mode: 'User'
   osDiskType: osDiskType
   osDiskSizeGB: osDiskSizeGB
-  count: agentCount
-  vmSize: agentVMSize
   osType: 'Linux'
   maxPods: maxPods
   type: 'VirtualMachineScaleSets'
-  enableAutoScaling: autoScale
   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
-  minCount: autoScale ? agentCount : json('null')
-  maxCount: autoScale ? agentCountMax : json('null')
   upgradeSettings: {
     maxSurge: '33%'
   }
-}
+}, userPoolVmProfile)
 
-var agentPoolProfiles = JustUseSystemPool ? array(agentPoolProfileSystem) : concat(array(agentPoolProfileSystem), array(agentPoolProfileUser))
+var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 

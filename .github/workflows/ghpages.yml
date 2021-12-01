@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
 
 env:
-  templateRelease: 0.3.1
+  templateRelease: 0.3.2
 
 jobs:
   

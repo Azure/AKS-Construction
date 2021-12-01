@@ -255,7 +255,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
-                <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label="Create ACR Private Agent Pool (applicable to private link)" />
+                <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label={<Text>Create ACR Private Agent Pool (private link only) (preview limited regions <a target="_new" href="https://docs.microsoft.com/azure/container-registry/tasks-agent-pools">docs</a>)</Text>} />
                 <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
                     <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>  
                     <TextField disabled={true} label="O/S" defaultValue="Linux"/>  
