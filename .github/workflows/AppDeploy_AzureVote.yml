@@ -27,7 +27,7 @@ on:
         default: false
         required: true
       MINIHELMBRANCH:
-        default: "main"
+        default: "azureVoteIngress"
         required: false
         type: string
         description: "The branch of MINIHELM to use"
@@ -114,30 +114,33 @@ jobs:
           
           case "${{ inputs.INGRESSTYPE }}" in
           PublicLoadBalancer)
-            echo "::set-output name=SERVICETYPE::LoadBalancer"
-            echo "::set-output name=AZURELBINT::false"
-            echo "::set-output name=INGRESS::false"
+            serviceType="LoadBalancer"
+            privateIp=false
+            ingress=false
             ;;
 
           InternalLoadBalancer)
-            echo "::set-output name=SERVICETYPE::LoadBalancer"
-            echo "::set-output name=AZURELBINT::true"
-            echo "::set-output name=INGRESS::false"
+            serviceType="LoadBalancer"
+            privateIp=true
+            ingress=false
             ;;
 
           AGIC-Public-Ingress)
-            echo "::set-output name=SERVICETYPE::ClusterIP"
-            echo "::set-output name=AZURELBINT::true"
-            echo "::set-output name=INGRESS::true"
+            serviceType="ClusterIP"
+            privateIp=false
+            ingress=true
             ;;
 
           AGIC-Private-Ingress)
-            echo "::set-output name=SERVICETYPE::ClusterIP"
-            echo "::set-output name=AZURELBINT::true"
-            echo "::set-output name=INGRESS::true"
+            serviceType="ClusterIP"
+            privateIp=true
+            ingress=true
             ;;
           esac
           
+          helmsetparams="ingress.enabled=$ingress, ingress.appGwPrivateIp="$privateIp", service.azureLbInternal="$privateIp", service.type="$serviceType"
+          echo $helmsetparams
+          echo "::set-output name=HELMSETPARAMS::$helmsetparams"
           
       - name: Install the Vote app
         if: inputs.USERUNCOMMAND == false
@@ -153,8 +156,8 @@ jobs:
           APPNAME='${{ inputs.APPNAME }}'
           #AGNAME='${{ inputs.AGNAME}}'
           
-          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set ingress.enabled=${{ steps.helmparams.outputs.INGRESS == 'true' }}, service.azureLbInternal=${{ steps.helmparams.outputs.AZURELBINT}}, service.type="${{ steps.helmparams.outputs.SERVICETYPE}}" --dry-run
-          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set ingress.enabled=${{ steps.helmparams.outputs.INGRESS == 'true' }}, service.azureLbInternal=${{ steps.helmparams.outputs.AZURELBINT}}, service.type="${{ steps.helmparams.outputs.SERVICETYPE}}"
+          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote --set ${{ steps.helmparams.outputs.helmsetparams}} --dry-run
+          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote --set ${{ steps.helmparams.outputs.helmsetparams}}
 
       - name: Install the Vote app (run cmd)
         if: inputs.USERUNCOMMAND == true
@@ -168,7 +171,7 @@ jobs:
           #AGNAME='${{ inputs.AGNAME}}'
           
           az aks command invoke -g $RG -n $AKSNAME --command "
-          helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.1.0.tgz --set ingress.enabled=${{ steps.helmparams.outputs.INGRESS == 'true' }}, service.azureLbInternal=${{ steps.helmparams.outputs.AZURELBINT}}, service.type="${{ steps.helmparams.outputs.SERVICETYPE}}"
+          helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz --set ${{ steps.helmparams.outputs.helmsetparams}}
           "
       - name: Checking deployment (Run cmd invoke)
         if: inputs.USERUNCOMMAND == true
