@@ -255,7 +255,7 @@ export default function PortalNav({ config }) {
   invalidFn('addons', 'appgwKVIntegration', addons.ingress === "appgw" && addons.appgwKVIntegration && addons.csisecret !== 'akvNew',
     <Text><b>ERROR</b>: KeyVault integration requires the 'CSI Secrets' 'Yes, Provision a new KeyVault' option to be selected</Text>)
   invalidFn('addons', 'ingress', net.afw && (addons.ingress !== "none" && addons.ingress !== "appgw"),
-    <Text><b>WARNING</b>: Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule to Azure Firewall</Link></Text>)
+    <Text><b>WARNING</b>: Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configuration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule to Azure Firewall</Link></Text>)
   invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
     <Text>Enter a valid Subnet Id where AKS nodes will be installed</Text>)
   invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
