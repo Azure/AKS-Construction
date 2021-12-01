@@ -159,7 +159,7 @@ param KeyVaultSoftDelete bool = true
 param KeyVaultPurgeProtection bool = true
 
 @description('Add IP to firewall whitelist')
-param kvIPWhitelist string = ''
+param kvIPWhitelist array = []
 
 var akvName = 'kv-${replace(resourceName, '-', '')}'
 
@@ -178,12 +178,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     networkAcls: privateLinks && !empty(kvIPWhitelist) ? {
       bypass: 'AzureServices' 
       defaultAction: 'Deny' 
-      
-      ipRules: empty(kvIPWhitelist) ? [] : [
-          {
-          value: kvIPWhitelist
-        }
-      ]
+      ipRules: kvIPWhitelist
       virtualNetworkRules: []
     } : {}
     
@@ -671,14 +666,10 @@ param dockerBridgeCidr string = '172.17.0.1/16'
 
 param JustUseSystemPool bool = false
 
-@allowed([
-  'Cost-Optimised'
-  'Standard'
-])
 @description('The System Pool Preset sizing')
 param SystemPoolType string = 'Cost-Optimised'
 
-var systemPoolPresets = {
+param systemPoolPresets object = {
   'Cost-Optimised' : {
     vmSize: 'Standard_B4ms'
     count: 1
@@ -988,8 +979,8 @@ resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-
   }
 }
 
-
 output LogAnalyticsName string = (createLaw) ? aks_law.name : ''
 output LogAnalyticsGuid string = (createLaw) ? aks_law.properties.customerId : ''
+output LogAnalyticsId string = (createLaw) ? aks_law.id : ''
 
 //ACSCII Art link : https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=Star%20Wars&text=changeme
