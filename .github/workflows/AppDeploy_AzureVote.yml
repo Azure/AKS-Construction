@@ -138,7 +138,7 @@ jobs:
             ;;
           esac
           
-          helmsetparams='ingress.enabled=$ingress, ingress.appGwPrivateIp="$privateIp", service.azureLbInternal="$privateIp", service.type="$serviceType"'
+          helmsetparams="ingress.enabled=${ingress}, ingress.appGwPrivateIp=$privateIp, service.azureLbInternal=$privateIp, service.type=$serviceType"
           echo $helmsetparams
           echo "::set-output name=HELMSETPARAMS::$helmsetparams"
           
@@ -170,9 +170,12 @@ jobs:
           APPNAME='${{ inputs.APPNAME }}'
           #AGNAME='${{ inputs.AGNAME}}'
           
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz --set ${{ steps.helmparams.outputs.helmsetparams}}
-          "
+          command="helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz --set ${{ steps.helmparams.outputs.helmsetparams}}"
+          echo "Sending command $command to AKS"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          
+          echo $cmdOut
+
       - name: Checking deployment (Run cmd invoke)
         if: inputs.USERUNCOMMAND == true
         env:
