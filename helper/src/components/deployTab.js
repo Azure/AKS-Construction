@@ -161,7 +161,9 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
 ` : '') +
       `  --namespace ${nginx_namespace}` : '') +
     (addons.ingress === 'contour' ? `\n\n# Install Contour Ingress Controller
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
     // External DNS
     (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `

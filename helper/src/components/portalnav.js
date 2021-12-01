@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ThemeProvider, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text } from '@fluentui/react';
+import { ThemeProvider, Link, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text } from '@fluentui/react';
 import Presents from './presets'
 
 import NetworkTab from './networkTab'
@@ -236,39 +236,42 @@ export default function PortalNav({ config }) {
 
   const { deploy, cluster, net, addons } = tabValues
 
+  console.log (`PortalNav: Evaluating configruation warnings...`)
   invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph,
-    "The selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache")
+    <Text><b>ERROR</b>: The selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache</Text>)
   invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36,
-    "Enter Valid Directory ID")
+    <Text>Enter Valid Directory ID</Text>)
 
   invalidFn('addons', 'registry', net.vnetprivateend && (addons.registry !== 'Premium' && addons.registry !== 'none'),
-    "Premium tier is required for Private Link, either select Premium, or disable Private Link")
+    <Text><b>ERROR</b>: Premium tier is required for Private Link, either select Premium, or disable Private Link</Text>)
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'),
-    "Enter valid Azure Public or Private DNS Zone resourceId")
+    <Text>Enter valid Azure Public or Private DNS Zone resourceId</Text>)
   invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'),
-    "Enter valid email for certificate generation")
+    <Text>Enter valid email for certificate generation</Text>)
   invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'),
-    "Enter valid Azure KeyVault resourceId")
+    <Text>Enter valid Azure KeyVault resourceId</Text>)
   invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}.){3}[0-9]{1,3}$'),
-    "Enter valid IP address")
+    <Text>Enter valid IP address</Text>)
   invalidFn('addons', 'appgwKVIntegration', addons.ingress === "appgw" && addons.appgwKVIntegration && addons.csisecret !== 'akvNew',
-    "KeyVault integration requires the 'CSI Secrets' 'Yes, Provision a new KeyVault' option to be selected")
+    <Text><b>ERROR</b>: KeyVault integration requires the 'CSI Secrets' 'Yes, Provision a new KeyVault' option to be selected</Text>)
+  invalidFn('addons', 'ingress', net.afw && (addons.ingress !== "none" && addons.ingress !== "appgw"),
+    <Text><b>WARNING</b>: Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule to Azure Firewall</Link></Text>)
   invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
-    "Enter a valid Subnet Id where AKS nodes will be installed")
+    <Text>Enter a valid Subnet Id where AKS nodes will be installed</Text>)
   invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
-    "Enter a valid Subnet Id where Application Gateway is installed")
+    <Text>Enter a valid Subnet Id where Application Gateway is installed</Text>)
   invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.afw || net.vnetprivateend),
-    "Cannot use default networking of you select Firewall or Private Link")
+    <Text>Cannot use default networking of you select Firewall or Private Link</Text>)
   invalidFn('net', 'afw', net.afw && net.vnet_opt !== "custom",
     net.vnet_opt === "byo" ?
-      "Please de-select, when using Bring your own VNET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)"
+      <Text>Please de-select, when using Bring your own VNET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)</Text>
       :
-      "Template can only deploy Azure Firewall in single VNET with Custom Networking")
-
-    invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
-      "Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab")
-    invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length>19,
-      "Enter valid cluster name")
+      <Text><b>WARNING</b>: This template can only deploy Azure Firewall in single VNET with Custom Networking"</Text>
+  )
+  invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
+    <Text>Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab</Text>)
+  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length>19,
+    <Text>Enter valid cluster name</Text>)
 
 
   function _customRenderer(page, link, defaultRenderer) {
