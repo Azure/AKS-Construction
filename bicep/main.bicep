@@ -666,9 +666,16 @@ param dockerBridgeCidr string = '172.17.0.1/16'
 
 param JustUseSystemPool bool = false
 
+@allowed([
+  'Cost-Optimised'
+  'Standard'
+  'HighSpec'
+  'Custom'
+])
 @description('The System Pool Preset sizing')
 param SystemPoolType string = 'Cost-Optimised'
 
+@description('System Pool presets are derived from the recommended system pool specs')
 param systemPoolPresets object = {
   'Cost-Optimised' : {
     vmSize: 'Standard_B4ms'
@@ -676,13 +683,39 @@ param systemPoolPresets object = {
     minCount: 1
     maxCount: 3
     enableAutoScaling: true
+    availabilityZones: []
   }
   'Standard' : {
+    vmSize: 'Standard_DS2_v2'
+    count: 3
+    minCount: 3
+    maxCount: 5
+    enableAutoScaling: true
+    availabilityZones: [
+      '1'
+      '2'
+      '3'
+    ]
+  }
+  'HighSpec' : {
     vmSize: 'Standard_D4s_v3'
+    count: 3
+    minCount: 3
+    maxCount: 5
+    enableAutoScaling: true
+    availabilityZones: [
+      '1'
+      '2'
+      '3'
+    ]
+  }
+  'Custom' : {
+    vmSize: 'Standard_B4ms'
     count: 2
     minCount: 2
     maxCount: 3
     enableAutoScaling: true
+    availabilityZones: !empty(availabilityZones) ? availabilityZones : null //Copies the setting used in the userpool
   }
 }
 
@@ -692,7 +725,6 @@ var systemPoolBase = {
   osType: 'Linux'
   maxPods: 30
   type: 'VirtualMachineScaleSets'
-  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
   upgradeSettings: {
     maxSurge: '33%'
@@ -708,6 +740,7 @@ var userPoolVmProfile = {
   minCount: autoScale ? agentCount : json('null')
   maxCount: autoScale ? agentCountMax : json('null')
   enableAutoScaling: autoScale
+  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
 }
 
 var agentPoolProfileUser = union({
@@ -718,7 +751,6 @@ var agentPoolProfileUser = union({
   osType: 'Linux'
   maxPods: maxPods
   type: 'VirtualMachineScaleSets'
-  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
   upgradeSettings: {
     maxSurge: '33%'

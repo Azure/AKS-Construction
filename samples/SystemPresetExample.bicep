@@ -5,8 +5,15 @@
 param nameseed string = 'app'
 param location string =  resourceGroup().location
 
+@allowed([
+  'dev'
+  'test'
+  'qa'
+  'prod'
+])
+param env string = 'dev'
 
-var mySystemPresets = {
+var envSystemPoolPresetMap = {
   'dev' : {
     vmSize: 'Standard_B4ms'
     count: 1
@@ -45,8 +52,10 @@ module aksconst '../bicep/main.bicep' = {
   params: {
     location : location
     resourceName: nameseed
-    systemPoolPresets: mySystemPresets
-    SystemPoolType: 'prod'
+    systemPoolPresets: {
+      'Custom' : envSystemPoolPresetMap[env]
+    }
+    SystemPoolType: 'Custom'
   }
 }
 output aksClusterName string = aksconst.outputs.aksClusterName
