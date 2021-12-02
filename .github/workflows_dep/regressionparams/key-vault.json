@@ -84,7 +84,9 @@
       "value": true
     },
     "kvIPWhitelist": {
-      "value": "86.188.67.127/32"
+      "value": [
+        "1.2.3.4/32"
+      ]
     },
     "upgradeChannel": {
       "value": "stable"
