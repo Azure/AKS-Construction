@@ -72,21 +72,34 @@ We anticipate the use of the Develop branch is temporary.
 
 Releases are used to capture a tested release (all stages, not just Validation), where there are significant new features or bugfixes. The release does not include CI Action files, just the Bicep code.
 
-## The Wizard Web App
+## Area change guidance
+
+### Bicep code
+
+When changing the Bicep code, try to build into your `developer inner loop` the following
+
+- Review the linting warnings in VSCode. When you push, the bicep will be compiled to json with warnings/errors picked up
+- If making a breaking change (eg. changing a parameter datatype), pay attention to the Regression parameter files. These will be checked during PR. If the change you're making isn't covered by an existing parameter file, then add one.
+
+#### Breaking Changes
+
+Should be avoided wherever possible, and where necessary highlight the breaking change in the release notes.
+
+### The Wizard Web App
 
 The [configuration experience](https://azure.github.io/Aks-Construction/) is hosted in GitHub pages. It's a static web app, written in NodeJS using FluentUI.
 
-### Playwright tests
+#### Playwright tests
 
 Playwright is used to help verify that the app works properly, you can use Playwright in your local dev experience (see Codespaces below), but crucially it's also leveraged as part of the publish process. If the tests don't pass, then the app will not publish. The `fragile` keyword should be used in any tests where you're learning how they work and run. Once the test is of sufficient quality to be considered a core test, the `fragile` keyword is removed.
 
 We're trying to ensure that PR's that contain Web UI changes have appropriate Playwright tests that use `data-testid` for navigating the dom.
 
-## Dev Container / Codespaces
+### Dev Container / Codespaces
 
 A dev container is present in the repo which makes dev and testing of the UI Helper component much easier.
 
-### Commands
+#### Commands
 
 Some helpful terminal commands for when you're getting started with DevContainer/Codespaces experience
 
