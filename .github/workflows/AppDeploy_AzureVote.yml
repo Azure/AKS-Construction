@@ -191,17 +191,17 @@ jobs:
           RG='${{ inputs.RG }}'
           AKSNAME='${{ inputs.AKSNAME}}'
 
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get po -n $NAMESP -o wide
-          "
+          command="kubectl get po -n $NAMESP"
+          echo "Sending command $command to AKS"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
           
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get svc -n $NAMESP
-          "
-          
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get ing -n $NAMESP
-          "
+          command="kubectl get svc -n $NAMESP"
+          echo "Sending command $command to AKS"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
+
+          command="kubectl get ing -n $NAMESP"
+          echo "Sending command $command to AKS"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
 
       - name: Verify App is reachable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
