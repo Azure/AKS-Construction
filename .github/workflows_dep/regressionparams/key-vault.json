@@ -5,59 +5,14 @@
     "resourceName": {
       "value": "az-k8s-keyvault"
     },
-    "kubernetesVersion": {
-      "value": "1.20.9"
-    },
-    "agentCount": {
-      "value": 1
-    },
-    "agentVMSize": {
-      "value": "Standard_DS3_v2"
-    },
-    "agentCountMax": {
-      "value": 5
-    },
     "custom_vnet": {
-      "value": true
-    },
-    "enable_aad": {
-      "value": true
-    },
-    "enableAzureRBAC": {
       "value": true
     },
     "registries_sku": {
       "value": "Premium"
     },
-    "acrPrivatePool": {
-      "value": true
-    },
-    "azureFirewalls": {
-      "value": true
-    },
-    "certManagerFW": {
-      "value": true
-    },
-    "privateLinks": {
-      "value": true
-    },
     "omsagent": {
       "value": true
-    },
-    "retentionInDays": {
-      "value": 30
-    },
-    "networkPolicy": {
-      "value": "azure"
-    },
-    "azurepolicy": {
-      "value": "audit"
-    },
-    "enablePrivateCluster": {
-      "value": true
-    },
-    "dnsZoneId": {
-      "value": "/this/parameter/is/overridden/in/my/script/valuefromsecrets"
     },
     "ingressApplicationGateway": {
       "value": true
@@ -87,9 +42,6 @@
       "value": [
         "1.2.3.4/32"
       ]
-    },
-    "upgradeChannel": {
-      "value": "stable"
     }
   }
 }
