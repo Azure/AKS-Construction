@@ -20,6 +20,7 @@ var envSystemPoolPresetMap = {
     minCount: 1
     maxCount: 3
     enableAutoScaling: true
+    availabilityZones: []
   }
   'test' : {
     vmSize: 'Standard_B4ms'
@@ -27,6 +28,7 @@ var envSystemPoolPresetMap = {
     minCount: 2
     maxCount: 6
     enableAutoScaling: true
+    availabilityZones: []
   }
   'qa' : {
     vmSize: 'Standard_D4s_v3'
@@ -34,6 +36,11 @@ var envSystemPoolPresetMap = {
     minCount: 2
     maxCount: 3
     enableAutoScaling: true
+    availabilityZones: [
+      '1'
+      '2'
+      '3'
+    ]
   }
   'prod' : {
     vmSize: 'Standard_D4s_v3'
@@ -41,6 +48,11 @@ var envSystemPoolPresetMap = {
     minCount: 3
     maxCount: 3
     enableAutoScaling: true
+    availabilityZones: [
+      '1'
+      '2'
+      '3'
+    ]
   }
 }
 
