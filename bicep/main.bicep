@@ -675,8 +675,11 @@ param JustUseSystemPool bool = false
 @description('The System Pool Preset sizing')
 param SystemPoolType string = 'Cost-Optimised'
 
+@description('A custom system pool spec')
+param SystemPoolCustomPreset object = {}
+
 @description('System Pool presets are derived from the recommended system pool specs')
-param systemPoolPresets object = {
+var systemPoolPresets = {
   'Cost-Optimised' : {
     vmSize: 'Standard_B4ms'
     count: 1
@@ -708,14 +711,6 @@ param systemPoolPresets object = {
       '2'
       '3'
     ]
-  }
-  'Custom' : {
-    vmSize: 'Standard_B4ms'
-    count: 2
-    minCount: 2
-    maxCount: 3
-    enableAutoScaling: true
-    availabilityZones: !empty(availabilityZones) ? availabilityZones : null //Copies the setting used in the userpool
   }
 }
 
@@ -757,7 +752,7 @@ var agentPoolProfileUser = union({
   }
 }, userPoolVmProfile)
 
-var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
+var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 

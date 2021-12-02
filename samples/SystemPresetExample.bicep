@@ -64,9 +64,7 @@ module aksconst '../bicep/main.bicep' = {
   params: {
     location : location
     resourceName: nameseed
-    systemPoolPresets: {
-      'Custom' : envSystemPoolPresetMap[env]
-    }
+    SystemPoolCustomPreset:  envSystemPoolPresetMap[env]
     SystemPoolType: 'Custom'
   }
 }
