@@ -143,11 +143,9 @@ jobs:
             ;;
           esac
           
-          helmsetparams="ingress.enabled=${ingress}, ingress.appGwPrivateIp=$privateIp, service.azureLbInternal=$privateIp, service.type=$serviceType"
+          helmsetparams="ingress.enabled=${ingress}, ingress.appGwPrivateIp=$privateIp, service.azureLbInternal=$privateIp, service.type=\"$serviceType\""
           echo $helmsetparams
           echo "::set-output name=HELMSETPARAMS::$helmsetparams"
-          
-          
           
       - name: Install the Vote app
         if: inputs.USERUNCOMMAND == false
