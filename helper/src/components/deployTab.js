@@ -334,7 +334,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
     
           </Text>
           
-          <CodeBlock deploycmd={deploycmd}/>
+          <CodeBlock deploycmd={deploycmd} testId={deploy-deploycmd}/>
 
           { urlParams.toString() !== "" && 
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>

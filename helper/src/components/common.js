@@ -21,7 +21,7 @@ export function getError(array, field) {
 export const adv_stackstyle = { root: { border: "1px solid", background: "#fcfcfc", margin: "10px 0", padding: "15px" } }
 
 
-export function CodeBlock({deploycmd}) {
+export function CodeBlock({deploycmd, testId}) {
     const [ copied, setCopied ] = useState(false)
 
     function copyIt() {
@@ -37,7 +37,7 @@ export function CodeBlock({deploycmd}) {
         </div>,
 
         <pre key="code-pre" className="has-inner-focus">
-            <code className="lang-bash"><span>{deploycmd}</span></code>
+            <code className="lang-bash"><span data-testid={testId || 'none'}>{deploycmd}</span></code>
         </pre>
     ]
 }
