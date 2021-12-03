@@ -1,7 +1,7 @@
 import React from 'react';
 import { Checkbox, Pivot, PivotItem, Image, TextField, Separator, Stack,  Label, MessageBar, MessageBarType } from '@fluentui/react';
 
-import { adv_stackstyle } from './common'
+import { adv_stackstyle, CodeBlock } from './common'
 
 export default function AppsTab({  tabValues }) {
 
@@ -62,7 +62,7 @@ ${cluster.apisecurity === "private" ? `"` : ``}
                             
                         </Stack.Item>
                         <Stack.Item>
-                            <TextField value={deploycmd} rows={deploycmd.split(/\r\n|\r|\n/).length + 1} readOnly={true} styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  />
+                            <CodeBlock deploycmd={deploycmd}/>
                         </Stack.Item>
                     </Stack>
                 </PivotItem>
