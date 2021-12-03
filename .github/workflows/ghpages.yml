@@ -17,9 +17,13 @@ on:
       - "helper/**"
 
   workflow_dispatch:
+    inputs:
+      templateRelease:
+        description: 'Version of the Bicep release to target'  
+        default: '0.3.3'
 
 env:
-  templateRelease: 0.3.3
+  templateRelease: ${{ github.event.inputs.templateRelease }}
 
 jobs:
   
@@ -27,6 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Parameter Inspection
+        run: echo "Template release version ${{env.templateRelease}}"
       
       - uses: streetsidesoftware/cspell-action@v1.3.4
         name: Spell Check
