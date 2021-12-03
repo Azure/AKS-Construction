@@ -175,6 +175,8 @@ jobs:
           APPNAME='${{ inputs.APPNAME }}'
           #AGNAME='${{ inputs.AGNAME}}'
           
+          echo "Using helm overrides ${{ steps.helmparams.outputs.helmsetparams}}"
+          
           command="helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz --set ${{ steps.helmparams.outputs.helmsetparams}} --dry-run"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
