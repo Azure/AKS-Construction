@@ -1,8 +1,8 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import { Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
+import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
-import { adv_stackstyle, getError } from './common'
+import { CodeBlock, adv_stackstyle, getError } from './common'
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
 
@@ -321,29 +321,39 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
         </MessageBar>
 
       }
-      
-      { urlParams.toString() !== "" && 
-        <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>{urlParams.toString()}</a></Text>
-      }
+    
 
       <Pivot >
+
         <PivotItem headerText="Provision Environment (CLI)"  >
-          <TextField data-testid="deploy-deploycmd"  value={deploycmd} rows={deploycmd.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Commands to deploy your fully operational environment" styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline errorMessage={!allok ? "Please complete all items that need attention before running script" : ""} />
-          <Text styles={{ root: { marginTop: "2px !important" } }} variant="medium" >
-            Open a Linux shell (requires 'az cli' pre-installed), or, open the
+
+          <Label style={{marginTop: '10px'}}>Commands to deploy your fully operational environment</Label>
+          <Text>
+            Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI</Link>, or, execute in the
             <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
-            <Text variant="medium" style={{ fontWeight: "bold" }}>Paste the commands</Text> into the shell
+    
           </Text>
+          
+          <CodeBlock deploycmd={deploycmd}/>
+
+          { urlParams.toString() !== "" && 
+            <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
+          }
+          
+          
+      
         </PivotItem>
 
         <PivotItem headerText="Post Configuration">
-          {addons.gitops === 'none' ?
-            <Stack>
-              <Label>Run these commands to install the requested kubernetes packages into your cluster</Label>
-              <MessageBar>Once available, we will switch to using the gitops addon here, to assure that your clusters get their source of truth from the defined git repo</MessageBar>
-              <TextField readOnly={true} label="Commands (requires helm)" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={postscript.split(/\r\n|\r|\n/).length + 1} value={postscript} />
-            </Stack>
-            :
+          {addons.gitops === 'none' ? [
+     
+              <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
+            
+              <Text key="post-text">Requires <Link target="_bl" href="https://helm.sh/docs/intro/install/">Helm</Link></Text>,
+              
+              <CodeBlock key="post-code" deploycmd={postscript}/>
+         
+          ] :
             <Stack>
 
               <TextField readOnly={true} label="While Gitops is in preview, run this manually" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={6} value={`az k8sconfiguration create
