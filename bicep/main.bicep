@@ -18,11 +18,11 @@ Resource sections
 */
 
 
-/*.__   __.  _______ .___________.____    __    ____  ______   .______       __  ___  __  .__   __.   _______ 
+/*.__   __.  _______ .___________.____    __    ____  ______   .______       __  ___  __  .__   __.   _______
 |  \ |  | |   ____||           |\   \  /  \  /   / /  __  \  |   _  \     |  |/  / |  | |  \ |  |  /  _____|
-|   \|  | |  |__   `---|  |----` \   \/    \/   / |  |  |  | |  |_)  |    |  '  /  |  | |   \|  | |  |  __  
-|  . `  | |   __|      |  |       \            /  |  |  |  | |      /     |    <   |  | |  . `  | |  | |_ | 
-|  |\   | |  |____     |  |        \    /\    /   |  `--'  | |  |\  \----.|  .  \  |  | |  |\   | |  |__| | 
+|   \|  | |  |__   `---|  |----` \   \/    \/   / |  |  |  | |  |_)  |    |  '  /  |  | |   \|  | |  |  __
+|  . `  | |   __|      |  |       \            /  |  |  |  | |      /     |    <   |  | |  . `  | |  | |_ |
+|  |\   | |  |____     |  |        \    /\    /   |  `--'  | |  |\  \----.|  .  \  |  | |  |\   | |  |__| |
 |__| \__| |_______|    |__|         \__/  \__/     \______/  | _| `._____||__|\__\ |__| |__| \__|  \______| */
 //Networking can either be one of: custom / byo / default
 
@@ -112,8 +112,8 @@ var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.a
 /*______  .__   __.      _______.    ________    ______   .__   __.  _______      _______.
 |       \ |  \ |  |     /       |   |       /   /  __  \  |  \ |  | |   ____|    /       |
 |  .--.  ||   \|  |    |   (----`   `---/  /   |  |  |  | |   \|  | |  |__      |   (----`
-|  |  |  ||  . `  |     \   \          /  /    |  |  |  | |  . `  | |   __|      \   \    
-|  '--'  ||  |\   | .----)   |        /  /----.|  `--'  | |  |\   | |  |____ .----)   |   
+|  |  |  ||  . `  |     \   \          /  /    |  |  |  | |  . `  | |   __|      \   \
+|  '--'  ||  |\   | .----)   |        /  /----.|  `--'  | |  |\   | |  |____ .----)   |
 |_______/ |__| \__| |_______/        /________| \______/  |__| \__| |_______||_______/    */
 
 param dnsZoneId string = ''
@@ -135,8 +135,8 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 /*__  __  _______ ____    ____    ____    ____  ___      __    __   __      .___________.
 |  |/  / |   ____|\   \  /   /    \   \  /   / /   \    |  |  |  | |  |     |           |
 |  '  /  |  |__    \   \/   /      \   \/   / /  ^  \   |  |  |  | |  |     `---|  |----`
-|    <   |   __|    \_    _/        \      / /  /_\  \  |  |  |  | |  |         |  |     
-|  .  \  |  |____     |  |           \    / /  _____  \ |  `--'  | |  `----.    |  |     
+|    <   |   __|    \_    _/        \      / /  /_\  \  |  |  |  | |  |         |  |
+|  .  \  |  |____     |  |           \    / /  _____  \ |  `--'  | |  `----.    |  |
 |__|\__\ |_______|    |__|            \__/ /__/     \__\ \______/  |_______|    |__|     */
 
 @description('Installs the AKS KV CSI provider')
@@ -166,12 +166,12 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
       name: 'standard'
     }
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
-    publicNetworkAccess: privateLinks && empty(kvIPWhitelist) ? 'disabled' : 'enabled' 
-    
+    publicNetworkAccess: privateLinks && empty(kvIPWhitelist) ? 'disabled' : 'enabled'
+
     networkAcls: privateLinks && !empty(kvIPWhitelist) ? {
-      bypass: 'AzureServices' 
-      defaultAction: 'Deny' 
-      
+      bypass: 'AzureServices'
+      defaultAction: 'Deny'
+
       ipRules: empty(kvIPWhitelist) ? [] : [
           {
           value: kvIPWhitelist
@@ -179,13 +179,13 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
       ]
       virtualNetworkRules: []
     } : {}
-    
+
     //enabledForTemplateDeployment: true
     enableRbacAuthorization: true
     enabledForDeployment: false
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
-    enableSoftDelete: KeyVaultSoftDelete 
+    enableSoftDelete: KeyVaultSoftDelete
     enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
   }
 }
@@ -259,15 +259,18 @@ resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
 }
 
 
-/*   ___           ______     .______          
-    /   \         /      |    |   _  \         
-   /  ^  \       |  ,----'    |  |_)  |        
-  /  /_\  \      |  |         |      /         
- /  _____  \   __|  `----. __ |  |\  \----. __ 
+/*   ___           ______     .______
+    /   \         /      |    |   _  \
+   /  ^  \       |  ,----'    |  |_)  |
+  /  /_\  \      |  |         |      /
+ /  _____  \   __|  `----. __ |  |\  \----. __
 /__/     \__\ (__)\______|(__)| _| `._____|(__)*/
-                                               
+
 param registries_sku string = ''
 
+@description('Enable the ACR Content Trust Policy')
+param enableACRTrustPolicy bool = false
+var acrContentTrustEnabled = enableACRTrustPolicy && registries_sku == 'Premium' ? 'enabled' : 'disabled'
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
@@ -278,11 +281,17 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
     name: registries_sku
   }
   properties: {
-    publicNetworkAccess: privateLinks /* && empty(acrIPWhitelist)*/ ? 'Disabled' : 'Enabled' 
+    policies: {
+      trustPolicy: enableACRTrustPolicy ? {
+        status: acrContentTrustEnabled
+        type: 'Notary'
+      } : {}
+    }
+    publicNetworkAccess: privateLinks /* && empty(acrIPWhitelist)*/ ? 'Disabled' : 'Enabled'
     /*
     networkRuleSet: {
-      defaultAction: 'Deny' 
-      
+      defaultAction: 'Deny'
+
       ipRules: empty(acrIPWhitelist) ? [] : [
           {
             action: 'Allow'
@@ -335,10 +344,10 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
   }
 }
 
-/*______  __  .______       _______ ____    __    ____  ___       __       __      
-|   ____||  | |   _  \     |   ____|\   \  /  \  /   / /   \     |  |     |  |     
-|  |__   |  | |  |_)  |    |  |__    \   \/    \/   / /  ^  \    |  |     |  |     
-|   __|  |  | |      /     |   __|    \            / /  /_\  \   |  |     |  |     
+/*______  __  .______       _______ ____    __    ____  ___       __       __
+|   ____||  | |   _  \     |   ____|\   \  /  \  /   / /   \     |  |     |  |
+|  |__   |  | |  |_)  |    |  |__    \   \/    \/   / /  ^  \    |  |     |  |
+|   __|  |  | |      /     |   __|    \            / /  /_\  \   |  |     |  |
 |  |     |  | |  |\  \----.|  |____    \    /\    / /  _____  \  |  `----.|  `----.
 |__|     |__| | _| `._____||_______|    \__/  \__/ /__/     \__\ |_______||_______|*/
 
@@ -361,11 +370,11 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   }
 }
 
-/*   ___      .______   .______          _______ ____    __    ____ 
-    /   \     |   _  \  |   _  \        /  _____|\   \  /  \  /   / 
-   /  ^  \    |  |_)  | |  |_)  |      |  |  __   \   \/    \/   /  
-  /  /_\  \   |   ___/  |   ___/       |  | |_ |   \            /   
- /  _____  \  |  |      |  |     __    |  |__| |    \    /\    / __ 
+/*   ___      .______   .______          _______ ____    __    ____
+    /   \     |   _  \  |   _  \        /  _____|\   \  /  \  /   /
+   /  ^  \    |  |_)  | |  |_)  |      |  |  __   \   \/    \/   /
+  /  /_\  \   |   ___/  |   ___/       |  | |_ |   \            /
+ /  _____  \  |  |      |  |     __    |  |__| |    \    /\    / __
 /__/     \__\ | _|      | _|    (__)    \______|     \__/  \__/ (__)*/
 
 @description('Create an Application Gateway')
@@ -393,7 +402,7 @@ var deployAppGw = ingressApplicationGateway && (custom_vnet || !empty(byoAGWSubn
 var appGWenableWafFirewall = appGWsku=='Standard_v2' ? false : appGWenableFirewall
 
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
-// 'identity' is always created (adding: "|| deployAppGw") until this is fixed: 
+// 'identity' is always created (adding: "|| deployAppGw") until this is fixed:
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
 resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (deployAppGw) {
   name: 'id-appgw-${resourceName}'
@@ -443,7 +452,7 @@ param appGwFirewallMode string = 'Prevention'
 
 var appGwFirewallConfigOwasp = {
   enabled: appGWenableWafFirewall
-  firewallMode: appGwFirewallMode 
+  firewallMode: appGwFirewallMode
   ruleSetType: 'OWASP'
   ruleSetVersion: '3.2'
   requestBodyCheck: true
@@ -624,8 +633,8 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 /*_  ___  __    __  .______    _______ .______      .__   __.  _______ .___________. _______      _______.
 |  |/  / |  |  |  | |   _  \  |   ____||   _  \     |  \ |  | |   ____||           ||   ____|    /       |
 |  '  /  |  |  |  | |  |_)  | |  |__   |  |_)  |    |   \|  | |  |__   `---|  |----`|  |__      |   (----`
-|    <   |  |  |  | |   _  <  |   __|  |      /     |  . `  | |   __|      |  |     |   __|      \   \    
-|  .  \  |  `--'  | |  |_)  | |  |____ |  |\  \----.|  |\   | |  |____     |  |     |  |____ .----)   |   
+|    <   |  |  |  | |   _  <  |   __|  |      /     |  . `  | |   __|      |  |     |   __|      \   \
+|  .  \  |  `--'  | |  |_)  | |  |____ |  |\  \----.|  |\   | |  |____     |  |     |  |____ .----)   |
 |__|\__\  \______/  |______/  |_______|| _| `._____||__| \__| |_______|    |__|     |_______||_______/ */
 
 param dnsPrefix string = '${resourceName}-dns'
@@ -890,11 +899,11 @@ resource gitops 'Microsoft.KubernetesConfiguration/sourceControlConfigurations@2
 }
 */
 
-/*__  ___.   ______   .__   __.  __  .___________.  ______   .______       __  .__   __.   _______ 
+/*__  ___.   ______   .__   __.  __  .___________.  ______   .______       __  .__   __.   _______
 |   \/   |  /  __  \  |  \ |  | |  | |           | /  __  \  |   _  \     |  | |  \ |  |  /  _____|
-|  \  /  | |  |  |  | |   \|  | |  | `---|  |----`|  |  |  | |  |_)  |    |  | |   \|  | |  |  __  
-|  |\/|  | |  |  |  | |  . `  | |  |     |  |     |  |  |  | |      /     |  | |  . `  | |  | |_ | 
-|  |  |  | |  `--'  | |  |\   | |  |     |  |     |  `--'  | |  |\  \----.|  | |  |\   | |  |__| | 
+|  \  /  | |  |  |  | |   \|  | |  | `---|  |----`|  |  |  | |  |_)  |    |  | |   \|  | |  |  __
+|  |\/|  | |  |  |  | |  . `  | |  |     |  |     |  |  |  | |      /     |  | |  . `  | |  | |_ |
+|  |  |  | |  `--'  | |  |\   | |  |     |  |     |  `--'  | |  |\  \----.|  | |  |\   | |  |__| |
 |__|  |__|  \______/  |__| \__| |__|     |__|      \______/  | _| `._____||__| |__| \__|  \______| */
 
 
@@ -960,7 +969,7 @@ param retentionInDays int = 30
 
 var aks_law_name = 'log-${resourceName}'
 
-var createLaw = (omsagent || deployAppGw || azureFirewalls) 
+var createLaw = (omsagent || deployAppGw || azureFirewalls)
 
 resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (createLaw) {
   name: aks_law_name
@@ -971,7 +980,7 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (cre
 }
 
 //This role assignment enables AKS->LA Fast Alerting experience
-var MonitoringMetricsPublisherRole = resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb') 
+var MonitoringMetricsPublisherRole = resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
 resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (omsagent) {
   scope: aks
   name: '${guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)}'
