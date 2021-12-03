@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "4034582782207379309"
+      "templateHash": "12685287730939629176"
     }
   },
   "parameters": {
@@ -134,6 +134,13 @@
     "registries_sku": {
       "type": "string",
       "defaultValue": ""
+    },
+    "enableACRTrustPolicy": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable the ACR Content Trust Policy"
+      }
     },
     "acrPushRolePrincipalId": {
       "type": "string",
@@ -385,6 +392,7 @@
     "keyVaultSecretsUserRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
     "keyVaultSecretsOfficerRole": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
     "keyVaultCertsOfficerRole": "[resourceId('Microsoft.Authorization/roleDefinitions', 'a4417e6f-fecd-4de8-b567-7b0420556985')]",
+    "acrContentTrustEnabled": "[if(and(parameters('enableACRTrustPolicy'), equals(parameters('registries_sku'), 'Premium')), 'enabled', 'disabled')]",
     "acrName": "[format('cr{0}{1}', replace(parameters('resourceName'), '-', ''), uniqueString(resourceGroup().id, parameters('resourceName')))]",
     "AcrPullRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
     "AcrPushRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')]",
@@ -612,6 +620,9 @@
         "name": "[parameters('registries_sku')]"
       },
       "properties": {
+        "policies": {
+          "trustPolicy": "[if(parameters('enableACRTrustPolicy'), createObject('status', variables('acrContentTrustEnabled'), 'type', 'Notary'), createObject())]"
+        },
         "publicNetworkAccess": "[if(parameters('privateLinks'), 'Disabled', 'Enabled')]"
       }
     },

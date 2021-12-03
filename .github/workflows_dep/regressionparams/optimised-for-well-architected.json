@@ -30,6 +30,9 @@
           "enableAzureRBAC": {
             "value": true
           },
+          "enableACRTrustPolicy": {
+            "value": true
+          },
           "registries_sku": {
             "value": "Premium"
           },
