@@ -159,7 +159,7 @@ param KeyVaultSoftDelete bool = true
 param KeyVaultPurgeProtection bool = true
 
 @description('Add IP to firewall whitelist')
-param kvIPWhitelist string = ''
+param kvIPWhitelist array = []
 
 var akvName = 'kv-${replace(resourceName, '-', '')}'
 
@@ -178,12 +178,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     networkAcls: privateLinks && !empty(kvIPWhitelist) ? {
       bypass: 'AzureServices' 
       defaultAction: 'Deny' 
-      
-      ipRules: empty(kvIPWhitelist) ? [] : [
-          {
-          value: kvIPWhitelist
-        }
-      ]
+      ipRules: kvIPWhitelist
       virtualNetworkRules: []
     } : {}
     
@@ -674,10 +669,16 @@ param JustUseSystemPool bool = false
 @allowed([
   'Cost-Optimised'
   'Standard'
+  'HighSpec'
+  'Custom'
 ])
 @description('The System Pool Preset sizing')
 param SystemPoolType string = 'Cost-Optimised'
 
+@description('A custom system pool spec')
+param SystemPoolCustomPreset object = {}
+
+@description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   'Cost-Optimised' : {
     vmSize: 'Standard_B4ms'
@@ -685,13 +686,31 @@ var systemPoolPresets = {
     minCount: 1
     maxCount: 3
     enableAutoScaling: true
+    availabilityZones: []
   }
   'Standard' : {
-    vmSize: 'Standard_D4s_v3'
-    count: 2
-    minCount: 2
-    maxCount: 3
+    vmSize: 'Standard_DS2_v2'
+    count: 3
+    minCount: 3
+    maxCount: 5
     enableAutoScaling: true
+    availabilityZones: [
+      '1'
+      '2'
+      '3'
+    ]
+  }
+  'HighSpec' : {
+    vmSize: 'Standard_D4s_v3'
+    count: 3
+    minCount: 3
+    maxCount: 5
+    enableAutoScaling: true
+    availabilityZones: [
+      '1'
+      '2'
+      '3'
+    ]
   }
 }
 
@@ -701,7 +720,6 @@ var systemPoolBase = {
   osType: 'Linux'
   maxPods: 30
   type: 'VirtualMachineScaleSets'
-  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
   upgradeSettings: {
     maxSurge: '33%'
@@ -717,6 +735,7 @@ var userPoolVmProfile = {
   minCount: autoScale ? agentCount : json('null')
   maxCount: autoScale ? agentCountMax : json('null')
   enableAutoScaling: autoScale
+  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
 }
 
 var agentPoolProfileUser = union({
@@ -727,14 +746,13 @@ var agentPoolProfileUser = union({
   osType: 'Linux'
   maxPods: maxPods
   type: 'VirtualMachineScaleSets'
-  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
   upgradeSettings: {
     maxSurge: '33%'
   }
 }, userPoolVmProfile)
 
-var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
+var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
@@ -988,8 +1006,8 @@ resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-
   }
 }
 
-
 output LogAnalyticsName string = (createLaw) ? aks_law.name : ''
 output LogAnalyticsGuid string = (createLaw) ? aks_law.properties.customerId : ''
+output LogAnalyticsId string = (createLaw) ? aks_law.id : ''
 
 //ACSCII Art link : https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=Star%20Wars&text=changeme
