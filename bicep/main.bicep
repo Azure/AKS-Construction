@@ -70,16 +70,21 @@ resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01
 }
 
 //------------------------------------------------------ Create custom vnet
-param vnetAddressPrefix string = '10.0.0.0/8'
-param vnetAksSubnetAddressPrefix string = '10.240.0.0/16'
-param vnetFirewallSubnetAddressPrefix string = '10.241.130.0/26'
-param vnetAppGatewaySubnetAddressPrefix string = '10.2.0.0/16'
+param vnetAddressPrefix string = '10.240.0.0/16'
+param vnetAksSubnetAddressPrefix string = '10.240.0.0/22'
+param vnetAppGatewaySubnetAddressPrefix string = '10.240.4.0/26'
+param acrAgentPoolSubnetAddressPrefix string = '10.240.4.64/26'
+
+@description('The address range for Azure Bastion in your custom vnet')
+param bastionSubnetAddressPrefix string = '10.240.4.128/26'
+param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
+param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 
 param privateLinks bool = false
-param privateLinkSubnetAddressPrefix string = '10.3.0.0/16'
-
 param acrPrivatePool bool = false
-param acrAgentPoolSubnetAddressPrefix string = '10.4.0.0/16'
+
+@description('Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)')
+param bastion bool = false
 
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
@@ -99,6 +104,8 @@ module network './network.bicep' = if (custom_vnet) {
     privateLinkAkvId: privateLinks && createKV ? kv.id : ''
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
+    bastion: bastion
+    bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
   }
 }
 
@@ -152,7 +159,7 @@ param KeyVaultSoftDelete bool = true
 param KeyVaultPurgeProtection bool = true
 
 @description('Add IP to firewall whitelist')
-param kvIPWhitelist string = ''
+param kvIPWhitelist array = []
 
 var akvName = 'kv-${replace(resourceName, '-', '')}'
 
@@ -171,12 +178,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     networkAcls: privateLinks && !empty(kvIPWhitelist) ? {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
-
-      ipRules: empty(kvIPWhitelist) ? [] : [
-          {
-          value: kvIPWhitelist
-        }
-      ]
+      ipRules: kvIPWhitelist
       virtualNetworkRules: []
     } : {}
 
@@ -638,7 +640,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 |__|\__\  \______/  |______/  |_______|| _| `._____||__| \__| |_______|    |__|     |_______||_______/ */
 
 param dnsPrefix string = '${resourceName}-dns'
-param kubernetesVersion string = '1.20.9'
+param kubernetesVersion string = '1.21.2'
 param enable_aad bool = false
 param aad_tenant_id string = ''
 
@@ -666,9 +668,9 @@ param availabilityZones array = []
 
 param AksPaidSkuForSLA bool = false
 
-param podCidr string = '10.244.0.0/16'
-param serviceCidr string = '10.0.0.0/16'
-param dnsServiceIP string = '10.0.0.10'
+param podCidr string = '10.240.100.0/24'
+param serviceCidr string = '172.10.0.0/16'
+param dnsServiceIP string = '172.10.0.10'
 param dockerBridgeCidr string = '172.17.0.1/16'
 
 param JustUseSystemPool bool = false
@@ -676,10 +678,16 @@ param JustUseSystemPool bool = false
 @allowed([
   'Cost-Optimised'
   'Standard'
+  'HighSpec'
+  'Custom'
 ])
 @description('The System Pool Preset sizing')
 param SystemPoolType string = 'Cost-Optimised'
 
+@description('A custom system pool spec')
+param SystemPoolCustomPreset object = {}
+
+@description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   'Cost-Optimised' : {
     vmSize: 'Standard_B4ms'
@@ -687,15 +695,31 @@ var systemPoolPresets = {
     minCount: 1
     maxCount: 3
     enableAutoScaling: true
-    //osDiskType: 'Ephemeral' //default
+    availabilityZones: []
   }
   'Standard' : {
-    vmSize: 'Standard_D4s_v3'
-    count: 2
-    minCount: 2
-    maxCount: 3
+    vmSize: 'Standard_DS2_v2'
+    count: 3
+    minCount: 3
+    maxCount: 5
     enableAutoScaling: true
-    //osDiskType: 'Ephemeral' //default
+    availabilityZones: [
+      '1'
+      '2'
+      '3'
+    ]
+  }
+  'HighSpec' : {
+    vmSize: 'Standard_D4s_v3'
+    count: 3
+    minCount: 3
+    maxCount: 5
+    enableAutoScaling: true
+    availabilityZones: [
+      '1'
+      '2'
+      '3'
+    ]
   }
 }
 
@@ -705,7 +729,6 @@ var systemPoolBase = {
   osType: 'Linux'
   maxPods: 30
   type: 'VirtualMachineScaleSets'
-  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
   upgradeSettings: {
     maxSurge: '33%'
@@ -715,29 +738,30 @@ var systemPoolBase = {
   ]
 }
 
-var agentPoolProfileSystem = union(systemPoolBase, systemPoolPresets[SystemPoolType])
+var userPoolVmProfile = {
+  vmSize: agentVMSize
+  count: agentCount
+  minCount: autoScale ? agentCount : json('null')
+  maxCount: autoScale ? agentCountMax : json('null')
+  enableAutoScaling: autoScale
+  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
+}
 
-var agentPoolProfileUser = {
+var agentPoolProfileUser = union({
   name: 'npuser01'
   mode: 'User'
   osDiskType: osDiskType
   osDiskSizeGB: osDiskSizeGB
-  count: agentCount
-  vmSize: agentVMSize
   osType: 'Linux'
   maxPods: maxPods
   type: 'VirtualMachineScaleSets'
-  enableAutoScaling: autoScale
-  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
-  minCount: autoScale ? agentCount : json('null')
-  maxCount: autoScale ? agentCountMax : json('null')
   upgradeSettings: {
     maxSurge: '33%'
   }
-}
+}, userPoolVmProfile)
 
-var agentPoolProfiles = JustUseSystemPool ? array(agentPoolProfileSystem) : concat(array(agentPoolProfileSystem), array(agentPoolProfileUser))
+var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
@@ -991,8 +1015,8 @@ resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-
   }
 }
 
-
 output LogAnalyticsName string = (createLaw) ? aks_law.name : ''
 output LogAnalyticsGuid string = (createLaw) ? aks_law.properties.customerId : ''
+output LogAnalyticsId string = (createLaw) ? aks_law.id : ''
 
 //ACSCII Art link : https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=Star%20Wars&text=changeme

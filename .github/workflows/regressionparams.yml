@@ -72,6 +72,7 @@ jobs:
 
       - name: Arm Parameter file check
         shell: pwsh
+        id: paramfile
         run: |
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamDir }}${{ matrix.files }}"
@@ -80,6 +81,19 @@ jobs:
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
+
+            Write-Output "Checking for PSrule template link metadata"
+            $paramfile=$paramFileContent|ConvertFrom-Json
+            if ($null -ne $paramfile.metadata.template) {
+              Write-Output "Temnplate value found"
+              Write-Output $paramfile.metadata.template
+              Write-Output $paramfile.metadata.template.length
+
+              echo "::set-output name=DOPSRULE::true"
+            } else {
+              Write-Output "Temnplate value NOT found"
+              echo "::set-output name=DOPSRULE::false"
+            }
           }
           
       - name: Replace subnet and dnszone param values from secret
@@ -98,7 +112,7 @@ jobs:
             $params.parameters.byoAGWSubnetId.value = "${{ secrets.ByoAgwSubnetId }}"
           }
           
-          $params | ConvertTo-Json | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
+          $params | ConvertTo-Json -Depth 4 | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
           
       - name: Azure Login
         uses: Azure/login@v1
@@ -115,3 +129,21 @@ jobs:
           inlineScript: |
             RG='${{ env.RG }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamDir }}${{ matrix.files }}
+
+      - name: Debug
+        run: |
+          echo "Input path is ${{ env.ParamDir }}${{ matrix.files }}"
+          echo "Do PS Rule is ${{ steps.paramfile.outputs.DOPSRULE }}"
+    
+      # PSRule does this cool thing where it traverse the parameter file through to the arm template
+      # PSRule performs IaC recommendations of the template.
+      # https://azure.github.io/PSRule.Rules.Azure/
+      - name: PSRule - Analyze Azure parameter file
+        if: steps.paramfile.outputs.DOPSRULE == 'true'
+        uses: Microsoft/ps-rule@main
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
+        with:
+          modules: 'PSRule.Rules.Azure' 
+          inputPath: "${{ env.ParamDir }}${{ matrix.files }}"
+          prerelease: false
+          baseline: 'Azure.Preview'

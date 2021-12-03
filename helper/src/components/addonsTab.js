@@ -64,7 +64,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     onChange={(ev, { key }) => updateFn("azurepolicy", key)}
                 />
                 {addons.azurepolicy !== 'none' &&
-                    <MessageBar messageBarType={addons.azurepolicy === 'audit' ? MessageBarType.success : MessageBarType.blocked} styles={{ root: { marginLeft: '50px', width: '700px' } }}>
+                    <MessageBar messageBarType={MessageBarType.success} styles={{ root: { marginTop: '20px', marginLeft: '100px', width: '700px' } }}>
                         The template will automatically assign and <b>{addons.azurepolicy}</b> the following <Link target="_target" href="https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json">Policies</Link>:
                         <ul>
                             <li>Do not allow privileged containers in Kubernetes cluster</li>
@@ -109,6 +109,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     ]}
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
+                {hasError(invalidArray, 'ingress') &&
+                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '100px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
+                }
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.ingress === "none" ? "none" : "block") } }} >
@@ -252,7 +255,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
-                <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label="Create ACR Private Agent Pool (applicable to private link)" />
+                <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label={<Text>Create ACR Private Agent Pool (private link only) (preview limited regions <a target="_new" href="https://docs.microsoft.com/azure/container-registry/tasks-agent-pools">docs</a>)</Text>} />
                 <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
                     <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>  
                     <TextField disabled={true} label="O/S" defaultValue="Linux"/>  

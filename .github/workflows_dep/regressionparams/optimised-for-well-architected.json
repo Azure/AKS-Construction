@@ -2,20 +2,24 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "metadata": {
-        "template": "bicep/compiled/main.json"
+        "template": "bicep/compiled/main.json",
+        "config" : "https://azure.github.io/Aks-Construction?secure=normal&net.dnsServiceIP=172.10.0.10&ops=managed&cluster.SystemPoolType=Standard&cluster.availabilityZones=yes&cluster.apisecurity=whitelist&addons.ingress=appgw&addons.registry=Premium&addons.appGWcount=2"
     },
     "parameters": {
         "resourceName": {
-            "value": "priv"
+            "value": "az-k8s-4wmn"
           },
           "kubernetesVersion": {
             "value": "1.21.2"
+          },
+          "SystemPoolType": {
+            "value": "Standard"
           },
           "agentVMSize": {
             "value": "Standard_DS3_v2"
           },
           "agentCountMax": {
-            "value": 3
+            "value": 20
           },
           "custom_vnet": {
             "value": true
@@ -29,15 +33,6 @@
           "registries_sku": {
             "value": "Premium"
           },
-          "acrPrivatePool": {
-            "value": true
-          },
-          "azureFirewalls": {
-            "value": true
-          },
-          "privateLinks": {
-            "value": true
-          },
           "omsagent": {
             "value": true
           },
@@ -48,25 +43,32 @@
             "value": "azure"
           },
           "azurepolicy": {
-            "value": "deny"
+            "value": "audit"
           },
-          "enablePrivateCluster": {
-            "value": true
+          "availabilityZones": {
+            "value": [
+              "1",
+              "2",
+              "3"
+            ]
+          },
+          "authorizedIPRanges": {
+            "value": [
+              "20.36.64.4/32",
+              "20.36.64.5/32"
+            ]
           },
           "ingressApplicationGateway": {
             "value": true
           },
-          "bastion" : {
-            "value": true
-          },
           "appGWcount": {
-            "value": 0
+            "value": 2
           },
           "appGWsku": {
             "value": "WAF_v2"
           },
           "appGWmaxCount": {
-            "value": 2
+            "value": 10
           },
           "appgwKVIntegration": {
             "value": true

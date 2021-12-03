@@ -28,6 +28,7 @@
     "@fluentui/react": "^8.36.3",
     "@microsoft/applicationinsights-web": "^2.7.0",
     "@playwright/test": "^1.15.2",
+    "playwright-expect": "^0.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "^4.0.3"
