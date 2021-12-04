@@ -145,5 +145,14 @@ jobs:
         with:
           modules: 'PSRule.Rules.Azure' 
           inputPath: "${{ env.ParamDir }}${{ matrix.files }}"
-          prerelease: false
-          baseline: 'Azure.Preview'
+          #prerelease: false
+          baseline: 'Azure.Default' #'Azure.Preview' 
+
+      - name: PSRule - Analyze Azure parameter file including Preview feature rulesets
+        if: steps.paramfile.outputs.DOPSRULE == 'true'
+        uses: Microsoft/ps-rule@main
+        continue-on-error: true #Preview feature checking means we need to suppress errors
+        with:
+          modules: 'PSRule.Rules.Azure' 
+          inputPath: "${{ env.ParamDir }}${{ matrix.files }}"
+          baseline: 'Azure.All' #All includes preview and internal rules

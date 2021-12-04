@@ -22,6 +22,8 @@ param acrAgentPoolSubnetAddressPrefix string = ''
 param bastion bool =false
 param bastionSubnetAddressPrefix string = ''
 
+param availabilityZones array = []
+
 var bastion_subnet_name = 'AzureBastionSubnet'
 var bastion_subnet = {
   name: bastion_subnet_name
@@ -268,6 +270,7 @@ resource bastionPip 'Microsoft.Network/publicIpAddresses@2020-05-01' = {
   sku: {
     name: 'Standard'
   }
+  zones: !empty(availabilityZones) ? availabilityZones : []
   properties: {
     publicIPAllocationMethod: 'Static'
   }

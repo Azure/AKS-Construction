@@ -274,6 +274,14 @@ param registries_sku string = ''
 param enableACRTrustPolicy bool = false
 var acrContentTrustEnabled = enableACRTrustPolicy && registries_sku == 'Premium' ? 'enabled' : 'disabled'
 
+//param enableACRZoneRedundancy bool = true
+var acrZoneRedundancyEnabled = !empty(availabilityZones) && registries_sku == 'Premium' ? 'Enabled' : 'Disabled'
+
+param acrUntaggedRetentionPolicyEnabled bool = false
+
+@description('The number of days to retain untagged manifests for')
+param acrUntaggedRetentionPolicy int = 30
+
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
 resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!empty(registries_sku)) {
@@ -288,8 +296,13 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
         status: acrContentTrustEnabled
         type: 'Notary'
       } : {}
+      retentionPolicy: acrUntaggedRetentionPolicyEnabled ? {
+        status: 'enabled'
+        days: acrUntaggedRetentionPolicy
+      } : json('null')
     }
     publicNetworkAccess: privateLinks /* && empty(acrIPWhitelist)*/ ? 'Disabled' : 'Enabled'
+    zoneRedundancy: acrZoneRedundancyEnabled
     /*
     networkRuleSet: {
       defaultAction: 'Deny'
@@ -459,6 +472,7 @@ var appGwFirewallConfigOwasp = {
   ruleSetVersion: '3.2'
   requestBodyCheck: true
   maxRequestBodySizeInKb: 128
+  disabledRuleGroups: []
 }
 
 var appGWskuObj = union({
@@ -791,6 +805,7 @@ var aks_properties_base = {
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
   }
+  disableLocalAccounts: true
 }
 
 var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
@@ -882,7 +897,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-07-01' = {
 }
 output aksClusterName string = aks.name
 
-// https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json
+
 var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
 resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
   name: '${resourceName}-baseline'
@@ -897,6 +912,11 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
         value: azurepolicy
       }
     }
+    metadata: { 
+      assignedBy: 'Aks Construction'
+    }
+    displayName: 'Aks Baseline Security Policy'
+    description: 'As per: https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json'
   }
 }
 
@@ -948,6 +968,12 @@ resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  
       category: aksDiagCategory
       enabled: true
     }]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
   }
 }
 
