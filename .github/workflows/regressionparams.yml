@@ -130,6 +130,14 @@ jobs:
             RG='${{ env.RG }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamDir }}${{ matrix.files }}
 
+      - name: WhatIf Infrastructure deployment
+        uses: Azure/cli@1.0.4
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+            RG='${{ env.RG }}'
+            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamDir }}${{ matrix.files }}
+
       - name: Debug
         run: |
           echo "Input path is ${{ env.ParamDir }}${{ matrix.files }}"
