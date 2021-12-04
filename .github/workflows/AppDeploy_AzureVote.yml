@@ -126,6 +126,7 @@ jobs:
           helm upgrade --install $APPNAME ./helmcharts/samples/azurevote --set ${{ steps.helmparams.outputs.helmsetparams}}
 
       - name: Install the Vote app (run cmd)
+        id: installapp
         if: inputs.USERUNCOMMAND == true
         env:
           NAMESP: "default"
@@ -245,7 +246,7 @@ jobs:
           AKSNAME='${{ inputs.AKSNAME}}'
           RG='${{ inputs.RG }}'
 
-          echo "Invoking Get ${{ steps.helmparams.outputs.RESTYPE}} to retrieve IP for $AKSNAME in $RG"
+          echo "Invoking Get ${{ steps.installapp.outputs.RESTYPE}} to retrieve IP for $AKSNAME in $RG"
           
           counter=1
           while [ $counter -le 10 ]
