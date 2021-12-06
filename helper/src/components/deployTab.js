@@ -19,12 +19,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
   const params = {
     resourceName: deploy.clusterName,
-    kubernetesVersion: deploy.kubernetesVersion,
+    ...(deploy.kubernetesVersion != defaults.deploy.kubernetesVersion && {kubernetesVersion: deploy.kubernetesVersion}),
     ...(cluster.agentCount !== defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
-    ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel }),
-    ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA } ),
+    ...(cluster.upgradeChannel !== defaults.cluster.upgradeChannel && { upgradeChannel: cluster.upgradeChannel }),
+    ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
-    ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
+    ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
@@ -43,8 +43,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
-        privateLinks: true,
-        ...(addons.csisecret === 'akvNew' && deploy.kvIPWhitelist  && apiips_array.length > 0 && {kvIPWhitelist: apiips_array }),
+        privateLinks: true, 
+        ...(addons.csisecret === 'akvNew' && deploy.kvIPWhitelist  && apiips_array.length > 0 && {kvIPWhitelist: apiips_array.map(v => {return {"value": v}}) }),
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
@@ -83,11 +83,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const params2CLI = p => Object.keys(p).map(k => {
     const val = p[k]
-    const targetVal = Array.isArray(val) ? JSON.stringify(val).replaceAll(' ', '').replaceAll('"', '\\"') : val
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
     return ` \\\n\t${k}=${targetVal}`
   }).join('')
 
-  const params2file = p => Object.keys(p).reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
+  const params2file = p => Object.keys(p).filter(p => p !== 'adminprincipleid' && p !== 'acrPushRolePrincipalId' && p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {}
@@ -136,10 +136,13 @@ az aks get-credentials -g ${deploy.rg} -n ${aks} ` : ""
     ) +
     // Prometheus
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 kubectl create namespace ${prometheus_namespace}
-helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}` : '') +
+helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}
+${cluster.apisecurity === "private" ? `"` : ``}
+` : '') +
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `\n\n# Create a namespace for your ingress resources
 kubectl create namespace ${nginx_namespace}
