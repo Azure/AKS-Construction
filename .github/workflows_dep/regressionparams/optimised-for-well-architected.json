@@ -95,6 +95,9 @@
               "guard",
               "AllMetrics"
             ]
+          },
+          "acrUntaggedRetentionPolicyEnabled": {
+            "value": true
           }
     }
 }

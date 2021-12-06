@@ -106,6 +106,7 @@ module network './network.bicep' = if (custom_vnet) {
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
     bastion: bastion
     bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
+    availabilityZones: availabilityZones
   }
 }
 
@@ -912,7 +913,7 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
         value: azurepolicy
       }
     }
-    metadata: { 
+    metadata: {
       assignedBy: 'Aks Construction'
     }
     displayName: 'Aks Baseline Security Policy'
