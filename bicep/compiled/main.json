@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "3047112235838399177"
+      "templateHash": "5408880221391502535"
     }
   },
   "parameters": {
@@ -1048,6 +1048,9 @@
           },
           "bastionSubnetAddressPrefix": {
             "value": "[parameters('bastionSubnetAddressPrefix')]"
+          },
+          "availabilityZones": {
+            "value": "[parameters('availabilityZones')]"
           }
         },
         "template": {
