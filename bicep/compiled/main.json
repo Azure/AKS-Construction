@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "3280758283277838055"
+      "templateHash": "8064397198988889580"
     }
   },
   "parameters": {
@@ -308,7 +308,7 @@
     },
     "AksDisableLocalAccounts": {
       "type": "bool",
-      "defaultValue": true,
+      "defaultValue": false,
       "metadata": {
         "description": "Disable local K8S accounts for AAD enabled clusters"
       }
