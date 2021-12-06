@@ -96,11 +96,12 @@ jobs:
           cd helper
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter list
 
-      - name: Persist exported Az Commands for testing
-        uses: actions/upload-artifact@v2
-        with:
-          name: AzCmds
-          path: helper/azcmd-*.sh
+      # This step is good for debugging, or if we wanted to use a new Job to do the Az testing. Commenting out.
+      # - name: Persist exported Az Commands for testing
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: AzCmds
+      #     path: helper/azcmd-*.sh
 
       - name: Azure Login
         uses: Azure/login@v1
@@ -110,14 +111,22 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
 
-      - name: Validate Infrastructure deployment
+      #TODO: If/When we capture more AZ CMD's, then we'll want to iterate over files beginning with "azcmd"
+      - name: Verify AZ Commands
         uses: Azure/cli@1.0.4
+        env:
+          azcmdpath: "helper/azcmd-managed-private.sh"
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
+            #Change the Create to a Validate statement
+            sed -i 's/az deployment group create/az deployment group validate/' ${{ $azcmdpath }}
 
-            #TODO: If/When we capture more AZ CMD's, then we'll want to iterate over files beginning with "azcmd"
-            sh azcmd-managed-private.sh
+            #Debug
+            cat ${{ $azcmdpath }}
+
+            #Run the script
+            sh ${{ $azcmdpath }}
 
       - name: Persist test failure screengrabs as artifacts
         uses: actions/upload-artifact@v2
