@@ -128,17 +128,21 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
 
-      - name: AKS Connect
-        uses: Azure/aks-set-context@v1
-        with:
-          creds: '${{ secrets.AZURE_CREDENTIALS }}'
-          cluster-name: ${{ needs.Deploy.outputs.AKSNAME }}
-          resource-group: ${{ env.RG }}
+      # - name: AKS Connect
+      #   uses: Azure/aks-set-context@v1
+      #   with:
+      #     creds: '${{ secrets.AZURE_CREDENTIALS }}'
+      #     cluster-name: ${{ needs.Deploy.outputs.AKSNAME }}
+      #     resource-group: ${{ env.RG }}
 
-      - name: Kubectl
+      - name: AKS Connect
         run: |
-          #sudo az aks install-cli
-          kubectl version
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+
+      - name: Kubelogin
+        run: |
+          kubelogin convert-kubeconfig -l azurecli
 
       - name: Deploy Simple Workload
         env:
