@@ -31,11 +31,11 @@ output:
 configuration:
   # Enable automatic expansion of Azure parameter files
   AZURE_PARAMETER_FILE_EXPANSION: true
-  
+
   # Bicep is experimental and currently disabled as testing occurs against compiled template
   # Enable automatic expansion of bicep source files
   # AZURE_BICEP_FILE_EXPANSION: true
-  
+
   #ProjectSpecifc rules
   Azure_AKSNodeMinimumMaxPods: 30
 
@@ -46,25 +46,27 @@ rule:
   - Azure.VM.Standalone
   - Azure.KeyVault.SoftDelete
   - Azure.KeyVault.PurgeProtect
+  - Azure.AppGw.UseHTTPS #In this project AGIC is in charge of managing the AppGW.
 
-  
+# Ignore the following rules for specific deployments
+# -aks-AksStan = Low spec'd AKS deployment that won't meet many WAF rules
 suppression:
   Azure.AKS.AuthorizedIPs:
   # Exclude the following AKS clusters
   - aks-AksStan
-  
+
   Azure.AKS.MinNodeCount:
   - aks-AksStan
-  
+
   Azure.AKS.NetworkPolicy:
   - aks-AksStan
-  
+
   Azure.AKS.AzurePolicyAddOn:
   - aks-AksStan
-  
+
   Azure.AKS.AutoScaling:
   - aks-AksStan
-  
+
   Azure.AKS.AvailabilityZone:
   - aks-AksStan
-  
+
