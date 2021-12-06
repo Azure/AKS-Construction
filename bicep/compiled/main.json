@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "3204895806738670895"
+      "templateHash": "8307656930129204381"
     }
   },
   "parameters": {
@@ -144,7 +144,10 @@
     },
     "acrUntaggedRetentionPolicyEnabled": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable removing of untagged manifests from ACR"
+      }
     },
     "acrUntaggedRetentionPolicy": {
       "type": "int",
