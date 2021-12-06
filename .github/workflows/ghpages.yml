@@ -17,6 +17,12 @@ on:
       - "helper/**"
 
   workflow_dispatch:
+    inputs:
+      doAzCmdDeployment:
+        description: 'Test AZ Cmd by deploying to an Azure subscription'
+        default: 'false'
+        type: boolean
+        required: false
 
 env:
   templateRelease: 0.3.3
@@ -131,7 +137,7 @@ jobs:
             sh $azcmdpath
 
       - name: Full deploy test AZ Commands
-        if: ${{ !github.event.pull_request.head.repo.fork }}
+        if: ${{ !github.event.pull_request.head.repo.fork &&  github.event.inputs.doAzCmdDeployment == 'true' }}
         uses: Azure/cli@1.0.4
         env:
           azcmdpath: "helper/azcmd-managed-private.sh"
