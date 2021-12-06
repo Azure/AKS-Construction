@@ -96,14 +96,15 @@ jobs:
           cd helper
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter list
 
-      # This step is good for debugging, or if we wanted to use a new Job to do the Az testing. Commenting out.
-      # - name: Persist exported Az Commands for testing
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: AzCmds
-      #     path: helper/azcmd-*.sh
+      - name: Persist exported Az Commands for visibility
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: AzCmds
+          path: helper/azcmd-*.sh
 
       - name: Azure Login
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
@@ -113,6 +114,7 @@ jobs:
 
       #TODO: If/When we capture more AZ CMD's, then we'll want to iterate over files beginning with "azcmd"
       - name: Verify AZ Commands
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         uses: Azure/cli@1.0.4
         env:
           azcmdpath: "helper/azcmd-managed-private.sh"
@@ -129,6 +131,7 @@ jobs:
             sh $azcmdpath
 
       - name: Full deploy test AZ Commands
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         uses: Azure/cli@1.0.4
         env:
           azcmdpath: "helper/azcmd-managed-private.sh"
