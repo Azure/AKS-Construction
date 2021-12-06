@@ -5,17 +5,17 @@ name: InfraCI - Private cluster
 
 on:
   workflow_dispatch:
-    
+
   push:
-    paths: 
+    paths:
       - 'bicep/*'
-      
+
   pull_request:
     branches: [ main ]
-    paths: 
+    paths:
       - 'bicep/*'
       - ".github/workflows/ByoVnetPrivateCI.yml"
-      
+
   schedule:
     # At 11:00pm, every Tuesday week
     - cron: '0 23 * * 2'
@@ -25,7 +25,7 @@ env:
   RESNAME: 'AksPriv'
   DEPNAME: 'DepPriv${{ github.run_number }}'
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
-  
+
 concurrency: ci-${{ github.ref }}
 
 jobs:
@@ -38,7 +38,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -51,12 +51,12 @@ jobs:
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
-          
+
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -72,12 +72,12 @@ jobs:
         uses: Microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
-          modules: 'PSRule.Rules.Azure' 
+          modules: 'PSRule.Rules.Azure'
           inputType: repository
           inputPath: "${{ env.ParamFilePath }}"
           baseline: 'Azure.GA_2021_09'
           prerelease: true
-          
+
       - name: Verify No Active Deployments in RG
         id: activedeps
         uses: Azure/cli@1.0.4
@@ -87,20 +87,20 @@ jobs:
             RG='${{ env.RG }}'
             RUNCOUNT=$(az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name] | length(@)" -o tsv)
             echo "Active deployments : $RUNCOUNT"
-            
+
             echo 'Active deployment list'
             az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name]"
-            
+
             #echo 'Verbose deployment list'
             #az deployment group list -g $RG --query "[].[properties.provisioningState, name]"
-            
+
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
-            
+
             if [ "$RUNCOUNT" -ne "0" ]
             then
               exit 1
             fi
-            
+
       - name: Validate AKS
         uses: Azure/cli@1.0.4
         with:
@@ -110,7 +110,7 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --verbose
-            
+
       - name: What If
         uses: Azure/cli@1.0.4
         with:
@@ -137,7 +137,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -148,12 +148,12 @@ jobs:
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
-          
+
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -161,7 +161,7 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Start Runner VM
         uses: Azure/cli@1.0.4
         with:
@@ -172,7 +172,7 @@ jobs:
             RunnerVM='GHRunnerWE'
 
             az vm start --name $RunnerVM --no-wait --resource-group $RunnerRG
-            
+
       - name: Deploy AKS
         id:  deployAks
         uses: Azure/cli@1.0.4
@@ -183,57 +183,57 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --name $DEPNAME --verbose
-            
+
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
-            
+
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
             echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
-            
+
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
             echo "::set-output name=AGNAME::$AGNAME" #outputting for conditon
-            
+
             LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
             echo "::set-output name=LANAME::$LANAME" #outputting for conditon
-            
+
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
             echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
-            
-            
+
+
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |          
+          inlineScript: |
             RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
             AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
-            
+
             echo "AKS $AKSNAME"
             echo "AG $AGNAME"
-            
+
             echo "Checking if ingressApplicationGateway is enabled"
             AGICEnabled=$(az aks show -n $AKSNAME -g  $RG --query "addonProfiles.ingressApplicationGateway.enabled")
             echo "AGICEnabled = $AGICEnabled"
-            
+
             if [ "$AGICEnabled" != "true" ];
             then
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
-            
+
       - name: Fast alerting experience
         uses: Azure/cli@1.0.4
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |          
+          inlineScript: |
             RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
             LANAME='${{ steps.deployAks.outputs.AGNAME}}'
-            
+
             echo "AKS $AKSNAME"
             echo "LA $LANAME"
-            
+
             if [ "true" == "true" ];
             then
                 AKSRESID=$(az aks show -g $RG  -n $AKSNAME --query id -o tsv)
@@ -252,14 +252,14 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
-          
+
           whoami
-          
+
           az version
 
       - name: Azure Login MSI
@@ -269,43 +269,43 @@ jobs:
       - name: AKS Connect
         run: |
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
+          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+
       - name: Kubectl
         run: |
           #sudo az aks install-cli
           kubectl version
-          
+
       - name: Deploy AGIC Public Facing Workload
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
           NAMESP: "default"
         run: |
           kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-          
+
           echo $MANIFESTTESTURL
           kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
 
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
-          
+
       - name: Verify AGIC Public Facing Workload
         env:
           NAMESP: "default"
         run: |
           sleep 2m #Give everything a chance to work
-        
+
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
-          
+
           pubIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
           echo $pubIp
-          
+
           curl -o /dev/null -s -w "%{http_code}\n" $pubIp
-          curl $pubIp       
-          
+          curl $pubIp
+
       - name: Delete AGIC Public Facing Workload
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
@@ -319,24 +319,24 @@ jobs:
           NAMESP: "default"
         run: |
           kubectl create -f $MANIFESTTESTURL -n  $NAMESP
-          
+
       - name: Verify AGIC Private Workload
         env:
           NAMESP: "default"
         run: |
           sleep 2m #Give everything a chance to work
-        
+
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
-          
+
           echo "Getting private ip"
           privIp=$(kubectl get ing -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
           echo "Private ip : $privIp"
-          
+
           respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
-          echo $respcode   
-          
+          echo $respcode
+
           #TODO: This is going to need to be rewritten. #loopshambles
           #SSH'ing on the runner shows this works, sometimes it just takes ages
           #Needs to be investigated.
@@ -344,17 +344,17 @@ jobs:
           then
               echo "going to need to wait longer i guess?"
               sleep 3m
-              
+
               respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
-              echo $respcode    
-              
+              echo $respcode
+
               if [ "$respcode" != "200" ];
               then
                 echo "going to need to wait EVEN longer i guess?  (wtf)"
                 sleep 6m
 
                 respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $privIp)
-                echo $respcode    
+                echo $respcode
 
                 if [ "$respcode" != "200" ];
                 then
@@ -363,7 +363,7 @@ jobs:
                 fi
               fi
           fi
-          
+
           curl $privIp
 
   AppTests:
@@ -374,7 +374,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -386,9 +386,9 @@ jobs:
           Write-Output "Check for Logs in the Log Analytics Workspace"
           $LANAME='${{ needs.Deploy.outputs.LANAME}}'
           $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          
+
           #if LANAME != null
-    
+
   InfraTests:
     runs-on: ubuntu-latest
     needs: [Deploy]
@@ -397,7 +397,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -416,7 +416,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Log Analytics log table verification
         shell: pwsh
         run: |
@@ -424,19 +424,19 @@ jobs:
           $LANAME='${{ needs.Deploy.outputs.LANAME}}'
           $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
           $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          
+
           #$KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
           $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
           Write-Output $KubeNode
           Write-Output $KubeNode[0].Count
-          
+
           if ($KubeNode[0].Count -eq 0) {
             throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
           }
-          
+
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
-          
+
   Cleanup:
     runs-on: ubuntu-latest
     needs: [Validation, Deploy, WorkloadAdd, InfraTests, AppTests]
@@ -447,7 +447,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -458,12 +458,12 @@ jobs:
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
-          
+
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -478,7 +478,7 @@ jobs:
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Az.Accounts
           Install-Module -Name Az.Resources
-          
+
       - name: Cleanup
         shell: pwsh
         run: |

@@ -7,7 +7,7 @@ on:
   #Run on Manual execution
   workflow_dispatch:
 
-  #Run when our bicep code changes 
+  #Run when our bicep code changes
   push:
     paths:
       - "bicep/*"
@@ -29,7 +29,7 @@ env:
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
-  
+
 jobs:
   Validation:
     runs-on: ubuntu-latest
@@ -127,17 +127,17 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: AKS Connect
         run: |
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
+          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+
       - name: Kubectl
         run: |
           #sudo az aks install-cli
           kubectl version
-          
+
       - name: Deploy Simple Workload
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
@@ -145,26 +145,26 @@ jobs:
         run: |
             echo "Creating namespace $NAMESP"
             kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-          
+
             echo $MANIFESTTESTURL
             kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-            
+
       - name: Verify Simple Workload
         id: simpleworkloadverify
         env:
           NAMESP: "votey"
         run: |
           sleep 2m #Give public ip a chance to be allocated
-        
+
           kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP       
-                    
+          kubectl get svc -n  $NAMESP
+
           pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
           echo $pubIp
           echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
-            
-          curl $pubIp   
-        
+
+          curl $pubIp
+
   Cleanup:
     runs-on: ubuntu-latest
     needs: [Validation, Deploy, SmokeTest_SimpleApp]
