@@ -23,6 +23,9 @@
           "enable_aad": {
             "value": true
           },
+          "aksDisableLocalAccounts": {
+            "value": true
+          },
           "enableAzureRBAC": {
             "value": true
           },

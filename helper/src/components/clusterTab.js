@@ -279,6 +279,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                     }
                                 </>
                             }
+
+                            <Checkbox inputProps={{ "data-testid": "cluster-localaccounts-Checkbox"}} disabled={!cluster.enableAzureRBAC} checked={cluster.AksDisableLocalAccounts} onChange={(ev, val) => updateFn("AksDisableLocalAccounts", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Disable Local Kubernetes Accounts <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/managed-aad#disable-local-accounts'>docs</Link>**</Text>} />
+
                         </Stack>
                     }
                 </Stack.Item>

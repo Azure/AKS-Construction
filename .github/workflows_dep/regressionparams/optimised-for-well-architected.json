@@ -92,8 +92,7 @@
               "kube-controller-manager",
               "kube-audit-admin",
               "kube-scheduler",
-              "guard",
-              "AllMetrics"
+              "guard"
             ]
           },
           "acrUntaggedRetentionPolicyEnabled": {

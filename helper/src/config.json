@@ -32,6 +32,7 @@
             "osDiskSizeGB": 0,
             "osDiskType": "Ephemeral",
             "enable_aad": true,
+            "AksDisableLocalAccounts": false,
             "use_alt_aad": false,
             "aad_tenant_id": "",
             "enableAzureRBAC": true,
@@ -238,6 +239,7 @@
                         },
                         "cluster": {
                             "enable_aad": false,
+                            "AksDisableLocalAccounts": false,
                             "apisecurity": "none"
                         },
                         "addons": {
@@ -303,6 +305,7 @@
                         },
                         "cluster": {
                             "enable_aad": true,
+                            "AksDisableLocalAccounts": false,
                             "apisecurity": "whitelist"
                         },
                         "addons": {
@@ -400,6 +403,7 @@
                         },
                         "cluster": {
                             "enable_aad": true,
+                            "AksDisableLocalAccounts": true,
                             "apisecurity": "private"
                         },
                         "addons": {
@@ -496,6 +500,7 @@
                     "values": {
                         "cluster": {
                             "enable_aad": true,
+                            "AksDisableLocalAccounts": false,
                             "apisecurity": "none",
                             "autoscale": true,
                             "agentCount": 2,
@@ -579,6 +584,7 @@
                     "values": {
                         "cluster": {
                             "enable_aad": true,
+                            "AksDisableLocalAccounts": true,
                             "apisecurity": "private",
                             "autoscale": true,
                             "upgradeChannel": "none"
@@ -660,6 +666,7 @@
                     "values": {
                         "cluster": {
                             "enable_aad": true,
+                            "AksDisableLocalAccounts": true,
                             "apisecurity": "private",
                             "autoscale": true,
                             "upgradeChannel": "none"

@@ -322,6 +322,31 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
 }
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
 
+resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && !empty(registries_sku)) {
+  name: 'acrDiags'
+  scope: acr
+  properties: {
+    workspaceId:aks_law.id
+    logs: [
+      {
+        category: 'ContainerRegistryRepositoryEvents'
+        enabled: true
+      }
+      {
+        category: 'ContainerRegistryLoginEvents'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+        timeGrain: 'PT1M'
+      }
+    ]
+  }
+}
+
 resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
   name: 'private-pool'
   location: location
