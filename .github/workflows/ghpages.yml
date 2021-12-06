@@ -120,13 +120,13 @@ jobs:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
             #Change the Create to a Validate statement
-            sed -i 's/az deployment group create/az deployment group validate/' ${{ $azcmdpath }}
+            sed -i 's/az deployment group create/az deployment group validate/' $azcmdpath
 
             #Debug
-            cat ${{ $azcmdpath }}
+            cat $azcmdpath
 
             #Run the script
-            sh ${{ $azcmdpath }}
+            sh $azcmdpath
 
       - name: Persist test failure screengrabs as artifacts
         uses: actions/upload-artifact@v2
