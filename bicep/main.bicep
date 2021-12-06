@@ -278,6 +278,7 @@ var acrContentTrustEnabled = enableACRTrustPolicy && registries_sku == 'Premium'
 //param enableACRZoneRedundancy bool = true
 var acrZoneRedundancyEnabled = !empty(availabilityZones) && registries_sku == 'Premium' ? 'Enabled' : 'Disabled'
 
+@description('Enable removing of untagged manifests from ACR')
 param acrUntaggedRetentionPolicyEnabled bool = false
 
 @description('The number of days to retain untagged manifests for')
