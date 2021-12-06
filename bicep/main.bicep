@@ -680,7 +680,7 @@ param gitops string = ''
 param authorizedIPRanges array = []
 param enablePrivateCluster bool = false
 param availabilityZones array = []
-
+param AksDisableLocalAccounts bool = true
 param AksPaidSkuForSLA bool = false
 
 param podCidr string = '10.240.100.0/24'
@@ -806,7 +806,7 @@ var aks_properties_base = {
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
   }
-  disableLocalAccounts: true
+  disableLocalAccounts: AksDisableLocalAccounts
 }
 
 var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
