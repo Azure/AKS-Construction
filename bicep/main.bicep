@@ -681,6 +681,7 @@ param gitops string = ''
 param authorizedIPRanges array = []
 param enablePrivateCluster bool = false
 param availabilityZones array = []
+@description('Disable local K8S accounts for AAD enabled clusters')
 param AksDisableLocalAccounts bool = true
 param AksPaidSkuForSLA bool = false
 
@@ -807,7 +808,7 @@ var aks_properties_base = {
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
   }
-  disableLocalAccounts: AksDisableLocalAccounts
+  disableLocalAccounts: AksDisableLocalAccounts && enable_aad
 }
 
 var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
