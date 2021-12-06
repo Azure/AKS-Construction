@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "8064397198988889580"
+      "templateHash": "14214211590560534306"
     }
   },
   "parameters": {
@@ -650,6 +650,37 @@
         "publicNetworkAccess": "[if(parameters('privateLinks'), 'Disabled', 'Enabled')]",
         "zoneRedundancy": "[variables('acrZoneRedundancyEnabled')]"
       }
+    },
+    {
+      "condition": "[and(variables('createLaw'), not(empty(parameters('registries_sku'))))]",
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', variables('acrName'))]",
+      "name": "acrDiags",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
+        "logs": [
+          {
+            "category": "ContainerRegistryRepositoryEvents",
+            "enabled": true
+          },
+          {
+            "category": "ContainerRegistryLoginEvents",
+            "enabled": true
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true,
+            "timeGrain": "PT1M"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
+      ]
     },
     {
       "condition": "[and(and(and(parameters('custom_vnet'), not(empty(parameters('registries_sku')))), parameters('privateLinks')), parameters('acrPrivatePool'))]",
