@@ -682,7 +682,7 @@ param authorizedIPRanges array = []
 param enablePrivateCluster bool = false
 param availabilityZones array = []
 @description('Disable local K8S accounts for AAD enabled clusters')
-param AksDisableLocalAccounts bool = true
+param AksDisableLocalAccounts bool = false
 param AksPaidSkuForSLA bool = false
 
 param podCidr string = '10.240.100.0/24'
