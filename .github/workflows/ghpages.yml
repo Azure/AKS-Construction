@@ -20,6 +20,8 @@ on:
 
 env:
   templateRelease: 0.3.3
+  AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
+  RG: "Automation-Actions-AksDeployCI"
 
 jobs:
 
@@ -94,11 +96,28 @@ jobs:
           cd helper
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter list
 
-      - name: Persist exported Az Commands for next stage
+      - name: Persist exported Az Commands for testing
         uses: actions/upload-artifact@v2
         with:
           name: AzCmds
           path: helper/azcmd-*.sh
+
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+
+      - name: Validate Infrastructure deployment
+        uses: Azure/cli@1.0.4
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+
+            #TODO: If/When we capture more AZ CMD's, then we'll want to iterate over files beginning with "azcmd"
+            sh azcmd-managed-private.sh
 
       - name: Persist test failure screengrabs as artifacts
         uses: actions/upload-artifact@v2

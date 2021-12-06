@@ -10,6 +10,11 @@ test('test', async ({ page }) => {
   await page.waitForSelector(privateClusterPresetCheckboxSelector)
   await page.click(privateClusterPresetCheckboxSelector)
 
+  //Change the name of the resource group
+  await page.waitForSelector('[data-testid="deploy-resourceGroup"]')
+  await page.click('[data-testid="deploy-deploycmddeploy-resourceGroup"]')
+  await page.type('[data-testid="deploy-resourceGroup"]', 'Automation-Actions-AksDeployCI')
+
   //Save the contents of the az cmd box to file
   const clitextboxrevisted = await page.$('[data-testid="deploy-deploycmd"]')
   const azcmdManagedPrivate =await clitextboxrevisted.innerText();
