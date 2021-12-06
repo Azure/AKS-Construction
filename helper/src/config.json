@@ -305,7 +305,7 @@
                         },
                         "cluster": {
                             "enable_aad": true,
-                            "AksDisableLocalAccounts": false,
+                            "AksDisableLocalAccounts": true,
                             "apisecurity": "whitelist"
                         },
                         "addons": {

@@ -129,9 +129,11 @@ jobs:
           allow-no-subscriptions: false
 
       - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+        uses: Azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+          cluster-name: ${{ needs.Deploy.outputs.AKSNAME }}
+          resource-group: ${{ env.RG }}
 
       - name: Kubectl
         run: |
