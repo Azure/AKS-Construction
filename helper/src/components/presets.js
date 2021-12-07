@@ -23,7 +23,7 @@ export default function ({ sections, selectedValues, updateSelected }) {
         <Stack key={`stack${s.key}`} horizontal tokens={{ childrenGap: 15 }}>
             {s.cards.map((c, i) =>
                 <DocumentCard  key={c.key}   onClick={() => updateSelected(s.key, c.key)} tokens={{ childrenMargin: 12 }}>
-                    
+
                     <DocumentCardDetails styles={{ root: { padding: "8px 16px", position: "relative" } }}>
                         <Checkbox inputProps={{ 'data-testid': `portalnav-presets-${s.key}-${c.key}-Checkbox`}} checked={selectedValues[s.key] === c.key} label={c.title} styles={{ label: { fontWeight: selectedValues[s.key] === c.key ? '500' : 'normal' } }} />
                     </DocumentCardDetails>

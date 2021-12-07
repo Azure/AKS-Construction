@@ -63,9 +63,9 @@ We anticipate the use of the Develop branch is temporary.
 ┌─────────────────┐               │
 │                 │               │
 │ Feature Branch  ├───────────────┘
-│                 │                         
-└─────────────────┘     
-                            
+│                 │
+└─────────────────┘
+
 ```
 
 ## Releases
