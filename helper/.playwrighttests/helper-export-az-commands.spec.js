@@ -13,7 +13,7 @@ test('test', async ({ page }) => {
   //Change the name of the resource group
   await page.waitForSelector('#azResourceGroup')
   await page.click('#azResourceGroup')
-  await page.fill('#azResourceGroup', 'Automation-Actions-AksDeployCI')
+  await page.fill('#azResourceGroup', 'Automation-Actions-AksPublishCI')
 
   //Save the contents of the az cmd box to file
   const clitextboxrevisted = await page.$('[data-testid="deploy-deploycmd"]')

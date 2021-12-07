@@ -27,7 +27,7 @@ on:
 env:
   templateRelease: 0.3.3
   AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
-  RG: "Automation-Actions-AksDeployCI"
+  RG: "Automation-Actions-AksPublishCI"
 
 jobs:
 
