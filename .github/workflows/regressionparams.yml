@@ -4,7 +4,7 @@ on:
   #Run on Manual execution
   workflow_dispatch:
 
-  #Run when our bicep code changes 
+  #Run when our bicep code changes
   push:
     paths:
       - "bicep/*"
@@ -21,12 +21,12 @@ on:
   schedule:
     # At 11:00pm, every Thursday week
     - cron: "0 23 * * 4"
-    
+
 env:
   RG: "Automation-Actions-AksPureValidation" #The resource group we're deploying to.
   ParamDir: ".github/workflows_dep/regressionparams/" #Path to parameter file
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
-  
+
 jobs:
   GetParamFiles:
     runs-on: ubuntu-latest
@@ -42,22 +42,22 @@ jobs:
           RG='${{ env.RG }}'
           echo "RG is: $RG"
           echo "Param dir path is: ${{ env.ParamDir }}"
-          
+
       - name: Get List of json files
         id: getfiles
         shell: pwsh
         run: |
           $FilePath="${{ env.ParamDir }}"
-          
+
           $FILELISTJSON=get-ChildItem -Path $FilePath -File '*.json' | select-object -ExpandProperty Name | ConvertTo-Json -Compress
           Write-Output $FILELISTJSON
           echo "::set-output name=FILELIST::$FILELISTJSON"
-          
+
   Validation:
     needs: [GetParamFiles]
     strategy:
       matrix:
-        files: ${{ fromJson(needs.GetParamFiles.outputs.FILELIST) }} 
+        files: ${{ fromJson(needs.GetParamFiles.outputs.FILELIST) }}
 
     runs-on: [ubuntu-latest]
     steps:
@@ -77,7 +77,7 @@ jobs:
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamDir }}${{ matrix.files }}"
           Test-Path $paramFilePath
-          
+
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
@@ -95,13 +95,13 @@ jobs:
               echo "::set-output name=DOPSRULE::false"
             }
           }
-          
+
       - name: Replace subnet and dnszone param values from secret
         shell: pwsh
         run: |
           $paramFilePath="${{ env.ParamDir }}${{ matrix.files }}"
           $params = Get-Content $paramFilePath | ConvertFrom-Json
-          
+
           if($params.parameters.dnsZoneId.value -ne $null) {
             $params.parameters.dnsZoneId.value = "${{ secrets.DnsIdAzdemocouk }}"
           }
@@ -111,9 +111,9 @@ jobs:
           if($params.parameters.byoAGWSubnetId.value -ne $null) {
             $params.parameters.byoAGWSubnetId.value = "${{ secrets.ByoAgwSubnetId }}"
           }
-          
+
           $params | ConvertTo-Json -Depth 4 | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -134,7 +134,7 @@ jobs:
         run: |
           echo "Input path is ${{ env.ParamDir }}${{ matrix.files }}"
           echo "Do PS Rule is ${{ steps.paramfile.outputs.DOPSRULE }}"
-    
+
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
@@ -143,7 +143,7 @@ jobs:
         uses: Microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
-          modules: 'PSRule.Rules.Azure' 
+          modules: 'PSRule.Rules.Azure'
           inputPath: "${{ env.ParamDir }}${{ matrix.files }}"
           prerelease: false
           baseline: 'Azure.Preview'

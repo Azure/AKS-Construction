@@ -22,15 +22,15 @@ env:
   templateRelease: 0.3.3
 
 jobs:
-  
+
   Validation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
       - uses: streetsidesoftware/cspell-action@v1.3.4
         name: Spell Check
-        if: ${{github.event_name!='workflow_dispatch'}} 
+        if: ${{github.event_name!='workflow_dispatch'}}
         with:
           config: './cspell.json'
           inline: warning
@@ -52,25 +52,25 @@ jobs:
           npx playwright install #https://github.com/microsoft/playwright/issues/4033
           npx playwright install-deps chromium
           npm i -D playwright-expect
-        
+
       - name: Test web server is up
         run: curl http://localhost:3000/Aks-Construction
-        
+
       - name: Verifying Playwright install
         run: |
           cd helper
-          
+
           echo "Looking for playwright"
           ls node_modules | grep playwright
 
           echo "Playwright version"
           npx playwright -V
-          
+
       - name: File system prep
         run: |
           mkdir failscreengrabs
           mkdir alwaysscreengrabs
-                    
+
       - name: Playwright - Run fragile helper tests
         env:
           filenamewordmatch: 'helper-fragile'
@@ -78,7 +78,7 @@ jobs:
         run: |
           cd helper
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter dot
-        
+
       - name: Playwright - Run stable helper tests
         env:
           filenamewordmatch: 'helper'

@@ -24,21 +24,21 @@ on:
   workflow_dispatch:
     inputs:
       minihelmbranch:
-        description: 'Branch name to use from MiniHelm repo'  
+        description: 'Branch name to use from MiniHelm repo'
         default: 'main'
       doWellArchitected:
-        description: 'Perform the Well Architected Framework assessment  [yes|no]'  
+        description: 'Perform the Well Architected Framework assessment  [yes|no]'
         default: 'no'
       doDebugSteps:
-        description: 'Run informational steps [yes|no]'  
+        description: 'Run informational steps [yes|no]'
         default: 'yes'
       doVerifySteps:
-        description: 'Run optional verify steps [yes|no]'  
+        description: 'Run optional verify steps [yes|no]'
         default: 'yes'
       doSmokeTestUninstall:
-        description: 'Uninstall smoke test apps after tests  [yes|no]'  
+        description: 'Uninstall smoke test apps after tests  [yes|no]'
         default: 'yes'
-        
+
 concurrency: ci-${{ github.ref }}
 
 env:
@@ -55,7 +55,7 @@ jobs:
     if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected != 'no'
     steps:
       - uses: actions/checkout@v2
-      
+
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
@@ -63,10 +63,10 @@ jobs:
         uses: Microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
-          modules: 'PSRule.Rules.Azure' 
+          modules: 'PSRule.Rules.Azure'
           inputPath: "${{ env.ParamFilePath }}"
           prerelease: true
-        
+
   #Pre deployment validation of the parameters + bicep code
   Validation:
     runs-on: ubuntu-latest
@@ -77,7 +77,7 @@ jobs:
 
       - name: Job parameter check
         if: github.event.inputs.doDebugSteps != 'no'
-        run: |       
+        run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
 
@@ -105,7 +105,7 @@ jobs:
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
-            
+
             Write-Output "Test Pulling a param (ingressApplicationGateway)"
             $params=$paramFileContent|ConvertFrom-Json
             Write-Output $params.parameters.ingressApplicationGateway.value
@@ -124,7 +124,7 @@ jobs:
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Az.KeyVault -Force
-          
+
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         id: activedeps
         if: github.event.inputs.doVerifySteps != 'no'
@@ -134,7 +134,7 @@ jobs:
           inlineScript: |
             echo "AZ CLI version"
             az version
-            
+
             RG='${{ env.RG }}'
             RUNCOUNT=$(az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name] | length(@)" -o tsv)
             echo "Active deployments : $RUNCOUNT"
@@ -146,7 +146,7 @@ jobs:
             #az deployment group list -g $RG --query "[].[properties.provisioningState, name]"
 
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for condition
-            
+
       - name: Verify AKS Preview Features are available in target Subscription
         if: github.event.inputs.doVerifySteps != 'no'
         shell: pwsh
@@ -162,7 +162,7 @@ jobs:
           $aksfeatures = az feature list --query "[?contains(name, 'Microsoft.ContainerService')]" | ConvertFrom-Json
           #$aksfeatures = $allfeatures | Where-Object {$_.Name -like 'Microsoft.ContainerService*'}
           $registeringfeatures = $aksfeatures |  Where-Object {$_.properties.state -eq 'Registering'}
-          
+
           if ($registeringfeatures -gt 0) {
             Write-Error "There are still features registering"
           } else { Write-Output "-- All good, no features in the process of registering" }
@@ -171,25 +171,25 @@ jobs:
           $paramFilePath="${{ env.ParamFilePath }}"
           $paramFileContent=Get-Content $paramFilePath
           $params=$paramFileContent|ConvertFrom-Json
-          
+
           if($params.parameters.upgradeChannel.value -ne $null) {
             $feature='AutoUpgradePreview'
             write-output "-- $feature"
             $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"}
             $featureCsi.properties.state
-            
+
             if ($featureCsi.properties.state -ne 'Registered') {
               Write-Ouput $featureCsi
               Write-Error "$feature NOT registered"
             } else { Write-Output "-- Looks like $feature is registered properly" }
           }
-                   
+
           if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
             $feature='AKS-AzureKeyVaultSecretsProvider'
             write-output "-- $feature"
             $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"}
             $featureCsi.properties.state
-            
+
             if ($featureCsi.properties.state -ne 'Registered') {
               Write-Ouput $featureCsi
               Write-Error "$feature NOT registered"
@@ -216,9 +216,9 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}'
-            
+
             echo $PARAMS
-            
+
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS --verbose
 
       - name: What If (GA edge Az cli version) (has issues)
@@ -234,7 +234,7 @@ jobs:
             WHATIFPATH='whatif.json'
             PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}'
 
-            #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
+            #az deployment group what-if --debug -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}
 
             az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS > $WHATIFPATH
 
@@ -244,7 +244,7 @@ jobs:
             fi
 
             cat $WHATIFPATH
-            
+
             echo "::set-output name=edgeSuccess::true"
 
       - name: What If (workaround task)
@@ -268,7 +268,7 @@ jobs:
             fi
 
             cat $WHATIFPATH
-            
+
       - name: What If Analysis Output - Parse output
         if: github.event.inputs.doVerifySteps != 'no'
         shell: pwsh
@@ -282,9 +282,9 @@ jobs:
           if ($whatifexists) {
             $jsonFileRaw=Get-Content $whatifpath
             Write-Output $jsonFileRaw
-            
+
             $whatIf=$jsonFileRaw | ConvertFrom-Json
-            
+
             if ($null -eq $whatIf) {
               Write-Output "What If results are null"
               #We might want to throw an error here, after the whatif bug gets fixed https://github.com/Azure/azure-cli/issues/19850
@@ -298,21 +298,21 @@ jobs:
         run: |
           Write-Output "https://pester.dev/"
           Write-Output "TODO"
-          
+
       - name: What If Analysis Gaps - Check for Soft deleted KeyVaults
         shell: pwsh
-        run: |     
+        run: |
           #This is a current gap in the What-If analysis.
           $whatifpath='whatif.json'
           $whatifexists=Test-Path -path $whatifpath
 
           if ($whatifexists) {
             $whatIf = Get-Content $whatifpath | ConvertFrom-Json
-            
+
             if ($null -eq $whatIf) {
               Write-Output "What If results are null"
               #We might want to throw an error here, after the whatif bug gets fixed https://github.com/Azure/azure-cli/issues/19850
-            } else {          
+            } else {
               $paramFilePath="${{ env.ParamFilePath }}"
               $paramFileContent=Get-Content $paramFilePath
               $params=$paramFileContent|ConvertFrom-Json
@@ -325,7 +325,7 @@ jobs:
                 $vaultname = $kvafter.after.name
 
                 write-output "Looking for KeyVault $vaultname"
-                Get-AzKeyVault -InRemovedState | ft 
+                Get-AzKeyVault -InRemovedState | ft
 
                 $deletedKv = Get-AzKeyVault -InRemovedState | where-object {$_.vaultname -eq $vaultname}
 
@@ -347,14 +347,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [Validation]
     environment: azurecirgs
-    outputs: 
+    outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
       LANAME : ${{ steps.deployAks.outputs.LANAME}}
       LAWGUID : ${{ steps.deployAks.outputs.LAWGUID}}
       AKVNAME : ${{ steps.deployAks.outputs.AKVNAME}}
       ACRNAME : ${{ steps.deployAks.outputs.ACRNAME}}
       AGNAME : ${{ steps.deployAks.outputs.AGNAME}}
-      
+
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop' || contains( github.event.pull_request.labels.*.name, 'bug')
     steps:
       - uses: actions/checkout@v2
@@ -368,7 +368,7 @@ jobs:
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
-          
+
       - name: Parameter file dependency check
         if: github.event.inputs.doVerifySteps != 'no'
         shell: pwsh
@@ -389,7 +389,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-            
+
       - name: Deploy Infrastructure
         id: deployAks
         uses: Azure/cli@1.0.4
@@ -411,21 +411,21 @@ jobs:
             echo "::set-output name=AKSNAME::$AKSNAME"
 
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
-            echo "::set-output name=AGNAME::$AGNAME" 
+            echo "::set-output name=AGNAME::$AGNAME"
 
             AKVNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.keyVaultName.value" -o tsv)
-            echo "::set-output name=AKVNAME::$AKVNAME" 
-            
+            echo "::set-output name=AKVNAME::$AKVNAME"
+
             LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
             echo "::set-output name=LANAME::$LANAME" #outputting for conditon
-            
+
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
             echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
-            
+
             ACRNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.containerRegistryName.value" -o tsv)
             echo "::set-output name=ACRNAME::$ACRNAME" #outputting for conditon
-            
-            
+
+
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
         if: ${{ needs.Deploy.outputs.AGNAME}} != ''
@@ -447,7 +447,7 @@ jobs:
             then
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
-          
+
       - name: Create AGIC role assignments (if not exist)
         if: ${{ needs.Deploy.outputs.AGNAME}} != ''
         continue-on-error: true
@@ -475,7 +475,7 @@ jobs:
               az role assignment create --role Contributor --assignee-object-id $agicobjid --assignee-principal-type ServicePrincipal --scope $agwScope
 
               az role assignment list --assignee $agicobjid
-            }     
+            }
 
   SmokeTest_JavaApp-certmgr:
     needs: [Deploy,SmokeTest_SimpleApp]
@@ -493,7 +493,7 @@ jobs:
       MINIHELMBRANCH: ${{ github.event.inputs.minihelmbranch }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      
+
   SmokeTest_JavaApp-appgw:
     needs: [Deploy,SmokeTest_JavaApp-certmgr]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
@@ -510,7 +510,7 @@ jobs:
       MINIHELMBRANCH: ${{ github.event.inputs.minihelmbranch }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      
+
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
     needs: [Deploy]
@@ -524,14 +524,14 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
-          
+
           whoami
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -539,31 +539,31 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-        
+
       - name: AKS Connect
         run: |
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
+
       - name: Kubectl
         if: github.event.inputs.doDebugSteps != 'no'
         run: |
           #sudo az aks install-cli
           kubectl version
-          
+
       - name: Deploy AGIC Public Facing Workload
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
           NAMESP: "default"
         run: |
           kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-          
+
           echo $MANIFESTTESTURL
           kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
-          
+
       - name: Verify AGIC Public Workload
         env:
           NAMESP: "default"
@@ -571,7 +571,7 @@ jobs:
           kubectl get po -n  $NAMESP
           kubectl get svc -n  $NAMESP
           kubectl get ingress -n  $NAMESP
-          
+
           counter=1
           pubIp="<pending>"
           while [ $counter -le 20 ] && [ "$pubIp" == "<pending>" ]
@@ -582,13 +582,13 @@ jobs:
             pubIp=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
             echo "Public ip : $pubIp"
           done
-          
+
           counter=1
           while [ $counter -le 20 ] && [ "$respcode" != "200" ]
           do
             echo "curl $pubIp [$counter]"
             respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
-            echo $respcode   
+            echo $respcode
             if [ "$respcode" != "200" ];
             then
                 echo "going to wait another 30s [$counter] [$(date +"%T")]"
@@ -596,32 +596,32 @@ jobs:
                 sleep 30s
             fi
           done
-          
+
           curl $pubIp
-          
+
       - name: Remove App from cluster
         env:
           MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
           NAMESP: "default"
         run: kubectl delete -f $MANIFESTTESTURL -n $NAMESP
-          
+
   DeployVerify:
     runs-on: ubuntu-latest
     needs: [Deploy]
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Param check
         if: github.event.inputs.doDebugSteps != 'no'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME }}"
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -629,7 +629,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Test Control Plane Config
         shell: pwsh
         run: |
@@ -642,18 +642,18 @@ jobs:
           if($params.parameters.custom_vnet.value -eq $true) {
             $aksId=az aks show -n $AKSNAME -g $RG --query "identity.type" -o tsv
             write-output $aksId
-            
+
             if($aksId -eq "UserAssigned"){
               Write-Output "UAI set correctly"
             } else {
               Write-Error "UAI not set properly"}
           }
-          
+
           Write-Output "Checking for CSI Secrets driver"
           if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
             $csiEnabled=az aks show -n $AKSNAME -g $RG --query "addonProfiles.omsagent.enabled" -o tsv
             write-output $csiEnabled
-            
+
             if($csiEnabled -eq "true"){
               Write-Output "CSI Secrets driver set correctly"
             } else {
@@ -670,18 +670,18 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "LA name is ${{ needs.Deploy.outputs.LANAME }}"
           echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID }}"
-          
+
       - name: Allow Monitoring extension
         shell: pwsh
         run: |
           az extension add -n log-analytics -y
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -689,7 +689,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Log Analytics log table verification
         shell: pwsh
         run: |
@@ -697,16 +697,16 @@ jobs:
           $LANAME='${{ needs.Deploy.outputs.LANAME}}'
           $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
           $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          
+
           #$KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
           $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
           Write-Output $KubeNode
           Write-Output $KubeNode[0].Count
-          
+
           if ($KubeNode[0].Count -eq 0) {
             throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
           }
-          
+
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
 
@@ -727,18 +727,18 @@ jobs:
         run: |
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
           az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
+
       - name: Kubectl
         if: github.event.inputs.doDebugSteps != 'no'
         run: |
           #sudo az aks install-cli
           kubectl version
-          
+
       - name: Kubectl get events
         if: github.event.inputs.doDebugSteps != 'no'
         run: |
           kubectl get events
-          
+
       - name: Describe AGIC Pod
         env:
           NAMESP: "kube-system"
@@ -752,7 +752,7 @@ jobs:
         run: |
           APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
           kubectl logs -n $NAMESP $APPGWPODNAME
-          
+
       - name: Check Events for default namespace
         env:
           NAMESP: "default"
@@ -787,13 +787,13 @@ jobs:
           try {
             #purge any KV's
             Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.KeyVault/vaults"} | Remove-AzKeyVault -force
-            
+
             #Remove all but public ip addresses
             Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-            
+
             #Remove public ip addresses
             Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-            
+
             #Final run to clean other dependant resources in parent-child graph
             Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
           }
