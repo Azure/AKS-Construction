@@ -212,6 +212,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             <Stack horizontal tokens={{ childrenGap: 142 }} styles={{ root: { marginTop: 10 } }}>
                 <Stack.Item>
                     <ChoiceGroup
+                        id='cluster-userauth-ChoiceGroup'
                         styles={{ root: { marginLeft: '50px' } }}
                         label={<Label>Cluster User Authentication <Link target="_" href="https://docs.microsoft.com/azure/aks/managed-aad">docs</Link></Label>}
                         selectedKey={cluster.enable_aad}
@@ -220,12 +221,14 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                             {
                                 key: false,
                                 iconProps: { iconName: 'UserWarning' },
-                                text: 'Kubernetes'
+                                text: 'Kubernetes',
+                                id: 'cluster-userauth-k8s'
                             },
                             {
                                 key: true,
                                 iconProps: { iconName: 'AADLogo' },
-                                text: 'AAD Integrated'
+                                text: 'AAD Integrate',
+                                id: 'cluster-userauth-aad'
                             }
                         ]} />
                 </Stack.Item>
