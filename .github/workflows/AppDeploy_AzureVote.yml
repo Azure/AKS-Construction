@@ -99,7 +99,7 @@ jobs:
             privateIp=false
             ingress=true
             echo "::set-output name=RESTYPE::ing"
-            echo "::set-output name=RESNAME::${APPNAME}-ing"
+            echo "::set-output name=RESNAME::azurevote-ing"
             echo "::set-output name=ISPUBLIC::true"
             ;;
 
