@@ -157,9 +157,7 @@ jobs:
           counter=1
           while [ $counter -le 10 ]
           do
-            echo "curl $ipAddress for response code [$counter]"
-
-            command="kubectl get ${{ steps.helmparams.outputs.RESTYPE}} azure-vote-front -n $NAMESP -ojson"
+            command="kubectl get ${{ steps.installapp.outputs.RESTYPE}} azure-vote-front -n $NAMESP -ojson"
             echo "Sending command $command to AKS"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
 
