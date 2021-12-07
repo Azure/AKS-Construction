@@ -125,7 +125,7 @@ jobs:
       INGRESSTYPE: "PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: true
       CURLRETRIES: 9
-      NAMESPACE: PLB
+      NAMESPACE: plb
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
