@@ -18,14 +18,14 @@ env:
 jobs:
   test-run-cmd:
     runs-on: ubuntu-latest
-    if: true
+    if: false
     env:
       AKSNAME: aks-AksPriv
       AGNAME: agw-AksPriv
       APPNAME: azure-vote-public
       NAMESP: default
     steps:
-              
+
       - name: File system prep
         run: mkdir jsonout
 
@@ -36,22 +36,22 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Verify Az Version
         run: az version
 
       - name: Create Default Deny NetworkPolicy
-        run: 
-        
+        run:
+
           netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true";
-          
+
           if [ -z "$netpolicycmd" ];
           then
             echo 'wtf';
           else
             echo $netpolicycmd;
           fi
-          
+
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo cmdOut;
@@ -59,13 +59,13 @@ jobs:
       - name: Getting nodes (Invoke)
         run: |
           echo "Connecting to $AKSNAME in $RG"
-          
+
           az aks command invoke -g $RG -n $AKSNAME --command "
           kubectl get nodes
           "
-          
+
           echo "Connecting to $AKSNAME in $RG (json output)"
-          
+
           az aks command invoke -g $RG -n $AKSNAME -o json --command "
           kubectl get nodes
           "
@@ -78,34 +78,34 @@ jobs:
           kubectl get nodes -ojson
           ")
           echo $commandId
-          
+
           echo "Retrieving result from id $commandId"
           nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId -o json --query logs)
           echo $nodes > jsonout/nodes.json
-          
+
       - name: Getting service Ip via jsonpath
         run: |
           echo "Connecting to $AKSNAME in $RG"
-          
+
           command="kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}'"
           loadbalancerIngressIp=$(az aks command invoke -g $RG -n $AKSNAME --query logs --command "${command}")
-          
-          echo $loadbalancerIngressIp 
+
+          echo $loadbalancerIngressIp
 
       - name: Getting service Ip via jq
         run: |
           echo "Connecting to $AKSNAME in $RG"
-          
+
           command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
-          
+
           #Debug
           echo $cmdOut > jsonout/svc.json
-          
+
           ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
           echo "\nIPAddress is $ipAddress"
-          
+
       - name: Save Json output as Artifact
         if: always()
         uses: actions/upload-artifact@v2
@@ -115,21 +115,18 @@ jobs:
 
   deploy-azure-vote-app:
     #needs: test-run-cmd
-    if: false
+    if: true
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: Automation-Actions-AksDeployCI #$RG
       AKSNAME: aks-AksPriv
       AGNAME: agw-AksPriv
       APPNAME: azure-vote-public
-      #MINIHELMBRANCH: main #main is the default
-      INGRESSTYPE: "PublicLoadBalancer"
-      UNINSTALLAFTERVERIFY: false
-      USERUNCOMMAND: true
-      CURLRETRIES: 2
+      INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer"
+      UNINSTALLAFTERVERIFY: true
+      CURLRETRIES: 9
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-
 
   # deploy-java-app-certmgr:
   #   uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1

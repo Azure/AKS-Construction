@@ -1,6 +1,6 @@
 # Demonstrates how to install the Azure Voting app, leveraging the AKS Run Command. This works great for private clusters.
 
-on: 
+on:
   workflow_call:
     inputs:
       RG:
@@ -24,7 +24,7 @@ on:
         required: false
         type: string  # - 'PublicLoadBalancer'/InternalLoadBalancer/AGIC-Public-Ingress/AGIC-Private-Ingress
       UNINSTALLAFTERVERIFY:
-        description: 'Uninstall app after tests  [yes|no]'  
+        description: 'Uninstall app after tests  [yes|no]'
         type: boolean
         default: false
         required: true
@@ -34,26 +34,26 @@ on:
         type: string
         description: "The location of the Helm package"
       CURLRETRIES:
-        description: 'How many retry attempts when verifying deployed App Url'  
+        description: 'How many retry attempts when verifying deployed App Url'
         type: number
         default: 10
         required: false
     secrets:
       AZURE_CREDENTIALS:
         required: true
-        
+
 jobs:
   App_Create:
     runs-on: ubuntu-latest
     concurrency: "Ag-${{ inputs.AGNAME}}" #AppGateway doesn't like concurrent updates
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Job parameter inspection
         run: |
           echo "RG is ${{ inputs.RG }}"
           echo "AKS name is ${{ inputs.AKSNAME }}"
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -61,7 +61,7 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-                   
+
       - name: Install the Vote app
         id: installapp
         env:
@@ -72,10 +72,10 @@ jobs:
           RG='${{ inputs.RG }}'
           APPNAME='${{ inputs.APPNAME }}'
           #AGNAME='${{ inputs.AGNAME}}'
-          
+
           #This deployment maps the Ingress Parameter type to underlying parameters in the Helm Chart
           echo ${{ inputs.INGRESSTYPE }}
-          
+
           case "${{ inputs.INGRESSTYPE }}" in
           PublicLoadBalancer)
             serviceType="LoadBalancer"
@@ -111,17 +111,17 @@ jobs:
             echo "::set-output name=RESNAME::${APPNAME}-ing"
             ;;
           esac
-          
+
           #Create a list of parameters to override
           helmsetparams="ingress.enabled=${ingress},ingress.appGwPrivateIp=$privateIp,service.azureLbInternal=$privateIp,service.type=\"$serviceType\""
           echo $helmsetparams
-          
+
           #Helm Dry Run
           command="helm upgrade --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams --dry-run"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
-          
+
           #Helm Install
           command="helm upgrade --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams"
           echo "Sending command $command to AKS"
@@ -138,7 +138,7 @@ jobs:
           command="kubectl get po -n $NAMESP"
           echo "Sending command $command to AKS"
           az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
-          
+
           command="kubectl get svc -n $NAMESP"
           echo "Sending command $command to AKS"
           az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
@@ -157,7 +157,7 @@ jobs:
           RG='${{ inputs.RG }}'
 
           echo "Invoking Get ${{ steps.installapp.outputs.RESTYPE}} to retrieve IP for $AKSNAME in $RG"
-          
+
           counter=1
           while [ $counter -le 10 ]
           do
@@ -180,7 +180,7 @@ jobs:
           done
 
           echo "::set-output name=IPADDRESS::$ipAddress"
-          
+
           counter=1
           while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
           do
@@ -189,8 +189,8 @@ jobs:
             #command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             echo "Sending command to AKS : $command"
-            
-            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")  
+
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
 
             echo $cmdOut > debug.json
             respcode=$(echo $cmdOut | jq -r '.logs')
@@ -206,12 +206,12 @@ jobs:
                 sleep 15
             fi
           done
-          
+
           if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
           then
             echo "curl $ipAddress for content [$counter attempts for 200]"
             command="curl $ipAddress"
-            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}") 
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
             cmdLogs=$(echo $cmdOut | jq -r '.logs')
 
             echo $cmdLogs
@@ -220,7 +220,7 @@ jobs:
              exit 1
           fi
 
-      - name: Verify Public LB App is reachable (from GitHub agent)
+      - name: Verify App is publically reachable (from hosted GitHub runner)
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
         env:
           NAMESP: "${{ inputs.NAMESPACE }}"
@@ -230,7 +230,7 @@ jobs:
           RG='${{ inputs.RG }}'
 
           ipAddress='${{ steps.verifyAppAvailable.outputs.IPADDRESS}}'
-          
+
           counter=1
           while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
           do
@@ -249,12 +249,12 @@ jobs:
                 sleep 15
             fi
           done
-          
+
           if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
           then
             echo "curl $ipAddress for content [$counter attempts for 200]"
             command="curl $ipAddress"
-            cmdOut=$(command) 
+            cmdOut=$(command)
             cmdLogs=$(echo $cmdOut | jq -r '.logs')
 
             echo $cmdLogs
@@ -269,7 +269,7 @@ jobs:
         env:
           APPNAME: "${{ inputs.APPNAME }}"
         run: helm uninstall $APPNAME
-        
+
       - name: Store any generated debug files as artifact
         if: always()
         uses: actions/upload-artifact@v2
