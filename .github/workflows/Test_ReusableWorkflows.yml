@@ -113,7 +113,7 @@ jobs:
           name: Json out
           path: jsonout/*.json
 
-  deploy-azure-vote-app:
+  deploy-azure-vote-app-lb:
     #needs: test-run-cmd
     if: true
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
@@ -129,7 +129,7 @@ jobs:
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
-  deploy-azure-vote-app:
+  deploy-azure-vote-app-ing:
     #needs: test-run-cmd
     if: true
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
