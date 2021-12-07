@@ -6,5 +6,6 @@
         }
     },
     "editor.renderWhitespace": "all",
-    "files.trimTrailingWhitespace": true
+    "files.trimTrailingWhitespace": true,
+    "diffEditor.ignoreTrimWhitespace": false
 }
