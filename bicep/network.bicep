@@ -22,6 +22,8 @@ param acrAgentPoolSubnetAddressPrefix string = ''
 param bastion bool =false
 param bastionSubnetAddressPrefix string = ''
 
+param availabilityZones array = []
+
 var bastion_subnet_name = 'AzureBastionSubnet'
 var bastion_subnet = {
   name: bastion_subnet_name
@@ -97,7 +99,7 @@ var aks_subnet =  {
     }, privateLinks ? {
       privateEndpointNetworkPolicies: 'Disabled'
       privateLinkServiceNetworkPolicies: 'Enabled'
-    } : {}, azureFirewalls ? {   
+    } : {}, azureFirewalls ? {
       routeTable: {
         id: vnet_udr.id //resourceId('Microsoft.Network/routeTables', routeFwTableName)
       }
@@ -158,8 +160,8 @@ resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!e
         name: 'Acr-Connection'
         properties: {
           privateLinkServiceId: privateLinkAcrId
-          groupIds: [ 
-            'registry' 
+          groupIds: [
+            'registry'
           ]
         }
       }
@@ -184,7 +186,7 @@ resource privateDnsAcrLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
     registrationEnabled: false
     virtualNetwork: {
       id: vnet.id
-    } 
+    }
   }
 }
 
@@ -216,8 +218,8 @@ resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!e
         name: 'Akv-Connection'
         properties: {
           privateLinkServiceId: privateLinkAkvId
-          groupIds: [ 
-            'vault' 
+          groupIds: [
+            'vault'
           ]
         }
       }
@@ -242,7 +244,7 @@ resource privateDnsAkvLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
     registrationEnabled: false
     virtualNetwork: {
       id: vnet.id
-    } 
+    }
   }
 }
 
@@ -270,6 +272,7 @@ resource bastionPip 'Microsoft.Network/publicIpAddresses@2020-05-01' = {
   sku: {
     name: 'Standard'
   }
+  zones: !empty(availabilityZones) ? availabilityZones : []
   properties: {
     publicIPAllocationMethod: 'Static'
   }

@@ -25,8 +25,8 @@ resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' exist
 }
 
 resource existing_vnet_cont 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name:  '${guid(user_identity_principalId, existingAksSubnetName)}' 
-  scope: existingAksSubnet 
+  name:  '${guid(user_identity_principalId, existingAksSubnetName)}'
+  scope: existingAksSubnet
   properties: {
     roleDefinitionId: networkContributorRole
     principalId: uai.properties.principalId

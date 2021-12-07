@@ -84,6 +84,22 @@
           },
           "upgradeChannel": {
             "value": "stable"
+          },
+          "AksDiagCategories": {
+            "value": [
+              "cluster-autoscaler",
+              "kube-apiserver",
+              "kube-controller-manager",
+              "kube-audit-admin",
+              "kube-scheduler",
+              "guard"
+            ]
+          },
+          "acrUntaggedRetentionPolicyEnabled": {
+            "value": true
+          },
+          "aksDisableLocalAccounts": {
+            "value": true
           }
     }
 }

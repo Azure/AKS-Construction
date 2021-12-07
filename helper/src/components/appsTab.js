@@ -20,7 +20,7 @@ export KVNAME=$(az keyvault list -g ${deploy.rg} --query [0].name -o tsv)
 export COMMON_NAME=openjdk-demo
 az keyvault certificate create --vault-name $KVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=$\{COMMON_NAME}/g )"
 
-` + 
+` +
 ( addons.ingress === 'appgw' ? `
 # Wait for Cert to be issued
 sleep 1m
@@ -59,7 +59,7 @@ ${cluster.apisecurity === "private" ? `"` : ``}
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.ingress !== 'none'} label="(Addons Tab) Ingress, for securely exposing app" />
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.dns} label="(Addons Tab) external-dns, for application hostname resolution" />
                             <Checkbox styles={{ root: { marginLeft: '50px' }}} checked={addons.certMan} label="(Addons Tab) cert-manager, to generate the frontend CA signed Cert" />
-                            
+
                         </Stack.Item>
                         <Stack.Item>
                             <CodeBlock deploycmd={deploycmd}/>

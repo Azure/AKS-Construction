@@ -32,7 +32,7 @@ var shortLocationNames = json(loadTextContent('./shortLocationNames.json'))
 var shortLocationName = '${shortLocationNames[location]}'
 
 @description('Creates a full resource name seed.')
-var fullnameseed = '${nameseed}-${environmentName}-${shortLocationName}-${namesuffix}' 
+var fullnameseed = '${nameseed}-${environmentName}-${shortLocationName}-${namesuffix}'
 
 
 //--------------ENVIRONMENT-------------

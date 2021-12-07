@@ -63,9 +63,9 @@ We anticipate the use of the Develop branch is temporary.
 ┌─────────────────┐               │
 │                 │               │
 │ Feature Branch  ├───────────────┘
-│                 │                         
-└─────────────────┘     
-                            
+│                 │
+└─────────────────┘
+
 ```
 
 ## Releases
@@ -83,11 +83,24 @@ When changing the Bicep code, try to build into your `developer inner loop` the 
 
 #### Breaking Changes
 
-Should be avoided wherever possible, and where necessary highlight the breaking change in the release notes.
+Should be avoided wherever possible, and where necessary highlight the breaking change in the release notes. Version 1.0 will signify a stricter policy around breaking  changes.
+
+#### PSRule validation for Well Architected Analysis
+
+[PSRule for Azure](https://azure.github.io/PSRule.Rules.Azure) provides analysis for IaC against the Well Architected Framework. It is leveraged in the GitHub actions that run on PR, but you can leverage it locally with the following script;
+
+```powershell
+Install-Module -Name 'PSRule.Rules.Azure' -Repository PSGallery -Scope CurrentUser
+
+$paramPath="./.github/workflows_dep/regressionparams/optimised-for-well-architected.json"
+test-path $paramPath
+Assert-PSRule -Module 'PSRule.Rules.Azure' -InputPath $paramPath -Format File -outcome Processed
+
+```
 
 ### The Wizard Web App
 
-The [configuration experience](https://azure.github.io/Aks-Construction/) is hosted in GitHub pages. It's a static web app, written in NodeJS using FluentUI.
+The [configuration experience](https://azure.github.io/Aks-Construction/) is hosted in GitHub pages. It's a static web app, written in NodeJS using [FluentUI](https://developer.microsoft.com/en-us/fluentui).
 
 #### Playwright tests
 

@@ -150,7 +150,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
                                 <Stack.Item>
                                     <Label style={{ marginBottom: "0px" }}>Application Gateway Type (<Link target='_' href='https://docs.microsoft.com/en-us/azure/web-application-firewall/ag/ag-overview'>docs</Link>)</Label>
-                                    <ChoiceGroup                                       
+                                    <ChoiceGroup
                                         selectedKey={addons.appGWsku}
                                         options={[
                                             { key: 'Standard_v2', text: 'Standard_v2: Standard Application Gateway' },
@@ -160,11 +160,11 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                     />
                                 </Stack.Item>
 
-                                { addons.appGWsku === 'WAF_v2' && 
+                                { addons.appGWsku === 'WAF_v2' &&
                                     <Stack.Item style={{ marginLeft: "20px"}}>
                                         <Checkbox checked={addons.appGWenableFirewall} onChange={(ev, v) => updateFn("appGWenableFirewall", v)} label={<Text>Enable Firewall: Provides centralized protection of your web applications from common exploits and vulnerabilities</Text>} />
-                                    
-                                        { addons.appGWenableFirewall && 
+
+                                        { addons.appGWenableFirewall &&
                                             <Stack.Item style={{ marginLeft: "25px"}}>
                                                 <Label style={{ marginBottom: "0px", marginTop: "5px" }}>WAF mode</Label>
                                                 <ChoiceGroup
@@ -225,12 +225,12 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                             {addons.dns &&
                                 <>
                                     <MessageBar messageBarType={MessageBarType.warning}>If using a Public DNS Zone, you need to own a custom domain, you can easily purchase a custom domain through Azure <Link target="_t1" href="https://docs.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain"> <b>details here</b></Link></MessageBar>
-                                    <TextField inputProps={{ "data-testid": "addons-dnsZoneId"}} value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Public or Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
+                                    <TextField value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Public or Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
 
 
                                     <Checkbox inputProps={{ "data-testid": "addons-certMan"}} disabled={hasError(invalidArray, 'dnsZoneId')} checked={addons.certMan} onChange={(ev, v) => updateFn("certMan", v)} label="Automatically Issue Certificates for HTTPS using cert-manager (with Lets Encrypt - requires email" />
                                     {addons.certMan &&
-                                        <TextField inputProps={{ "data-testid": "addons-certEmail"}}  value={addons.certEmail} onChange={(ev, v) => updateFn("certEmail", v)} errorMessage={getError(invalidArray, 'certEmail') ? "Enter valid email" : ''} label="Enter mail address for certificate notification:" required />
+                                        <TextField value={addons.certEmail} onChange={(ev, v) => updateFn("certEmail", v)} errorMessage={getError(invalidArray, 'certEmail') ? "Enter valid email" : ''} label="Enter mail address for certificate notification:" required />
                                     }
                                 </>
                             }
@@ -265,9 +265,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
                 <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label={<Text>Create ACR Private Agent Pool (private link only) (preview limited regions <a target="_new" href="https://docs.microsoft.com/azure/container-registry/tasks-agent-pools">docs</a>)</Text>} />
                 <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
-                    <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>  
-                    <TextField disabled={true} label="O/S" defaultValue="Linux"/>  
-                    <TextField disabled={true} label="Agent Count" defaultValue="1"/>  
+                    <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>
+                    <TextField disabled={true} label="O/S" defaultValue="Linux"/>
+                    <TextField disabled={true} label="Agent Count" defaultValue="1"/>
                 </Stack>
             </Stack.Item>
 
@@ -299,7 +299,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                 </Stack>
             </Stack.Item>
 
-            {/* 
+            {/*
         <ChoiceGroup
           label='Enable gitops'
           selectedKey={addons.gitops}

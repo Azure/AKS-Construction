@@ -19,7 +19,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
   const params = {
     resourceName: deploy.clusterName,
-    ...(deploy.kubernetesVersion != defaults.deploy.kubernetesVersion && {kubernetesVersion: deploy.kubernetesVersion}),
+    ...(deploy.kubernetesVersion !== defaults.deploy.kubernetesVersion && {kubernetesVersion: deploy.kubernetesVersion}),
     ...(cluster.agentCount !== defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
     ...(cluster.upgradeChannel !== defaults.cluster.upgradeChannel && { upgradeChannel: cluster.upgradeChannel }),
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
@@ -27,9 +27,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
-    ...(net.vnet_opt === "custom" && { 
-         custom_vnet: true, 
-         ...serviceparams, 
+    ...(net.vnet_opt === "custom" && {
+         custom_vnet: true,
+         ...serviceparams,
          ...aksvnetparams,
          ...(net.bastion !== defaults.net.bastion && {bastion: net.bastion}),
          ...(net.bastion && defaults.net.bastionSubnetAddressPrefix !== net.bastionSubnetAddressPrefix && {bastionSubnetAddressPrefix: net.bastionSubnetAddressPrefix})
@@ -37,20 +37,21 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...serviceparams }),
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
+    ...(cluster.enable_aad && cluster.AksDisableLocalAccounts !== defaults.cluster.AksDisableLocalAccounts && { AksDisableLocalAccounts: cluster.AksDisableLocalAccounts }),
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
-    ...(addons.registry !== "none" && { 
-        registries_sku: addons.registry, 
+    ...(addons.registry !== "none" && {
+        registries_sku: addons.registry,
         ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
-        privateLinks: true, 
+        privateLinks: true,
         ...(addons.csisecret === 'akvNew' && deploy.kvIPWhitelist  && apiips_array.length > 0 && {kvIPWhitelist: apiips_array.map(v => {return {"value": v}}) }),
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
-    ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}), 
+    ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}),
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
@@ -133,7 +134,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
     (cluster.apisecurity !== "private" ?
     `\n# Get credentials for your new AKS cluster
 az aks get-credentials -g ${deploy.rg} -n ${aks} ` : ""
-    ) + 
+    ) +
     // Prometheus
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
@@ -192,11 +193,11 @@ kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdi
 }
 EOF
 ${cluster.apisecurity === "private" ? `"` : ``}
-# external-dns manifest (for clusters with RBAC) replacing {{domain-filter}} and {{providers}} values 
+# external-dns manifest (for clusters with RBAC) replacing {{domain-filter}} and {{providers}} values
 curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
-${cluster.apisecurity === "private" ? 
-  `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-ext-dns.yml" --file  /tmp/aks-ext-dns.yml` 
-: 
+${cluster.apisecurity === "private" ?
+  `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-ext-dns.yml" --file  /tmp/aks-ext-dns.yml`
+:
   `kubectl apply -f /tmp/aks-ext-dns.yml`}
 
 ` : '') +
@@ -218,7 +219,7 @@ sleep 30s
 # Lets Encrypt production Issuer, using either HTTP01 for external services, or DNS01 for internal
 # https://cert-manager.io/docs/configuration/acme/
 
-cat >/tmp/aks-issuer.yml<<EOF 
+cat >/tmp/aks-issuer.yml<<EOF
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -248,7 +249,7 @@ spec:
         ingress:
           class: ${(addons.ingress === 'contour' ? 'contour' : (addons.ingress === 'nginx' ? "nginx" : "azure/application-gateway"))}
 EOF
-${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-issuer.yml" --file  /tmp/aks-issuer.yml` 
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-issuer.yml" --file  /tmp/aks-issuer.yml`
 :
  `kubectl apply -f /tmp/aks-issuer.yml`}
 ` : '')
@@ -267,7 +268,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
           <Separator ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Environment Name & Location</b></div> </Separator>
 
           <TextField label="Cluster Name" onChange={(ev, val) => updateFn('clusterName', val)} required errorMessage={getError(invalidArray, 'clusterName')} value={deploy.clusterName} />
-          <TextField label="Resource Group" onChange={(ev, val) => updateFn('rg', val)} required errorMessage={getError(invalidArray, 'rg')} value={deploy.rg} />
+          <TextField id="azResourceGroup" label="Resource Group" onChange={(ev, val) => updateFn('rg', val)} required errorMessage={getError(invalidArray, 'rg')} value={deploy.rg} />
           <TextField label="Kubernetes version" prefix="Current GA Version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
 
           <Dropdown
@@ -329,7 +330,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
         </MessageBar>
 
       }
-    
+
 
       <Pivot >
 
@@ -339,42 +340,42 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
           <Text>
             Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI</Link>, or, execute in the
             <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
-    
+
           </Text>
-          
+
           <CodeBlock deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
-          { urlParams.toString() !== "" && 
+          { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
           }
-          
-          
-      
+
+
+
         </PivotItem>
 
         <PivotItem headerText="Post Configuration">
           {addons.gitops === 'none' ? [
-     
+
               <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
-            
+
               <Text key="post-text">Requires <Link target="_bl" href="https://helm.sh/docs/intro/install/">Helm</Link></Text>,
-              
+
               <CodeBlock key="post-code" deploycmd={postscript}/>
-         
+
           ] :
             <Stack>
 
               <TextField readOnly={true} label="While Gitops is in preview, run this manually" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={6} value={`az k8sconfiguration create
-        --name cluster-config 
-        --cluster-name ${aks}    
-        --resource-group ${deploy.rg}     
-        --operator-instance-name flux     
-        --operator-namespace cluster-config     
-        --enable-helm-operator     
-        --operator-params='--git-readonly --git-path=cluster-config'     
-        --repository-url git://github.com/khowling/aks-deploy-arm.git     
-        --scope cluster     
-        --helm-operator-params='--set helm.versions=v3'     
+        --name cluster-config
+        --cluster-name ${aks}
+        --resource-group ${deploy.rg}
+        --operator-instance-name flux
+        --operator-namespace cluster-config
+        --enable-helm-operator
+        --operator-params='--git-readonly --git-path=cluster-config'
+        --repository-url git://github.com/khowling/aks-deploy-arm.git
+        --scope cluster
+        --helm-operator-params='--set helm.versions=v3'
         --cluster-type managedclusters`} />
 
             </Stack>
@@ -388,7 +389,7 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
         </PivotItem>
       </Pivot>
-      
+
     </Stack>
   )
 }

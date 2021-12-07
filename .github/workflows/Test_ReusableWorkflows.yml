@@ -3,11 +3,11 @@
 name: Test Harness for Reusable workflows
 
 on:
-  workflow_dispatch: 
-  
+  workflow_dispatch:
+
   #pull_request:
   #  branches: [main]
-  #  paths: 
+  #  paths:
   #    - ".github/workflows/Test_ReusableWorkflows.yml"
 
 concurrency: ci-${{ github.ref }}

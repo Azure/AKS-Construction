@@ -23,6 +23,9 @@
         "enableAzureRBAC": {
             "value": true
         },
+        "aksDisableLocalAccounts": {
+            "value": true
+          },
         "omsagent": {
             "value": true
         },

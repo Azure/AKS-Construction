@@ -129,7 +129,7 @@ var appgwProperties = union({
 
 var appGwZones = !empty(availabilityZones) ? availabilityZones : []
 
-// 'identity' is always set until this is fixed: 
+// 'identity' is always set until this is fixed:
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
 resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (!empty(userAssignedIdentity)) {
   name: appgwName

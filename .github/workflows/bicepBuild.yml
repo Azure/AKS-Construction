@@ -4,26 +4,26 @@ name: BicepBuild
 
 on:
   push:
-    paths: 
+    paths:
       - 'bicep/*'
       - ".github/workflows/bicepBuild.yml"
     branches-ignore: main
-    
+
   pull_request:
     branches: main
 
   workflow_dispatch:
-  
+
 jobs:
   Validation:
     runs-on: ubuntu-latest
-  
+
     steps:
       - uses: actions/checkout@v2
 
       - name: ContextCheck
         shell: pwsh
-        run: | 
+        run: |
           echo 'ghen : ${{ github.event_name }}'
           dir
 
@@ -37,7 +37,7 @@ jobs:
         run: |
           #write-output $pwd
           $compiledir=Join-Path -Path $pwd -ChildPath "bicep/compiled"
-          
+
           write-output $compiledir
           If(!(test-path $compiledir))
           {
@@ -51,7 +51,7 @@ jobs:
         id: isGitDiff
         run: |
           $diff=git diff --shortstat
-          
+
           if ($null -eq $diff) {
             write-output "No difference in compiled bicep to commit"
             echo "::set-output name=GITDIFF::false" #outputting for condition
@@ -59,14 +59,14 @@ jobs:
           else {
             write-output "There are differences in compiled bicep to commit"
             echo $diff
-            
+
             echo "::set-output name=GITDIFF::true" #outputting for condition
           }
-          
+
       - name: Debug
         run: |
           echo "gitdiff is ${{ steps.isGitDiff.outputs.GITDIFF}}"
-          
+
       - name: GIT Push Json file
         if: steps.isGitDiff.outputs.GITDIFF=='true'
         uses: actions-x/commit@v2

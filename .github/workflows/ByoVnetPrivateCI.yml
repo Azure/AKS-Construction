@@ -7,47 +7,47 @@ on:
   workflow_dispatch:
     inputs:
       doWellArchitected:
-        description: 'Perform the Well Architected Framework assesment'  
+        description: 'Perform the Well Architected Framework assesment'
         default: 'false'
         type: boolean
         required: false
       doDebugSteps:
-        description: 'Run informational steps'  
+        description: 'Run informational steps'
         default: 'true'
         type: boolean
         required: false
       doVerifySteps:
-        description: 'Run optional verify steps'  
+        description: 'Run optional verify steps'
         default: 'true'
         type: boolean
         required: false
       defaultdeny:
-        description: 'Default Deny NetworkPolicy?'  
+        description: 'Default Deny NetworkPolicy?'
         default: 'true'
         type: boolean
         required: false
-        
+
   push:
-    paths: 
+    paths:
       - 'bicep/*'
-      
+
   pull_request:
     branches: [ main ]
-    paths: 
+    paths:
       - 'bicep/*'
       - ".github/workflows/ByoVnetPrivateCI.yml"
-      
+
   schedule:
     # At 11:00pm, every Tuesday week
     - cron: '0 23 * * 2'
-    
+
 env:
   RG: 'Automation-Actions-AksDeployCI'
   ParamFilePath: ".github/workflows_dep/AksDeploy-Private.parameters.json"
   RESNAME: 'Priva'
   DEPNAME: 'DepPriv${{ github.run_number }}'
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
-  
+
 concurrency: ci-${{ github.ref }}
 
 jobs:
@@ -56,7 +56,7 @@ jobs:
     if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
     steps:
       - uses: actions/checkout@v2
-      
+
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
@@ -64,12 +64,12 @@ jobs:
         uses: Microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
-          modules: 'PSRule.Rules.Azure' 
+          modules: 'PSRule.Rules.Azure'
           inputType: repository
           inputPath: "${{ env.ParamFilePath }}"
           baseline: 'Azure.GA_2021_09'
           prerelease: true
-          
+
   Validation:
     runs-on: ubuntu-latest
     steps:
@@ -80,7 +80,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -94,12 +94,12 @@ jobs:
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
-          
+
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -107,7 +107,7 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         if: github.event.inputs.doDebugSteps == 'true'
         id: activedeps
@@ -118,20 +118,20 @@ jobs:
             RG='${{ env.RG }}'
             RUNCOUNT=$(az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name] | length(@)" -o tsv)
             echo "Active deployments : $RUNCOUNT"
-            
+
             echo 'Active deployment list'
             az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name]"
-            
+
             #echo 'Verbose deployment list'
             #az deployment group list -g $RG --query "[].[properties.provisioningState, name]"
-            
+
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
-            
+
             if [ "$RUNCOUNT" -ne "0" ]
             then
               exit 1
             fi
-            
+
       - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
         with:
@@ -140,9 +140,9 @@ jobs:
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
-            
-            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
-            
+
+            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}
+
       - name: What If
         if: github.event.inputs.doDebugSteps == 'true'
         uses: Azure/cli@1.0.4
@@ -152,8 +152,8 @@ jobs:
             RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
-            
-            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} 
+
+            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}
 
   Deploy:
     runs-on: ubuntu-latest
@@ -172,7 +172,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -184,12 +184,12 @@ jobs:
           Write-Output "Checking parameter file existance/contents"
           $paramFilePath="${{ env.ParamFilePath }}"
           Test-Path $paramFilePath
-          
+
           if (Test-Path $paramFilePath) {
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
-          
+
       - name: Azure Login
         uses: Azure/login@v1
         with:
@@ -197,7 +197,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-            
+
       - name: Deploy Infrastructure
         id:  deployAks
         uses: Azure/cli@1.0.4
@@ -208,20 +208,20 @@ jobs:
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --name $DEPNAME --verbose
-            
+
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
-            
+
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
             echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
-            
+
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
             echo "::set-output name=AGNAME::$AGNAME" #outputting for conditon
-            
+
             LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
             echo "::set-output name=LANAME::$LANAME" #outputting for conditon
-            
+
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
             echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
             
@@ -229,40 +229,40 @@ jobs:
         uses: Azure/cli@1.0.4
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |          
+          inlineScript: |
             RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
             AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
-            
+
             echo "AKS $AKSNAME"
             echo "AG $AGNAME"
-            
+
             #TODO:Check AGNAME value to see if one was created
-            
+
             echo "Checking if ingressApplicationGateway is enabled"
             AGICEnabled=$(az aks show -n $AKSNAME -g  $RG --query "addonProfiles.ingressApplicationGateway.enabled")
             echo "AGICEnabled = $AGICEnabled"
-            
+
             if [ "$AGICEnabled" != "true" ];
             then
                 az aks enable-addons -n $AKSNAME -g $RG -a ingress-appgw --appgw-id $(az network application-gateway show -g $RG -n $AGNAME --query id -o tsv)
             fi
-            
+
       - name: Create Default Deny NetworkPolicy
         if: github.event.inputs.defaultdeny == 'true'
-        run: 
+        run:
           RG='${{ env.RG }}'
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-          
+
           netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true";
-          
+
           if [ -z "$netpolicycmd" ];
           then
             echo 'capturing strange issue... wtf';
           else
             echo $netpolicycmd;
           fi
-          
+
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
@@ -272,9 +272,9 @@ jobs:
         run:
           RG='${{ env.RG }}'
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
-          
+
           netpolicycmd="kubectl get networkpolicy -A";
-                    
+
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
@@ -303,7 +303,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -322,7 +322,7 @@ jobs:
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Log Analytics log table verification
         shell: pwsh
         run: |
@@ -330,16 +330,16 @@ jobs:
           $LANAME='${{ needs.Deploy.outputs.LANAME}}'
           $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
           $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          
+
           #$KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
           $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
           Write-Output $KubeNode
           Write-Output $KubeNode[0].Count
-          
+
           if ($KubeNode[0].Count -eq 0) {
             throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
           }
-          
+
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
 
@@ -354,7 +354,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-          
+
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -373,7 +373,7 @@ jobs:
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Az.Accounts
           Install-Module -Name Az.Resources
-          
+
       - name: Cleanup
         shell: pwsh
         run: |
