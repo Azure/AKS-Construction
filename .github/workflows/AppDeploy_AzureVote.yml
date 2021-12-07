@@ -117,13 +117,13 @@ jobs:
           echo $helmsetparams
 
           #Helm Dry Run
-          command="helm upgrade --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams --dry-run"
+          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams --dry-run"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
 
           #Helm Install
-          command="helm upgrade --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams"
+          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
@@ -137,15 +137,15 @@ jobs:
 
           command="kubectl get po -n $NAMESP"
           echo "Sending command $command to AKS"
-          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}" | jq -r ".logs"
 
           command="kubectl get svc -n $NAMESP"
           echo "Sending command $command to AKS"
-          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"| jq -r ".logs"
 
           command="kubectl get ing -n $NAMESP"
           echo "Sending command $command to AKS"
-          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"| jq -r ".logs"
 
       - name: Verify App is reachable (from run cmd container)
         id: verifyAppAvailable

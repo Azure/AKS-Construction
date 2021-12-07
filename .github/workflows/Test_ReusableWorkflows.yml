@@ -122,6 +122,22 @@ jobs:
       AKSNAME: aks-Priva
       AGNAME: agw-Priva
       APPNAME: azure-vote-public
+      INGRESSTYPE: "PublicLoadBalancer"
+      UNINSTALLAFTERVERIFY: true
+      CURLRETRIES: 9
+      NAMESPACE: PLB
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+  deploy-azure-vote-app:
+    #needs: test-run-cmd
+    if: true
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
+    with:
+      RG: Automation-Actions-AksDeployCI #$RG
+      AKSNAME: aks-Priva
+      AGNAME: agw-Priva
+      APPNAME: azure-vote-public
       INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: true
       CURLRETRIES: 9
