@@ -65,7 +65,7 @@ jobs:
       - name: Install the Vote app
         id: installapp
         env:
-          NAMESP: "default"
+          NAMESP: "${{ inputs.NAMESPACE }}"
           APPNAME: "${{ inputs.APPNAME }}"
         run: |
           AKSNAME='${{ inputs.AKSNAME}}'
@@ -126,7 +126,7 @@ jobs:
 
       - name: Checking deployment
         env:
-          NAMESP: "default"
+          NAMESP: "${{ inputs.NAMESPACE }}"
         run: |
           RG='${{ inputs.RG }}'
           AKSNAME='${{ inputs.AKSNAME}}'
@@ -146,7 +146,7 @@ jobs:
       - name: Verify App is reachable (from run cmd container)
         id: verifyAppAvailable
         env:
-          NAMESP: "default"
+          NAMESP: "${{ inputs.NAMESPACE }}"
           APPNAME: "${{ inputs.APPNAME }}"
         run: |
           AKSNAME='${{ inputs.AKSNAME}}'
@@ -221,7 +221,7 @@ jobs:
       - name: Verify Public LB App is reachable (from GitHub agent)
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
         env:
-          NAMESP: "default"
+          NAMESP: "${{ inputs.NAMESPACE }}"
           APPNAME: "${{ inputs.APPNAME }}"
         run: |
           AKSNAME='${{ inputs.AKSNAME}}'
