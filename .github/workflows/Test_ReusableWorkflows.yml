@@ -119,8 +119,8 @@ jobs:
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: Automation-Actions-AksDeployCI #$RG
-      AKSNAME: aks-AksPriv
-      AGNAME: agw-AksPriv
+      AKSNAME: aks-Priva
+      AGNAME: agw-Priva
       APPNAME: azure-vote-public
       INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: true
