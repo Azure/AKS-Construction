@@ -97,6 +97,9 @@
           },
           "acrUntaggedRetentionPolicyEnabled": {
             "value": true
+          },
+          "aksDisableLocalAccounts": {
+            "value": true
           }
     }
 }
