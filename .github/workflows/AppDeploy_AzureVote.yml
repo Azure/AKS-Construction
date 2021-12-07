@@ -1,3 +1,5 @@
+# Demonstrates how to install the Azure Voting app, leveraging the AKS Run Command. This works great for private clusters.
+
 on: 
   workflow_call:
     inputs:
@@ -26,16 +28,11 @@ on:
         type: boolean
         default: false
         required: true
-      MINIHELMBRANCH:
-        default: "azureVoteIngress"
+      HELMPACKAGEURI:
+        default: "https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz"
         required: false
         type: string
-        description: "The branch of MINIHELM to use"
-      USERUNCOMMAND:
-        description: 'Use the AKS Run Command to install App'  
-        type: boolean
-        default: true
-        required: true
+        description: "The location of the Helm package"
       CURLRETRIES:
         description: 'How many retry attempts when verifying deployed App Url'  
         type: number
@@ -64,70 +61,9 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-
-      - name: AKS Connect
-        if: inputs.USERUNCOMMAND == false
-        env:
-          RG: "${{ inputs.RG }}"
-          AKSNAME: "${{ inputs.AKSNAME }}"
-        run: |
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
-          
-      - name: Kubectl
-        if: inputs.USERUNCOMMAND == false
-        run: |
-          #sudo az aks install-cli
-          kubectl version
-
-      - name: Grab Helm chart to install
-        if: inputs.USERUNCOMMAND == false
-        run: |
-          BRANCH='${{ inputs.MINIHELMBRANCH }}'
-          echo "$BRANCH"
-
-          if [ -z "$BRANCH" ]
-          then
-                BRANCH='main'
-          fi
-
-          git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
-          
-      - name: Check if App Helm Chart already installed
-        if: inputs.USERUNCOMMAND == false
-        env:
-          APPNAME: "${{ inputs.APPNAME }}"          
-        run: |
-          APPINSTALLED=$(helm list --filter ^$APPNAME$ --short)
-          if [ -z "$APPINSTALLED" ]
-          then
-                echo "App not installed"
-          else
-                echo "App already installed, forcing uninstall"
-                helm list --short
-                helm uninstall $APPNAME
-                sleep 1m
-          fi
-          
+                   
       - name: Install the Vote app
-        if: inputs.USERUNCOMMAND == false
-        env:
-          NAMESP: "default"
-          APPNAME: "${{ inputs.APPNAME }}" #Using backend cert common name
-          
-        run: |
-          # REF: https://github.com/khowling/e2e-tls-java-aks
-          
-          AKSNAME='${{ inputs.AKSNAME}}'
-          RG='${{ inputs.RG }}'
-          APPNAME='${{ inputs.APPNAME }}'
-          #AGNAME='${{ inputs.AGNAME}}'
-          
-          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote --set ${{ steps.helmparams.outputs.helmsetparams}} --dry-run
-          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote --set ${{ steps.helmparams.outputs.helmsetparams}}
-
-      - name: Install the Vote app (run cmd)
         id: installapp
-        if: inputs.USERUNCOMMAND == true
         env:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}"
@@ -137,7 +73,8 @@ jobs:
           APPNAME='${{ inputs.APPNAME }}'
           #AGNAME='${{ inputs.AGNAME}}'
           
-          echo ${{ inputs.INGRESSTYPE }} #== 'PublicLoadBalancer'
+          #This deployment maps the Ingress Parameter type to underlying parameters in the Helm Chart
+          echo ${{ inputs.INGRESSTYPE }}
           
           case "${{ inputs.INGRESSTYPE }}" in
           PublicLoadBalancer)
@@ -145,6 +82,7 @@ jobs:
             privateIp=false
             ingress=false
             echo "::set-output name=RESTYPE::svc"
+            echo "::set-output name=ISPUBLIC::true"
             ;;
 
           InternalLoadBalancer)
@@ -159,6 +97,7 @@ jobs:
             privateIp=false
             ingress=true
             echo "::set-output name=RESTYPE::ing"
+            echo "::set-output name=ISPUBLIC::true"
             ;;
 
           AGIC-Private-Ingress)
@@ -169,21 +108,23 @@ jobs:
             ;;
           esac
           
+          #Create a list of parameters to override
           helmsetparams="ingress.enabled=${ingress},ingress.appGwPrivateIp=$privateIp,service.azureLbInternal=$privateIp,service.type=\"$serviceType\""
           echo $helmsetparams
           
-          command="helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz --set $helmsetparams --dry-run"
+          #Helm Dry Run
+          command="helm upgrade --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams --dry-run"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
           
-          command="helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz --set $helmsetparams"
+          #Helm Install
+          command="helm upgrade --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
 
-      - name: Checking deployment (Run cmd invoke)
-        if: inputs.USERUNCOMMAND == true
+      - name: Checking deployment
         env:
           NAMESP: "default"
         run: |
@@ -202,43 +143,8 @@ jobs:
           echo "Sending command $command to AKS"
           az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
 
-      - name: Verify App is reachable
-        #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
-        if: inputs.INGRESSTYPE == 'PublicLoadBalancer' && inputs.USERUNCOMMAND == false
-        env:
-          NAMESP: "default"
-          APPNAME: "${{ inputs.APPNAME }}"
-        run: |
-          echo "Waiting on IP allocation"
-          sleep 1m
-          
-          pubIp=$(kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          echo "Public ip : $pubIp"
-          
-          counter=1
-          while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
-          do
-            echo "curl $pubIp [$counter]"
-            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
-            echo $respcode   
-
-            cleanResponseCode=$(echo $respcode|tr -d '\n')
-            echo $cleanResponseCode
-
-            if [ "$cleanResponseCode" != "200" ];
-            then
-                echo "going to wait another 30s [$counter] [$(date +"%T")]"
-                ((counter++))
-                sleep 30s
-            fi
-          done
-          
-          curl $pubIp
-
-      - name: Verify Public LB App is reachable (run cmd)
+      - name: Verify App is reachable (from run cmd container)
         id: verifyAppAvailable
-        #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
-        if: inputs.USERUNCOMMAND == true
         env:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}"
@@ -312,8 +218,8 @@ jobs:
              exit 1
           fi
 
-      - name: Verify Public LB App is reachable
-        if: inputs.INGRESSTYPE == 'PublicLoadBalancer' || inputs.INGRESSTYPE == 'AGIC-Public-Ingress'
+      - name: Verify Public LB App is reachable (from GitHub agent)
+        if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
         env:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}"
@@ -362,9 +268,9 @@ jobs:
           APPNAME: "${{ inputs.APPNAME }}"
         run: helm uninstall $APPNAME
         
-      - name: Debug Artifact
+      - name: Store any generated debug files as artifact
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: Json out
+          name: DebugFiles
           path: debug*.json
