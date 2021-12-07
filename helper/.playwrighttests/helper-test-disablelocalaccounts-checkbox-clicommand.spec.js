@@ -18,7 +18,7 @@ test('networkpolicy-test-defaul-is-azure', async ({ page }) => {
   await page.waitForSelector('[data-testid="deploy-deploycmd"]')
   const clitextbox = await page.$('[data-testid="deploy-deploycmd"]')
   await expect(clitextbox).toBeVisible()
-  await expect(clitextbox).toContainText('aksDisableLocalAccounts')
+  await expect(clitextbox).toContainText('AksDisableLocalAccounts')
   await expect(clitextbox).toContainText('enable_aad=true')
 
   // Click the 2nd Tab in the portal Navigation Pivot (cluster details)
@@ -39,5 +39,5 @@ test('networkpolicy-test-defaul-is-azure', async ({ page }) => {
 
   //The setting should have disappeared now
   const clitextboxrevisted = await page.$('[data-testid="deploy-deploycmd"]')
-  await expect(clitextboxrevisted).not.toContainText('aksDisableLocalAccounts');
+  await expect(clitextboxrevisted).not.toContainText('AksDisableLocalAccounts');
 });
