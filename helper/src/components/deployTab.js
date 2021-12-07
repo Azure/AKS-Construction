@@ -1,8 +1,8 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import { Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
+import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
-import { adv_stackstyle, getError } from './common'
+import { CodeBlock, adv_stackstyle, getError } from './common'
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
 
@@ -19,12 +19,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
   const params = {
     resourceName: deploy.clusterName,
-    kubernetesVersion: deploy.kubernetesVersion,
+    ...(deploy.kubernetesVersion != defaults.deploy.kubernetesVersion && {kubernetesVersion: deploy.kubernetesVersion}),
     ...(cluster.agentCount !== defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
-    ...(cluster.upgradeChannel !== "none" && { upgradeChannel: cluster.upgradeChannel }),
-    ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA } ),
+    ...(cluster.upgradeChannel !== defaults.cluster.upgradeChannel && { upgradeChannel: cluster.upgradeChannel }),
+    ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
-    ...(cluster.vmSize !== "default" && { agentVMSize: cluster.vmSize }),
+    ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && { 
@@ -44,7 +44,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
         privateLinks: true, 
-        ...(addons.csisecret === 'akvNew' && deploy.kvIPWhitelist  && apiips_array.length > 0 && {kvIPWhitelist: `"${apiips_array[0]}"`}),
+        ...(addons.csisecret === 'akvNew' && deploy.kvIPWhitelist  && apiips_array.length > 0 && {kvIPWhitelist: apiips_array.map(v => {return {"value": v}}) }),
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
@@ -83,11 +83,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const params2CLI = p => Object.keys(p).map(k => {
     const val = p[k]
-    const targetVal = Array.isArray(val) ? JSON.stringify(val).replaceAll(' ', '').replaceAll('"', '\\"') : val
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
     return ` \\\n\t${k}=${targetVal}`
   }).join('')
 
-  const params2file = p => Object.keys(p).reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
+  const params2file = p => Object.keys(p).filter(p => p !== 'adminprincipleid' && p !== 'acrPushRolePrincipalId' && p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {}
@@ -136,14 +136,18 @@ az aks get-credentials -g ${deploy.rg} -n ${aks} ` : ""
     ) + 
     // Prometheus
     (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 kubectl create namespace ${prometheus_namespace}
-helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}` : '') +
+helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}
+${cluster.apisecurity === "private" ? `"` : ``}
+` : '') +
     // Default Deny All Network Policy, east-west traffic in cluster
     (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `\n\n# Create a default network policy in your cluster to deny all traffic
 kubectl create -f https://github.com/Azure/Aks-Construction/blob/main/k8smanifests/networkpolicy-deny-all.yml?raw=true`
     : '') +
+
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `\n\n# Create a namespace for your ingress resources
 kubectl create namespace ${nginx_namespace}
@@ -166,7 +170,9 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
 ` : '') +
       `  --namespace ${nginx_namespace}` : '') +
     (addons.ingress === 'contour' ? `\n\n# Install Contour Ingress Controller
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
     // External DNS
     (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
@@ -202,7 +208,7 @@ ${cluster.apisecurity === "private" ?
 # Cannot use 1.6.0 with AGIC https://github.com/jetstack/cert-manager/issues/4547
 
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.yaml
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${addons.ingress === 'appgw' ? 'v1.5.3' : 'v1.6.0'}/cert-manager.yaml
 ${cluster.apisecurity === "private" ? `"` : ``}
 
 # Wait for cert-manager to install
@@ -323,29 +329,39 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
         </MessageBar>
 
       }
-      
-      { urlParams.toString() !== "" && 
-        <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>{urlParams.toString()}</a></Text>
-      }
+    
 
       <Pivot >
+
         <PivotItem headerText="Provision Environment (CLI)"  >
-          <TextField data-testid="deploy-deploycmd"  value={deploycmd} rows={deploycmd.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Commands to deploy your fully operational environment" styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline errorMessage={!allok ? "Please complete all items that need attention before running script" : ""} />
-          <Text styles={{ root: { marginTop: "2px !important" } }} variant="medium" >
-            Open a Linux shell (requires 'az cli' pre-installed), or, open the
+
+          <Label style={{marginTop: '10px'}}>Commands to deploy your fully operational environment</Label>
+          <Text>
+            Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI</Link>, or, execute in the
             <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
-            <Text variant="medium" style={{ fontWeight: "bold" }}>Paste the commands</Text> into the shell
+    
           </Text>
+          
+          <CodeBlock deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
+
+          { urlParams.toString() !== "" && 
+            <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
+          }
+          
+          
+      
         </PivotItem>
 
         <PivotItem headerText="Post Configuration">
-          {addons.gitops === 'none' ?
-            <Stack>
-              <Label>Run these commands to install the requested kubernetes packages into your cluster</Label>
-              <MessageBar>Once available, we will switch to using the gitops addon here, to assure that your clusters get their source of truth from the defined git repo</MessageBar>
-              <TextField readOnly={true} label="Commands (requires helm)" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={postscript.split(/\r\n|\r|\n/).length + 1} value={postscript} />
-            </Stack>
-            :
+          {addons.gitops === 'none' ? [
+     
+              <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
+            
+              <Text key="post-text">Requires <Link target="_bl" href="https://helm.sh/docs/intro/install/">Helm</Link></Text>,
+              
+              <CodeBlock key="post-code" deploycmd={postscript}/>
+         
+          ] :
             <Stack>
 
               <TextField readOnly={true} label="While Gitops is in preview, run this manually" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={6} value={`az k8sconfiguration create

@@ -37,6 +37,7 @@
         "currt",
         "currv",
         "Daemonset",
+        "DNAT",
         "demoapp",
         "denydefault",
         "deploycmd",

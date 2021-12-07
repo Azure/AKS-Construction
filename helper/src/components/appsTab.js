@@ -1,7 +1,7 @@
 import React from 'react';
 import { Checkbox, Pivot, PivotItem, Image, TextField, Separator, Stack,  Label, MessageBar, MessageBarType } from '@fluentui/react';
 
-import { adv_stackstyle } from './common'
+import { adv_stackstyle, CodeBlock } from './common'
 
 export default function AppsTab({  tabValues }) {
 
@@ -20,7 +20,8 @@ export KVNAME=$(az keyvault list -g ${deploy.rg} --query [0].name -o tsv)
 export COMMON_NAME=openjdk-demo
 az keyvault certificate create --vault-name $KVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=$\{COMMON_NAME}/g )"
 
-
+` + 
+( addons.ingress === 'appgw' ? `
 # Wait for Cert to be issued
 sleep 1m
 
@@ -30,11 +31,11 @@ az network application-gateway root-cert create \\
      --resource-group ${deploy.rg} \\
      --name $COMMON_NAME \\
      --keyvault-secret $(az keyvault secret list-versions --vault-name $KVNAME -n $COMMON_NAME --query "[?attributes.enabled].id" -o tsv)
-
+` : '' ) + `
 # Install
 export APPNAME=openjdk-demo
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
-helm upgrade --install $APPNAME https://github.com/khowling/e2e-tls-java-aks/blob/main/openjdk-demo-3.1.0.tgz?raw=true  --set letsEncrypt.issuer=letsencrypt-prod,image.repository=$\{ACRNAME}.azurecr.io/openjdk-demo,image.tag=0.0.1,csisecrets.vaultname=$\{KVNAME},csisecrets.tenantId=$(az account show --query tenantId -o tsv),csisecrets.clientId=$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv),dnsname=$\{APPNAME}.${addons.dnsZoneId.split('/')[8]}
+helm upgrade --install $APPNAME https://github.com/khowling/e2e-tls-java-aks/blob/main/openjdk-demo-3.1.0.tgz?raw=true  --set ingressType=${addons.ingress},letsEncrypt.issuer=letsencrypt-prod,image.repository=$\{ACRNAME}.azurecr.io/openjdk-demo,image.tag=0.0.1,csisecrets.vaultname=$\{KVNAME},csisecrets.tenantId=$(az account show --query tenantId -o tsv),csisecrets.clientId=$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv),dnsname=$\{APPNAME}.${addons.dnsZoneId.split('/')[8]}
 ${cluster.apisecurity === "private" ? `"` : ``}
 `
 
@@ -61,7 +62,7 @@ ${cluster.apisecurity === "private" ? `"` : ``}
                             
                         </Stack.Item>
                         <Stack.Item>
-                            <TextField value={deploycmd} rows={deploycmd.split(/\r\n|\r|\n/).length + 1} readOnly={true} styles={{ root: { fontFamily: 'Monaco, Menlo, Consolas, "Droid Sans Mono", Inconsolata, "Courier New", monospace' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  />
+                            <CodeBlock deploycmd={deploycmd}/>
                         </Stack.Item>
                     </Stack>
                 </PivotItem>
