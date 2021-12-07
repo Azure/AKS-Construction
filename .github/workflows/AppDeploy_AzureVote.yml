@@ -27,7 +27,7 @@ on:
         default: false
         required: true
       MINIHELMBRANCH:
-        default: "main"
+        default: "azureVoteIngress"
         required: false
         type: string
         description: "The branch of MINIHELM to use"
@@ -107,37 +107,6 @@ jobs:
                 helm uninstall $APPNAME
                 sleep 1m
           fi
-      - name: Resolve Helm Parameters
-        id: helmparams
-        run: |
-          echo ${{ inputs.INGRESSTYPE }} #== 'PublicLoadBalancer'
-          
-          case "${{ inputs.INGRESSTYPE }}" in
-          PublicLoadBalancer)
-            echo "::set-output name=SERVICETYPE::LoadBalancer"
-            echo "::set-output name=AZURELBINT::false"
-            echo "::set-output name=INGRESS::false"
-            ;;
-
-          InternalLoadBalancer)
-            echo "::set-output name=SERVICETYPE::LoadBalancer"
-            echo "::set-output name=AZURELBINT::true"
-            echo "::set-output name=INGRESS::false"
-            ;;
-
-          AGIC-Public-Ingress)
-            echo "::set-output name=SERVICETYPE::ClusterIP"
-            echo "::set-output name=AZURELBINT::true"
-            echo "::set-output name=INGRESS::true"
-            ;;
-
-          AGIC-Private-Ingress)
-            echo "::set-output name=SERVICETYPE::ClusterIP"
-            echo "::set-output name=AZURELBINT::true"
-            echo "::set-output name=INGRESS::true"
-            ;;
-          esac
-          
           
       - name: Install the Vote app
         if: inputs.USERUNCOMMAND == false
@@ -153,10 +122,11 @@ jobs:
           APPNAME='${{ inputs.APPNAME }}'
           #AGNAME='${{ inputs.AGNAME}}'
           
-          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set ingress.enabled=${{ steps.helmparams.outputs.INGRESS == 'true' }}, service.azureLbInternal=${{ steps.helmparams.outputs.AZURELBINT}}, service.type="${{ steps.helmparams.outputs.SERVICETYPE}}" --dry-run
-          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote-simple --set ingress.enabled=${{ steps.helmparams.outputs.INGRESS == 'true' }}, service.azureLbInternal=${{ steps.helmparams.outputs.AZURELBINT}}, service.type="${{ steps.helmparams.outputs.SERVICETYPE}}"
+          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote --set ${{ steps.helmparams.outputs.helmsetparams}} --dry-run
+          helm upgrade --install $APPNAME ./helmcharts/samples/azurevote --set ${{ steps.helmparams.outputs.helmsetparams}}
 
       - name: Install the Vote app (run cmd)
+        id: installapp
         if: inputs.USERUNCOMMAND == true
         env:
           NAMESP: "default"
@@ -167,9 +137,51 @@ jobs:
           APPNAME='${{ inputs.APPNAME }}'
           #AGNAME='${{ inputs.AGNAME}}'
           
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.1.0.tgz --set ingress.enabled=${{ steps.helmparams.outputs.INGRESS == 'true' }}, service.azureLbInternal=${{ steps.helmparams.outputs.AZURELBINT}}, service.type="${{ steps.helmparams.outputs.SERVICETYPE}}"
-          "
+          echo ${{ inputs.INGRESSTYPE }} #== 'PublicLoadBalancer'
+          
+          case "${{ inputs.INGRESSTYPE }}" in
+          PublicLoadBalancer)
+            serviceType="LoadBalancer"
+            privateIp=false
+            ingress=false
+            echo "::set-output name=RESTYPE::svc"
+            ;;
+
+          InternalLoadBalancer)
+            serviceType="LoadBalancer"
+            privateIp=true
+            ingress=false
+            echo "::set-output name=RESTYPE::svc"
+            ;;
+
+          AGIC-Public-Ingress)
+            serviceType="ClusterIP"
+            privateIp=false
+            ingress=true
+            echo "::set-output name=RESTYPE::ing"
+            ;;
+
+          AGIC-Private-Ingress)
+            serviceType="ClusterIP"
+            privateIp=true
+            ingress=true
+            echo "::set-output name=RESTYPE::ing"
+            ;;
+          esac
+          
+          helmsetparams="ingress.enabled=${ingress},ingress.appGwPrivateIp=$privateIp,service.azureLbInternal=$privateIp,service.type=\"$serviceType\""
+          echo $helmsetparams
+          
+          command="helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz --set $helmsetparams --dry-run"
+          echo "Sending command $command to AKS"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          echo $cmdOut
+          
+          command="helm upgrade --install $APPNAME https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz --set $helmsetparams"
+          echo "Sending command $command to AKS"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          echo $cmdOut
+
       - name: Checking deployment (Run cmd invoke)
         if: inputs.USERUNCOMMAND == true
         env:
@@ -178,13 +190,17 @@ jobs:
           RG='${{ inputs.RG }}'
           AKSNAME='${{ inputs.AKSNAME}}'
 
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get po -n $NAMESP -o wide
-          "
+          command="kubectl get po -n $NAMESP"
+          echo "Sending command $command to AKS"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
           
-          az aks command invoke -g $RG -n $AKSNAME --command "
-          kubectl get svc -n $NAMESP
-          "
+          command="kubectl get svc -n $NAMESP"
+          echo "Sending command $command to AKS"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
+
+          command="kubectl get ing -n $NAMESP"
+          echo "Sending command $command to AKS"
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"
 
       - name: Verify App is reachable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
@@ -219,10 +235,10 @@ jobs:
           
           curl $pubIp
 
-      - name: Verify Public LB App is reachable via IP (run cmd)
+      - name: Verify Public LB App is reachable (run cmd)
         id: verifyAppAvailable
         #if: github.event.inputs.INGRESSTYPE == 'PublicLoadBalancer'
-        if: inputs.INGRESSTYPE == 'PublicLoadBalancer' && inputs.USERUNCOMMAND == true
+        if: inputs.USERUNCOMMAND == true
         env:
           NAMESP: "default"
           APPNAME: "${{ inputs.APPNAME }}"
@@ -230,14 +246,14 @@ jobs:
           AKSNAME='${{ inputs.AKSNAME}}'
           RG='${{ inputs.RG }}'
 
-          echo "Invoking Get SVC to retrieve IP for $AKSNAME in $RG"
+          echo "Invoking Get ${{ steps.installapp.outputs.RESTYPE}} to retrieve IP for $AKSNAME in $RG"
           
           counter=1
           while [ $counter -le 10 ]
           do
             echo "curl $ipAddress for response code [$counter]"
 
-            command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
+            command="kubectl get ${{ steps.helmparams.outputs.RESTYPE}} azure-vote-front -n $NAMESP -ojson"
             echo "Sending command $command to AKS"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
 
@@ -339,7 +355,6 @@ jobs:
               curl $ipAddress
              exit 1
           fi
-
 
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY

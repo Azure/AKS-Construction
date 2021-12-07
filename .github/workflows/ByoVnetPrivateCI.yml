@@ -292,6 +292,7 @@ jobs:
       UNINSTALLAFTERVERIFY: false
       USERUNCOMMAND: true
       CURLRETRIES: 10
+      MINIHELMBRANCH: azureVoteIngress
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
