@@ -29,6 +29,9 @@
         "omsagent": {
             "value": true
         },
+        "azurepolicy": {
+            "value": "audit"
+        },
         "retentionInDays": {
             "value": 30
         },
