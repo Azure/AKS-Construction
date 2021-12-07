@@ -99,7 +99,7 @@ var aks_subnet =  {
     }, privateLinks ? {
       privateEndpointNetworkPolicies: 'Disabled'
       privateLinkServiceNetworkPolicies: 'Enabled'
-    } : {}, azureFirewalls ? {   
+    } : {}, azureFirewalls ? {
       routeTable: {
         id: vnet_udr.id //resourceId('Microsoft.Network/routeTables', routeFwTableName)
       }
@@ -159,8 +159,8 @@ resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!e
         name: 'Acr-Connection'
         properties: {
           privateLinkServiceId: privateLinkAcrId
-          groupIds: [ 
-            'registry' 
+          groupIds: [
+            'registry'
           ]
         }
       }
@@ -185,7 +185,7 @@ resource privateDnsAcrLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
     registrationEnabled: false
     virtualNetwork: {
       id: vnet.id
-    } 
+    }
   }
 }
 
@@ -216,8 +216,8 @@ resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!e
         name: 'Akv-Connection'
         properties: {
           privateLinkServiceId: privateLinkAkvId
-          groupIds: [ 
-            'vault' 
+          groupIds: [
+            'vault'
           ]
         }
       }
@@ -242,7 +242,7 @@ resource privateDnsAkvLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
     registrationEnabled: false
     virtualNetwork: {
       id: vnet.id
-    } 
+    }
   }
 }
 

@@ -65,10 +65,10 @@
         "appGWsku" : {
             "value" : "Standard_v2"
         },
-        "SystemPoolType" : { 
+        "SystemPoolType" : {
             "value" : "Standard"
         },
-        "createKV" : { 
+        "createKV" : {
             "value" : true
         },
         "azureKeyvaultSecretsProvider" : {

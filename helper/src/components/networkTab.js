@@ -10,7 +10,7 @@ const columnProps = {
 
 
 export default function NetworkTab ({ tabValues, updateFn, invalidArray, featureFlag }) {
-    
+
     const [callout1, setCallout1] = useState(false)
 
     const { net, addons } = tabValues

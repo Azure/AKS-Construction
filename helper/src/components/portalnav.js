@@ -68,7 +68,7 @@ function Header({ entScale, setEntScale, featureFlag }) {
 export default function PortalNav({ config }) {
 
   console.log (`PortalNav: ${JSON.stringify(Object.keys(config))}`)
-  
+
   const { tabLabels, defaults, entScaleOps, defaultOps } = config
   const [pivotkey, setPivotkey] = useState(Object.keys(tabLabels)[0])
 
@@ -84,7 +84,7 @@ export default function PortalNav({ config }) {
   const sections = entScale ? entScaleOps : defaultOps
   const [selected, setSelected] = useState(() => { return {
         values: sections.reduce((a, s) => {
-            return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key } 
+            return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
           }, {}),
         entScale
       }
@@ -94,7 +94,7 @@ export default function PortalNav({ config }) {
     const clusterName = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
 
     // Apply selected presets to tab values
-    const tabApplySections = Object.keys(selected.values).reduce((acc,curr) => 
+    const tabApplySections = Object.keys(selected.values).reduce((acc,curr) =>
       updateTabValues (acc, sections, curr, selected.values[curr])
     , defaults)
 
@@ -109,9 +109,9 @@ export default function PortalNav({ config }) {
       }
     }
     // Apply url params to tab values
-    const urlApplySections = Object.keys(dynamicApplySections).reduce((acct, currt) => {  
+    const urlApplySections = Object.keys(dynamicApplySections).reduce((acct, currt) => {
         return {
-          ...acct, 
+          ...acct,
           [currt]: Object.keys(dynamicApplySections[currt]).reduce((accv, currv) => {
             const urlname = `${currt}.${currv}`
             let valres =  dynamicApplySections[currt][currv]
@@ -132,7 +132,7 @@ export default function PortalNav({ config }) {
     console.log (`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
     return Object.keys(card_values).reduce((acc, curr) => {
       return {
-        ...acc, 
+        ...acc,
         [curr]: {
           ...acc[curr],
           // resolve conditional params
@@ -165,7 +165,7 @@ export default function PortalNav({ config }) {
           currentUrlParams.delete(element.key)
         })
       }
-  
+
       if (entScale) {
         currentUrlParams.set('entScale', 1)
       } else {
@@ -179,7 +179,7 @@ export default function PortalNav({ config }) {
     console.log (`updateSelected: sectionKey=${sectionKey} cardKey=${cardKey}`)
     setSelected({entScale, values: { ...(selected.entScale === entScale && selected.values), [sectionKey]: cardKey }})
     setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, sectionKey, cardKey))
-    
+
     //window.history.replaceState(null, null, "?"+urlParams.toString())
   }
 
@@ -189,13 +189,13 @@ export default function PortalNav({ config }) {
       return response.json();
     }).then((res) => {
       console.log (`useEffect Get IP`)
-      setTabValues(currentTabValues => { return { 
-          ...currentTabValues, 
-          deploy: { 
-            ...currentTabValues.deploy, 
-            apiips: `${res.ip}/32` 
-          } 
-        } 
+      setTabValues(currentTabValues => { return {
+          ...currentTabValues,
+          deploy: {
+            ...currentTabValues.deploy,
+            apiips: `${res.ip}/32`
+          }
+        }
       })
 
     }).catch((err) => console.error('Problem fetching my IP', err))

@@ -142,7 +142,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
                                 <Stack.Item>
                                     <Label style={{ marginBottom: "0px" }}>Application Gateway Type (<Link target='_' href='https://docs.microsoft.com/en-us/azure/web-application-firewall/ag/ag-overview'>docs</Link>)</Label>
-                                    <ChoiceGroup                                       
+                                    <ChoiceGroup
                                         selectedKey={addons.appGWsku}
                                         options={[
                                             { key: 'Standard_v2', text: 'Standard_v2: Standard Application Gateway' },
@@ -152,11 +152,11 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                     />
                                 </Stack.Item>
 
-                                { addons.appGWsku === 'WAF_v2' && 
+                                { addons.appGWsku === 'WAF_v2' &&
                                     <Stack.Item style={{ marginLeft: "20px"}}>
                                         <Checkbox checked={addons.appGWenableFirewall} onChange={(ev, v) => updateFn("appGWenableFirewall", v)} label={<Text>Enable Firewall: Provides centralized protection of your web applications from common exploits and vulnerabilities</Text>} />
-                                    
-                                        { addons.appGWenableFirewall && 
+
+                                        { addons.appGWenableFirewall &&
                                             <Stack.Item style={{ marginLeft: "25px"}}>
                                                 <Label style={{ marginBottom: "0px", marginTop: "5px" }}>WAF mode</Label>
                                                 <ChoiceGroup
@@ -257,9 +257,9 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
                 <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label={<Text>Create ACR Private Agent Pool (private link only) (preview limited regions <a target="_new" href="https://docs.microsoft.com/azure/container-registry/tasks-agent-pools">docs</a>)</Text>} />
                 <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
-                    <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>  
-                    <TextField disabled={true} label="O/S" defaultValue="Linux"/>  
-                    <TextField disabled={true} label="Agent Count" defaultValue="1"/>  
+                    <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>
+                    <TextField disabled={true} label="O/S" defaultValue="Linux"/>
+                    <TextField disabled={true} label="Agent Count" defaultValue="1"/>
                 </Stack>
             </Stack.Item>
 
@@ -291,7 +291,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                 </Stack>
             </Stack.Item>
 
-            {/* 
+            {/*
         <ChoiceGroup
           label='Enable gitops'
           selectedKey={addons.gitops}
