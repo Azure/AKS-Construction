@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "12685287730939629176"
+      "templateHash": "4088242955469676073"
     }
   },
   "parameters": {
@@ -156,6 +156,18 @@
     "certManagerFW": {
       "type": "bool",
       "defaultValue": false
+    },
+    "inboundHttpFW": {
+      "type": "string",
+      "defaultValue": "AllowAllIn",
+      "metadata": {
+        "description": "Allow Http traffic (80/443) into AKS from specific sources"
+      },
+      "allowedValues": [
+        "AllowAllIn",
+        "AllowAcrSubnetIn",
+        ""
+      ]
     },
     "ingressApplicationGateway": {
       "type": "bool",
@@ -1031,7 +1043,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "15111295381841954366"
+              "templateHash": "7415311614784972885"
             }
           },
           "parameters": {
@@ -1155,9 +1167,9 @@
             "final_subnets": "[if(parameters('ingressApplicationGateway'), concat(array(variables('subnets_4')), array(variables('appgw_subnet'))), array(variables('subnets_4')))]",
             "vnetName": "[format('vnet-{0}', parameters('resourceName'))]",
             "networkContributorRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
-            "privateLinkAcrName": "[format('vnet-pl-acr-{0}', parameters('resourceName'))]",
+            "privateLinkAcrName": "[format('pl-acr-{0}', parameters('resourceName'))]",
             "privateDnsAcrLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]",
-            "privateLinkAkvName": "[format('vnet-pl-akv-{0}', parameters('resourceName'))]",
+            "privateLinkAkvName": "[format('pl-akv-{0}', parameters('resourceName'))]",
             "privateDnsAkvLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]",
             "publicIpAddressName": "[format('pip-{0}', parameters('bastionHostName'))]"
           },
@@ -1611,6 +1623,9 @@
           },
           "acrAgentPoolSubnetAddressPrefix": {
             "value": "[parameters('acrAgentPoolSubnetAddressPrefix')]"
+          },
+          "inboundHttpFW": {
+            "value": "[parameters('inboundHttpFW')]"
           }
         },
         "template": {
@@ -1620,7 +1635,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "9476886646663582740"
+              "templateHash": "15515578701046546909"
             }
           },
           "parameters": {
@@ -1643,6 +1658,15 @@
             "certManagerFW": {
               "type": "bool",
               "defaultValue": false
+            },
+            "inboundHttpFW": {
+              "type": "string",
+              "defaultValue": "AllowAllIn",
+              "allowedValues": [
+                "AllowAllIn",
+                "AllowAcrSubnetIn",
+                ""
+              ]
             },
             "acrPrivatePool": {
               "type": "bool",
@@ -1722,7 +1746,7 @@
             },
             {
               "type": "Microsoft.Network/azureFirewalls",
-              "apiVersion": "2019-04-01",
+              "apiVersion": "2021-03-01",
               "name": "[variables('fw_name')]",
               "location": "[parameters('location')]",
               "properties": {
@@ -1740,33 +1764,71 @@
                   }
                 ],
                 "threatIntelMode": "Alert",
-                "applicationRuleCollections": [
+                "firewallPolicy": {
+                  "id": "[resourceId('Microsoft.Network/firewallPolicies', format('afwp-{0}', parameters('resourceName')))]"
+                },
+                "applicationRuleCollections": [],
+                "networkRuleCollections": []
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('firewallPublicIpName'))]",
+                "[resourceId('Microsoft.Network/firewallPolicies', format('afwp-{0}', parameters('resourceName')))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/firewallPolicies",
+              "apiVersion": "2020-11-01",
+              "name": "[format('afwp-{0}', parameters('resourceName'))]",
+              "location": "westeurope",
+              "properties": {
+                "sku": {
+                  "tier": "Standard"
+                },
+                "threatIntelMode": "Alert",
+                "threatIntelWhitelist": {
+                  "fqdns": [],
+                  "ipAddresses": []
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/{1}', format('afwp-{0}', parameters('resourceName')), 'AKSConstructionRuleGroup')]",
+              "properties": {
+                "priority": 200,
+                "ruleCollections": [
                   {
-                    "name": "clusterRc1",
-                    "properties": {
-                      "priority": 101,
-                      "action": {
-                        "type": "Allow"
-                      },
-                      "rules": "[concat(createArray(createObject('name', 'aks', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(), 'fqdnTags', createArray('AzureKubernetesService'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), if(parameters('certManagerFW'), createArray(createObject('name', 'cetman-quay', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('quay.io', '*.quay.io'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix'))), createObject('name', 'cetman-letsencrypt', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('letsencrypt.org', '*.letsencrypt.org'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()), if(and(parameters('certManagerFW'), not(empty(parameters('appDnsZoneName')))), createArray(createObject('name', 'cetman-appDnsZoneName', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(parameters('appDnsZoneName'), format('*.{0}', parameters('appDnsZoneName'))), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()))]"
-                    }
-                  }
-                ],
-                "networkRuleCollections": [
+                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                    "name": "CoreAksNetEgress",
+                    "priority": 100,
+                    "action": {
+                      "type": "Allow"
+                    },
+                    "rules": "[concat(createArray(createObject('name', 'ControlPlaneTCP', 'ruleType', 'NetworkRule', 'ipProtocols', createArray('TCP'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationAddresses', createArray(format('AzureCloud.{0}', parameters('location'))), 'destinationPorts', createArray('9000', '22')), createObject('name', 'ControlPlaneUDP', 'ruleType', 'NetworkRule', 'ipProtocols', createArray('UDP'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationAddresses', createArray(format('AzureCloud.{0}', parameters('location'))), 'destinationPorts', createArray('1194')), createObject('name', 'AzureMonitorForContainers', 'ruleType', 'NetworkRule', 'ipProtocols', createArray('TCP'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationAddresses', createArray('AzureMonitor'), 'destinationPorts', createArray('443'))), if(parameters('acrPrivatePool'), createArray(createObject('name', 'acr-agentpool', 'ruleType', 'NetworkRule', 'ipProtocols', createArray('TCP'), 'sourceAddresses', createArray(parameters('acrAgentPoolSubnetAddressPrefix')), 'destinationAddresses', createArray('AzureKeyVault', 'Storage', 'EventHub', 'AzureActiveDirectory', 'AzureMonitor'), 'destinationPorts', createArray('443'))), createArray()))]"
+                  },
                   {
-                    "name": "netRc1",
-                    "properties": {
-                      "priority": 100,
-                      "action": {
-                        "type": "Allow"
-                      },
-                      "rules": "[concat(createArray(createObject('name', 'ControlPlaneTCP', 'protocols', createArray('TCP'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationAddresses', createArray(format('AzureCloud.{0}', parameters('location'))), 'destinationPorts', createArray('9000', '22')), createObject('name', 'ControlPlaneUDP', 'protocols', createArray('UDP'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationAddresses', createArray(format('AzureCloud.{0}', parameters('location'))), 'destinationPorts', createArray('1194')), createObject('name', 'AzureMonitorForContainers', 'protocols', createArray('TCP'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationAddresses', createArray('AzureMonitor'), 'destinationPorts', createArray('443'))), if(parameters('acrPrivatePool'), createArray(createObject('name', 'acr-agentpool', 'protocols', createArray('TCP'), 'sourceAddresses', createArray(parameters('acrAgentPoolSubnetAddressPrefix')), 'destinationAddresses', createArray('AzureKeyVault', 'Storage', 'EventHub', 'AzureActiveDirectory', 'AzureMonitor'), 'destinationPorts', createArray('443'))), createArray()))]"
-                    }
+                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                    "name": "CoreAksHttpEgress",
+                    "priority": 400,
+                    "action": {
+                      "type": "Allow"
+                    },
+                    "rules": "[concat(createArray(createObject('name', 'aks', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(), 'fqdnTags', createArray('AzureKubernetesService'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), if(parameters('certManagerFW'), createArray(createObject('name', 'certman-quay', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('quay.io', '*.quay.io'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix'))), createObject('name', 'certman-letsencrypt', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('letsencrypt.org', '*.letsencrypt.org'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()), if(and(parameters('certManagerFW'), not(empty(parameters('appDnsZoneName')))), createArray(createObject('name', 'certman-appDnsZoneName', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(parameters('appDnsZoneName'), format('*.{0}', parameters('appDnsZoneName'))), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()))]"
+                  },
+                  {
+                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                    "name": "AksNetIngress",
+                    "priority": 300,
+                    "action": {
+                      "type": "Allow"
+                    },
+                    "rules": "[concat(if(equals(parameters('inboundHttpFW'), 'AllowAllIn'), createArray(createObject('ruleType', 'NetworkRule', 'name', parameters('inboundHttpFW'), 'ipProtocols', createArray('TCP'), 'sourceAddresses', createArray('*'), 'destinationAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationPorts', createArray('80', '443'))), createArray()), if(and(parameters('acrPrivatePool'), equals(parameters('inboundHttpFW'), 'AllowAcrSubnetIn')), createArray(createObject('ruleType', 'NetworkRule', 'name', parameters('inboundHttpFW'), 'ipProtocols', createArray('TCP', 'ICMP'), 'sourceAddresses', createArray(parameters('acrAgentPoolSubnetAddressPrefix')), 'destinationAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationPorts', createArray('80', '443'))), createArray()))]"
                   }
                 ]
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', variables('firewallPublicIpName'))]"
+                "[resourceId('Microsoft.Network/firewallPolicies', format('afwp-{0}', parameters('resourceName')))]"
               ]
             }
           ]
@@ -1814,7 +1876,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "2184454154164447255"
+              "templateHash": "3495804899041359526"
             }
           },
           "parameters": {
@@ -1842,6 +1904,7 @@
               "defaultValue": "PT1M",
               "allowedValues": [
                 "PT1M",
+                "PT5M",
                 "PT15M"
               ],
               "metadata": {
