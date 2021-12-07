@@ -47,6 +47,7 @@ on:
         description: 'Uninstall app after tests  [yes|no]'
         type: boolean
         default: true
+        required: false
     secrets:
       AZURE_CREDENTIALS:
         required: true
@@ -136,12 +137,16 @@ jobs:
           RG: "${{ inputs.RG }}"
           AKSNAME: "${{ inputs.AKSNAME }}"
         run: |
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
-      - name: Kubectl
+      - name: Kubelogin
+        env:
+          kubeloginversion: 'v0.0.10'
         run: |
-          #sudo az aks install-cli
-          kubectl version
+          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
+          unzip kubelogin-linux-amd64.zip
+          sudo mv bin/linux_amd64/kubelogin /usr/bin
+          kubelogin convert-kubeconfig -l azurecli
 
       - name: Observe Existing DNSConfig
         env:

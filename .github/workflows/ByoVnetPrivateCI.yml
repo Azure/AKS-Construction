@@ -269,7 +269,7 @@ jobs:
       - name: AKS Connect
         run: |
           AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --admin --overwrite-existing
+          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubectl
         run: |

@@ -46,8 +46,10 @@ rule:
   - Azure.VM.Standalone
   - Azure.KeyVault.SoftDelete
   - Azure.KeyVault.PurgeProtect
+  - Azure.AppGw.UseHTTPS #In this project AGIC is in charge of managing the AppGW.
 
-
+# Ignore the following rules for specific deployments
+# -aks-AksStan = Low spec'd AKS deployment that won't meet many WAF rules
 suppression:
   Azure.AKS.AuthorizedIPs:
   # Exclude the following AKS clusters

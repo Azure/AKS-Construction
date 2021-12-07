@@ -258,7 +258,7 @@ function CustomVNET({ net, addons, updateFn }) {
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField inputProps={{ "data-testid": "network-bastion-subnet"}} prefix="Cidr" disabled={!net.bastion} label="Azure Bastion subnet" onChange={(ev, val) => updateFn("bastionSubnetAddressPrefix", val)} value={net.bastion ? net.bastionSubnetAddressPrefix : "No bastion subnet requested"} />
+                        <TextField prefix="Cidr" disabled={!net.bastion} label="Azure Bastion subnet" onChange={(ev, val) => updateFn("bastionSubnetAddressPrefix", val)} value={net.bastion ? net.bastionSubnetAddressPrefix : "No bastion subnet requested"} />
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
