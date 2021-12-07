@@ -83,6 +83,7 @@ jobs:
             ingress=false
             echo "::set-output name=RESTYPE::svc"
             echo "::set-output name=ISPUBLIC::true"
+            echo "::set-output name=RESNAME::${APPNAME}"
             ;;
 
           InternalLoadBalancer)
@@ -90,6 +91,7 @@ jobs:
             privateIp=true
             ingress=false
             echo "::set-output name=RESTYPE::svc"
+            echo "::set-output name=RESNAME::${APPNAME}"
             ;;
 
           AGIC-Public-Ingress)
@@ -97,6 +99,7 @@ jobs:
             privateIp=false
             ingress=true
             echo "::set-output name=RESTYPE::ing"
+            echo "::set-output name=RESNAME::${APPNAME}-ing"
             echo "::set-output name=ISPUBLIC::true"
             ;;
 
@@ -105,6 +108,7 @@ jobs:
             privateIp=true
             ingress=true
             echo "::set-output name=RESTYPE::ing"
+            echo "::set-output name=RESNAME::${APPNAME}-ing"
             ;;
           esac
           
@@ -157,7 +161,7 @@ jobs:
           counter=1
           while [ $counter -le 10 ]
           do
-            command="kubectl get ${{ steps.installapp.outputs.RESTYPE}} azure-vote-front -n $NAMESP -ojson"
+            command="kubectl get ${{ steps.installapp.outputs.RESTYPE}} ${{ steps.installapp.outputs.RESNAME}} -n $NAMESP -ojson"
             echo "Sending command $command to AKS"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
 
