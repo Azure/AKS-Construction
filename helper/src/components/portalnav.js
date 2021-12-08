@@ -104,8 +104,7 @@ export default function PortalNav({ config }) {
       deploy: {
         ...tabApplySections.deploy,
         clusterName,
-        rg: `${clusterName}-rg`,
-        ...(process.env.REACT_APP_K8S_VERSION && { kubernetesVersion: process.env.REACT_APP_K8S_VERSION })
+        rg: `${clusterName}-rg`
       }
     }
     // Apply url params to tab values
