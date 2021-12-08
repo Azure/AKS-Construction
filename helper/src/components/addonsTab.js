@@ -291,7 +291,6 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { minWidth: '700px', display: (addons.csisecret === "none" ? "none" : "block") } }} >
-                <MessageBar messageBarType={MessageBarType.warning}>Ensure you register for this preview feature <Link target="_t2" href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver#register-the-aks-azurekeyvaultsecretsprovider-preview-feature">here</Link></MessageBar>
                 <Stack tokens={{ childrenGap: 15 }}>
                     {addons.csisecret === "akvExist" &&
                         <TextField value={addons.kvId} onChange={(ev, v) => updateFn("kvId", v)} errorMessage={getError(invalidArray, 'kvId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Azure Key Vault Resource Id</Text>} />
