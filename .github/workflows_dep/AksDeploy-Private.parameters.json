@@ -8,9 +8,6 @@
         "resourceName": {
             "value": "priv"
           },
-          "kubernetesVersion": {
-            "value": "1.21.2"
-          },
           "agentVMSize": {
             "value": "Standard_DS3_v2"
           },
