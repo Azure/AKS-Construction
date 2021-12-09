@@ -681,7 +681,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 |__|\__\  \______/  |______/  |_______|| _| `._____||__| \__| |_______|    |__|     |_______||_______/ */
 
 param dnsPrefix string = '${resourceName}-dns'
-param kubernetesVersion string = '1.21.4'
+param kubernetesVersion string = '1.21.5'
 param enable_aad bool = false
 param aad_tenant_id string = ''
 
