@@ -3,7 +3,7 @@
 name: BicepBuild
 
 on:
-  push:
+#  push:
 #    paths:
 #      - 'bicep/*'
 #      - ".github/workflows/bicepBuild.yml"
