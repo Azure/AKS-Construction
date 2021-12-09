@@ -1,0 +1,59 @@
+#Checks main.json file for any parameter changes
+#Any changes found, are then highlighted in a PR review
+
+name: Review PR for file parameter changes
+
+on:
+  pull_request_target:
+    branches: [ main ]
+    paths: "bicep/compiled/main.json"
+
+jobs:
+  checkPr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Variable check
+        run: |
+          echo "${{ github.event.pull_request.number }}"
+        
+      - uses: actions/checkout@v2
+        name: Git Checkout target
+        with:
+          path: old
+        
+      - uses: actions/checkout@v2
+        name: Git Checkout branch
+        with:
+          path: new
+          ref: ${{ github.event.pull_request.head.sha }}    
+      
+      - name: Check for Parameter changes in main.json
+        env: 
+          oldFilePath: 'old/bicep/compiled/main.json'
+          newFilePath : 'new/bicep/compiled/main.json'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        shell: pwsh
+        run: |
+          $arm1params = get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters
+          $arm2params = get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters
+
+          $arm1paramList = @()
+          $arm1params.keys | % {$arm1paramList += New-Object PSObject -Property ([Ordered]@{Parameter=$_; DefaultValue=$arm1params.Get_Item($_).defaultValue | ConvertTo-Json -Compress })}
+
+          $arm2paramList = @()
+          $arm2params.keys | % {$arm2paramList+= New-Object PSObject -Property ([Ordered]@{Parameter=$_; DefaultValue=$arm2params.Get_Item($_).defaultValue | ConvertTo-Json -Compress })}
+
+          $comparison = Compare-Object $arm1paramList $arm2paramList -Property Name, DefaultValue -PassThru | select Parameter, DefaultValue, @{N='FileVersion';E={$_.SideIndicator.replace('<=','Old').replace('=>','New')}}
+
+          if ($comparison.length -gt 0) {
+              cd old #Need to change directory to give the gh cli repo context
+              
+              #GitHub uses a markdown rendering tool called Glamour. It copes with HTML pretty well, and pwsh loves html not markdown.
+              [string]$html = $comparison | sort-object Parameter, @{e='FileVersion';desc=$true} | ConvertTo-Html -Fragment | Out-String
+              "<h2>Detected parameter change</h2><p>Parameter changes need to be reviewed carefully</p>" + $html | Out-File "ghpr.html"
+
+              gh pr review ${{ github.event.pull_request.number }} -r -F "ghpr.html"
+          }
+          
