@@ -681,8 +681,8 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 |__|\__\  \______/  |______/  |_______|| _| `._____||__| \__| |_______|    |__|     |_______||_______/ */
 
 param dnsPrefix string = '${resourceName}-dns'
-param kubernetesVersion string = '1.20.9'
-param enable_aad bool = false
+param kubernetesVersion string = '1.21.2'
+param enable_aad bool = true
 param aad_tenant_id string = ''
 
 @description('Create, and use a new Log Analytics workspace for AKS logs')
