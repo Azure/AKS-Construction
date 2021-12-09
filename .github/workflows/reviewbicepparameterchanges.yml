@@ -7,7 +7,7 @@ on:
   pull_request_target:
     branches: [ main ]
     paths: "bicep/compiled/main.json"
-
+concurrency: " GITHUBSHA"
 jobs:
   checkPr:
     runs-on: ubuntu-latest
@@ -16,6 +16,9 @@ jobs:
       - name: Variable check
         run: |
           echo "${{ github.event.pull_request.number }}"
+          echo "Sha is ${{ github.sha }}"
+          echo "Ref is ${{ github.ref }}"
+          echo "Ref name is ${{GITHUB.REF_NAME}}"
         
       - uses: actions/checkout@v2
         name: Git Checkout target
