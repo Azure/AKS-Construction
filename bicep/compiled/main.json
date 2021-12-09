@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "7174392492022265622"
+      "templateHash": "14437848509110436202"
     }
   },
   "parameters": {
@@ -229,7 +229,7 @@
     },
     "kubernetesVersion": {
       "type": "string",
-      "defaultValue": "1.21.9"
+      "defaultValue": "1.21.11"
     },
     "enable_aad": {
       "type": "bool",
