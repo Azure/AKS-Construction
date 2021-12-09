@@ -3,14 +3,17 @@
 name: BicepBuild
 
 on:
-  push:
-    paths:
-      - 'bicep/*'
-      - ".github/workflows/bicepBuild.yml"
-    branches-ignore: main
+  #push:
+  #  paths:
+  #    - 'bicep/*'
+  #    - ".github/workflows/bicepBuild.yml"
+  #  branches-ignore: main
 
   pull_request:
     branches: main
+    paths:
+      - 'bicep/*'
+      - ".github/workflows/bicepBuild.yml"
 
   workflow_dispatch:
 
