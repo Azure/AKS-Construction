@@ -30,8 +30,8 @@ jobs:
       
       - name: Check for Parameter changes in main.json
         env: 
-          oldFilePath: 'old/testfiles/armjson/main.json'
-          newFilePath : 'new/testfiles/armjson/main.json'
+          oldFilePath: 'old/bicep/compiled/main.json'
+          newFilePath : 'new/bicep/compiled/main.json'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         shell: pwsh
