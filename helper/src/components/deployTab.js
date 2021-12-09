@@ -328,14 +328,12 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
 
 
       <Pivot >
-
         <PivotItem headerText="Provision Environment (CLI)"  >
 
           <Label style={{marginTop: '10px'}}>Commands to deploy your fully operational environment</Label>
           <Text>
-            Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI</Link>, or, execute in the
-            <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
-
+            Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI</Link>
+            , or, execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
           </Text>
 
           <CodeBlock deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
@@ -343,9 +341,6 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
           }
-
-
-
         </PivotItem>
 
         <PivotItem headerText="Post Configuration">
