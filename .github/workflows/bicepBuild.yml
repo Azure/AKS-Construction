@@ -77,7 +77,7 @@ jobs:
 
   checkParam:
     needs: [Validation]
-    if: needs.Validation.outputs.isGitDiff == 'true' #We only need to check if the file changes.
+    if: always() && needs.Validation.outputs.isGitDiff == 'true' #We only need to check if the file changes.
     runs-on: ubuntu-latest
 
     steps:
