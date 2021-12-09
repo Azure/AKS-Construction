@@ -80,3 +80,16 @@ jobs:
         uses: actions-x/commit@v2
         with:
           message: Adding auto compiled bicep json
+
+      - uses: actions/checkout@v2
+        name: Git Checkout target
+        with:
+          path: old
+      
+      - name: Debug - Check old file
+        run: cat old/bicep/compiled/main.json | grep -m1 kubernetesVersion -A 3
+        
+      - name: Debug - Check generated file
+        run: cat bicep/compiled/main.json | grep -m1 kubernetesVersion -A 3
+        
+        
