@@ -71,4 +71,17 @@ code {
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
 }
 
+label i {
+    margin-left:4px;
+    color: cornflowerblue;
+}
 
+.ms-Callout-main {
+    padding: 20px 24px ;
+    width: 320;
+    max-width: 90%;
+}
+
+.ms-Callout-main span {
+    margin:5px
+}

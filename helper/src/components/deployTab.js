@@ -1,7 +1,7 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
-
+import { FontIcon, Callout, Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
+import { useBoolean } from '@fluentui/react-hooks';
 import { CodeBlock, adv_stackstyle, getError } from './common'
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
@@ -108,6 +108,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const prometheus_helm_release_name = 'monitoring'
   const nginx_namespace = 'ingress-basic'
   const nginx_helm_release_name = 'nginx-ingress'
+
+  const [isAksAdminCalloutVisible, { toggle: toggleIsCalloutVisible }] = useBoolean(false);
 
   const postscript =
     // App Gateway addon: see main.bicep DEPLOY_APPGW_ADDON
@@ -296,9 +298,26 @@ ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n 
           <TextField label="Current IP Address" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
 
           <Stack.Item>
-            <Label>Grant AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
+            <Label id="AksClusterAdmin" onClick={toggleIsCalloutVisible}>Grant AKS Cluster Admin Role<FontIcon aria-label="Info" iconName="Info"  /></Label>
             <Checkbox disabled={cluster.enable_aad === false || cluster.enableAzureRBAC === false} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
             <Checkbox disabled={cluster.apisecurity !== "whitelist"}  onChange={(ev, val) => updateFn("clusterIPWhitelist", val)} checked={deploy.clusterIPWhitelist} label="Add current IP to AKS firewall (applicable to AKS IP ranges)"  />
+            {isAksAdminCalloutVisible && (
+              <Callout
+                target={`#AksClusterAdmin`}
+                onDismiss={toggleIsCalloutVisible}
+                setInitialFocus
+              >
+                <Text block variant="xLarge">
+                  AKS Cluster Admin Role
+                </Text>
+                <Text block variant="small">
+                  Assign yourself Azure Kubernetes Service RBAC Cluster Admin in order to expedite control and deployment of the cluster.
+                </Text>
+                <Link href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster" target="_blank">
+                  Microsoft documentation
+                </Link>
+              </Callout>
+            )}
           </Stack.Item>
 
           <Stack.Item>
