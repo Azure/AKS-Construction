@@ -77,7 +77,7 @@ jobs:
 
       - name: GIT Push Json file
         if: steps.isGitDiff.outputs.GITDIFF=='true' #&& github.event_name == 'push'
-        uses: actions-x/commit@v2
+        uses: actions-x/commit@a8dd87de97778a220a28bb56bd761aa935582ce0
         with:
           message: Adding auto compiled bicep json
 
