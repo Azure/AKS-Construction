@@ -48,7 +48,7 @@ jobs:
           $arm2paramList = @()
           $arm2params.keys | % {$arm2paramList+= New-Object PSObject -Property ([Ordered]@{Parameter=$_; DefaultValue=$arm2params.Get_Item($_).defaultValue | ConvertTo-Json -Compress })}
 
-          $comparison = Compare-Object $arm1paramList $arm2paramList -Property Name, DefaultValue -PassThru | select Parameter, DefaultValue, @{N='FileVersion';E={$_.SideIndicator.replace('<=','Old').replace('=>','New')}}
+          $comparison = Compare-Object $arm1paramList $arm2paramList -Property Name, DefaultValue -PassThru | select Parameter, DefaultValue, @{N='FileVersion';E={$_.SideIndicator.replace('<=','Main').replace('=>','New')}}
           write-output $comparison
           if ($comparison.length -gt 0) {
               cd old #Need to change directory to give the gh cli repo context
