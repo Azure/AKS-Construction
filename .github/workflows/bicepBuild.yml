@@ -27,6 +27,9 @@ jobs:
         shell: pwsh
         run: |
           echo 'ghen : ${{ github.event_name }}'
+          echo "Sha is ${{ github.sha }}"
+          echo "Ref is ${{ github.ref }}"
+          echo "Ref name is ${{GITHUB.REF_NAME}}"
           dir
 
       - name: Install Bicep
