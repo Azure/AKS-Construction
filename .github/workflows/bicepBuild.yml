@@ -4,10 +4,10 @@ name: BicepBuild
 
 on:
   push:
-    paths:
-      - 'bicep/*'
-      - ".github/workflows/bicepBuild.yml"
-    branches-ignore: main
+#    paths:
+#      - 'bicep/*'
+#      - ".github/workflows/bicepBuild.yml"
+#    branches-ignore: main
 
   pull_request:
     branches: main
@@ -83,7 +83,7 @@ jobs:
     steps:
       - name: Variable check
         run: |
-          echo "${{ github.event.pull_request.number }}"
+          echo "PR Number ${{ github.event.pull_request.number }}"
           echo "Is there a GitDiff ${{ needs.Validation.outputs.isGitDiff }}"
         
       - uses: actions/checkout@v2
@@ -117,6 +117,7 @@ jobs:
               
               #GitHub uses a markdown rendering tool called Glamour. It copes with HTML pretty well, and pwsh loves html not markdown.
               [string]$html = $comparison | sort-object Parameter, @{e='FileVersion';desc=$true} | ConvertTo-Html -Fragment | Out-String
+              Write-Output $html
               "<h2>Detected parameter change</h2><p>Parameter changes need to be reviewed carefully</p>" + $html | Out-File "ghpr.html"
               gh pr review ${{ github.event.pull_request.number }} -r -F "ghpr.html"
           }
