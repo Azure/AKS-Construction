@@ -4,9 +4,13 @@
 name: Review PR for file parameter changes
 
 on:
-  pull_request_target:
+  #pull_request_target:
+  #  branches: [ main ]
+  #  paths: "bicep/compiled/main.json"
+  pull_request:
     branches: [ main ]
     paths: "bicep/compiled/main.json"
+    
 concurrency: " GITHUBSHA"
 jobs:
   checkPr:
