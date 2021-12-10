@@ -12,13 +12,16 @@ on:
     branches: main
     paths:
       - 'bicep/*'
+      - 'helper/src/config.json'
+
+  workflow_dispatch:
 
 jobs:
   Validation:
     runs-on: ubuntu-latest
     outputs:
       isGitDiff: ${{ steps.isGitDiff.outputs.GITDIFF}}
-      
+
     steps:
       - uses: actions/checkout@v2
 
@@ -82,10 +85,10 @@ jobs:
         name: Git Checkout target
         with:
           path: old
-        
+
       - name: Check for Parameter changes in main.json
         if: github.event_name == 'pull_request'
-        env: 
+        env:
           oldFilePath: 'old/bicep/compiled/main.json'
           newFilePath : 'bicep/compiled/main.json'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -99,11 +102,11 @@ jobs:
           $arm2paramList = @()
           $arm2params.keys | % {$arm2paramList+= New-Object PSObject -Property ([Ordered]@{Parameter=$_; DefaultValue=$arm2params.Get_Item($_).defaultValue | ConvertTo-Json -Compress })}
           $comparison = Compare-Object $arm1paramList $arm2paramList -Property Name, DefaultValue -PassThru | select Parameter, DefaultValue, @{N='FileVersion';E={$_.SideIndicator.replace('<=','Old').replace('=>','New')}}
-          
+
           write-output $comparison
           if ($comparison.length -gt 0) {
               cd old #Need to change directory to give the gh cli repo context
-              
+
               #GitHub uses a markdown rendering tool called Glamour. It copes with HTML pretty well, and pwsh loves html not markdown.
               [string]$html = $comparison | sort-object Parameter, @{e='FileVersion';desc=$true} | ConvertTo-Html -Fragment | Out-String
               Write-Output $html
@@ -112,3 +115,7 @@ jobs:
           } else {
               write-output "no changes to parameters"
           }
+
+      - name: Check for gaps between default values in UI Config vs Bicep
+        if: github.event_name == 'pull_request' ||   github.event_name == 'workflow_dispatch'
+        run: node .github/check-defaults.js
