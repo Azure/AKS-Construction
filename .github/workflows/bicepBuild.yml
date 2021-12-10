@@ -118,4 +118,9 @@ jobs:
 
       - name: Check for gaps between default values in UI Config vs Bicep
         if: github.event_name == 'pull_request' ||   github.event_name == 'workflow_dispatch'
-        run: node .github/check-defaults.js
+        run: |
+          paramgaps=$(node .github/check-defaults.js)
+          echo $paramgaps
+
+          #TODO: Parse the output from node and raise a gh pr review if the eventype was PR
+          #gh pr review ${{ github.event.pull_request.number }} -r -F "ghpr.html"
