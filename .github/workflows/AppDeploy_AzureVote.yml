@@ -167,6 +167,7 @@ jobs:
             command="kubectl get ${{ steps.installapp.outputs.RESTYPE}} ${{ steps.installapp.outputs.RESNAME}} -n $NAMESP -ojson"
             echo "Sending command $command to AKS"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+            echo $cmdOut
 
             ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
             echo "IPAddress is $ipAddress"
