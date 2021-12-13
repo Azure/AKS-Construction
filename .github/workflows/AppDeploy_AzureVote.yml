@@ -128,6 +128,7 @@ jobs:
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
+          $cmdOut | jq -r > debugHelm.json
 
       - name: Checking deployment
         env:
