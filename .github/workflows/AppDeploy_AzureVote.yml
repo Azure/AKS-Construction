@@ -84,7 +84,7 @@ jobs:
             ingress=false
             echo "::set-output name=RESTYPE::svc"
             echo "::set-output name=ISPUBLIC::true"
-            echo "::set-output name=RESNAME::azure-vote-public-azure-vote-front"
+            echo "::set-output name=RESNAME::azure-vote-front"
             ;;
 
           InternalLoadBalancer)
