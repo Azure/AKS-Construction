@@ -272,10 +272,10 @@ jobs:
         if: inputs.UNINSTALLAFTERVERIFY
         env:
           APPNAME: "${{ inputs.APPNAME }}"
+          NAMESP: "${{ inputs.NAMESPACE }}"
+          AKSNAME: "${{ inputs.AKSNAME}}"
+          RG: "${{ inputs.RG }}"
         run: |
-          AKSNAME='${{ inputs.AKSNAME}}'
-          RG='${{ inputs.RG }}'
-          
           command="helm uninstall $APPNAME -n $NAMESP"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
