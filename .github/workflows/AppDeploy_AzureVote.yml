@@ -29,7 +29,7 @@ on:
         default: false
         required: true
       HELMPACKAGEURI:
-        default: "https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.2.0.tgz"
+        default: "https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.3.0.tgz"
         required: false
         type: string
         description: "The location of the Helm package"
@@ -118,13 +118,13 @@ jobs:
           echo $helmsetparams
 
           #Helm Dry Run
-          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMRUI --set $helmsetparams --dry-run"
+          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMURI --set $helmsetparams --dry-run"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
 
           #Helm Install
-          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMRUI --set $helmsetparams"
+          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMURI --set $helmsetparams"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
