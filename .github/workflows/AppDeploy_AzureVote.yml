@@ -272,9 +272,13 @@ jobs:
         if: inputs.UNINSTALLAFTERVERIFY
         env:
           APPNAME: "${{ inputs.APPNAME }}"
-        run: helm uninstall $APPNAME
+        run: |
+          command="helm uninstall $APPNAME -n $NAMESP"
+          echo "Sending command $command to AKS"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          echo $cmdOut
 
-      - name: Store any generated debug files as artifact
+      - name: Store any generated debug files as artifacts
         if: always()
         uses: actions/upload-artifact@v2
         with:
