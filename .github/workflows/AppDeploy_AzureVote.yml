@@ -72,6 +72,7 @@ jobs:
           RG='${{ inputs.RG }}'
           APPNAME='${{ inputs.APPNAME }}'
           #AGNAME='${{ inputs.AGNAME}}'
+          HELMURI='${{ inputs.HELMPACKAGEURI }}'
 
           #This deployment maps the Ingress Parameter type to underlying parameters in the Helm Chart
           echo ${{ inputs.INGRESSTYPE }}
@@ -117,13 +118,13 @@ jobs:
           echo $helmsetparams
 
           #Helm Dry Run
-          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams --dry-run"
+          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMRUI --set $helmsetparams --dry-run"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
 
           #Helm Install
-          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME ${{ inputs.HELMPACKAGEURI }} --set $helmsetparams"
+          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMRUI --set $helmsetparams"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
