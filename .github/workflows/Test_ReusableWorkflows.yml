@@ -20,10 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     if: false
     env:
-      AKSNAME: aks-AksPriv
-      AGNAME: agw-AksPriv
+      AKSNAME: aks-Byo
+      AGNAME: agw-Boy
       APPNAME: azure-vote-public
-      NAMESP: default
+      NAMESP: vote4
     steps:
 
       - name: File system prep
@@ -119,8 +119,8 @@ jobs:
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: Automation-Actions-AksDeployCI #$RG
-      AKSNAME: aks-Priva
-      AGNAME: agw-Priva
+      AKSNAME: aks-Byo
+      AGNAME: agw-Byo
       APPNAME: azure-vote-public
       INGRESSTYPE: "PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: true
@@ -135,12 +135,13 @@ jobs:
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: Automation-Actions-AksDeployCI #$RG
-      AKSNAME: aks-Priva
-      AGNAME: agw-Priva
+      AKSNAME: aks-Byo
+      AGNAME: agw-Byo
       APPNAME: azure-vote-public
       INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: true
       CURLRETRIES: 9
+      NAMESPACE: ingy
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
