@@ -124,7 +124,7 @@ jobs:
           echo $cmdOut
 
           #Helm Install
-          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMURI --set $helmsetparams"
+          command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMURI --set $helmsetparams -o json"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
