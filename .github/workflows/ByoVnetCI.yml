@@ -512,101 +512,16 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   SmokeTest_SimpleApp:
-    runs-on: ubuntu-latest
-    needs: [Deploy]
-    environment: azurecirgs
-    concurrency: ${{ needs.Deploy.outputs.AGNAME}}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Param check
-        if: github.event.inputs.doDebugSteps != 'no'
-        run: |
-          RG='${{ env.RG }}'
-          echo "RG is: $RG"
-
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-          echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME}}"
-
-          whoami
-
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-
-      - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
-
-      - name: Kubelogin
-        env:
-          kubeloginversion: 'v0.0.10'
-        run: |
-          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
-          unzip kubelogin-linux-amd64.zip
-          sudo mv bin/linux_amd64/kubelogin /usr/bin
-          kubelogin convert-kubeconfig -l azurecli
-
-      - name: Deploy AGIC Public Facing Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
-          NAMESP: "default"
-        run: |
-          kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-
-          echo $MANIFESTTESTURL
-          kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-
-      - name: Verify AGIC Public Workload
-        env:
-          NAMESP: "default"
-        run: |
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-          kubectl get ingress -n  $NAMESP
-
-          counter=1
-          pubIp="<pending>"
-          while [ $counter -le 20 ] && [ "$pubIp" == "<pending>" ]
-          do
-            sleep 10s
-
-            echo "Getting public ip [$counter] [$(date +"%T")]"
-            pubIp=$(kubectl get ing -n $NAMESP azure-vote-ing -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-            echo "Public ip : $pubIp"
-          done
-
-          counter=1
-          while [ $counter -le 20 ] && [ "$respcode" != "200" ]
-          do
-            echo "curl $pubIp [$counter]"
-            respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $pubIp)
-            echo $respcode
-            if [ "$respcode" != "200" ];
-            then
-                echo "going to wait another 30s [$counter] [$(date +"%T")]"
-                ((counter++))
-                sleep 30s
-            fi
-          done
-
-          curl $pubIp
-
-      - name: Remove App from cluster
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/Snippets/master/AKS/Azure-Vote-Labelled-ILB-AGIC-NetPolicy.yaml"
-          NAMESP: "default"
-        run: kubectl delete -f $MANIFESTTESTURL -n $NAMESP
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
+    with:
+      RG: Automation-Actions-AksDeployCI #$RG
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
+      APPNAME: avote-public
+      INGRESSTYPE: "AGIC-Public-Ingress"
+      UNINSTALLAFTERVERIFY: true
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   DeployVerify:
     runs-on: ubuntu-latest
