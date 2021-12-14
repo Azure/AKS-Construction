@@ -179,7 +179,9 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
     networkAcls: privateLinks && !empty(kvIPWhitelist) ? {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
-      ipRules: kvIPWhitelist
+      ipRules: [for kvIp in kvIPWhitelist: {
+        "value": kvIp
+      }]
       virtualNetworkRules: []
     } : {}
 
