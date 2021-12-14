@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "2011806925322202497"
+      "templateHash": "15315891245680784193"
     }
   },
   "parameters": {
@@ -2718,6 +2718,10 @@
     "containerRegistryName": {
       "type": "string",
       "value": "[if(not(empty(parameters('registries_sku'))), variables('acrName'), '')]"
+    },
+    "containerRegistryId": {
+      "type": "string",
+      "value": "[if(not(empty(parameters('registries_sku'))), resourceId('Microsoft.ContainerRegistry/registries', variables('acrName')), '')]"
     },
     "ApplicationGatewayName": {
       "type": "string",

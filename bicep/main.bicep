@@ -321,6 +321,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
   }
 }
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
+output containerRegistryId string = !empty(registries_sku) ? acr.id : ''
 
 resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && !empty(registries_sku)) {
   name: 'acrDiags'
@@ -925,7 +926,6 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-07-01' = {
   }
 }
 output aksClusterName string = aks.name
-
 
 var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
 resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
