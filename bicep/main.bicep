@@ -321,6 +321,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
   }
 }
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
+output containerRegistryId string = !empty(registries_sku) ? acr.id : ''
 
 resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && !empty(registries_sku)) {
   name: 'acrDiags'
