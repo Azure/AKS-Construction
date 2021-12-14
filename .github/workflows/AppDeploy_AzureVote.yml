@@ -108,7 +108,7 @@ jobs:
           if [ $privateIp == false ]; then echo "::set-output name=ISPUBLIC::true"; else echo "::set-output name=ISPUBLIC::false";  fi
 
           #Create a list of parameters to override
-          helmsetparams="ingress.enabled=${ingress},ingress.appGwPrivateIp=$privateIp,service.azureLbInternal=$privateIp,service.type=\"$serviceType\""
+          helmsetparams="ingress.enabled=${ingress},ingress.appGwPrivateIp=$privateIp,front.service.azureLbInternal=$privateIp,front.service.type=\"$serviceType\""
           echo $helmsetparams
 
           #Helm Dry Run
