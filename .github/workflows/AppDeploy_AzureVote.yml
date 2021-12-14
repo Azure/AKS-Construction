@@ -51,6 +51,11 @@ jobs:
   App_Create:
     runs-on: ubuntu-latest
     concurrency: "Ag-${{ inputs.AGNAME}}" #AppGateway doesn't like concurrent updates
+    env:
+      APPNAME: "${{ inputs.APPNAME }}"
+      NAMESP: "${{ inputs.NAMESPACE }}"
+      AKSNAME: "${{ inputs.AKSNAME}}"
+      RG: "${{ inputs.RG }}"
     steps:
       - uses: actions/checkout@v2
 
@@ -69,14 +74,7 @@ jobs:
 
       - name: Install the Vote app
         id: installapp
-        env:
-          NAMESP: "${{ inputs.NAMESPACE }}"
-          APPNAME: "${{ inputs.APPNAME }}"
         run: |
-          AKSNAME='${{ inputs.AKSNAME}}'
-          RG='${{ inputs.RG }}'
-          APPNAME='${{ inputs.APPNAME }}'
-          #AGNAME='${{ inputs.AGNAME}}'
           HELMURI='${{ inputs.HELMPACKAGEURI }}'
 
           #This deployment maps the Ingress Parameter type to underlying parameters in the Helm Chart
@@ -133,16 +131,11 @@ jobs:
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
-          echo $cmdOut > debugHelm.json
+          if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > debugHelm.json; fi
           echo $cmdOut | jq -r
 
       - name: Checking deployment
-        env:
-          NAMESP: "${{ inputs.NAMESPACE }}"
         run: |
-          RG='${{ inputs.RG }}'
-          AKSNAME='${{ inputs.AKSNAME}}'
-
           command="kubectl get po -n $NAMESP"
           echo "Sending command $command to AKS"
           az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}" | jq -r ".logs"
@@ -157,13 +150,7 @@ jobs:
 
       - name: Verify App is reachable (from run cmd container)
         id: verifyAppAvailable
-        env:
-          NAMESP: "${{ inputs.NAMESPACE }}"
-          APPNAME: "${{ inputs.APPNAME }}"
         run: |
-          AKSNAME='${{ inputs.AKSNAME}}'
-          RG='${{ inputs.RG }}'
-
           echo "Invoking Get ${{ steps.installapp.outputs.RESTYPE}} to retrieve IP for $AKSNAME in $RG"
 
           counter=1
@@ -231,13 +218,7 @@ jobs:
 
       - name: Verify App is publically reachable (from hosted GitHub runner)
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
-        env:
-          NAMESP: "${{ inputs.NAMESPACE }}"
-          APPNAME: "${{ inputs.APPNAME }}"
         run: |
-          AKSNAME='${{ inputs.AKSNAME}}'
-          RG='${{ inputs.RG }}'
-
           ipAddress='${{ steps.verifyAppAvailable.outputs.IPADDRESS}}'
 
           counter=1
@@ -275,11 +256,6 @@ jobs:
 
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY
-        env:
-          APPNAME: "${{ inputs.APPNAME }}"
-          NAMESP: "${{ inputs.NAMESPACE }}"
-          AKSNAME: "${{ inputs.AKSNAME}}"
-          RG: "${{ inputs.RG }}"
         run: |
           command="helm uninstall $APPNAME -n $NAMESP"
           echo "Sending command $command to AKS"
