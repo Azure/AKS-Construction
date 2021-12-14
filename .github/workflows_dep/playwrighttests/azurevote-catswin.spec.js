@@ -10,14 +10,14 @@ test('azurevote-catswin', async ({ page }) => {
   while (i < 4) {
     await page.waitForSelector('#container > #form > center > #form > .button1')
     await page.click('#container > #form > center > #form > .button1')
-    await navigationPromise
+    //await navigationPromise
     i++;
   }
 
   //Click Vote for Dogs x1
   await page.waitForSelector('#container > #form > center > #form > .button2')
   await page.click('#container > #form > center > #form > .button2')
-  await navigationPromise
+  //await navigationPromise
 
   await page.waitForSelector('#results')
   await expect('#results').not.toContainText('Cats - 3 | Dogs - 1');
