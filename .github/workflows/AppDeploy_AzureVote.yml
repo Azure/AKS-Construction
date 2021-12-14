@@ -250,8 +250,9 @@ jobs:
 
           export APPIP=$ipAddress
 
-          npx playwright install #https://github.com/microsoft/playwright/issues/4033
-          npx playwright install-deps chromium
+          #npx playwright install #https://github.com/microsoft/playwright/issues/4033
+          #npx playwright install-deps chromium
+          npm install -D @playwright/test
           npm i -D playwright-expect
           npx playwright -V
           npx playwright test --browser chromium .github/workflows_dep/playwrighttests/azurevote-catswin.spec.js --reporter list
