@@ -243,6 +243,19 @@ jobs:
              exit 1
           fi
 
+      - name: Test App works
+        if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
+        run: |
+          ipAddress='${{ steps.verifyAppAvailable.outputs.IPADDRESS}}'
+
+          export APPIP=$ipAddress
+
+          npx playwright install #https://github.com/microsoft/playwright/issues/4033
+          npx playwright install-deps chromium
+          npm i -D playwright-expect
+          npx playwright -V
+          npx playwright test --browser chromium .github/workflows_dep/playwrighttests/azurevote-catswin.spec.js --reporter list
+
       - name: Cleanup app
         if: inputs.UNINSTALLAFTERVERIFY
         run: |
