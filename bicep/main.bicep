@@ -862,7 +862,6 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
   }
 }) : aks_addons
 
-
 var aks_addons2 = createLaw && omsagent ? union(aks_addons1, {
   omsagent: {
     enabled: true
