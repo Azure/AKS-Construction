@@ -79,7 +79,7 @@ jobs:
         run: |
 
           #This deployment maps the Ingress Parameter type to underlying parameters in the Helm Chart
-          echo ${{ inputs.INGRESSTYPE }}
+          echo "${{ inputs.INGRESSTYPE }}"
           case "${{ inputs.INGRESSTYPE }}" in
           PublicLoadBalancer)
             serviceType="LoadBalancer"; privateIp=false; ingress=false
@@ -104,7 +104,7 @@ jobs:
           esac
 
           #Set step outputs
-          if [ $ingress" == false ]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi
+          if [ $ingress == false ]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi
           if [ $privateIp == false ]; then echo "::set-output name=ISPUBLIC::true"; else echo "::set-output name=ISPUBLIC::false";  fi
 
           #Create a list of parameters to override
