@@ -24,7 +24,7 @@ env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json"
   RESNAME: 'AksPriv'
   DEPNAME: 'DepPriv${{ github.run_number }}'
-  AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.31.0 #Pinning to a specific AZ CLI version
 
 concurrency: ci-${{ github.ref }}
 
