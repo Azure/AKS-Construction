@@ -32,7 +32,7 @@ on:
         description: "Do Debug steps to generate Debug-Artifact"
         type: boolean
         default: true
-        required: true
+        required: false
       HELMPACKAGEURI:
         default: "https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.3.0.tgz"
         required: false
