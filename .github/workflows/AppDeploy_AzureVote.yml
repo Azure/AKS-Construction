@@ -206,7 +206,7 @@ jobs:
              exit 1
           fi
 
-      - name: Verify App is publically reachable (from hosted GitHub runner)
+      - name: Verify App is publicly reachable (from hosted GitHub runner)
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
         run: |
           ipAddress='${{ steps.verifyAppAvailable.outputs.IPADDRESS}}'
