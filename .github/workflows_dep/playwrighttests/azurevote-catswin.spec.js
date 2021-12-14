@@ -6,6 +6,7 @@ test('azurevote-catswin', async ({ page }) => {
   await page.goto('http://' + process.env.APPIP)
 
   //Click Vote for Cats x3
+  i=0
   while (i < 4) {
     await page.waitForSelector('#container > #form > center > #form > .button1')
     await page.click('#container > #form > center > #form > .button1')
