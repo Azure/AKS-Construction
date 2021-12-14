@@ -104,8 +104,8 @@ jobs:
           esac
 
           #Set step outputs
-          if [$ingress == false]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi
-          if [$privateIp == false]; then echo "::set-output name=ISPUBLIC::true"; else echo "::set-output name=ISPUBLIC::false";  fi
+          if [ $ingress" == false ]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi
+          if [ $privateIp == false ]; then echo "::set-output name=ISPUBLIC::true"; else echo "::set-output name=ISPUBLIC::false";  fi
 
           #Create a list of parameters to override
           helmsetparams="ingress.enabled=${ingress},ingress.appGwPrivateIp=$privateIp,service.azureLbInternal=$privateIp,service.type=\"$serviceType\""
@@ -122,7 +122,7 @@ jobs:
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
-          if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > debugHelm.json; fi
+          if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > debugHelm.json; fi
           echo $cmdOut | jq -r
 
       - name: Checking deployment
@@ -151,7 +151,7 @@ jobs:
             echo "Sending command $command to AKS"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
             echo $cmdOut
-            if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > GetIpRunContainer.json; fi
+            if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > GetIpRunContainer.json; fi
 
             ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
             echo "IPAddress is $ipAddress"
@@ -197,7 +197,7 @@ jobs:
             echo "curl $ipAddress for content [$counter attempts for 200]"
             command="curl $ipAddress"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
-            if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > AppContentFromRunContainer.html; fi
+            if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > AppContentFromRunContainer.html; fi
             cmdLogs=$(echo $cmdOut | jq -r '.logs')
 
             echo $cmdLogs
