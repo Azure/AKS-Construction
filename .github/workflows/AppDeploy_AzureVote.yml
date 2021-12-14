@@ -1,4 +1,4 @@
-# Demonstrates how to install the Azure Voting app, leveraging the AKS Run Command. This works great for private clusters.
+# Demonstrates how to install the Azure Voting app, leveraging the AKS Run Command. This works great for private clusters, but also works with regular clusters too.
 
 on:
   workflow_call:
@@ -74,47 +74,38 @@ jobs:
 
       - name: Install the Vote app
         id: installapp
+        env:
+          HELMURI: '${{ inputs.HELMPACKAGEURI }}'
         run: |
-          HELMURI='${{ inputs.HELMPACKAGEURI }}'
 
           #This deployment maps the Ingress Parameter type to underlying parameters in the Helm Chart
           echo ${{ inputs.INGRESSTYPE }}
-
           case "${{ inputs.INGRESSTYPE }}" in
           PublicLoadBalancer)
-            serviceType="LoadBalancer"
-            privateIp=false
-            ingress=false
-            echo "::set-output name=RESTYPE::svc"
-            echo "::set-output name=ISPUBLIC::true"
+            serviceType="LoadBalancer"; privateIp=false; ingress=false
             echo "::set-output name=RESNAME::azure-vote-front"
             ;;
 
           InternalLoadBalancer)
-            serviceType="LoadBalancer"
-            privateIp=true
-            ingress=false
+            serviceType="LoadBalancer"; privateIp=true; ingress=false
             echo "::set-output name=RESTYPE::svc"
             echo "::set-output name=RESNAME::${APPNAME}"
             ;;
 
           AGIC-Public-Ingress)
-            serviceType="ClusterIP"
-            privateIp=false
-            ingress=true
-            echo "::set-output name=RESTYPE::ing"
+            serviceType="ClusterIP"; privateIp=false; ingress=true
             echo "::set-output name=RESNAME::azurevote-ing"
-            echo "::set-output name=ISPUBLIC::true"
             ;;
 
           AGIC-Private-Ingress)
-            serviceType="ClusterIP"
-            privateIp=true
-            ingress=true
-            echo "::set-output name=RESTYPE::ing"
+            serviceType="ClusterIP"; privateIp=true; ingress=true
             echo "::set-output name=RESNAME::${APPNAME}-ing"
             ;;
           esac
+
+          #Set step outputs
+          if [$ingress == false]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi
+          if [$privateIp == false]; then echo "::set-output name=ISPUBLIC::true"; else echo "::set-output name=ISPUBLIC::false";  fi
 
           #Create a list of parameters to override
           helmsetparams="ingress.enabled=${ingress},ingress.appGwPrivateIp=$privateIp,service.azureLbInternal=$privateIp,service.type=\"$serviceType\""
@@ -160,6 +151,7 @@ jobs:
             echo "Sending command $command to AKS"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
             echo $cmdOut
+            if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > GetIpRunContainer.json; fi
 
             ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
             echo "IPAddress is $ipAddress"
@@ -182,13 +174,10 @@ jobs:
           do
             echo "curl $ipAddress for response code [$counter]"
 
-            #command="curl -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
             echo "Sending command to AKS : $command"
-
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
-
-            echo $cmdOut > debug.json
+            if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > VerifyAppFromRunContainer.json; fi
             respcode=$(echo $cmdOut | jq -r '.logs')
 
             echo $respcode
@@ -208,6 +197,7 @@ jobs:
             echo "curl $ipAddress for content [$counter attempts for 200]"
             command="curl $ipAddress"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+            if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > AppContentFromRunContainer.html; fi
             cmdLogs=$(echo $cmdOut | jq -r '.logs')
 
             echo $cmdLogs
@@ -225,10 +215,9 @@ jobs:
           while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
           do
             echo "curl $ipAddress for response code [$counter]"
-
             respcode=$(curl -o /dev/null -s -w "%{http_code}\n" $ipAddress)
-
             echo $respcode
+
             if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
             then
                 echo "200 response code received after $counter trys"
