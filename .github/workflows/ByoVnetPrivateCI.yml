@@ -145,6 +145,7 @@ jobs:
 
       - name: What If
         if: github.event.inputs.doDebugSteps == 'true'
+        continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE }}
         uses: Azure/cli@1.0.4
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -224,7 +225,7 @@ jobs:
 
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
             echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
-            
+
       - name: Enable AGIC Addon
         uses: Azure/cli@1.0.4
         with:
