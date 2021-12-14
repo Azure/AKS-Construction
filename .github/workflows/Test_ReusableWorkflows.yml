@@ -25,7 +25,6 @@ jobs:
       APPNAME: azure-vote-public
       NAMESP: vote4
     steps:
-
       - name: File system prep
         run: mkdir jsonout
 
@@ -42,7 +41,6 @@ jobs:
 
       - name: Create Default Deny NetworkPolicy
         run:
-
           netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true";
 
           if [ -z "$netpolicycmd" ];
@@ -139,7 +137,7 @@ jobs:
       AGNAME: agw-Byo
       APPNAME: azure-vote-public
       INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer"
-      UNINSTALLAFTERVERIFY: true
+      UNINSTALLAFTERVERIFY: false
       CURLRETRIES: 9
       NAMESPACE: ingy
     secrets:
