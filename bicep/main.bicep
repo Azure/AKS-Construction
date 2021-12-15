@@ -159,10 +159,14 @@ param KeyVaultSoftDelete bool = true
 @description('If purge protection is enabled')
 param KeyVaultPurgeProtection bool = true
 
-@description('Add IP to firewall whitelist')
-param kvIPWhitelist array = []
+@description('Add IP to KV firewall allow-list')
+param kvIPAllowlist array = []
 
 var akvName = 'kv-${replace(resourceName, '-', '')}'
+
+var kvIPRules = [for kvIp in kvIPAllowlist: {
+  value: kvIp
+}]
 
 resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
   name: akvName
@@ -174,12 +178,12 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
       name: 'standard'
     }
     // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
-    publicNetworkAccess: privateLinks && empty(kvIPWhitelist) ? 'disabled' : 'enabled'
+    publicNetworkAccess: privateLinks && empty(kvIPAllowlist) ? 'disabled' : 'enabled'
 
-    networkAcls: privateLinks && !empty(kvIPWhitelist) ? {
+    networkAcls: privateLinks && !empty(kvIPAllowlist) ? {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
-      ipRules: kvIPWhitelist
+      ipRules: kvIPRules
       virtualNetworkRules: []
     } : {}
 

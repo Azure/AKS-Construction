@@ -15,7 +15,7 @@
             "disablePreviews": false,
             "acrPushRole": true,
             "kvCertSecretRole": true,
-            "kvIPWhitelist": false,
+            "kvIPAllowlist": false,
             "clusterAdminRole": true,
             "clusterIPWhitelist" : true
         },
@@ -235,7 +235,7 @@
                     "icon": "Unlock",
                     "values": {
                         "deploy": {
-                            "kvIPWhitelist": false
+                            "kvIPAllowlist": false
                         },
                         "cluster": {
                             "enable_aad": false,
@@ -301,7 +301,7 @@
                     "icon": "Lock12",
                     "values": {
                         "deploy": {
-                            "kvIPWhitelist": false
+                            "kvIPAllowlist": false
                         },
                         "cluster": {
                             "enable_aad": true,
@@ -399,7 +399,7 @@
                     "icon": "ProtectionCenterLogo32",
                     "values": {
                         "deploy": {
-                            "kvIPWhitelist": true
+                            "kvIPAllowlist": true
                         },
                         "cluster": {
                             "enable_aad": true,
