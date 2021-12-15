@@ -13,21 +13,24 @@ param certManagerFW bool = false
 param inboundHttpFW string = 'AllowAllIn'
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
+param availabilityZones array = []
 
 var firewallPublicIpName = 'pip-afw-${resourceName}'
-resource fw_pip 'Microsoft.Network/publicIPAddresses@2018-08-01' = {
+
+resource fw_pip 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
   name: firewallPublicIpName
   location: location
   sku: {
     name: 'Standard'
   }
+  zones: !empty(availabilityZones) ? availabilityZones : []
   properties: {
     publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
   }
 }
 
-resource fwDiags 'microsoft.insights/diagnosticSettings@2017-05-01-preview' = if (!empty(workspaceDiagsId)) {
+resource fwDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(workspaceDiagsId)) {
   scope: fw
   name: 'fwDiags'
   properties: {
@@ -70,6 +73,7 @@ var fw_name = 'afw-${resourceName}'
 resource fw 'Microsoft.Network/azureFirewalls@2021-03-01' = {
   name: fw_name
   location: location
+  zones: !empty(availabilityZones) ? availabilityZones : []
   properties: {
     ipConfigurations: [
       {

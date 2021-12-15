@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "8440279695679867601"
+      "templateHash": "10327328712553938589"
     }
   },
   "parameters": {
@@ -1113,7 +1113,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "14726811969831091583"
+              "templateHash": "16112893859720717153"
             }
           },
           "parameters": {
@@ -1443,7 +1443,7 @@
             },
             {
               "type": "Microsoft.Network/publicIPAddresses",
-              "apiVersion": "2020-05-01",
+              "apiVersion": "2021-03-01",
               "name": "[variables('publicIpAddressName')]",
               "location": "[parameters('location')]",
               "sku": {
@@ -1699,8 +1699,8 @@
           "acrAgentPoolSubnetAddressPrefix": {
             "value": "[parameters('acrAgentPoolSubnetAddressPrefix')]"
           },
-          "inboundHttpFW": {
-            "value": "[parameters('inboundHttpFW')]"
+          "availabilityZones": {
+            "value": "[parameters('availabilityZones')]"
           }
         },
         "template": {
@@ -1710,7 +1710,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "15515578701046546909"
+              "templateHash": "2104825812770131025"
             }
           },
           "parameters": {
@@ -1751,6 +1751,10 @@
               "type": "string",
               "defaultValue": ""
             },
+            "availabilityZones": {
+              "type": "array",
+              "defaultValue": []
+            },
             "appDnsZoneName": {
               "type": "string",
               "defaultValue": "",
@@ -1767,12 +1771,13 @@
           "resources": [
             {
               "type": "Microsoft.Network/publicIPAddresses",
-              "apiVersion": "2018-08-01",
+              "apiVersion": "2021-03-01",
               "name": "[variables('firewallPublicIpName')]",
               "location": "[parameters('location')]",
               "sku": {
                 "name": "Standard"
               },
+              "zones": "[if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), createArray())]",
               "properties": {
                 "publicIPAllocationMethod": "Static",
                 "publicIPAddressVersion": "IPv4"
@@ -1781,7 +1786,7 @@
             {
               "condition": "[not(empty(parameters('workspaceDiagsId')))]",
               "type": "Microsoft.Insights/diagnosticSettings",
-              "apiVersion": "2017-05-01-preview",
+              "apiVersion": "2021-05-01-preview",
               "scope": "[format('Microsoft.Network/azureFirewalls/{0}', variables('fw_name'))]",
               "name": "fwDiags",
               "properties": {
@@ -1824,6 +1829,7 @@
               "apiVersion": "2021-03-01",
               "name": "[variables('fw_name')]",
               "location": "[parameters('location')]",
+              "zones": "[if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), createArray())]",
               "properties": {
                 "ipConfigurations": [
                   {
@@ -2772,6 +2778,10 @@
     "containerRegistryName": {
       "type": "string",
       "value": "[if(not(empty(parameters('registries_sku'))), variables('acrName'), '')]"
+    },
+    "containerRegistryId": {
+      "type": "string",
+      "value": "[if(not(empty(parameters('registries_sku'))), resourceId('Microsoft.ContainerRegistry/registries', variables('acrName')), '')]"
     },
     "ApplicationGatewayName": {
       "type": "string",
