@@ -145,7 +145,6 @@ jobs:
 
       - name: What If
         if: github.event.inputs.doDebugSteps == 'true'
-        continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
         uses: Azure/cli@1.0.4
         continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
         with:
