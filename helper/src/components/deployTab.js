@@ -45,7 +45,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
         privateLinks: true,
-        ...(addons.csisecret === 'akvNew' && deploy.kvIPWhitelist  && apiips_array.length > 0 && {kvIPWhitelist: apiips_array.map(v => {return {"value": v}}) }),
+        ...(addons.csisecret === 'akvNew' && deploy.kvIPWhitelist  && apiips_array.length > 0 && {kvIPWhitelist: apiips_array }),
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
