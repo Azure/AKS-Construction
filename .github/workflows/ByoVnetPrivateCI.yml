@@ -113,6 +113,7 @@ jobs:
 
       - name: What If
         uses: Azure/cli@1.0.4
+        continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |

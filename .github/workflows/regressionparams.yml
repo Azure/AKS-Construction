@@ -134,6 +134,7 @@ jobs:
 
       - name: WhatIf Infrastructure deployment
         if: steps.paramfile.outputs.DOPSRULE == 'true'
+        continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
         uses: Azure/cli@1.0.4
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
