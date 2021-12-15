@@ -414,6 +414,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     appDnsZoneName: dnsZoneName
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
+    availabilityZones: availabilityZones
   }
 }
 
@@ -864,7 +865,6 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
     }
   }
 }) : aks_addons
-
 
 var aks_addons2 = createLaw && omsagent ? union(aks_addons1, {
   omsagent: {
