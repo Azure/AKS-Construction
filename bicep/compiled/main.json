@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "10327328712553938589"
+      "templateHash": "9779690262846106047"
     }
   },
   "parameters": {
@@ -1113,7 +1113,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "16112893859720717153"
+              "templateHash": "10481598351946406516"
             }
           },
           "parameters": {
@@ -1699,6 +1699,9 @@
           "acrAgentPoolSubnetAddressPrefix": {
             "value": "[parameters('acrAgentPoolSubnetAddressPrefix')]"
           },
+          "inboundHttpFW": {
+            "value": "[parameters('inboundHttpFW')]"
+          },
           "availabilityZones": {
             "value": "[parameters('availabilityZones')]"
           }
@@ -1710,7 +1713,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1008.15138",
-              "templateHash": "2104825812770131025"
+              "templateHash": "1464391609929325064"
             }
           },
           "parameters": {
