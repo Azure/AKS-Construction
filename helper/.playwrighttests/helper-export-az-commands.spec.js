@@ -18,6 +18,7 @@ test('test', async ({ page }) => {
   //Save the contents of the az cmd box to file
   const clitextboxrevisted = await page.$('[data-testid="deploy-deploycmd"]')
   const azcmdManagedPrivate =await clitextboxrevisted.innerText();
+  console.log(azcmdManagedPrivate);
   fs.writeFileSync('azcmd-managed-private.sh', azcmdManagedPrivate);
 
 });
