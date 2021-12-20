@@ -184,6 +184,7 @@ jobs:
             #command="wget --server-response $ipAddress 2>&1 | awk '/^  HTTP/{print $2}'"
             echo "Sending command to AKS : $command"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+            echo $cmdOut
             if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > VerifyAppFromRunContainer.json; fi
             respcode=$(echo $cmdOut | jq -r '.logs')
 
@@ -209,7 +210,7 @@ jobs:
             echo "curl $ipAddress for content [$counter attempts for 200]"
             command="curl $ipAddress"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
-            if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > AppContentFromRunContainer.html; fi
+            if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > DebugAppContentFromRunContainer.json; fi
             cmdLogs=$(echo $cmdOut | jq -r '.logs')
 
             echo $cmdLogs
@@ -247,18 +248,14 @@ jobs:
           if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
           then
             echo "curl $ipAddress for content [$counter attempts for 200]"
-            command="curl $ipAddress"
-            cmdOut=$(command)
-            cmdLogs=$(echo $cmdOut | jq -r '.logs')
-
-            echo $cmdLogs
+            curl $ipAddress
           else
               echo "$respcode not 200 - failing"
               curl $ipAddress
              exit 1
           fi
 
-      - name: Test App works
+      - name: Test App with Playwright
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
         run: |
           ipAddress='${{ steps.waitforip.outputs.IPADDRESS}}'
