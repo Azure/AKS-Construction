@@ -109,9 +109,14 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const nginx_namespace = 'ingress-basic'
   const nginx_helm_release_name = 'nginx-ingress'
 
+  const EXTERNAL_DNS_REGISTRY = 'k8s.gcr.io'
+  const EXTERNAL_DNS_REPO = 'external-dns/external-dns:v0.8.0'
+
   const postscript =
     // App Gateway addon: see main.bicep DEPLOY_APPGW_ADDON
-    (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `#------- START Workaround to enable AGIC with BYO VNET (until supported by template)
+    (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `
+# ---------------------------------------------------------------------
+# Workaround to enable AGIC with BYO VNET (until supported by template)
 APPGW_RG_ID="$(az group show -n ${deploy.rg} --query id -o tsv)"
 APPGW_ID="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query id -o tsv)"
 az aks enable-addons -n ${aks} -g ${deploy.rg} -a ingress-appgw --appgw-id $APPGW_ID
@@ -123,20 +128,20 @@ az role assignment create --role "Reader" --assignee-principal-type ServicePrinc
 APPGW_IDENTITY="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
 az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
 ` : '') +
-    (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `#------- END Workaround
-  ` : '') +
-    // CSI-Secret KeyVault addon - using this method until supported by ARM template
-    //    (addons.csisecret !== "none" ? `\n# Workaround to enabling the csisecret addon (in preview)
-    //az aks enable-addons -n ${aks} -g ${deploy.rg} -a azure-keyvault-secrets-provider
-    //` : '') +
+
 
     // Get credentials
-    (cluster.apisecurity !== "private" ?
-    `\n# Get credentials for your new AKS cluster
-az aks get-credentials -g ${deploy.rg} -n ${aks} ` : ""
-    ) +
+    (cluster.apisecurity !== "private" ? `
+# ----------------------------------------
+# Get credentials for your new AKS cluster
+az aks get-credentials -g ${deploy.rg} -n ${aks}
+` : '') +
+
+
     // Prometheus
-    (addons.monitor === 'oss' ? `\n\n# Install kube-prometheus-stack
+    (addons.monitor === 'oss' ? `
+# -----------------------------------
+# Install kube-prometheus-stack chart
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
@@ -144,14 +149,15 @@ kubectl create namespace ${prometheus_namespace}
 helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}
 ${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
+
+
     // Nginx Ingress Controller
-    (addons.ingress === 'nginx' ? `\n\n# Create a namespace for your ingress resources
+    (addons.ingress === 'nginx' ? `
+# --------------------------------
+# Install Nginx Ingress Controller
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 kubectl create namespace ${nginx_namespace}
-
-# Add the ingress-nginx repository
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-
-# Use Helm to deploy an NGINX ingress controller
 helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
   --set controller.publishService.enabled=true \\
 ` + (addons.ingressEveryNode ?
@@ -164,19 +170,26 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
   --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \\
   --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \\
 ` : '') +
-      `  --namespace ${nginx_namespace}` : '') +
-    (addons.ingress === 'contour' ? `\n\n# Install Contour Ingress Controller
+      `  --namespace ${nginx_namespace}
+${cluster.apisecurity === "private" ? `"` : ``}
+` : '') +
+
+    // Contour Ingress Controller
+    (addons.ingress === 'contour' ? `
+# ----------------------------------
+# Install Contour Ingress Controller
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 ${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
+
+
     // External DNS
+    // external-dns needs permissions to make changes in the Azure DNS server.
+    // https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/azure.md#azure-managed-service-identity-msi
     (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
-
+# --------------------
 # Install external-dns
-# external-dns needs permissions to make changes in the Azure DNS server.
-# https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/azure.md#azure-managed-service-identity-msi
-
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdin<<EOF
 {
@@ -187,32 +200,51 @@ kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdi
   resourceGroup: ${addons.dnsZoneId.split('/')[4]}
 }
 EOF
-${cluster.apisecurity === "private" ? `"` : ``}
-# external-dns manifest (for clusters with RBAC) replacing {{domain-filter}} and {{providers}} values
-curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
+${cluster.apisecurity === "private" ? `"
+# Import Image to ACR
+export ACRNAME=$(az acr list -g ${deploy.rg} --query [0].name -o tsv)
+az acr import -n $ACRNAME --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO} --image ${EXTERNAL_DNS_REPO}
+` : ``}
+
+# external-dns manifest (for clusters with RBAC)
+curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{image}}|${cluster.apisecurity === "private" ? `$ACRNAME.azurecr.io/${EXTERNAL_DNS_REPO}` : `${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}`}|g" -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
 ${cluster.apisecurity === "private" ?
   `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-ext-dns.yml" --file  /tmp/aks-ext-dns.yml`
 :
   `kubectl apply -f /tmp/aks-ext-dns.yml`}
 
 ` : '') +
+
+
     // Cert-Manager
+    // https://cert-manager.io/docs/installation/
+    // Cannot use 1.6.0 with AGIC https://github.com/jetstack/cert-manager/issues/4547
+    // cert-manager ACME ClusterIssuer Configuration (client owns the domain)
+    // Lets Encrypt production Issuer, using either HTTP01 for external services, or DNS01 for internal
+    // https://cert-manager.io/docs/configuration/acme/
+
+    /*
+    - dns01:
+        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
+        azureDNS:
+          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
+          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
+          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
+          managedIdentity:
+            # client id of the node pool managed identity (can not be set at the same time as resourceID)
+            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
+            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
+
+    */
+
     (addons.ingress !== 'none' && addons.certMan ? `
-
+# --------------------
 # Install cert-manager
-# https://cert-manager.io/docs/installation/
-# Cannot use 1.6.0 with AGIC https://github.com/jetstack/cert-manager/issues/4547
-
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${addons.ingress === 'appgw' ? 'v1.5.3' : 'v1.6.0'}/cert-manager.yaml
 ${cluster.apisecurity === "private" ? `"` : ``}
-
 # Wait for cert-manager to install
 sleep 30s
-
-# cert-manager ACME ClusterIssuer Configuration (client owns the domain)
-# Lets Encrypt production Issuer, using either HTTP01 for external services, or DNS01 for internal
-# https://cert-manager.io/docs/configuration/acme/
 
 cat >/tmp/aks-issuer.yml<<EOF
 apiVersion: cert-manager.io/v1
@@ -230,16 +262,6 @@ spec:
       name: letsencrypt-prod
     # Enable the HTTP-01 challenge provider
     solvers:
-#    - dns01:
-#        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
-#        azureDNS:
-#          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
-#          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
-#          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
-#          managedIdentity:
-#            # client id of the node pool managed identity (can not be set at the same time as resourceID)
-#            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
-#            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
     - http01:
         ingress:
           class: ${(addons.ingress === 'contour' ? 'contour' : (addons.ingress === 'nginx' ? "nginx" : "azure/application-gateway"))}
