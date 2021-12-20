@@ -113,7 +113,7 @@ jobs:
 
   deploy-azure-vote-app-lb:
     #needs: test-run-cmd
-    if: true
+    if: false
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
       RG: Automation-Actions-AksDeployCI #$RG
@@ -132,14 +132,14 @@ jobs:
     if: true
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
-      RG: Automation-Actions-AksDeployCI #$RG
-      AKSNAME: aks-Byo
-      AGNAME: agw-Byo
+      RG: Automation-Actions-AksDeployCI
+      AKSNAME: aks-Priva
+      AGNAME: agw-Priva
       APPNAME: azure-vote-public
       INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: false
       CURLRETRIES: 9
-      NAMESPACE: ingy
+      NAMESPACE: default
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
