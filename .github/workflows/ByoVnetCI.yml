@@ -26,18 +26,27 @@ on:
       minihelmbranch:
         description: 'Branch name to use from MiniHelm repo'
         default: 'main'
+        required: false
       doWellArchitected:
-        description: 'Perform the Well Architected Framework assessment  [yes|no]'
-        default: 'no'
+        description: 'Perform the Well Architected Framework assesment'
+        default: 'false'
+        type: boolean
+        required: false
       doDebugSteps:
-        description: 'Run informational steps [yes|no]'
-        default: 'yes'
+        description: 'Run informational steps'
+        default: 'true'
+        type: boolean
+        required: false
       doVerifySteps:
-        description: 'Run optional verify steps [yes|no]'
-        default: 'yes'
+        description: 'Run optional verify steps'
+        default: 'true'
+        type: boolean
+        required: false
       doSmokeTestUninstall:
         description: 'Uninstall smoke test apps after tests  [yes|no]'
-        default: 'yes'
+        default: 'true'
+        type: boolean
+        required: false
 
 concurrency: ci-${{ github.ref }}
 
@@ -52,7 +61,7 @@ env:
 jobs:
   Well_Architected:
     runs-on: ubuntu-latest
-    if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected != 'no'
+    if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
     steps:
       - uses: actions/checkout@v2
 
@@ -76,7 +85,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Job parameter check
-        if: github.event.inputs.doDebugSteps != 'no'
+        if: github.event.inputs.doDebugSteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -95,7 +104,7 @@ jobs:
           echo "doSmokeTestUninstall is ${{ github.event.inputs.doSmokeTestUninstall }}"
 
       - name: Arm Parameter file check
-        if: github.event.inputs.doVerifySteps != 'no'
+        if: github.event.inputs.doVerifySteps == 'true'
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existence/contents"
@@ -127,7 +136,7 @@ jobs:
 
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         id: activedeps
-        if: github.event.inputs.doVerifySteps != 'no'
+        if: github.event.inputs.doVerifySteps == 'true'
         uses: Azure/cli@1.0.4
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -148,7 +157,7 @@ jobs:
             echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for condition
 
       - name: Verify AKS Preview Features are available in target Subscription
-        if: github.event.inputs.doVerifySteps != 'no'
+        if: github.event.inputs.doVerifySteps == 'true'
         shell: pwsh
         run: |
           write-output 'Full list of features of AKS'
@@ -270,7 +279,7 @@ jobs:
             cat $WHATIFPATH
 
       - name: What If Analysis Output - Parse output
-        if: github.event.inputs.doVerifySteps != 'no'
+        if: github.event.inputs.doVerifySteps == 'true'
         shell: pwsh
         run: |
           $whatifpath='whatif.json'
@@ -360,7 +369,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Job parameter check
-        if: github.event.inputs.doDebugSteps != 'no'
+        if: github.event.inputs.doDebugSteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -370,7 +379,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}
 
       - name: Parameter file dependency check
-        if: github.event.inputs.doVerifySteps != 'no'
+        if: github.event.inputs.doVerifySteps == 'true'
         shell: pwsh
         run: |
           Write-Output "Checking parameter file existence/contents"
@@ -520,7 +529,7 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: avote-public
       INGRESSTYPE: "AGIC-Public-Ingress"
-      UNINSTALLAFTERVERIFY: true
+      UNINSTALLAFTERVERIFY: ${{ github.event.inputs.doSmokeTestUninstall }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -531,7 +540,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Param check
-        if: github.event.inputs.doDebugSteps != 'no'
+        if: github.event.inputs.doDebugSteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -585,7 +594,7 @@ jobs:
     needs: [Deploy]
     steps:
       - name: Param check
-        if: github.event.inputs.doDebugSteps != 'no'
+        if: github.event.inputs.doDebugSteps == 'true'
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
@@ -657,7 +666,7 @@ jobs:
           kubelogin convert-kubeconfig -l azurecli
 
       - name: Kubectl get events
-        if: github.event.inputs.doDebugSteps != 'no'
+        if: github.event.inputs.doDebugSteps == 'true'
         run: |
           kubectl get events
 

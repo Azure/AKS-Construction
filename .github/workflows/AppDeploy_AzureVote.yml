@@ -1,4 +1,5 @@
-# Demonstrates how to install the Azure Voting app, leveraging the AKS Run Command. This works great for private clusters, but also works with regular clusters too.
+# Demonstrates how to install the Azure Voting app, leveraging the AKS Run Command.
+#This works great for private clusters, but also works with regular clusters too.
 
 on:
   workflow_call:
@@ -30,9 +31,9 @@ on:
         default: false
         required: true
       DEBUG:
-        description: "Do Debug steps to generate Debug-Artifact"
+        description: "Generate optional Debug Artifacts"
         type: boolean
-        default: true
+        default: false
         required: false
       HELMPACKAGEURI:
         default: "https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.5.0.tgz"
@@ -79,7 +80,7 @@ jobs:
           HELMURI: '${{ inputs.HELMPACKAGEURI }}'
         run: |
 
-          #This deployment maps the Ingress Parameter type to underlying parameters in the Helm Chart
+          #This deployment maps a single input parameter to underlying parameters for the Helm Chart
           echo "${{ inputs.INGRESSTYPE }}"
           case "${{ inputs.INGRESSTYPE }}" in
           PublicLoadBalancer)
@@ -94,11 +95,11 @@ jobs:
 
           #Create a list of helm parameters to override
           helmsetparams="ingress.enabled=${ingress},ingress.appGwPrivateIp=$privateIp,front.service.azureLbInternal=$privateIp,front.service.type=\"$serviceType\""
-          
-          #Set step outputs, which are used to ensure the app is working
+
+          #Set step outputs, which are used in subsequent steps to ensure the app is working
           if [ $ingress == false ]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi
           if [ $privateIp == false ]; then echo "::set-output name=ISPUBLIC::true"; else echo "::set-output name=ISPUBLIC::false";  fi
-          
+
           #Helm Dry Run
           command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMURI --set $helmsetparams --dry-run"
           echo "Sending command $command to AKS"
@@ -112,9 +113,9 @@ jobs:
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
           if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > debugHelm.json; fi
-          
+
           #Check Exit code from Run Command
-          exitCode=$(echo $cmdout | jq -r ".exitCode")
+          exitCode=$(echo $cmdOut | jq -r ".exitCode")
           echo $exitCode
           if [ "$exitCode" != "0" ]
           then
@@ -141,9 +142,9 @@ jobs:
       - name: Wait for IP
         id: waitforip
         run: |
-          
+
           #TODO: When the WAIT command is no longer experimental, shift to use that. REF: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#wait
-          
+
           echo "Invoking Get ${{ steps.installapp.outputs.RESTYPE}} to retrieve IP for $AKSNAME in $RG"
 
           counter=1
@@ -170,11 +171,11 @@ jobs:
           done
 
           echo "::set-output name=IPADDRESS::$ipAddress"
-          
+
       - name: Verify App is reachable (from run cmd container)
         run: |
           ipAddress='${{ steps.waitforip.outputs.IPADDRESS}}'
-          
+
           counter=1
           while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
           do

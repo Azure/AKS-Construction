@@ -78,9 +78,7 @@ jobs:
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
         run: |
-          RG='${{ env.RG }}'
           echo "RG is: $RG"
-
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -115,7 +113,6 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
             RUNCOUNT=$(az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name] | length(@)" -o tsv)
             echo "Active deployments : $RUNCOUNT"
 
@@ -137,10 +134,6 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
-            RESNAME='${{ env.RESNAME }}'
-            DEPNAME='${{ env.DEPNAME }}'
-
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}
 
       - name: What If
@@ -150,10 +143,6 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
-            RESNAME='${{ env.RESNAME }}'
-            DEPNAME='${{ env.DEPNAME }}'
-
             az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}
 
   Deploy:
@@ -171,9 +160,7 @@ jobs:
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
         run: |
-          RG='${{ env.RG }}'
           echo "RG is: $RG"
-
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -205,9 +192,6 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
-            RESNAME='${{ env.RESNAME }}'
-            DEPNAME='${{ env.DEPNAME }}'
             az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --name $DEPNAME --verbose
 
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
@@ -231,7 +215,6 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
             AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
 
@@ -252,7 +235,6 @@ jobs:
       - name: Create Default Deny NetworkPolicy
         if: github.event.inputs.defaultdeny == 'true'
         run:
-          RG='${{ env.RG }}'
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
 
           netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true";
@@ -271,7 +253,6 @@ jobs:
       - name: Verify Default Deny NetworkPolicy
         if: github.event.inputs.doVerifySteps == 'true'
         run:
-          RG='${{ env.RG }}'
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
 
           netpolicycmd="kubectl get networkpolicy -A";
@@ -302,9 +283,7 @@ jobs:
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
         run: |
-          RG='${{ env.RG }}'
           echo "RG is: $RG"
-
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -332,7 +311,6 @@ jobs:
           $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
           $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
 
-          #$KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
           $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
           Write-Output $KubeNode
           Write-Output $KubeNode[0].Count
@@ -353,9 +331,7 @@ jobs:
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
         run: |
-          RG='${{ env.RG }}'
           echo "RG is: $RG"
-
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
