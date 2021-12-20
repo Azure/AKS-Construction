@@ -251,7 +251,7 @@ jobs:
           echo $cmdOut;
 
       - name: Verify Default Deny NetworkPolicy
-        if: github.event.inputs.doVerifySteps == 'true'
+        if: github.event.inputs.defaultdeny == 'true' && github.event.inputs.doVerifySteps == 'true'
         run:
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
 
