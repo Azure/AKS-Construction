@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "15391606077355386377"
+      "templateHash": "1837689754854716771"
     }
   },
   "parameters": {
@@ -173,7 +173,7 @@
     },
     "inboundHttpFW": {
       "type": "string",
-      "defaultValue": "AllowAllIn",
+      "defaultValue": "",
       "metadata": {
         "description": "Allow Http traffic (80/443) into AKS from specific sources"
       },
@@ -1717,7 +1717,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1124.51302",
-              "templateHash": "7745808669117838126"
+              "templateHash": "6646458215337953968"
             }
           },
           "parameters": {
@@ -1743,7 +1743,7 @@
             },
             "inboundHttpFW": {
               "type": "string",
-              "defaultValue": "AllowAllIn",
+              "defaultValue": "",
               "allowedValues": [
                 "AllowAllIn",
                 "AllowAcrSubnetIn",
