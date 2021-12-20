@@ -109,6 +109,16 @@ jobs:
           if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > debugHelm.json; fi
           echo $cmdOut | jq -r
           
+          #Check Exit code from Run Command
+          exitCode=$(echo $cmdout | jq -r ".exitCode")
+          if [ "$exitCode" != "0" ]
+          then
+            echo $exitCode
+            
+            echo $cmdout | jq -r ".logs"
+            exit $exitCode
+          fi
+          
           #Set step outputs, which are used to ensure the app is working
           if [ $ingress == false ]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi
           if [ $privateIp == false ]; then echo "::set-output name=ISPUBLIC::true"; else echo "::set-output name=ISPUBLIC::false";  fi
