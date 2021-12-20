@@ -1,5 +1,5 @@
 # Demonstrates how to install the Azure Voting app, leveraging the AKS Run Command.
-#This works great for private clusters, but also works with regular clusters too.
+# This works great for private clusters, but also works with regular clusters too.
 
 name: AppDeploy - Azure Vote
 
@@ -38,7 +38,7 @@ on:
         default: false
         required: false
       HELMPACKAGEURI:
-        default: "https://github.com/Gordonby/minihelm/raw/azureVoteIngress/samples/AzureVote-0.5.0.tgz"
+        default: "https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.5.0.tgz"
         required: false
         type: string
         description: "The location of the Helm package"
