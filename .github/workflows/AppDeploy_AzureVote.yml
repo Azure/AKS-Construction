@@ -189,6 +189,11 @@ jobs:
             then
                 echo "200 response code received after $counter trys"
                 break 2
+            elif [ "$respcode" == "470" ] || [ "$respcode" == "470n" ];
+            then
+                echo "470 response code received after $counter trys"
+                echo "::warning ::Could not verify IP connectivity from Run Command"
+                break 2
             else
                 echo "going to wait another 15s [$counter] [$(date +"%T")]"
                 ((counter++))
@@ -205,6 +210,9 @@ jobs:
             cmdLogs=$(echo $cmdOut | jq -r '.logs')
 
             echo $cmdLogs
+          elif [ "$respcode" == "470" ] || [ "$respcode" == "470n" ];
+          then
+              echo "Skipping content check from Run Command"
           else
               echo "$respcode not 200 - failing"
              exit 1
