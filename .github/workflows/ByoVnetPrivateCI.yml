@@ -238,14 +238,6 @@ jobs:
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
 
           netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/gb-denyall/k8smanifests/networkpolicy-deny-all.yml?raw=true";
-
-          if [ -z "$netpolicycmd" ];
-          then
-            echo 'capturing strange issue... wtf';
-          else
-            echo $netpolicycmd;
-          fi
-
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;

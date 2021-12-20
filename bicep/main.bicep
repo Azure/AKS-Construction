@@ -408,7 +408,7 @@ param certManagerFW bool = false
   ''
 ])
 @description('Allow Http traffic (80/443) into AKS from specific sources')
-param inboundHttpFW string = 'AllowAllIn'
+param inboundHttpFW string = ''
 
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'

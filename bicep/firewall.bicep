@@ -10,7 +10,7 @@ param certManagerFW bool = false
   'AllowAcrSubnetIn'
   ''
 ])
-param inboundHttpFW string = 'AllowAllIn'
+param inboundHttpFW string = ''
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 param availabilityZones array = []
