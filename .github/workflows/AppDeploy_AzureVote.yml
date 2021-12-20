@@ -188,7 +188,7 @@ jobs:
             echo "Sending command to AKS : $command"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
             echo $cmdOut
-            if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > VerifyAppFromRunContainer.json; fi
+            if [ "${{ inputs.DEBUG }}" == "true"]; then echo $cmdOut > VerifyAppFromRunContainer.json; fi
             respcode=$(echo $cmdOut | jq -r '.logs')
 
             echo $respcode
