@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1008.15138",
-      "templateHash": "9779690262846106047"
+      "templateHash": "1113433167775496239"
     }
   },
   "parameters": {
@@ -120,11 +120,11 @@
         "description": "If purge protection is enabled"
       }
     },
-    "kvIPWhitelist": {
+    "kvIPAllowlist": {
       "type": "array",
       "defaultValue": [],
       "metadata": {
-        "description": "Add IP to firewall whitelist"
+        "description": "Add IP to KV firewall allow-list"
       }
     },
     "kvOfficerRolePrincipalId": {
@@ -413,6 +413,15 @@
   },
   "functions": [],
   "variables": {
+    "copy": [
+      {
+        "name": "kvIPRules",
+        "count": "[length(parameters('kvIPAllowlist'))]",
+        "input": {
+          "value": "[parameters('kvIPAllowlist')[copyIndex('kvIPRules')]]"
+        }
+      }
+    ],
     "aks_byo_identity": "[or(parameters('custom_vnet'), not(empty(parameters('byoAKSSubnetId'))))]",
     "existingAksVnetRG": "[if(not(empty(parameters('byoAKSSubnetId'))), if(greater(length(split(parameters('byoAKSSubnetId'), '/')), 4), split(parameters('byoAKSSubnetId'), '/')[4], ''), '')]",
     "existingAGWSubnetName": "[if(not(empty(parameters('byoAGWSubnetId'))), if(greater(length(split(parameters('byoAGWSubnetId'), '/')), 10), split(parameters('byoAGWSubnetId'), '/')[10], ''), '')]",
@@ -544,8 +553,8 @@
           "family": "A",
           "name": "standard"
         },
-        "publicNetworkAccess": "[if(and(parameters('privateLinks'), empty(parameters('kvIPWhitelist'))), 'disabled', 'enabled')]",
-        "networkAcls": "[if(and(parameters('privateLinks'), not(empty(parameters('kvIPWhitelist')))), createObject('bypass', 'AzureServices', 'defaultAction', 'Deny', 'ipRules', parameters('kvIPWhitelist'), 'virtualNetworkRules', createArray()), createObject())]",
+        "publicNetworkAccess": "[if(and(parameters('privateLinks'), empty(parameters('kvIPAllowlist'))), 'disabled', 'enabled')]",
+        "networkAcls": "[if(and(parameters('privateLinks'), not(empty(parameters('kvIPAllowlist')))), createObject('bypass', 'AzureServices', 'defaultAction', 'Deny', 'ipRules', variables('kvIPRules'), 'virtualNetworkRules', createArray()), createObject())]",
         "enableRbacAuthorization": true,
         "enabledForDeployment": false,
         "enabledForDiskEncryption": false,
