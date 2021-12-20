@@ -23,10 +23,6 @@ on:
 
   workflow_dispatch:
     inputs:
-      minihelmbranch:
-        description: 'Branch name to use from MiniHelm repo'
-        default: 'main'
-        required: false
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
         default: 'false'
@@ -43,7 +39,7 @@ on:
         type: boolean
         required: false
       doSmokeTestUninstall:
-        description: 'Uninstall smoke test apps after tests  [yes|no]'
+        description: 'Uninstall smoke test apps after tests'
         default: 'true'
         type: boolean
         required: false
@@ -499,7 +495,6 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-demo
       FRONTENDCERTTYPE: certmanager-staging
-      MINIHELMBRANCH: ${{ github.event.inputs.minihelmbranch }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -516,7 +511,6 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-kvssl
       FRONTENDCERTTYPE: appgw-selfsigned
-      MINIHELMBRANCH: ${{ github.event.inputs.minihelmbranch }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
