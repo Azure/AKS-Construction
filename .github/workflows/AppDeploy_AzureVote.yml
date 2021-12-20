@@ -150,7 +150,7 @@ jobs:
             echo "Sending command $command to AKS"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
             echo $cmdOut
-            if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > GetIpRunContainer.json; fi
+            #if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > GetIpRunContainer.json; fi
 
             ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
             echo "IPAddress is $ipAddress"
