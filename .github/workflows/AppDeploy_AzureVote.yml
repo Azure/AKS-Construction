@@ -1,6 +1,8 @@
 # Demonstrates how to install the Azure Voting app, leveraging the AKS Run Command.
 #This works great for private clusters, but also works with regular clusters too.
 
+name: AppDeploy - Azure Vote
+
 on:
   workflow_call:
     inputs:
