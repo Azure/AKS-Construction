@@ -118,6 +118,7 @@ jobs:
           echo $exitCode
           if [ "$exitCode" != "0" ]
           then
+            echo "Error, non zero exit code.  $exitCode"
             #The command that executed inside the Run Command returned an error.
             echo $cmdout | jq -r ".logs"
             exit $exitCode
@@ -176,8 +177,8 @@ jobs:
           do
             echo "curl $ipAddress for response code [$counter]"
 
-            #command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
-            command="wget --server-response $ipAddress 2>&1 | awk '/^  HTTP/{print $2}'"
+            command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
+            #command="wget --server-response $ipAddress 2>&1 | awk '/^  HTTP/{print $2}'"
             echo "Sending command to AKS : $command"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
             if ["${{ inputs.DEBUG }}" -eq "true"]; then echo $cmdOut > VerifyAppFromRunContainer.json; fi
