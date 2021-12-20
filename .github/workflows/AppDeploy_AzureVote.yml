@@ -141,6 +141,9 @@ jobs:
       - name: Wait for IP
         id: waitforip
         run: |
+          
+          #TODO: When the WAIT command is no longer experimental, shift to use that. REF: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#wait
+          
           echo "Invoking Get ${{ steps.installapp.outputs.RESTYPE}} to retrieve IP for $AKSNAME in $RG"
 
           counter=1
