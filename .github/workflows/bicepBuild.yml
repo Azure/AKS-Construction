@@ -133,6 +133,7 @@ jobs:
         env:
           oldFilePath: 'old/bicep/compiled/main.json'
           newFilePath : 'bicep/compiled/main.json'
+        shell: pwsh
         run: |
          get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters | ConvertTo-Json
          get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters | ConvertTo-Json
