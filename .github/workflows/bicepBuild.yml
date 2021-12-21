@@ -85,7 +85,7 @@ jobs:
         with:
           path: old
           #ref: ${{ github.event.pull_request.head.sha }}
-          #ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Check for Parameter changes in main.json
         if: github.event_name != 'push'
@@ -128,12 +128,18 @@ jobs:
             write-output "no parameter changes, no pr comment required"
           }
 
-      - name: Debug - param files
+      - name: Debug - old param file
         if: github.event_name != 'push'
         env:
           oldFilePath: 'old/bicep/compiled/main.json'
-          newFilePath : 'bicep/compiled/main.json'
         shell: pwsh
         run: |
          get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters | ConvertTo-Json
+
+      - name: Debug - new param file
+        if: github.event_name != 'push'
+        env:
+          newFilePath : 'bicep/compiled/main.json'
+        shell: pwsh
+        run: |
          get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters | ConvertTo-Json
