@@ -10,7 +10,6 @@ param logAnalyticsWorkspaceLocation string = resourceGroup().location
 @description('Select the frequency on how often the alert rule should be run. Selecting frequency smaller than granularity of datapoints grouping will result in sliding window evaluation')
 @allowed([
   'PT1M'
-  'PT5M'
   'PT15M'
 ])
 param evalFrequency string = 'PT1M'
