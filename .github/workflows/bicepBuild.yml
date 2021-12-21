@@ -85,6 +85,7 @@ jobs:
         with:
           path: old
           #ref: ${{ github.event.pull_request.head.sha }}
+          #ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Check for Parameter changes in main.json
         if: github.event_name != 'push'
@@ -133,5 +134,5 @@ jobs:
           oldFilePath: 'old/bicep/compiled/main.json'
           newFilePath : 'bicep/compiled/main.json'
         run: |
-          cat $oldFilePath
-          cat $newFilePath
+         get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters | ConvertTo-Json
+         get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters | ConvertTo-Json
