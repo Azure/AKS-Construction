@@ -84,7 +84,6 @@ jobs:
         name: Git Checkout target
         with:
           path: old
-          #ref: ${{ github.event.pull_request.head.sha }}
           ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Check for Parameter changes in main.json
@@ -103,6 +102,7 @@ jobs:
           $comparison = Compare-Object $arm1paramList $arm2paramList -Property Name, DefaultValue -PassThru | select Parameter, DefaultValue, @{N='FileVersion';E={$_.SideIndicator.replace('<=','Old').replace('=>','New')}}
 
           write-output $comparison
+
           if ($comparison.length -gt 0) {
               cd old #Need to change directory to give the gh cli repo context
 
@@ -121,11 +121,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
+
           if (test-path "ghpr.html") {
             gh pr review ${{ github.event.pull_request.number }} -r -F "ghpr.html"
           }
           else {
-            write-output "no parameter changes, no pr comment required"
+            write-output "ghpr.html not found, no pr comment required"
           }
 
       - name: Debug - old param file
