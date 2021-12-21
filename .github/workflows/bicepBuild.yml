@@ -128,7 +128,7 @@ jobs:
           }
 
       - name: Debug - param files
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push'
         env:
           oldFilePath: 'old/bicep/compiled/main.json'
           newFilePath : 'bicep/compiled/main.json'
