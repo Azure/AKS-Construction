@@ -13,12 +13,14 @@ on:
     paths:
       - 'bicep/*'
 
+  workflow_dispatch: #Manual execution will be good for debugging
+
 jobs:
   Validation:
     runs-on: ubuntu-latest
     outputs:
       isGitDiff: ${{ steps.isGitDiff.outputs.GITDIFF}}
-      
+
     steps:
       - uses: actions/checkout@v2
 
@@ -67,7 +69,7 @@ jobs:
             echo "::set-output name=GITDIFF::true" #outputting for condition
           }
 
-      - name: Debug
+      - name: Debug - GitDiff
         run: |
           echo "gitdiff is ${{ steps.isGitDiff.outputs.GITDIFF}}"
 
@@ -78,20 +80,23 @@ jobs:
           message: Adding auto compiled bicep json
 
       - uses: actions/checkout@v2
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'push'
         name: Git Checkout target
         with:
           path: old
-        
+          ref: ${{ github.event.pull_request.base.sha }}
+
       - name: Check for Parameter changes in main.json
-        if: github.event_name == 'pull_request'
-        env: 
+        if: github.event_name != 'push'
+        env:
           oldFilePath: 'old/bicep/compiled/main.json'
           newFilePath : 'bicep/compiled/main.json'
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
         shell: pwsh
         run: |
+          mkdir .debug
+          Copy-Item $Env:oldFilePath -Destination ".debug/old.json"
+          Copy-Item $Env:newFilePath -Destination ".debug/new.json"
+          
           $arm1params = get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters
           $arm2params = get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters
           $arm1paramList = @()
@@ -99,16 +104,58 @@ jobs:
           $arm2paramList = @()
           $arm2params.keys | % {$arm2paramList+= New-Object PSObject -Property ([Ordered]@{Parameter=$_; DefaultValue=$arm2params.Get_Item($_).defaultValue | ConvertTo-Json -Compress })}
           $comparison = Compare-Object $arm1paramList $arm2paramList -Property Name, DefaultValue -PassThru | select Parameter, DefaultValue, @{N='FileVersion';E={$_.SideIndicator.replace('<=','Old').replace('=>','New')}}
-          
+
           write-output $comparison
+
           if ($comparison.length -gt 0) {
-              cd old #Need to change directory to give the gh cli repo context
-              
+              #cd old #Need to change directory to give the gh cli repo context
+
               #GitHub uses a markdown rendering tool called Glamour. It copes with HTML pretty well, and pwsh loves html not markdown.
               [string]$html = $comparison | sort-object Parameter, @{e='FileVersion';desc=$true} | ConvertTo-Html -Fragment | Out-String
               Write-Output $html
               "<h2>Detected parameter change</h2><p>Parameter changes need to be reviewed carefully</p>" + $html | Out-File "ghpr.html"
-              gh pr review ${{ github.event.pull_request.number }} -r -F "ghpr.html"
+              test-path "ghpr.html"
+              Copy-Item "ghpr.html" -Destination ".debug/ghpr.html"
           } else {
               write-output "no changes to parameters"
           }
+
+      - name: Add comment to PR
+        if: github.event_name == 'pull_request'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+
+          if (test-path "ghpr.html") {
+            gh pr review ${{ github.event.pull_request.number }} -r -F "ghpr.html"
+          }
+          else {
+            write-output "ghpr.html not found, no pr comment required"
+          }
+
+      - name: Debug - old param file
+        if: github.event_name != 'push'
+        env:
+          oldFilePath: 'old/bicep/compiled/main.json'
+        shell: pwsh
+        run: |
+         get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty metadata | ConvertTo-Json
+         get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters | ConvertTo-Json
+
+      - name: Debug - new param file
+        if: github.event_name != 'push'
+        env:
+          newFilePath : 'bicep/compiled/main.json'
+        shell: pwsh
+        run: |
+         get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty metadata | ConvertTo-Json
+         get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters | ConvertTo-Json
+         
+      - name: Store debug files as artifacts
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: DebugFiles
+          path: .debug/*
