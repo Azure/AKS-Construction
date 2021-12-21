@@ -402,6 +402,14 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
 param azureFirewalls bool = false
 param certManagerFW bool = false
 
+@allowed([
+  'AllowAllIn'
+  'AllowAcrSubnetIn'
+  ''
+])
+@description('Allow Http traffic (80/443) into AKS subnet from specific sources')
+param inboundHttpFW string = ''
+
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
   params: {
@@ -414,6 +422,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     appDnsZoneName: dnsZoneName
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
+    inboundHttpFW: inboundHttpFW
     availabilityZones: availabilityZones
   }
 }
