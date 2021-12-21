@@ -93,6 +93,10 @@ jobs:
           newFilePath : 'bicep/compiled/main.json'
         shell: pwsh
         run: |
+          mkdir .debug
+          Copy-Item $Env:oldFilePath -Destination ".debug/old.json"
+          Copy-Item $Env:newFilePath -Destination ".debug/new.json"
+          
           $arm1params = get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters
           $arm2params = get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters
           $arm1paramList = @()
@@ -111,6 +115,7 @@ jobs:
               Write-Output $html
               "<h2>Detected parameter change</h2><p>Parameter changes need to be reviewed carefully</p>" + $html | Out-File "ghpr.html"
               test-path "ghpr.html"
+              Copy-Item "ghpr.html" -Destination ".debug/ghpr.html"
           } else {
               write-output "no changes to parameters"
           }
@@ -147,3 +152,10 @@ jobs:
         run: |
          get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty metadata | ConvertTo-Json
          get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters | ConvertTo-Json
+         
+      - name: Store debug files as artifacts
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: DebugFiles
+          path: .debug/*
