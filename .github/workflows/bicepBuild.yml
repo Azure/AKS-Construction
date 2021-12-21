@@ -13,12 +13,14 @@ on:
     paths:
       - 'bicep/*'
 
+  workflow_dispatch: #Manual execution will be good for debugging
+
 jobs:
   Validation:
     runs-on: ubuntu-latest
     outputs:
       isGitDiff: ${{ steps.isGitDiff.outputs.GITDIFF}}
-      
+
     steps:
       - uses: actions/checkout@v2
 
@@ -67,7 +69,7 @@ jobs:
             echo "::set-output name=GITDIFF::true" #outputting for condition
           }
 
-      - name: Debug
+      - name: Debug - GitDiff
         run: |
           echo "gitdiff is ${{ steps.isGitDiff.outputs.GITDIFF}}"
 
@@ -78,18 +80,17 @@ jobs:
           message: Adding auto compiled bicep json
 
       - uses: actions/checkout@v2
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'push'
         name: Git Checkout target
         with:
           path: old
-        
+          #ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Check for Parameter changes in main.json
-        if: github.event_name == 'pull_request'
-        env: 
+        if: github.event_name != 'push'
+        env:
           oldFilePath: 'old/bicep/compiled/main.json'
           newFilePath : 'bicep/compiled/main.json'
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
         shell: pwsh
         run: |
           $arm1params = get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters
@@ -99,16 +100,38 @@ jobs:
           $arm2paramList = @()
           $arm2params.keys | % {$arm2paramList+= New-Object PSObject -Property ([Ordered]@{Parameter=$_; DefaultValue=$arm2params.Get_Item($_).defaultValue | ConvertTo-Json -Compress })}
           $comparison = Compare-Object $arm1paramList $arm2paramList -Property Name, DefaultValue -PassThru | select Parameter, DefaultValue, @{N='FileVersion';E={$_.SideIndicator.replace('<=','Old').replace('=>','New')}}
-          
+
           write-output $comparison
           if ($comparison.length -gt 0) {
               cd old #Need to change directory to give the gh cli repo context
-              
+
               #GitHub uses a markdown rendering tool called Glamour. It copes with HTML pretty well, and pwsh loves html not markdown.
               [string]$html = $comparison | sort-object Parameter, @{e='FileVersion';desc=$true} | ConvertTo-Html -Fragment | Out-String
               Write-Output $html
               "<h2>Detected parameter change</h2><p>Parameter changes need to be reviewed carefully</p>" + $html | Out-File "ghpr.html"
-              gh pr review ${{ github.event.pull_request.number }} -r -F "ghpr.html"
           } else {
               write-output "no changes to parameters"
           }
+
+      - name: Add comment to PR
+        if: github.event_name == 'pull_request'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          if (test-path "ghpr.html") {
+            gh pr review ${{ github.event.pull_request.number }} -r -F "ghpr.html"
+          }
+          else {
+            write-output "no parameter changes, no pr comment required"
+          }
+
+      - name: Debug - param files
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          oldFilePath: 'old/bicep/compiled/main.json'
+          newFilePath : 'bicep/compiled/main.json'
+        run: |
+          cat $oldFilePath
+          cat $newFilePath
