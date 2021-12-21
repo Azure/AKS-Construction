@@ -82,7 +82,7 @@ jobs:
         name: Git Checkout target
         with:
           path: old
-          ref: ${{ github.event.pull_request.base.sha }}
+          #ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Check for Parameter changes in main.json
         if: github.event_name == 'pull_request'
