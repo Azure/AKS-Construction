@@ -24,6 +24,10 @@ param bastionSubnetAddressPrefix string = ''
 
 param availabilityZones array = []
 
+param workspaceDiagsId string = ''
+
+param networkSecurityGroups bool = true
+
 var bastion_subnet_name = 'AzureBastionSubnet'
 var bastion_subnet = {
   name: bastion_subnet_name
@@ -55,6 +59,9 @@ var appgw_subnet = {
   name: appgw_subnet_name
   properties: {
     addressPrefix: vnetAppGatewaySubnetAddressPrefix
+    networkSecurityGroup: ingressApplicationGateway && networkSecurityGroups ? {
+      id: nsgAppGw.outputs.nsgId
+    } : {}
   }
 }
 var fw_subnet_name = 'AzureFirewallSubnet' // Required by FW
@@ -293,5 +300,14 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2020-05-01' = if(bastion) {
         }
       }
     ]
+  }
+}
+
+module nsgAppGw 'nsgAppGw.bicep' = if(ingressApplicationGateway) {
+  name: 'nsgAppGw'
+  params: {
+    location: location
+    resourceName: resourceName
+    workspaceDiagsId: workspaceDiagsId
   }
 }

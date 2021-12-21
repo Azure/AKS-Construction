@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceName": {
+      "value": "az-k8s-netty"
+    },
+    "custom_vnet": {
+      "value": true
+    },
+    "enable_aad": {
+      "value": true
+    },
+    "enableAzureRBAC": {
+      "value": true
+    },
+    "networkPolicy": {
+      "value": "azure"
+    },
+    "azurepolicy": {
+      "value": "audit"
+    },
+    "ingressApplicationGateway": {
+      "value": true
+    },
+    "omsagent": {
+      "value": true
+    }
+  }
+}
