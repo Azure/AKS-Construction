@@ -815,47 +815,6 @@ var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPool
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
-var aks_properties_base = {
-  kubernetesVersion: kubernetesVersion
-  enableRBAC: true
-  dnsPrefix: dnsPrefix
-  aadProfile: enable_aad ? {
-    managed: true
-    enableAzureRBAC: enableAzureRBAC
-    tenantID: aad_tenant_id
-  } : null
-  apiServerAccessProfile: !empty(authorizedIPRanges) ? {
-    authorizedIPRanges: authorizedIPRanges
-  } : {
-    enablePrivateCluster: enablePrivateCluster
-    privateDNSZone: enablePrivateCluster ? 'none' : ''
-    enablePrivateClusterPublicFQDN: enablePrivateCluster
-  }
-  agentPoolProfiles: agentPoolProfiles
-  networkProfile: {
-    loadBalancerSku: 'standard'
-    networkPlugin: networkPlugin
-    networkPolicy: networkPolicy
-    podCidr: podCidr
-    serviceCidr: serviceCidr
-    dnsServiceIP: dnsServiceIP
-    dockerBridgeCidr: dockerBridgeCidr
-  }
-  disableLocalAccounts: AksDisableLocalAccounts && enable_aad
-  securityProfile: {
-    azureDefender: {
-      enabled: DefenderForContainers && omsagent
-      logAnalyticsWorkspaceResourceId: DefenderForContainers && omsagent ? aks_law.id : ''
-    }
-  }
-}
-
-var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
-  autoUpgradeProfile: {
-    upgradeChannel: upgradeChannel
-  }
-}) : aks_properties_base
-
 var aks_addons = {}
 var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   ingressApplicationGateway: {
@@ -913,10 +872,6 @@ var aks_addons5 = azureKeyvaultSecretsProvider ? union(aks_addons4, {
   }
 }) : aks_addons4
 
-var aks_properties2 = !empty(aks_addons5) ? union(aks_properties1, {
-  addonProfiles: aks_addons5
-}) : aks_properties1
-
 var aks_identity = {
   type: 'UserAssigned'
   userAssignedIdentities: {
@@ -927,7 +882,44 @@ var aks_identity = {
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
   name: 'aks-${resourceName}'
   location: location
-  properties: aks_properties2
+  properties: {
+    kubernetesVersion: kubernetesVersion
+    enableRBAC: true
+    dnsPrefix: dnsPrefix
+    aadProfile: enable_aad ? {
+      managed: true
+      enableAzureRBAC: enableAzureRBAC
+      tenantID: aad_tenant_id
+    } : null
+    apiServerAccessProfile: !empty(authorizedIPRanges) ? {
+      authorizedIPRanges: authorizedIPRanges
+    } : {
+      enablePrivateCluster: enablePrivateCluster
+      privateDNSZone: enablePrivateCluster ? 'none' : ''
+      enablePrivateClusterPublicFQDN: enablePrivateCluster
+    }
+    agentPoolProfiles: agentPoolProfiles
+    networkProfile: {
+      loadBalancerSku: 'standard'
+      networkPlugin: networkPlugin
+      networkPolicy: networkPolicy
+      podCidr: podCidr
+      serviceCidr: serviceCidr
+      dnsServiceIP: dnsServiceIP
+      dockerBridgeCidr: dockerBridgeCidr
+    }
+    disableLocalAccounts: AksDisableLocalAccounts && enable_aad
+    securityProfile: {
+      azureDefender: {
+        enabled: DefenderForContainers && omsagent
+        logAnalyticsWorkspaceResourceId: DefenderForContainers && omsagent ? aks_law.id : ''
+      }
+    }
+    autoUpgradeProfile: !empty(upgradeChannel) ? {
+      upgradeChannel: upgradeChannel
+    } : {}
+    addonProfiles: !empty(aks_addons5) ? aks_addons5 : {}
+  }
   identity: aks_byo_identity ? aks_identity : {
     type: 'SystemAssigned'
   }
