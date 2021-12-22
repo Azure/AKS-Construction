@@ -1,3 +1,5 @@
+@minLength(2)
+@description('The location to use for the deployment. defaults to Resource Groups location.')
 param location string = resourceGroup().location
 
 @minLength(3)
@@ -70,17 +72,45 @@ resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01
 }
 
 //------------------------------------------------------ Create custom vnet
+@minLength(9)
+@maxLength(18)
+@description('The address range for the AKS vnet')
 param vnetAddressPrefix string = '10.240.0.0/16'
+
+@minLength(9)
+@maxLength(18)
+@description('The address range for AKS in your custom vnet')
 param vnetAksSubnetAddressPrefix string = '10.240.0.0/22'
+
+@minLength(9)
+@maxLength(18)
+@description('The address range for the App Gateway in your custom vnet')
 param vnetAppGatewaySubnetAddressPrefix string = '10.240.4.0/26'
+
+@minLength(9)
+@maxLength(18)
+@description('The address range for the ACR in your custom vnet')
 param acrAgentPoolSubnetAddressPrefix string = '10.240.4.64/26'
 
+@minLength(9)
+@maxLength(18)
 @description('The address range for Azure Bastion in your custom vnet')
 param bastionSubnetAddressPrefix string = '10.240.4.128/26'
+
+@minLength(9)
+@maxLength(18)
+@description('The address range for private link in your custom vnet')
 param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
+
+@minLength(9)
+@maxLength(18)
+@description('The address range for Azure Firewall in your custom vnet')
 param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 
+@description('Enable support for private links')
 param privateLinks bool = false
+
+@description('Enable support for ACR private pool')
 param acrPrivatePool bool = false
 
 @description('Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)')
@@ -124,6 +154,7 @@ var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.a
 |  '--'  ||  |\   | .----)   |        /  /----.|  `--'  | |  |\   | |  |____ .----)   |
 |_______/ |__| \__| |_______/        /________| \______/  |__| \__| |_______||_______/    */
 
+@description('The full Azure resource ID of the DNS zone to use for the AKS cluster')
 param dnsZoneId string = ''
 var dnsZoneRg = !empty(dnsZoneId) ? split(dnsZoneId, '/')[4] : ''
 var dnsZoneName = !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''
@@ -218,6 +249,7 @@ resource kvCSIdriverSecretsUserRole 'Microsoft.Authorization/roleAssignments@202
   }
 }
 
+@description('The principal ID of the service principal that has access to the Key Vault')
 param kvOfficerRolePrincipalId string = ''
 var keyVaultSecretsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
 resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
@@ -273,9 +305,16 @@ resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
  /  _____  \   __|  `----. __ |  |\  \----. __
 /__/     \__\ (__)\______|(__)| _| `._____|(__)*/
 
+@allowed([
+  ''
+  'Basic'
+  'Standard'
+  'Premium'
+])
+@description('The SKU to use for the Container Registry')
 param registries_sku string = ''
 
-@description('Enable the ACR Content Trust Policy')
+@description('Enable the ACR Content Trust Policy, SKU must be set to Premium')
 param enableACRTrustPolicy bool = false
 var acrContentTrustEnabled = enableACRTrustPolicy && registries_sku == 'Premium' ? 'enabled' : 'disabled'
 
@@ -379,6 +418,8 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
 }
 
 var AcrPushRole = resourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')
+
+@description('The principal ID of the service principal to assign the push role to the ACR')
 param acrPushRolePrincipalId string = ''
 
 resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku) && !empty(acrPushRolePrincipalId)) {
@@ -400,6 +441,8 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
 
 @description('Create an Azure Firewall')
 param azureFirewalls bool = false
+
+@description('Add application rules to the firewall for certificate management.')
 param certManagerFW bool = false
 
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
@@ -428,12 +471,18 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
 @description('Create an Application Gateway')
 param ingressApplicationGateway bool = false
 
+@description('The number of applciation gateway instances')
 param appGWcount int = 2
+
+@description('The maximum number of application gateway instances')
 param appGWmaxCount int = 0
 
+@minLength(7)
+@maxLength(15)
 @description('A known private ip in the Application Gateway subnet range to be allocated for internal traffic')
 param privateIpApplicationGateway string = ''
 
+@description('Enable key vault integration for application gateway')
 param appgwKVIntegration bool = false
 
 @allowed([
@@ -686,41 +735,114 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 |  .  \  |  `--'  | |  |_)  | |  |____ |  |\  \----.|  |\   | |  |____     |  |     |  |____ .----)   |
 |__|\__\  \______/  |______/  |_______|| _| `._____||__| \__| |_______|    |__|     |_______||_______/ */
 
+@description('DNS prefix. Defaults to {resourceName}-dns')
 param dnsPrefix string = '${resourceName}-dns'
+
+@description('Kubernetes Version')
 param kubernetesVersion string = '1.20.9'
+
+@description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
+
+@description('The ID of the Azure AD tenant')
 param aad_tenant_id string = ''
 
 @description('Create, and use a new Log Analytics workspace for AKS logs')
 param omsagent bool = false
 
+@description('Enable RBAC using AAD')
 param enableAzureRBAC bool = false
+
+@allowed([
+  ''
+  'none'
+  'patch'
+  'stable'
+  'rapid'
+  'node-image'
+])
+@description('AKS upgrade channel')
 param upgradeChannel string = ''
+
+@allowed([
+  'Ephemeral'
+  'Managed'
+])
+@description('OS disk type')
 param osDiskType string = 'Ephemeral'
+
+@description('VM SKU')
 param agentVMSize string = 'Standard_DS3_v2'
+
+@description('Disk size in GB')
 param osDiskSizeGB int = 0
 
+@description('The number of agents for the user node pool')
 param agentCount int = 3
+
+@description('The maximum number of nodes for the user node pool')
 param agentCountMax int = 0
 var autoScale = agentCountMax > agentCount
 
+@description('The maximum number of pods per node.')
 param maxPods int = 30
+
+@allowed([
+  'azure'
+  'kubenet'
+])
+@description('The network plugin type')
 param networkPlugin string = 'azure'
-param networkPolicy string = ''
+
+@allowed([
+  'azure'
+  'calico'
+])
+@description('The network policy to use.')
+param networkPolicy string = 'azure'
+
+@description('Enable the Azure Policy addon')
 param azurepolicy string = ''
+
+@description('Enable the git ops addon')
 param gitops string = ''
+
+@description('The IP addresses that are allowed to access the API server')
 param authorizedIPRanges array = []
+
+@description('Enable private cluster')
 param enablePrivateCluster bool = false
+
+@description('The zones to use for a node pool')
 param availabilityZones array = []
+
 @description('Disable local K8S accounts for AAD enabled clusters')
 param AksDisableLocalAccounts bool = false
+
+@description('Use the paid sku for SLA rather than SLO')
 param AksPaidSkuForSLA bool = false
 
+@minLength(9)
+@maxLength(18)
+@description('The address range to use for pods')
 param podCidr string = '10.240.100.0/24'
+
+@minLength(9)
+@maxLength(18)
+@description('The address range to use for services')
 param serviceCidr string = '172.10.0.0/16'
+
+@minLength(7)
+@maxLength(15)
+@description('The IP address to reserve for DNS')
 param dnsServiceIP string = '172.10.0.10'
+
+@minLength(9)
+@maxLength(18)
+@description('The address range to use for the docker bridge')
 param dockerBridgeCidr string = '172.17.0.1/16'
 
+@description('Only use the system node pool')
 param JustUseSystemPool bool = false
 
 @allowed([
@@ -952,6 +1074,7 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
   }
 }
 
+@description('The principal ID to assign the AKS admin role.')
 param adminprincipleid string = ''
 // for AAD Integrated Cluster wusing 'enableAzureRBAC', add Cluster admin to the current user!
 var buildInAKSRBACClusterAdmin = resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
