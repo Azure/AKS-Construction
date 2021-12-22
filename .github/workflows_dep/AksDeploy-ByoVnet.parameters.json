@@ -88,6 +88,9 @@
         },
         "dnsZoneId" : {
             "value" : "/this/parameter/is/overridden/in/my/script/valuefromsecrets"
+        },
+        "DefenderForContainers": {
+            "value": true
         }
     }
 }
