@@ -331,6 +331,24 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     }
                 </Stack>
             </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Microsoft Defender for Containers  <Link target='_' href='https://docs.microsoft.com/en-us/azure/defender-for-cloud/defender-for-containers-enable'>docs</Link>
+                </Label>
+                <ChoiceGroup
+                    selectedKey={cluster.DefenderForContainers}
+                    styles={{ root: { marginLeft: '50px' } }}
+                    options={[
+                        { key: false, text: 'Disable Microsoft Defender' },
+                        { key: true, text: 'Enable Microsoft Defender security alerting' }
+
+                    ]}
+                    onChange={(ev, { key }) => updateFn("DefenderForContainers", key)}
+                />
+            </Stack.Item>
         </Stack>
 
     )

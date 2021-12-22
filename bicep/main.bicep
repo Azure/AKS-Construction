@@ -721,6 +721,8 @@ param serviceCidr string = '172.10.0.0/16'
 param dnsServiceIP string = '172.10.0.10'
 param dockerBridgeCidr string = '172.17.0.1/16'
 
+param DefenderForContainers bool = false
+
 param JustUseSystemPool bool = false
 
 @allowed([
@@ -840,6 +842,12 @@ var aks_properties_base = {
     dockerBridgeCidr: dockerBridgeCidr
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
+  securityProfile: {
+    azureDefender: {
+      enabled: DefenderForContainers
+      logAnalyticsWorkspaceResourceId: DefenderForContainers ? aks_law.id : ''
+    }
+  }
 }
 
 var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
@@ -916,7 +924,7 @@ var aks_identity = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-07-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aks_properties2
