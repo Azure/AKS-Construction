@@ -721,6 +721,7 @@ param serviceCidr string = '172.10.0.0/16'
 param dnsServiceIP string = '172.10.0.10'
 param dockerBridgeCidr string = '172.17.0.1/16'
 
+@description('Enable Microsoft Defender for Containers (currently preview)')
 param DefenderForContainers bool = false
 
 param JustUseSystemPool bool = false
@@ -912,7 +913,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
     securityProfile: {
       azureDefender: {
         enabled: DefenderForContainers && omsagent
-        logAnalyticsWorkspaceResourceId: DefenderForContainers && omsagent ? aks_law.id : ''
+        logAnalyticsWorkspaceResourceId: DefenderForContainers && omsagent ? aks_law.id : json('null')
       }
     }
     autoUpgradeProfile: !empty(upgradeChannel) ? {

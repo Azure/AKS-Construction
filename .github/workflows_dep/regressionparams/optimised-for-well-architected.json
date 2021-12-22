@@ -100,9 +100,6 @@
           },
           "aksDisableLocalAccounts": {
             "value": true
-          },
-          "DefenderForContainers": {
-              "value": true
           }
     }
 }

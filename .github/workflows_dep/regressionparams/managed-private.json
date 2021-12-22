@@ -70,9 +70,6 @@
     },
     "upgradeChannel": {
       "value": "stable"
-    },
-    "DefenderForContainers": {
-        "value": true
     }
   }
 }
