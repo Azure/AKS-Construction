@@ -844,8 +844,8 @@ var aks_properties_base = {
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
   securityProfile: {
     azureDefender: {
-      enabled: DefenderForContainers
-      logAnalyticsWorkspaceResourceId: DefenderForContainers ? aks_law.id : ''
+      enabled: DefenderForContainers && omsagent
+      logAnalyticsWorkspaceResourceId: DefenderForContainers && omsagent ? aks_law.id : ''
     }
   }
 }
