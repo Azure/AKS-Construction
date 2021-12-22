@@ -336,7 +336,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Microsoft Defender for Containers  <Link target='_' href='https://docs.microsoft.com/en-us/azure/defender-for-cloud/defender-for-containers-enable'>docs</Link>
+                    Microsoft Defender for Containers  <Link target='_' href='https://docs.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction'>docs</Link>
                 </Label>
                 <ChoiceGroup
                     selectedKey={cluster.DefenderForContainers}
