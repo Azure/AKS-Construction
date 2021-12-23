@@ -74,7 +74,7 @@ resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01
 //------------------------------------------------------ Create custom vnet
 @minLength(9)
 @maxLength(18)
-@description('The address range for the AKS vnet')
+@description('The address range for the custom vnet')
 param vnetAddressPrefix string = '10.240.0.0/16'
 
 @minLength(9)
