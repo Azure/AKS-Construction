@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "10229933235714142382"
+      "templateHash": "2723507249335821189"
     }
   },
   "parameters": {
@@ -261,8 +261,7 @@
       "metadata": {
         "description": "A known private ip in the Application Gateway subnet range to be allocated for internal traffic"
       },
-      "maxLength": 15,
-      "minLength": 7
+      "maxLength": 15
     },
     "appgwKVIntegration": {
       "type": "bool",
