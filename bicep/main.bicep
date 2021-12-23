@@ -795,11 +795,12 @@ param maxPods int = 30
 param networkPlugin string = 'azure'
 
 @allowed([
+  ''
   'azure'
   'calico'
 ])
 @description('The network policy to use.')
-param networkPolicy string = 'azure'
+param networkPolicy string = ''
 
 @description('Enable the Azure Policy addon')
 param azurepolicy string = ''
