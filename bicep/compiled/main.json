@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "2723507249335821189"
+      "templateHash": "93102909541968735"
     }
   },
   "parameters": {
@@ -50,7 +50,7 @@
       "type": "string",
       "defaultValue": "10.240.0.0/16",
       "metadata": {
-        "description": "The address range for the AKS vnet"
+        "description": "The address range for the custom vnet"
       },
       "maxLength": 18,
       "minLength": 9
