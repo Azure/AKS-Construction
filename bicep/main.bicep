@@ -477,7 +477,6 @@ param appGWcount int = 2
 @description('The maximum number of application gateway instances')
 param appGWmaxCount int = 0
 
-@minLength(7)
 @maxLength(15)
 @description('A known private ip in the Application Gateway subnet range to be allocated for internal traffic')
 param privateIpApplicationGateway string = ''
