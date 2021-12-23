@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "499565331387904806"
+      "templateHash": "10229933235714142382"
     }
   },
   "parameters": {
@@ -413,11 +413,12 @@
     },
     "networkPolicy": {
       "type": "string",
-      "defaultValue": "azure",
+      "defaultValue": "",
       "metadata": {
         "description": "The network policy to use."
       },
       "allowedValues": [
+        "",
         "azure",
         "calico"
       ]
