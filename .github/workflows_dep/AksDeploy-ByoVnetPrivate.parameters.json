@@ -1,87 +1,90 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-    "contentVersion": "1.0.0.0",
-    "metadata": {
-        "template": "bicep/compiled/main.json"
-    },
-    "parameters": {
-        "resourceName": {
-            "value": "priv"
-          },
-          "kubernetesVersion": {
-            "value": "1.21.2"
-          },
-          "agentVMSize": {
-            "value": "Standard_DS3_v2"
-          },
-          "agentCountMax": {
-            "value": 3
-          },
-          "custom_vnet": {
-            "value": true
-          },
-          "enable_aad": {
-            "value": true
-          },
-          "aksDisableLocalAccounts": {
-            "value": false
-          },
-          "enableAzureRBAC": {
-            "value": true
-          },
-          "registries_sku": {
-            "value": "Premium"
-          },
-          "acrPrivatePool": {
-            "value": true
-          },
-          "azureFirewalls": {
-            "value": true
-          },
-          "privateLinks": {
-            "value": true
-          },
-          "omsagent": {
-            "value": true
-          },
-          "retentionInDays": {
-            "value": 30
-          },
-          "networkPolicy": {
-            "value": "azure"
-          },
-          "azurepolicy": {
-            "value": "deny"
-          },
-          "enablePrivateCluster": {
-            "value": true
-          },
-          "ingressApplicationGateway": {
-            "value": true
-          },
-          "bastion" : {
-            "value": true
-          },
-          "appGWcount": {
-            "value": 0
-          },
-          "appGWsku": {
-            "value": "WAF_v2"
-          },
-          "appGWmaxCount": {
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+      "template": "bicep/compiled/main.json"
+  },
+  "parameters": {
+      "resourceName": {
+          "value": "priv"
+        },
+        "agentVMSize": {
+          "value": "Standard_DS3_v2"
+        },
+        "agentCountMax": {
             "value": 2
-          },
-          "appgwKVIntegration": {
-            "value": true
-          },
-          "azureKeyvaultSecretsProvider": {
-            "value": true
-          },
-          "createKV": {
-            "value": true
-          },
-          "upgradeChannel": {
-            "value": "stable"
-          }
-    }
+        },
+        "JustUseSystemPool": {
+          "value": true
+        },
+        "custom_vnet": {
+          "value": true
+        },
+        "enable_aad": {
+          "value": true
+        },
+        "aksDisableLocalAccounts": {
+          "value": false
+        },
+        "enableAzureRBAC": {
+          "value": true
+        },
+        "registries_sku": {
+          "value": "Premium"
+        },
+        "acrPrivatePool": {
+          "value": true
+        },
+        "azureFirewalls": {
+          "value": true
+        },
+        "privateLinks": {
+          "value": true
+        },
+        "omsagent": {
+          "value": true
+        },
+        "retentionInDays": {
+          "value": 30
+        },
+        "networkPolicy": {
+          "value": "azure"
+        },
+        "azurepolicy": {
+          "value": "deny"
+        },
+        "enablePrivateCluster": {
+          "value": true
+        },
+        "ingressApplicationGateway": {
+          "value": true
+        },
+        "privateIpApplicationGateway" : {
+          "value": "10.240.4.60"
+        },
+        "bastion" : {
+          "value": true
+        },
+        "appGWcount": {
+          "value": 0
+        },
+        "appGWsku": {
+          "value": "WAF_v2"
+        },
+        "appGWmaxCount": {
+          "value": 2
+        },
+        "appgwKVIntegration": {
+          "value": true
+        },
+        "azureKeyvaultSecretsProvider": {
+          "value": true
+        },
+        "createKV": {
+          "value": true
+        },
+        "upgradeChannel": {
+          "value": "stable"
+        }
+  }
 }
