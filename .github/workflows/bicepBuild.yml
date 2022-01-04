@@ -93,7 +93,7 @@ jobs:
           newFilePath : 'bicep/compiled/main.json'
         shell: pwsh
         run: |
-          
+
           $arm1params = get-content $Env:oldFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters
           $arm2params = get-content $Env:newFilePath | ConvertFrom-Json -AsHashtable | Select -expandProperty parameters
           $arm1paramList = @()

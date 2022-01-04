@@ -116,6 +116,9 @@ param acrPrivatePool bool = false
 @description('Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)')
 param bastion bool = false
 
+@description('Deploy NSGs to your vnet. (works with Custom Networking only, not BYO)')
+param CreateNetworkSecurityGroups bool = true
+
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
   params: {
@@ -137,6 +140,8 @@ module network './network.bicep' = if (custom_vnet) {
     bastion: bastion
     bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
     availabilityZones: availabilityZones
+    workspaceDiagsId: createLaw ? aks_law.id : ''
+    networkSecurityGroups: CreateNetworkSecurityGroups
   }
 }
 
