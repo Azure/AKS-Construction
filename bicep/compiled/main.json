@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "93102909541968735"
+      "templateHash": "10753860308706549325"
     }
   },
   "parameters": {
@@ -312,7 +312,7 @@
     },
     "kubernetesVersion": {
       "type": "string",
-      "defaultValue": "1.20.9",
+      "defaultValue": "1.21.7",
       "metadata": {
         "description": "Kubernetes Version"
       }
@@ -1301,11 +1301,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1124.51302",
-<<<<<<< HEAD
               "templateHash": "16834932649433911852"
-=======
-              "templateHash": "13781598848049858506"
->>>>>>> d6768cabe86e8c387a76af1deb612831cc0439c9
             }
           },
           "parameters": {
