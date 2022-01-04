@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "17819417002217880622"
+      "templateHash": "2348966813339934824"
     }
   },
   "parameters": {
@@ -240,18 +240,6 @@
       "metadata": {
         "description": "Add application rules to the firewall for certificate management."
       }
-    },
-    "inboundHttpFW": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Allow Http traffic (80/443) into AKS subnet from specific sources"
-      },
-      "allowedValues": [
-        "AllowAllIn",
-        "AllowAcrSubnetIn",
-        ""
-      ]
     },
     "ingressApplicationGateway": {
       "type": "bool",
@@ -2055,9 +2043,6 @@
           "acrAgentPoolSubnetAddressPrefix": {
             "value": "[parameters('acrAgentPoolSubnetAddressPrefix')]"
           },
-          "inboundHttpFW": {
-            "value": "[parameters('inboundHttpFW')]"
-          },
           "availabilityZones": {
             "value": "[parameters('availabilityZones')]"
           }
@@ -2069,7 +2054,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1124.51302",
-              "templateHash": "6646458215337953968"
+              "templateHash": "4208943346413869048"
             }
           },
           "parameters": {
@@ -2092,15 +2077,6 @@
             "certManagerFW": {
               "type": "bool",
               "defaultValue": false
-            },
-            "inboundHttpFW": {
-              "type": "string",
-              "defaultValue": "",
-              "allowedValues": [
-                "AllowAllIn",
-                "AllowAcrSubnetIn",
-                ""
-              ]
             },
             "acrPrivatePool": {
               "type": "bool",
@@ -2254,15 +2230,6 @@
                       "type": "Allow"
                     },
                     "rules": "[concat(createArray(createObject('name', 'aks', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(), 'fqdnTags', createArray('AzureKubernetesService'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), if(parameters('certManagerFW'), createArray(createObject('name', 'certman-quay', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('quay.io', '*.quay.io'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix'))), createObject('name', 'certman-letsencrypt', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('letsencrypt.org', '*.letsencrypt.org'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()), if(and(parameters('certManagerFW'), not(empty(parameters('appDnsZoneName')))), createArray(createObject('name', 'certman-appDnsZoneName', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(parameters('appDnsZoneName'), format('*.{0}', parameters('appDnsZoneName'))), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()))]"
-                  },
-                  {
-                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
-                    "name": "AksNetIngress",
-                    "priority": 300,
-                    "action": {
-                      "type": "Allow"
-                    },
-                    "rules": "[concat(if(equals(parameters('inboundHttpFW'), 'AllowAllIn'), createArray(createObject('ruleType', 'NetworkRule', 'name', parameters('inboundHttpFW'), 'ipProtocols', createArray('TCP'), 'sourceAddresses', createArray('*'), 'destinationAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationPorts', createArray('80', '443'))), createArray()), if(and(parameters('acrPrivatePool'), equals(parameters('inboundHttpFW'), 'AllowAcrSubnetIn')), createArray(createObject('ruleType', 'NetworkRule', 'name', parameters('inboundHttpFW'), 'ipProtocols', createArray('TCP', 'ICMP'), 'sourceAddresses', createArray(parameters('acrAgentPoolSubnetAddressPrefix')), 'destinationAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationPorts', createArray('80', '443'))), createArray()))]"
                   }
                 ]
               },
