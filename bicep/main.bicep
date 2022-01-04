@@ -450,14 +450,6 @@ param azureFirewalls bool = false
 @description('Add application rules to the firewall for certificate management.')
 param certManagerFW bool = false
 
-@allowed([
-  'AllowAllIn'
-  'AllowAcrSubnetIn'
-  ''
-])
-@description('Allow Http traffic (80/443) into AKS subnet from specific sources')
-param inboundHttpFW string = ''
-
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
   params: {
@@ -470,7 +462,6 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     appDnsZoneName: dnsZoneName
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
-    inboundHttpFW: inboundHttpFW
     availabilityZones: availabilityZones
   }
 }

@@ -4,13 +4,6 @@ param workspaceDiagsId string = ''
 param fwSubnetId string
 param vnetAksSubnetAddressPrefix string
 param certManagerFW bool = false
-
-@allowed([
-  'AllowAllIn'
-  'AllowAcrSubnetIn'
-  ''
-])
-param inboundHttpFW string = ''
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 param availabilityZones array = []
@@ -294,52 +287,6 @@ resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-
               ]
             }
           ] : [])
-      }
-      {
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-        name: 'AksNetIngress'
-        priority: 300
-        action: {
-          type: 'Allow'
-        }
-        rules: concat(inboundHttpFW=='AllowAllIn' ? [
-          {
-            ruleType: 'NetworkRule'
-            name: inboundHttpFW
-            ipProtocols: [
-              'TCP'
-            ]
-            sourceAddresses: [
-              '*'
-            ]
-            destinationAddresses: [
-              vnetAksSubnetAddressPrefix
-            ]
-            destinationPorts: [
-              '80'
-              '443'
-            ]
-          }
-        ]:[], acrPrivatePool && inboundHttpFW=='AllowAcrSubnetIn' ? [
-          {
-            ruleType: 'NetworkRule'
-            name: inboundHttpFW
-            ipProtocols: [
-              'TCP'
-              'ICMP'
-            ]
-            sourceAddresses: [
-              acrAgentPoolSubnetAddressPrefix
-            ]
-            destinationAddresses: [
-              vnetAksSubnetAddressPrefix
-            ]
-            destinationPorts: [
-              '80'
-              '443'
-            ]
-          }
-        ]:[])
       }
     ]
   }

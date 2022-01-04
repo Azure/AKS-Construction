@@ -85,9 +85,6 @@
         },
         "upgradeChannel": {
           "value": "stable"
-        },
-        "inboundHttpFW": {
-          "value": "AllowAllIn"
         }
   }
 }
