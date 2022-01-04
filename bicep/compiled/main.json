@@ -5,13 +5,17 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "16676852466051595724"
+      "templateHash": "93102909541968735"
     }
   },
   "parameters": {
     "location": {
       "type": "string",
-      "defaultValue": "[resourceGroup().location]"
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "The location to use for the deployment. defaults to Resource Groups location."
+      },
+      "minLength": 2
     },
     "resourceName": {
       "type": "string",
@@ -44,42 +48,80 @@
     },
     "vnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.0.0/16"
+      "defaultValue": "10.240.0.0/16",
+      "metadata": {
+        "description": "The address range for the custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "vnetAksSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.0.0/22"
+      "defaultValue": "10.240.0.0/22",
+      "metadata": {
+        "description": "The address range for AKS in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "vnetAppGatewaySubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.4.0/26"
+      "defaultValue": "10.240.4.0/26",
+      "metadata": {
+        "description": "The address range for the App Gateway in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "acrAgentPoolSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.4.64/26"
+      "defaultValue": "10.240.4.64/26",
+      "metadata": {
+        "description": "The address range for the ACR in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "bastionSubnetAddressPrefix": {
       "type": "string",
       "defaultValue": "10.240.4.128/26",
       "metadata": {
         "description": "The address range for Azure Bastion in your custom vnet"
-      }
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "privateLinkSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.4.192/26"
+      "defaultValue": "10.240.4.192/26",
+      "metadata": {
+        "description": "The address range for private link in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "vnetFirewallSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.50.0/24"
+      "defaultValue": "10.240.50.0/24",
+      "metadata": {
+        "description": "The address range for Azure Firewall in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "privateLinks": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable support for private links"
+      }
     },
     "acrPrivatePool": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable support for ACR private pool"
+      }
     },
     "bastion": {
       "type": "bool",
@@ -97,7 +139,10 @@
     },
     "dnsZoneId": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The full Azure resource ID of the DNS zone to use for the AKS cluster"
+      }
     },
     "azureKeyvaultSecretsProvider": {
       "type": "bool",
@@ -136,17 +181,29 @@
     },
     "kvOfficerRolePrincipalId": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The principal ID of the service principal that has access to the Key Vault"
+      }
     },
     "registries_sku": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The SKU to use for the Container Registry"
+      },
+      "allowedValues": [
+        "",
+        "Basic",
+        "Standard",
+        "Premium"
+      ]
     },
     "enableACRTrustPolicy": {
       "type": "bool",
       "defaultValue": false,
       "metadata": {
-        "description": "Enable the ACR Content Trust Policy"
+        "description": "Enable the ACR Content Trust Policy, SKU must be set to Premium"
       }
     },
     "acrUntaggedRetentionPolicyEnabled": {
@@ -165,7 +222,10 @@
     },
     "acrPushRolePrincipalId": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The principal ID of the service principal to assign the push role to the ACR"
+      }
     },
     "azureFirewalls": {
       "type": "bool",
@@ -176,7 +236,10 @@
     },
     "certManagerFW": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Add application rules to the firewall for certificate management."
+      }
     },
     "ingressApplicationGateway": {
       "type": "bool",
@@ -187,22 +250,32 @@
     },
     "appGWcount": {
       "type": "int",
-      "defaultValue": 2
+      "defaultValue": 2,
+      "metadata": {
+        "description": "The number of applciation gateway instances"
+      }
     },
     "appGWmaxCount": {
       "type": "int",
-      "defaultValue": 0
+      "defaultValue": 0,
+      "metadata": {
+        "description": "The maximum number of application gateway instances"
+      }
     },
     "privateIpApplicationGateway": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
         "description": "A known private ip in the Application Gateway subnet range to be allocated for internal traffic"
-      }
+      },
+      "maxLength": 15
     },
     "appgwKVIntegration": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable key vault integration for application gateway"
+      }
     },
     "appGWsku": {
       "type": "string",
@@ -232,19 +305,31 @@
     },
     "dnsPrefix": {
       "type": "string",
-      "defaultValue": "[format('{0}-dns', parameters('resourceName'))]"
+      "defaultValue": "[format('{0}-dns', parameters('resourceName'))]",
+      "metadata": {
+        "description": "DNS prefix. Defaults to {resourceName}-dns"
+      }
     },
     "kubernetesVersion": {
       "type": "string",
-      "defaultValue": "1.20.9"
+      "defaultValue": "1.20.9",
+      "metadata": {
+        "description": "Kubernetes Version"
+      }
     },
     "enable_aad": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Azure AD integration on AKS"
+      }
     },
     "aad_tenant_id": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The ID of the Azure AD tenant"
+      }
     },
     "omsagent": {
       "type": "bool",
@@ -255,63 +340,129 @@
     },
     "enableAzureRBAC": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable RBAC using AAD"
+      }
     },
     "upgradeChannel": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "AKS upgrade channel"
+      },
+      "allowedValues": [
+        "",
+        "none",
+        "patch",
+        "stable",
+        "rapid",
+        "node-image"
+      ]
     },
     "osDiskType": {
       "type": "string",
-      "defaultValue": "Ephemeral"
+      "defaultValue": "Ephemeral",
+      "metadata": {
+        "description": "OS disk type"
+      },
+      "allowedValues": [
+        "Ephemeral",
+        "Managed"
+      ]
     },
     "agentVMSize": {
       "type": "string",
-      "defaultValue": "Standard_DS3_v2"
+      "defaultValue": "Standard_DS3_v2",
+      "metadata": {
+        "description": "VM SKU"
+      }
     },
     "osDiskSizeGB": {
       "type": "int",
-      "defaultValue": 0
+      "defaultValue": 0,
+      "metadata": {
+        "description": "Disk size in GB"
+      }
     },
     "agentCount": {
       "type": "int",
-      "defaultValue": 3
+      "defaultValue": 3,
+      "metadata": {
+        "description": "The number of agents for the user node pool"
+      }
     },
     "agentCountMax": {
       "type": "int",
-      "defaultValue": 0
+      "defaultValue": 0,
+      "metadata": {
+        "description": "The maximum number of nodes for the user node pool"
+      }
     },
     "maxPods": {
       "type": "int",
-      "defaultValue": 30
+      "defaultValue": 30,
+      "metadata": {
+        "description": "The maximum number of pods per node."
+      }
     },
     "networkPlugin": {
       "type": "string",
-      "defaultValue": "azure"
+      "defaultValue": "azure",
+      "metadata": {
+        "description": "The network plugin type"
+      },
+      "allowedValues": [
+        "azure",
+        "kubenet"
+      ]
     },
     "networkPolicy": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The network policy to use."
+      },
+      "allowedValues": [
+        "",
+        "azure",
+        "calico"
+      ]
     },
     "azurepolicy": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "Enable the Azure Policy addon"
+      }
     },
     "gitops": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "Enable the git ops addon"
+      }
     },
     "authorizedIPRanges": {
       "type": "array",
-      "defaultValue": []
+      "defaultValue": [],
+      "metadata": {
+        "description": "The IP addresses that are allowed to access the API server"
+      }
     },
     "enablePrivateCluster": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable private cluster"
+      }
     },
     "availabilityZones": {
       "type": "array",
-      "defaultValue": []
+      "defaultValue": [],
+      "metadata": {
+        "description": "The zones to use for a node pool"
+      }
     },
     "AksDisableLocalAccounts": {
       "type": "bool",
@@ -322,27 +473,53 @@
     },
     "AksPaidSkuForSLA": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Use the paid sku for SLA rather than SLO"
+      }
     },
     "podCidr": {
       "type": "string",
-      "defaultValue": "10.240.100.0/24"
+      "defaultValue": "10.240.100.0/24",
+      "metadata": {
+        "description": "The address range to use for pods"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "serviceCidr": {
       "type": "string",
-      "defaultValue": "172.10.0.0/16"
+      "defaultValue": "172.10.0.0/16",
+      "metadata": {
+        "description": "The address range to use for services"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "dnsServiceIP": {
       "type": "string",
-      "defaultValue": "172.10.0.10"
+      "defaultValue": "172.10.0.10",
+      "metadata": {
+        "description": "The IP address to reserve for DNS"
+      },
+      "maxLength": 15,
+      "minLength": 7
     },
     "dockerBridgeCidr": {
       "type": "string",
-      "defaultValue": "172.17.0.1/16"
+      "defaultValue": "172.17.0.1/16",
+      "metadata": {
+        "description": "The address range to use for the docker bridge"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "JustUseSystemPool": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Only use the system node pool"
+      }
     },
     "SystemPoolType": {
       "type": "string",
@@ -366,7 +543,10 @@
     },
     "adminprincipleid": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The principal ID to assign the AKS admin role."
+      }
     },
     "AksDiagCategories": {
       "type": "array",
@@ -1121,7 +1301,11 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1124.51302",
+<<<<<<< HEAD
               "templateHash": "16834932649433911852"
+=======
+              "templateHash": "13781598848049858506"
+>>>>>>> d6768cabe86e8c387a76af1deb612831cc0439c9
             }
           },
           "parameters": {
