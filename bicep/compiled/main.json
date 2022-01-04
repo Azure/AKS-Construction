@@ -5,13 +5,17 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "1837689754854716771"
+      "templateHash": "2348966813339934824"
     }
   },
   "parameters": {
     "location": {
       "type": "string",
-      "defaultValue": "[resourceGroup().location]"
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "The location to use for the deployment. defaults to Resource Groups location."
+      },
+      "minLength": 2
     },
     "resourceName": {
       "type": "string",
@@ -44,42 +48,80 @@
     },
     "vnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.0.0/16"
+      "defaultValue": "10.240.0.0/16",
+      "metadata": {
+        "description": "The address range for the custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "vnetAksSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.0.0/22"
+      "defaultValue": "10.240.0.0/22",
+      "metadata": {
+        "description": "The address range for AKS in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "vnetAppGatewaySubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.4.0/26"
+      "defaultValue": "10.240.4.0/26",
+      "metadata": {
+        "description": "The address range for the App Gateway in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "acrAgentPoolSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.4.64/26"
+      "defaultValue": "10.240.4.64/26",
+      "metadata": {
+        "description": "The address range for the ACR in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "bastionSubnetAddressPrefix": {
       "type": "string",
       "defaultValue": "10.240.4.128/26",
       "metadata": {
         "description": "The address range for Azure Bastion in your custom vnet"
-      }
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "privateLinkSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.4.192/26"
+      "defaultValue": "10.240.4.192/26",
+      "metadata": {
+        "description": "The address range for private link in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "vnetFirewallSubnetAddressPrefix": {
       "type": "string",
-      "defaultValue": "10.240.50.0/24"
+      "defaultValue": "10.240.50.0/24",
+      "metadata": {
+        "description": "The address range for Azure Firewall in your custom vnet"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "privateLinks": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable support for private links"
+      }
     },
     "acrPrivatePool": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable support for ACR private pool"
+      }
     },
     "bastion": {
       "type": "bool",
@@ -88,9 +130,19 @@
         "description": "Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)"
       }
     },
+    "CreateNetworkSecurityGroups": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Deploy NSGs to your vnet. (works with Custom Networking only, not BYO)"
+      }
+    },
     "dnsZoneId": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The full Azure resource ID of the DNS zone to use for the AKS cluster"
+      }
     },
     "azureKeyvaultSecretsProvider": {
       "type": "bool",
@@ -129,17 +181,29 @@
     },
     "kvOfficerRolePrincipalId": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The principal ID of the service principal that has access to the Key Vault"
+      }
     },
     "registries_sku": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The SKU to use for the Container Registry"
+      },
+      "allowedValues": [
+        "",
+        "Basic",
+        "Standard",
+        "Premium"
+      ]
     },
     "enableACRTrustPolicy": {
       "type": "bool",
       "defaultValue": false,
       "metadata": {
-        "description": "Enable the ACR Content Trust Policy"
+        "description": "Enable the ACR Content Trust Policy, SKU must be set to Premium"
       }
     },
     "acrUntaggedRetentionPolicyEnabled": {
@@ -158,7 +222,10 @@
     },
     "acrPushRolePrincipalId": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The principal ID of the service principal to assign the push role to the ACR"
+      }
     },
     "azureFirewalls": {
       "type": "bool",
@@ -169,7 +236,10 @@
     },
     "certManagerFW": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Add application rules to the firewall for certificate management."
+      }
     },
     "inboundHttpFW": {
       "type": "string",
@@ -192,22 +262,32 @@
     },
     "appGWcount": {
       "type": "int",
-      "defaultValue": 2
+      "defaultValue": 2,
+      "metadata": {
+        "description": "The number of applciation gateway instances"
+      }
     },
     "appGWmaxCount": {
       "type": "int",
-      "defaultValue": 0
+      "defaultValue": 0,
+      "metadata": {
+        "description": "The maximum number of application gateway instances"
+      }
     },
     "privateIpApplicationGateway": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
         "description": "A known private ip in the Application Gateway subnet range to be allocated for internal traffic"
-      }
+      },
+      "maxLength": 15
     },
     "appgwKVIntegration": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable key vault integration for application gateway"
+      }
     },
     "appGWsku": {
       "type": "string",
@@ -237,19 +317,31 @@
     },
     "dnsPrefix": {
       "type": "string",
-      "defaultValue": "[format('{0}-dns', parameters('resourceName'))]"
+      "defaultValue": "[format('{0}-dns', parameters('resourceName'))]",
+      "metadata": {
+        "description": "DNS prefix. Defaults to {resourceName}-dns"
+      }
     },
     "kubernetesVersion": {
       "type": "string",
-      "defaultValue": "1.20.9"
+      "defaultValue": "1.21.7",
+      "metadata": {
+        "description": "Kubernetes Version"
+      }
     },
     "enable_aad": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Azure AD integration on AKS"
+      }
     },
     "aad_tenant_id": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The ID of the Azure AD tenant"
+      }
     },
     "omsagent": {
       "type": "bool",
@@ -260,63 +352,129 @@
     },
     "enableAzureRBAC": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable RBAC using AAD"
+      }
     },
     "upgradeChannel": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "AKS upgrade channel"
+      },
+      "allowedValues": [
+        "",
+        "none",
+        "patch",
+        "stable",
+        "rapid",
+        "node-image"
+      ]
     },
     "osDiskType": {
       "type": "string",
-      "defaultValue": "Ephemeral"
+      "defaultValue": "Ephemeral",
+      "metadata": {
+        "description": "OS disk type"
+      },
+      "allowedValues": [
+        "Ephemeral",
+        "Managed"
+      ]
     },
     "agentVMSize": {
       "type": "string",
-      "defaultValue": "Standard_DS3_v2"
+      "defaultValue": "Standard_DS3_v2",
+      "metadata": {
+        "description": "VM SKU"
+      }
     },
     "osDiskSizeGB": {
       "type": "int",
-      "defaultValue": 0
+      "defaultValue": 0,
+      "metadata": {
+        "description": "Disk size in GB"
+      }
     },
     "agentCount": {
       "type": "int",
-      "defaultValue": 3
+      "defaultValue": 3,
+      "metadata": {
+        "description": "The number of agents for the user node pool"
+      }
     },
     "agentCountMax": {
       "type": "int",
-      "defaultValue": 0
+      "defaultValue": 0,
+      "metadata": {
+        "description": "The maximum number of nodes for the user node pool"
+      }
     },
     "maxPods": {
       "type": "int",
-      "defaultValue": 30
+      "defaultValue": 30,
+      "metadata": {
+        "description": "The maximum number of pods per node."
+      }
     },
     "networkPlugin": {
       "type": "string",
-      "defaultValue": "azure"
+      "defaultValue": "azure",
+      "metadata": {
+        "description": "The network plugin type"
+      },
+      "allowedValues": [
+        "azure",
+        "kubenet"
+      ]
     },
     "networkPolicy": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The network policy to use."
+      },
+      "allowedValues": [
+        "",
+        "azure",
+        "calico"
+      ]
     },
     "azurepolicy": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "Enable the Azure Policy addon"
+      }
     },
     "gitops": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "Enable the git ops addon"
+      }
     },
     "authorizedIPRanges": {
       "type": "array",
-      "defaultValue": []
+      "defaultValue": [],
+      "metadata": {
+        "description": "The IP addresses that are allowed to access the API server"
+      }
     },
     "enablePrivateCluster": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable private cluster"
+      }
     },
     "availabilityZones": {
       "type": "array",
-      "defaultValue": []
+      "defaultValue": [],
+      "metadata": {
+        "description": "The zones to use for a node pool"
+      }
     },
     "AksDisableLocalAccounts": {
       "type": "bool",
@@ -327,27 +485,53 @@
     },
     "AksPaidSkuForSLA": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Use the paid sku for SLA rather than SLO"
+      }
     },
     "podCidr": {
       "type": "string",
-      "defaultValue": "10.240.100.0/24"
+      "defaultValue": "10.240.100.0/24",
+      "metadata": {
+        "description": "The address range to use for pods"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "serviceCidr": {
       "type": "string",
-      "defaultValue": "172.10.0.0/16"
+      "defaultValue": "172.10.0.0/16",
+      "metadata": {
+        "description": "The address range to use for services"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "dnsServiceIP": {
       "type": "string",
-      "defaultValue": "172.10.0.10"
+      "defaultValue": "172.10.0.10",
+      "metadata": {
+        "description": "The IP address to reserve for DNS"
+      },
+      "maxLength": 15,
+      "minLength": 7
     },
     "dockerBridgeCidr": {
       "type": "string",
-      "defaultValue": "172.17.0.1/16"
+      "defaultValue": "172.17.0.1/16",
+      "metadata": {
+        "description": "The address range to use for the docker bridge"
+      },
+      "maxLength": 18,
+      "minLength": 9
     },
     "JustUseSystemPool": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": false,
+      "metadata": {
+        "description": "Only use the system node pool"
+      }
     },
     "SystemPoolType": {
       "type": "string",
@@ -371,7 +555,10 @@
     },
     "adminprincipleid": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "metadata": {
+        "description": "The principal ID to assign the AKS admin role."
+      }
     },
     "AksDiagCategories": {
       "type": "array",
@@ -1111,6 +1298,12 @@
           },
           "availabilityZones": {
             "value": "[parameters('availabilityZones')]"
+          },
+          "workspaceDiagsId": {
+            "value": "[if(variables('createLaw'), resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')), '')]"
+          },
+          "networkSecurityGroups": {
+            "value": "[parameters('CreateNetworkSecurityGroups')]"
           }
         },
         "template": {
@@ -1120,7 +1313,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1124.51302",
-              "templateHash": "18221183003757865636"
+              "templateHash": "17597598927346155064"
             }
           },
           "parameters": {
@@ -1191,6 +1384,14 @@
               "type": "array",
               "defaultValue": []
             },
+            "workspaceDiagsId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "networkSecurityGroups": {
+              "type": "bool",
+              "defaultValue": true
+            },
             "bastionHostName": {
               "type": "string",
               "defaultValue": "[format('bas-{0}', parameters('resourceName'))]"
@@ -1221,12 +1422,6 @@
               }
             },
             "appgw_subnet_name": "appgw-sn",
-            "appgw_subnet": {
-              "name": "[variables('appgw_subnet_name')]",
-              "properties": {
-                "addressPrefix": "[parameters('vnetAppGatewaySubnetAddressPrefix')]"
-              }
-            },
             "fw_subnet_name": "AzureFirewallSubnet",
             "fw_subnet": {
               "name": "[variables('fw_subnet_name')]",
@@ -1244,7 +1439,6 @@
             "subnets_2": "[if(parameters('privateLinks'), concat(array(variables('subnets_1')), array(variables('private_link_subnet'))), array(variables('subnets_1')))]",
             "subnets_3": "[if(parameters('acrPrivatePool'), concat(array(variables('subnets_2')), array(variables('acrpool_subnet'))), array(variables('subnets_2')))]",
             "subnets_4": "[if(parameters('bastion'), concat(array(variables('subnets_3')), array(variables('bastion_subnet'))), array(variables('subnets_3')))]",
-            "final_subnets": "[if(parameters('ingressApplicationGateway'), concat(array(variables('subnets_4')), array(variables('appgw_subnet'))), array(variables('subnets_4')))]",
             "vnetName": "[format('vnet-{0}', parameters('resourceName'))]",
             "networkContributorRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
             "privateLinkAcrName": "[format('pl-acr-{0}', parameters('resourceName'))]",
@@ -1287,9 +1481,10 @@
                     "[parameters('vnetAddressPrefix')]"
                   ]
                 },
-                "subnets": "[variables('final_subnets')]"
+                "subnets": "[if(parameters('ingressApplicationGateway'), concat(array(variables('subnets_4')), array(createObject('name', variables('appgw_subnet_name'), 'properties', createObject('addressPrefix', parameters('vnetAppGatewaySubnetAddressPrefix'), 'networkSecurityGroup', if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), createObject('id', reference(resourceId('Microsoft.Resources/deployments', 'nsgAppGw'), '2020-10-01').outputs.nsgId.value), createObject()))))), array(variables('subnets_4')))]"
               },
               "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'nsgAppGw')]",
                 "[resourceId('Microsoft.Network/routeTables', variables('routeFwTableName'))]"
               ]
             },
@@ -1532,6 +1727,162 @@
                   }
                 }
               }
+            },
+            {
+              "condition": "[and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "nsgAppGw",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "resourceName": {
+                    "value": "[parameters('resourceName')]"
+                  },
+                  "workspaceDiagsId": {
+                    "value": "[parameters('workspaceDiagsId')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1124.51302",
+                      "templateHash": "792507653757810842"
+                    }
+                  },
+                  "parameters": {
+                    "resourceName": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "workspaceDiagsId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "NsgDiagnosticCategories": {
+                      "type": "array",
+                      "defaultValue": [
+                        "NetworkSecurityGroupEvent",
+                        "NetworkSecurityGroupRuleCounter"
+                      ]
+                    }
+                  },
+                  "variables": {
+                    "nsgName": "[format('nsg-agw-{0}', parameters('resourceName'))]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2021-05-01",
+                      "name": "[variables('nsgName')]",
+                      "location": "[parameters('location')]"
+                    },
+                    {
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2020-11-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AppGatewayManagement')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "65200-65535",
+                        "sourceAddressPrefix": "GatewayManager",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 100,
+                        "direction": "Inbound"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2020-11-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AzureLoadBalancer')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "AzureLoadBalancer",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 110,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2020-11-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Deny_AllInboundInternet')]",
+                      "properties": {
+                        "description": "Azure infrastructure communication",
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 4096,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('workspaceDiagsId')))]",
+                      "type": "Microsoft.Insights/diagnosticSettings",
+                      "apiVersion": "2021-05-01-preview",
+                      "scope": "[format('Microsoft.Network/networkSecurityGroups/{0}', variables('nsgName'))]",
+                      "name": "[format('diags-{0}', variables('nsgName'))]",
+                      "properties": {
+                        "copy": [
+                          {
+                            "name": "logs",
+                            "count": "[length(parameters('NsgDiagnosticCategories'))]",
+                            "input": {
+                              "category": "[parameters('NsgDiagnosticCategories')[copyIndex('logs')]]",
+                              "enabled": true
+                            }
+                          }
+                        ],
+                        "workspaceId": "[parameters('workspaceDiagsId')]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                    }
+                  }
+                }
+              }
             }
           ],
           "outputs": {
@@ -1560,6 +1911,7 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]",
         "[resourceId('Microsoft.KeyVault/vaults', variables('akvName'))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-aks-{0}', parameters('resourceName')))]"
       ]
@@ -1717,7 +2069,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1124.51302",
-              "templateHash": "6646458215337953968"
+              "templateHash": "4208943346413869048"
             }
           },
           "parameters": {
@@ -1902,15 +2254,6 @@
                       "type": "Allow"
                     },
                     "rules": "[concat(createArray(createObject('name', 'aks', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(), 'fqdnTags', createArray('AzureKubernetesService'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), if(parameters('certManagerFW'), createArray(createObject('name', 'certman-quay', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('quay.io', '*.quay.io'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix'))), createObject('name', 'certman-letsencrypt', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray('letsencrypt.org', '*.letsencrypt.org'), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()), if(and(parameters('certManagerFW'), not(empty(parameters('appDnsZoneName')))), createArray(createObject('name', 'certman-appDnsZoneName', 'ruleType', 'ApplicationRule', 'protocols', createArray(createObject('port', 443, 'protocolType', 'Https'), createObject('port', 80, 'protocolType', 'Http')), 'targetFqdns', createArray(parameters('appDnsZoneName'), format('*.{0}', parameters('appDnsZoneName'))), 'sourceAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')))), createArray()))]"
-                  },
-                  {
-                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
-                    "name": "AksNetIngress",
-                    "priority": 300,
-                    "action": {
-                      "type": "Allow"
-                    },
-                    "rules": "[concat(if(equals(parameters('inboundHttpFW'), 'AllowAllIn'), createArray(createObject('ruleType', 'NetworkRule', 'name', parameters('inboundHttpFW'), 'ipProtocols', createArray('TCP'), 'sourceAddresses', createArray('*'), 'destinationAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationPorts', createArray('80', '443'))), createArray()), if(and(parameters('acrPrivatePool'), equals(parameters('inboundHttpFW'), 'AllowAcrSubnetIn')), createArray(createObject('ruleType', 'NetworkRule', 'name', parameters('inboundHttpFW'), 'ipProtocols', createArray('TCP', 'ICMP'), 'sourceAddresses', createArray(parameters('acrAgentPoolSubnetAddressPrefix')), 'destinationAddresses', createArray(parameters('vnetAksSubnetAddressPrefix')), 'destinationPorts', createArray('80', '443'))), createArray()))]"
                   }
                 ]
               },
@@ -1963,7 +2306,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1124.51302",
-              "templateHash": "15279359060035009380"
+              "templateHash": "9411231074914926626"
             }
           },
           "parameters": {
