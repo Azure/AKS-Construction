@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "2348966813339934824"
+      "templateHash": "2928077471136429261"
     }
   },
   "parameters": {
@@ -240,18 +240,6 @@
       "metadata": {
         "description": "Add application rules to the firewall for certificate management."
       }
-    },
-    "inboundHttpFW": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Allow Http traffic (80/443) into AKS from specific sources"
-      },
-      "allowedValues": [
-        "AllowAllIn",
-        "AllowAcrSubnetIn",
-        ""
-      ]
     },
     "ingressApplicationGateway": {
       "type": "bool",
@@ -2055,9 +2043,6 @@
           "acrAgentPoolSubnetAddressPrefix": {
             "value": "[parameters('acrAgentPoolSubnetAddressPrefix')]"
           },
-          "inboundHttpFW": {
-            "value": "[parameters('inboundHttpFW')]"
-          },
           "availabilityZones": {
             "value": "[parameters('availabilityZones')]"
           }
@@ -2092,15 +2077,6 @@
             "certManagerFW": {
               "type": "bool",
               "defaultValue": false
-            },
-            "inboundHttpFW": {
-              "type": "string",
-              "defaultValue": "",
-              "allowedValues": [
-                "AllowAllIn",
-                "AllowAcrSubnetIn",
-                ""
-              ]
             },
             "acrPrivatePool": {
               "type": "bool",
@@ -2306,7 +2282,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1124.51302",
-              "templateHash": "9411231074914926626"
+              "templateHash": "15279359060035009380"
             }
           },
           "parameters": {
