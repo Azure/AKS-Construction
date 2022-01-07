@@ -174,57 +174,6 @@ jobs:
 
           echo "::set-output name=IPADDRESS::$ipAddress"
 
-      - name: Verify App is reachable (from run cmd container)
-        run: |
-          ipAddress='${{ steps.waitforip.outputs.IPADDRESS}}'
-
-          counter=1
-          while [ $counter -le ${{ inputs.CURLRETRIES }} ] && [ "$respcode" != "200" ]
-          do
-            echo "curl $ipAddress for response code [$counter]"
-
-            command="curl --connect-timeout 2 --retry 2 --retry-delay 5 --no-keepalive --no-tcp-nodelay  -o /dev/null -s -w "%{http_code}\n" $ipAddress"
-            #command="wget --server-response $ipAddress 2>&1 | awk '/^  HTTP/{print $2}'"
-            echo "Sending command to AKS : $command"
-            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
-            echo $cmdOut
-            if [ "${{ inputs.DEBUG }}" == "true"]; then echo $cmdOut > VerifyAppFromRunContainer.json; fi
-            respcode=$(echo $cmdOut | jq -r '.logs')
-
-            echo $respcode
-            if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
-            then
-                echo "200 response code received after $counter trys"
-                break 2
-            elif [ "$respcode" == "470" ] || [ "$respcode" == "470n" ];
-            then
-                echo "470 response code received after $counter trys"
-                echo "::warning ::Could not verify IP connectivity from Run Command"
-                break 2
-            else
-                echo "going to wait another 15s [$counter] [$(date +"%T")]"
-                ((counter++))
-                sleep 15
-            fi
-          done
-
-          if [ "$respcode" == "200" ] || [ "$respcode" == "200n" ];
-          then
-            echo "curl $ipAddress for content [$counter attempts for 200]"
-            command="curl $ipAddress"
-            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
-            if [ "${{ inputs.DEBUG }}" == "true" ]; then echo $cmdOut > DebugAppContentFromRunContainer.json; fi
-            cmdLogs=$(echo $cmdOut | jq -r '.logs')
-
-            echo $cmdLogs
-          elif [ "$respcode" == "470" ] || [ "$respcode" == "470n" ];
-          then
-              echo "Skipping content check from Run Command"
-          else
-              echo "$respcode not 200 - failing"
-             exit 1
-          fi
-
       - name: Verify App is publicly reachable (from hosted GitHub runner)
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
         run: |
