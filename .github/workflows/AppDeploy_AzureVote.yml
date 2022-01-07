@@ -31,7 +31,7 @@ on:
         description: 'Uninstall app after verifying it works'
         type: boolean
         default: false
-        required: true
+        required: false
       DEBUG:
         description: "Generate optional Debug Artifacts"
         type: boolean
