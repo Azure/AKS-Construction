@@ -492,6 +492,7 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: avote-public
       INGRESSTYPE: "AGIC-Public-Ingress"
+      FORCEHELMCLEANINSTALL: true
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       
