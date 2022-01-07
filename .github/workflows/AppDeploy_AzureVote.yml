@@ -81,7 +81,7 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
           
-      - name: Check for, and uninstall the Vote app
+      - name: Check for and uninstall the Vote app
         if: inputs.FORCEHELMCLEANINSTALL == true
         run: |
         
@@ -93,12 +93,14 @@ jobs:
           voteAppInstalled=$(echo $cmdOut | jq -r '.logs' | jq 'length')
           echo "voteAppInstalled is $voteAppInstalled"
           
-          if [ $voteAppInstalled > 0 ]; 
+          if [ $voteAppInstalled -gt 0 ]; 
           then
             command="helm uninstall --namespace $NAMESP $APPNAME"
             echo "Sending command $command to AKS"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
             echo $cmdOut
+            
+            sleep 20s
           fi
           
       - name: Install the Vote app
