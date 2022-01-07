@@ -32,6 +32,11 @@ on:
         type: boolean
         default: false
         required: false
+      FORCEHELMCLEANINSTALL:
+        description: 'If App is already installed, remove explictly before install'
+        type: boolean
+        default: false
+        required: false
       DEBUG:
         description: "Generate optional Debug Artifacts"
         type: boolean
@@ -75,7 +80,27 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-
+          
+      - name: Check for, and uninstall the Vote app
+        if: inputs.FORCEHELMCLEANINSTALL == true
+        run: |
+        
+          command="helm list --namespace $NAMESP -o json -f $APPNAME"
+          echo "Sending command $command to AKS"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          echo $cmdOut
+          
+          voteAppInstalled=$(echo $cmdOut | jq -r '.logs' | jq 'length')
+          echo "voteAppInstalled is $voteAppInstalled"
+          
+          if [ $voteAppInstalled > 0 ]; 
+          then
+            command="helm uninstall --namespace $NAMESP $APPNAME"
+            echo "Sending command $command to AKS"
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+            echo $cmdOut
+          fi
+          
       - name: Install the Vote app
         id: installapp
         env:
