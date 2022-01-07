@@ -16,6 +16,18 @@ env:
   RG: "Automation-Actions-AksDeployCI"
 
 jobs:
+  byo-cluster:
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
+    with:
+      RG: Automation-Actions-AksDeployCI #$RG
+      AKSNAME: aks-Byo
+      AGNAME: agw-Byo
+      APPNAME: avote-public
+      INGRESSTYPE: "AGIC-Public-Ingress"
+      UNINSTALLAFTERVERIFY: false
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      
   test-run-cmd:
     runs-on: ubuntu-latest
     if: false
