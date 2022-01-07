@@ -462,7 +462,7 @@ jobs:
             $AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
             $AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
 
-                     write-output "AKS $AKSNAME"
+            write-output "AKS $AKSNAME"
             write-output "AG $AGNAME"
 
             write-output "Checking if ingressApplicationGateway is enabled"
@@ -481,10 +481,25 @@ jobs:
 
               az role assignment list --assignee $agicobjid
             }
-
+            
+  SmokeTest_SimpleApp:
+    needs: [Deploy]
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
+    #concurrency: "Ag-${{ inputs.AGNAME}}"
+    with:
+      RG: Automation-Actions-AksDeployCI #$RG
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
+      APPNAME: avote-public
+      INGRESSTYPE: "AGIC-Public-Ingress"
+      UNINSTALLAFTERVERIFY: ${{ github.event.inputs.doSmokeTestUninstall }}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      
   SmokeTest_JavaApp-certmgr:
-    needs: [Deploy,SmokeTest_SimpleApp]
+    needs: [Deploy]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+    #concurrency: "Ag-${{ inputs.AGNAME}}"
     with:
       RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
@@ -511,19 +526,6 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-kvssl
       FRONTENDCERTTYPE: appgw-selfsigned
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-
-  SmokeTest_SimpleApp:
-    needs: [Deploy]
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
-    with:
-      RG: Automation-Actions-AksDeployCI #$RG
-      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
-      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
-      APPNAME: avote-public
-      INGRESSTYPE: "AGIC-Public-Ingress"
-      UNINSTALLAFTERVERIFY: ${{ github.event.inputs.doSmokeTestUninstall }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
