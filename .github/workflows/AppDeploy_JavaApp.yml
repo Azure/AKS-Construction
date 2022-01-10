@@ -301,6 +301,11 @@ jobs:
             ((counter++))
             sleep 10s
           done
+          
+          if [ "$dnsrecords" == "[]" ]
+          then
+            exit 1
+          fi
 
       - name: Wait for Cert Manager to issue certificate
         if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
