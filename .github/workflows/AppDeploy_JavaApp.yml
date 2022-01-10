@@ -64,6 +64,7 @@ jobs:
           echo "RG is ${{ inputs.RG }}"
           echo "AKS name is ${{ inputs.AKSNAME }}"
           echo "FrontendCert type is ${{ inputs.FRONTENDCERTTYPE }}"
+          echo "CertManager version is ${{ inputs.CERTMANAGERVERSION }}"
 
       - name: Azure Login
         uses: Azure/login@v1
@@ -304,7 +305,7 @@ jobs:
           
           if [ "$dnsrecords" == "[]" ]
           then
-            echo "ExternalDNS has not created Azure DNS Records in a timely fashion, suggest you examine the ExternalDNS pod logs" 
+            echo "ExternalDNS has not created Azure DNS Records in a timely fashion, suggest you examine the ExternalDNS pod logs with kubectl logs -l app=externaldns" 
             exit 1
           fi
 
