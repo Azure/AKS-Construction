@@ -305,7 +305,8 @@ jobs:
           
           if [ "$dnsrecords" == "[]" ]
           then
-            echo "ExternalDNS has not created Azure DNS Records in a timely fashion, suggest you examine the ExternalDNS pod logs with kubectl logs -l app=externaldns" 
+            echo "ExternalDNS has not created Azure DNS Records in a timely fashion, suggest you examine the ExternalDNS pod logs with; kubectl logs -l app=externaldns" 
+            kubectl logs -l app=externaldns
             exit 1
           fi
 
