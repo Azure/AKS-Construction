@@ -507,13 +507,14 @@ jobs:
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
   
-  #Resuable workflows can't be directly passed ENV/INPUTS (yet)
   ReusableWF:
     needs: [Deploy]
     runs-on: ubuntu-latest
     outputs:
       RG: ${{ env.RG }} 
       Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
+    steps:
+      - run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
 
   SmokeTest_SimpleApp:
     needs: [Deploy]
