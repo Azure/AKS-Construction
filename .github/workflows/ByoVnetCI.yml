@@ -514,10 +514,11 @@ jobs:
       RG: ${{ env.RG }} 
       Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
     steps:
-      - run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+      - name: Dummy step
+        run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
 
   SmokeTest_SimpleApp:
-    needs: [Deploy]
+    needs: [Deploy, ReusableWF]
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     #concurrency: "Ag-${{ inputs.AGNAME}}"
     with:
@@ -531,7 +532,7 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       
   SmokeTest_JavaApp-certmgr:
-    needs: [Deploy]
+    needs: [Deploy, ReusableWF]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-denyall
     #concurrency: "Ag-${{ inputs.AGNAME}}"
     with:
@@ -549,7 +550,7 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   SmokeTest_JavaApp-appgw:
-    needs: [Deploy,SmokeTest_JavaApp-certmgr]
+    needs: [Deploy, ReusableWF, SmokeTest_JavaApp-certmgr]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-denyall
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
