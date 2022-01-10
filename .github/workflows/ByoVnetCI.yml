@@ -523,7 +523,7 @@ jobs:
       
   SmokeTest_JavaApp-certmgr:
     needs: [Deploy]
-    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-denyall
     #concurrency: "Ag-${{ inputs.AGNAME}}"
     with:
       RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
@@ -540,7 +540,7 @@ jobs:
 
   SmokeTest_JavaApp-appgw:
     needs: [Deploy,SmokeTest_JavaApp-certmgr]
-    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-denyall
     with:
       RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
