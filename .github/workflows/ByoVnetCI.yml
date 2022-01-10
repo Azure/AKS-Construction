@@ -506,13 +506,21 @@ jobs:
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
-          
+  
+  #Resuable workflows can't be directly passed ENV/INPUTS (yet)
+  ReusableWF:
+    needs: [Deploy]
+    runs-on: ubuntu-latest
+    outputs:
+      RG: ${{ env.RG }} 
+      Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
+
   SmokeTest_SimpleApp:
     needs: [Deploy]
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     #concurrency: "Ag-${{ inputs.AGNAME}}"
     with:
-      RG: Automation-Actions-AksDeployCI #$RG
+      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #$RG
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: avote-public
@@ -526,7 +534,7 @@ jobs:
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-denyall
     #concurrency: "Ag-${{ inputs.AGNAME}}"
     with:
-      RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: azdemo.co.uk
       DNSRG: domainssl
@@ -535,6 +543,7 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-demo
       FRONTENDCERTTYPE: certmanager-staging
+      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -542,7 +551,7 @@ jobs:
     needs: [Deploy,SmokeTest_JavaApp-certmgr]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-denyall
     with:
-      RG: Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: azdemo.co.uk
       DNSRG: domainssl
@@ -551,6 +560,7 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-kvssl
       FRONTENDCERTTYPE: appgw-selfsigned
+      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
