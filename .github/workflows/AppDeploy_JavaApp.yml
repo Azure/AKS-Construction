@@ -304,6 +304,7 @@ jobs:
           
           if [ "$dnsrecords" == "[]" ]
           then
+            echo "ExternalDNS has not created Azure DNS Records in a timely fashion, suggest you examine the ExternalDNS pod logs" 
             exit 1
           fi
 
