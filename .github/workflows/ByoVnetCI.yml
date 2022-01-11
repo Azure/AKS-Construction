@@ -515,6 +515,8 @@ jobs:
     steps:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+      - name: Explain more
+        run: echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
 
   SmokeTest_SimpleApp:
     needs: [Deploy, ReusableWF]
@@ -527,6 +529,7 @@ jobs:
       APPNAME: avote-public
       INGRESSTYPE: "AGIC-Public-Ingress"
       FORCEHELMCLEANINSTALL: true
+      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       
