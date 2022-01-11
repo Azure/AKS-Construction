@@ -252,13 +252,24 @@ jobs:
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
+          
+  ReusableWF:
+    runs-on: ubuntu-latest
+    outputs:
+      RG: ${{ env.RG }} 
+      #Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
+    steps:
+      - name: Dummy step
+        run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+      - name: Explain more
+        run: echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
 
   SmokeTest_KnownGoodApp:
-    needs: [Deploy]
+    needs: [ReusableWF, Deploy]
     #This points to a specific branch, because of a limitation around targetting @${{ github.sha }} isn't supported yet. https://github.community/t/ref-head-in-reusable-workflows/203690/6
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
-      RG: 'Automation-Actions-AksDeployCI'  #${{ env.RG }} #Seems to be a bug with reusable workflows, not able to pass ENV variables down. https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111
+      RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: azure-vote-public
