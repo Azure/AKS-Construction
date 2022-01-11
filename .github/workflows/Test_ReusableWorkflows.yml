@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       RG: ${{ env.RG }} 
-      Uninstall: '${{ github.event.inputs.doSmokeTestUninstall }}'
+      Uninstall: ${{ github.event.inputs.doSmokeTestUninstall == true }}
       
     steps:
       - name: Dummy step
