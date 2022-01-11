@@ -4,27 +4,39 @@ name: Test Harness for Reusable workflows
 
 on:
   workflow_dispatch:
-
-  #pull_request:
-  #  branches: [main]
-  #  paths:
-  #    - ".github/workflows/Test_ReusableWorkflows.yml"
+    inputs:
+      doSmokeTestUninstall:
+        description: 'Uninstall smoke test apps after tests'
+        default: 'true'
+        type: boolean
+        required: false
 
 concurrency: ci-${{ github.ref }}
 
 env:
   RG: "Automation-Actions-AksDeployCI"
-
+  
 jobs:
+  ReusableWF:
+    runs-on: ubuntu-latest
+    outputs:
+      RG: ${{ env.RG }} 
+      Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
+      
+    steps:
+      - name: Dummy step
+        run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+        
   byo-cluster:
+    needs: [ReusableWF]
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@gb-denyall
     with:
-      RG: Automation-Actions-AksDeployCI #$RG
+      RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: aks-Byo
       AGNAME: agw-Byo
       APPNAME: avote-public
       INGRESSTYPE: "AGIC-Public-Ingress"
-      UNINSTALLAFTERVERIFY: false
+      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       
