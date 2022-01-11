@@ -36,7 +36,7 @@ jobs:
       AGNAME: agw-Byo
       APPNAME: avote-public
       INGRESSTYPE: "AGIC-Public-Ingress"
-      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall }}
+      UNINSTALLAFTERVERIFY: "${{ needs.ReusableWF.outputs.Uninstall }}"
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       
