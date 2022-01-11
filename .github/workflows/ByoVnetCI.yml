@@ -544,7 +544,7 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-demo
       FRONTENDCERTTYPE: certmanager-staging
-      #UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall }}
+      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -561,7 +561,7 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-kvssl
       FRONTENDCERTTYPE: appgw-selfsigned
-      #UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall }}
+      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
