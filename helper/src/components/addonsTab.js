@@ -96,10 +96,10 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.networkPolicy === "none" ? "none" : "block") } }} >
                 <Stack tokens={{ childrenGap: 15 }}>
                     <MessageBar messageBarType={MessageBarType.warning}>A Default Deny Network Policy provides an enhanced security posture. Pods without policy are not allowed traffic. Please use caution, with apps that you know have policy defined.</MessageBar>
-                    <Checkbox inputProps={{ "data-testid": "addons-netpolicy-denydefault-Checkbox"}} disabled={addons.networkPolicy === 'none'} checked={addons.denydefaultNetworkPolicy} onChange={(ev, v) => updateFn("denydefaultNetworkPolicy", v)} label="Create a default deny policy" />
+                    <Checkbox inputProps={{ "data-testid": "addons-netpolicy-denydefault-Checkbox"}} disabled={addons.networkPolicy === 'none'} checked={addons.denydefaultNetworkPolicy} onChange={(ev, v) => updateFn("denydefaultNetworkPolicy", v)} label="Create a default deny policy in the default namespace" />
                 </Stack>
             </Stack.Item>
-            
+
             <Separator className="notopmargin" />
             <Stack.Item align="start">
                 <Label required={true}>
