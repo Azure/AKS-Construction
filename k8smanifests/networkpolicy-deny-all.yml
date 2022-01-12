@@ -1,3 +1,5 @@
+#Creates a default deny for ingress/egress in the namespace you apply it
+---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
