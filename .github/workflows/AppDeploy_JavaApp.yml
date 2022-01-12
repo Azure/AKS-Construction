@@ -302,10 +302,10 @@ jobs:
             ((counter++))
             sleep 10s
           done
-          
+
           if [ "$dnsrecords" == "[]" ]
           then
-            echo "ExternalDNS has not created Azure DNS Records in a timely fashion, suggest you examine the ExternalDNS pod logs with; kubectl logs -l app=externaldns" 
+            echo "ExternalDNS has not created Azure DNS Records in a timely fashion, suggest you examine the ExternalDNS pod logs with; kubectl logs -l app=externaldns"
             kubectl logs -l app=externaldns
             exit 1
           fi
@@ -332,6 +332,13 @@ jobs:
             ((counter++))
             sleep 10s
           done
+
+          if [ -z "$secret" ]
+          then
+            echo "CertManager ClusterIssuer has not created the certificate secret in a timely fashion, suggest you examine the logs"
+            kubectl get pods
+            exit 1
+          fi
 
       - name: Verify Java App is reachable
         env:
