@@ -41,6 +41,7 @@
         },
         "addons": {
             "networkPolicy": "none",
+            "denydefaultNetworkPolicy": false,
             "azurepolicy": "none",
             "ingress": "none",
             "ingressEveryNode": false,
