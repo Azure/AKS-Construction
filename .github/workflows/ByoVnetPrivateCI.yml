@@ -44,7 +44,7 @@ on:
 env:
   RG: 'Automation-Actions-AksDeployCI'
   ParamFilePath: ".github/workflows_dep/AksDeploy-Private.parameters.json"
-  RESNAME: 'Private'
+  RESNAME: 'Priv'
   DEPNAME: 'DepPriv${{ github.run_number }}'
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
 
