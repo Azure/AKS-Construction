@@ -44,7 +44,7 @@ on:
 env:
   RG: 'Automation-Actions-AksDeployCI'
   ParamFilePath: ".github/workflows_dep/AksDeploy-Private.parameters.json"
-  RESNAME: 'Priva'
+  RESNAME: 'Private'
   DEPNAME: 'DepPriv${{ github.run_number }}'
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
 
@@ -252,11 +252,11 @@ jobs:
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
-          
+
   ReusableWF:
     runs-on: ubuntu-latest
     outputs:
-      RG: ${{ env.RG }} 
+      RG: ${{ env.RG }}
       #Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
     steps:
       - name: Dummy step
