@@ -33,7 +33,7 @@
             "value": "Premium"
           },
           "acrPrivatePool": {
-            "value": true
+            "value": false
           },
           "azureFirewalls": {
             "value": true
