@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "2348966813339934824"
+      "templateHash": "5599439790278084939"
     }
   },
   "parameters": {
@@ -1292,6 +1292,9 @@
           },
           "networkSecurityGroups": {
             "value": "[parameters('CreateNetworkSecurityGroups')]"
+          },
+          "ingressApplicationGatewayPublic": {
+            "value": "[empty(parameters('privateIpApplicationGateway'))]"
           }
         },
         "template": {
@@ -1301,7 +1304,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1124.51302",
-              "templateHash": "17597598927346155064"
+              "templateHash": "13469875493675947635"
             }
           },
           "parameters": {
@@ -1319,6 +1322,10 @@
               "defaultValue": ""
             },
             "ingressApplicationGateway": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "ingressApplicationGatewayPublic": {
               "type": "bool",
               "defaultValue": false
             },
@@ -1735,6 +1742,9 @@
                   },
                   "workspaceDiagsId": {
                     "value": "[parameters('workspaceDiagsId')]"
+                  },
+                  "allowInternetHttpIn": {
+                    "value": "[parameters('ingressApplicationGatewayPublic')]"
                   }
                 },
                 "template": {
@@ -1744,7 +1754,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.4.1124.51302",
-                      "templateHash": "792507653757810842"
+                      "templateHash": "734783370998665324"
                     }
                   },
                   "parameters": {
@@ -1757,6 +1767,10 @@
                     "workspaceDiagsId": {
                       "type": "string",
                       "defaultValue": ""
+                    },
+                    "allowInternetHttpIn": {
+                      "type": "bool",
+                      "defaultValue": false
                     },
                     "NsgDiagnosticCategories": {
                       "type": "array",
@@ -1832,6 +1846,31 @@
                         "direction": "Inbound",
                         "sourcePortRanges": [],
                         "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('allowInternetHttpIn')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2020-11-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Http')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80",
+                          "443"
+                        ],
                         "sourceAddressPrefixes": [],
                         "destinationAddressPrefixes": []
                       },
