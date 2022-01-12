@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "2348966813339934824"
+      "templateHash": "15514835279513108370"
     }
   },
   "parameters": {
@@ -604,7 +604,7 @@
     "dnsZoneRg": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[4], '')]",
     "dnsZoneName": "[if(not(empty(parameters('dnsZoneId'))), split(parameters('dnsZoneId'), '/')[8], '')]",
     "isPrivate": "[if(not(empty(parameters('dnsZoneId'))), equals(split(parameters('dnsZoneId'), '/')[7], 'privateDnsZones'), false())]",
-    "akvName": "[format('kv-{0}', replace(parameters('resourceName'), '-', ''))]",
+    "akvName": "[format('kv-{0}{1}', replace(parameters('resourceName'), '-', ''), uniqueString(resourceGroup().id, parameters('resourceName')))]",
     "keyVaultSecretsUserRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
     "keyVaultSecretsOfficerRole": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
     "keyVaultCertsOfficerRole": "[resourceId('Microsoft.Authorization/roleDefinitions', 'a4417e6f-fecd-4de8-b567-7b0420556985')]",
