@@ -150,9 +150,13 @@ helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheu
 ${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
     // Default Deny All Network Policy, east-west traffic in cluster
-    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `\n\n# Create a default network policy in your cluster to deny all traffic
-kubectl create -f https://github.com/Azure/Aks-Construction/blob/main/k8smanifests/networkpolicy-deny-all.yml?raw=true`
-    : '') +
+    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `
+# -----------------------------------
+# Create a default-deny network policy in your cluster to deny all traffic in the default namespace
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
+kubectl apply -f https://github.com/Azure/Aks-Construction/blob/main/k8smanifests/networkpolicy-deny-all.yml?raw=true
+${cluster.apisecurity === "private" ? `"` : ``}
+` : '') +
 
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `
