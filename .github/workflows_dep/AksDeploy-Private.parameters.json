@@ -59,9 +59,6 @@
           "ingressApplicationGateway": {
             "value": true
           },
-          "privateIpApplicationGateway" : {
-            "value": "10.240.4.60"
-          },
           "bastion" : {
             "value": true
           },

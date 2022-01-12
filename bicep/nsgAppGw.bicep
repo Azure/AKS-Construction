@@ -64,6 +64,27 @@ resource ruleDenyInternet 'Microsoft.Network/networkSecurityGroups/securityRules
   }
 }
 
+param allowInternetHttpIn bool = false
+resource ruleInternetHttp 'Microsoft.Network/networkSecurityGroups/securityRules@2020-11-01' = if(allowInternetHttpIn) {
+  parent: nsg
+  name: 'Allow_Internet_Http'
+  properties: {
+    protocol: 'Tcp'
+    sourcePortRange: '*'
+    sourceAddressPrefix: 'Internet'
+    destinationAddressPrefix: '*'
+    access: 'Allow'
+    priority: 200
+    direction: 'Inbound'
+    sourcePortRanges: []
+    destinationPortRanges: [
+      '80'
+      '443'
+    ]
+    sourceAddressPrefixes: []
+    destinationAddressPrefixes: []
+  }
+}
 
 param NsgDiagnosticCategories array = [
   'NetworkSecurityGroupEvent'

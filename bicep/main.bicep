@@ -142,6 +142,7 @@ module network './network.bicep' = if (custom_vnet) {
     availabilityZones: availabilityZones
     workspaceDiagsId: createLaw ? aks_law.id : ''
     networkSecurityGroups: CreateNetworkSecurityGroups
+    ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
   }
 }
 
@@ -338,6 +339,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
   name: acrName
   location: location
   sku: {
+    #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no ACR required.
     name: registries_sku
   }
   properties: {
