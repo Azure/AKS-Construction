@@ -142,6 +142,7 @@ module network './network.bicep' = if (custom_vnet) {
     availabilityZones: availabilityZones
     workspaceDiagsId: createLaw ? aks_law.id : ''
     networkSecurityGroups: CreateNetworkSecurityGroups
+    ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
   }
 }
 
@@ -338,6 +339,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
   name: acrName
   location: location
   sku: {
+    #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no ACR required.
     name: registries_sku
   }
   properties: {
@@ -450,6 +452,14 @@ param azureFirewalls bool = false
 @description('Add application rules to the firewall for certificate management.')
 param certManagerFW bool = false
 
+// @allowed([
+//   'AllowAllIn'
+//   'AllowAcrSubnetIn'
+//   ''
+// ])
+// @description('Allow Http traffic (80/443) into AKS from specific sources')
+// param inboundHttpFW string = ''
+
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
   params: {
@@ -462,6 +472,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     appDnsZoneName: dnsZoneName
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
+    // inboundHttpFW: inboundHttpFW
     availabilityZones: availabilityZones
   }
 }
