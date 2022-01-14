@@ -81,6 +81,7 @@ jobs:
   Validation:
     runs-on: ubuntu-latest
     environment: azurecirgs
+    if: ${{ !github.event.pull_request.head.repo.fork }}
 
     steps:
       - uses: actions/checkout@v2

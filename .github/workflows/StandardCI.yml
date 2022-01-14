@@ -33,6 +33,8 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.head.repo.fork }}
+
     steps:
       #Get the code files from the repo
       - uses: actions/checkout@v2
