@@ -27,7 +27,20 @@ jobs:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
 
+  Post-Deploy:
+    needs: [ReusableWF]
+    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@gb-certmanagerrefactor
+    with:
+      RG: ${{ needs.ReusableWF.outputs.RG }}
+      AKSNAME: aks-Byo
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      CERTMANAGEREMAIL: "gdogg@microsoft.com"
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
   byo-cluster:
+    if: false
     needs: [ReusableWF]
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
     with:
