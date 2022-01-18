@@ -37,11 +37,11 @@ on:
         required: true
 
 jobs:
-  App_Create:
+  K8S:
     runs-on: ubuntu-latest
-    concurrency: "Ag-${{ inputs.AGNAME}}" #AppGateway doesn't like concurrent updates
     steps:
       - uses: actions/checkout@v2
+        name: Script file download
 
       - name: Job parameter inspection
         run: |
@@ -62,8 +62,7 @@ jobs:
         env:
           RG: "${{ inputs.RG }}"
           AKSNAME: "${{ inputs.AKSNAME }}"
-        run: |
-          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
         env:
@@ -80,16 +79,14 @@ jobs:
           CERTMANAGERURI: "https://github.com/jetstack/cert-manager/releases/download/${{ inputs.CERTMANAGERVERSION }}/cert-manager.yaml"
           CERTMANAGERISSUERURI: "${{ inputs.HELMCERTMANAGERISSUERURI }}"
           EMAILAD: "${{ inputs.CERTMANAGEREMAIL }}"
-        run: sh scripts/certmanager-install.sh
+        run: sh post-deploy/scripts/certmanager-install.sh
 
       - name: Verify Cert Manager ClusterIssuer
         if: inputs.CERTMANAGER
-        env:
-          EMAILAD: "gdogg@microsoft.com"
         run: kubectl describe clusterissuer
 
       - name: Create azure-config secret and install externaldns
         env:
           EXTERNALDNSURI: "${{ inputs.HELMEXTERNALDNSURI }}"
           DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
-        run: sh scripts/externaldns-config-install.sh
+        run: sh post-deploy/scripts/externaldns-config-install.sh

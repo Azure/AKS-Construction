@@ -1,7 +1,4 @@
 #!/bin/bash
-if [ -z "$CERTMANAGERURI" ] then $CERTMANAGERURI="betterdefault" fi
-if [ -z "$CERTMANAGERISSUERURI" ] then $CERTMANAGERISSUERURI="betterdefault" fi
-
 echo "Installing Cert Manager from $CERTMANAGERURI"
 kubectl apply -f $CERTMANAGERURI
 sleep 1m
