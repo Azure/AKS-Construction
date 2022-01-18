@@ -1,0 +1,26 @@
+replicaCount: 1
+
+nameOverride: ""
+
+externaldns:
+  provider: azure
+  domainfilter: ""
+
+volumeAndSecretname: azure-config-file
+
+image:
+  repository: k8s.gcr.io/external-dns/external-dns
+  pullPolicy: IfNotPresent #Always
+  tag: "v0.8.0" #image tag should be set in Chart.yaml - but where it's a strange tag, just override here
+
+service:
+  type: ClusterIP
+  port: 80
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "" #Leave empty and it'll default to the name of the app, thanks to the _helpers.tpl
+
+podSecurityContext: {}
+  # fsGroup: 2000

@@ -35,16 +35,17 @@ on:
         #- certmanager-staging
         #- certmanager-production
         #- appgw-selfsigned
-      MINIHELMBRANCH:
-        default: "main"
+      HELMAPPURI:
+        default: "https://github.com/Azure-Samples/java-aks-keyvault-tls/raw/main/openjdk-demo-3.5.0.tgz"
         required: false
         type: string
-      CERTMANAGERVERSION:
-        default: "v1.5.3"
+      FORCEHELMCLEANINSTALL:
+        description: 'If App is already installed, remove explicitly before install'
+        type: boolean
+        default: false
         required: false
-        type: string
       UNINSTALLAFTERVERIFY:
-        description: 'Uninstall app after tests  [yes|no]'
+        description: 'Uninstall app after tests'
         type: boolean
         default: true
         required: false
@@ -157,19 +158,8 @@ jobs:
         run: |
           az network dns record-set list -g $DNSRG -z $DNSDOMAIN --query "[?name=='$RECORDNAME'][{type:type,fqdn:fqdn,aRecords:aRecords,txtRecords:txtRecords}]"
 
-      - name: Grab some Helm charts to install
-        run: |
-          BRANCH='${{ inputs.MINIHELMBRANCH }}'
-          echo "$BRANCH"
-
-          if [ -z "$BRANCH" ]
-          then
-                BRANCH='main'
-          fi
-
-          git clone -b $BRANCH https://github.com/Gordonby/minihelm.git helmcharts
-
-      - name: Check if App Helm Chart already installed
+      - name: Force helm uninstall of existing application
+        if: inputs.FORCEHELMCLEANINSTALL == true
         env:
           APPNAME: "${{ inputs.APPNAME }}"
         run: |
@@ -184,27 +174,8 @@ jobs:
                 sleep 1m
           fi
 
-      - name: Install Cert Manager
-        if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
-        env:
-          MANIFESTTESTURL: "https://github.com/jetstack/cert-manager/releases/download/${{ inputs.CERTMANAGERVERSION }}/cert-manager.yaml"
-        run: |
-          kubectl apply -f $MANIFESTTESTURL
-          sleep 1m
-
-      - name: Install Cert Manager ClusterIssuer
-        if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
-        env:
-          EMAILAD: "gdogg@microsoft.com"
-        run: |
-          echo "Email Address for Lets Encrypt: $EMAILAD"
-          helm upgrade --install smokecertissuer ./helmcharts/samples/certmanagerissuer --set email=$EMAILAD
-          sleep 1m
-
       - name: Verify Cert Manager ClusterIssuer
         if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
-        env:
-          EMAILAD: "gdogg@microsoft.com"
         run: |
           case "${{ inputs.FRONTENDCERTTYPE }}" in
              "certmanager-staging") CERTSOURCE="letsEncrypt"; LEISSUER="letsencrypt-staging" ;;
@@ -212,39 +183,6 @@ jobs:
           esac
 
           kubectl describe clusterissuer $LEISSUER
-
-      - name: Add a azure-config secret for use with externaldns
-        env:
-          DNSRESOURCEGROUP: "${{ inputs.DNSRG }}"
-          RG: "${{ inputs.RG }}"
-          AKSNAME: "${{ inputs.AKSNAME }}"
-        run: |
-          echo "AKS $AKSNAME"
-          echo $DNSRESOURCEGROUP
-
-          KubeletId=$(az aks show -n $AKSNAME -g  $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
-          TenantId=$(az account show --query tenantId -o tsv)
-          SubscriptionId=$(az account show --query id -o tsv)
-
-          JSONSECRETPATH="azure.json"
-          cat<<EOF>$JSONSECRETPATH
-          {
-            "userAssignedIdentityID": "$KubeletId",
-            "tenantId": "$TenantId",
-            "useManagedIdentityExtension": true,
-            "subscriptionId": "$SubscriptionId",
-            "resourceGroup": "$DNSRESOURCEGROUP"
-          }
-          EOF
-
-          kubectl create secret generic azure-config-file --dry-run=client -o yaml --from-file=azure.json | kubectl apply -f -
-
-      - name: Add external dns config
-        env:
-          DOMAINFILTER: "${{ inputs.DNSDOMAIN }}"
-        run: |
-          echo $DOMAINFILTER
-          helm upgrade --install externaldns ./helmcharts/samples/externaldns --set externaldns.domainfilter="$DOMAINFILTER"
 
       - name: Install the Java sample app
         env:

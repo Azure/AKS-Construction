@@ -1,0 +1,95 @@
+on:
+  workflow_call:
+    inputs:
+      RG:
+        required: true
+        type: string
+      AKSNAME:
+        required: true
+        type: string
+      DNSDOMAIN:
+        required: true
+        type: string
+      DNSRG:
+        required: true
+        type: string
+      HELMCERTMANAGERISSUERURI:
+        default: "postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz"
+        required: false
+        type: string
+      HELMEXTERNALDNSURI:
+        default: "postdeploy/helm/externaldns-0.2.0.tgz"
+        required: false
+        type: string
+      CERTMANAGER:
+        type: boolean
+        default: true
+        required: false
+      CERTMANAGERVERSION:
+        default: "v1.5.3"
+        required: false
+        type: string
+      CERTMANAGEREMAIL:
+        required: true
+        type: string
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+
+jobs:
+  App_Create:
+    runs-on: ubuntu-latest
+    concurrency: "Ag-${{ inputs.AGNAME}}" #AppGateway doesn't like concurrent updates
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Job parameter inspection
+        run: |
+          echo "RG is ${{ inputs.RG }}"
+          echo "AKS name is ${{ inputs.AKSNAME }}"
+          echo "FrontendCert type is ${{ inputs.FRONTENDCERTTYPE }}"
+          echo "CertManager version is ${{ inputs.CERTMANAGERVERSION }}"
+
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: false
+          environment: azurecloud
+          allow-no-subscriptions: false
+
+      - name: AKS Connect
+        env:
+          RG: "${{ inputs.RG }}"
+          AKSNAME: "${{ inputs.AKSNAME }}"
+        run: |
+          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+
+      - name: Kubelogin
+        env:
+          kubeloginversion: 'v0.0.10'
+        run: |
+          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
+          unzip kubelogin-linux-amd64.zip
+          sudo mv bin/linux_amd64/kubelogin /usr/bin
+          kubelogin convert-kubeconfig -l azurecli
+
+      - name: Install Cert Manager and ClusterIssuer
+        if: inputs.CERTMANAGER
+        env:
+          CERTMANAGERURI: "https://github.com/jetstack/cert-manager/releases/download/${{ inputs.CERTMANAGERVERSION }}/cert-manager.yaml"
+          CERTMANAGERISSUERURI: "${{ inputs.HELMCERTMANAGERISSUERURI }}"
+          EMAILAD: "${{ inputs.CERTMANAGEREMAIL }}"
+        run: sh scripts/certmanager-install.sh
+
+      - name: Verify Cert Manager ClusterIssuer
+        if: inputs.CERTMANAGER
+        env:
+          EMAILAD: "gdogg@microsoft.com"
+        run: kubectl describe clusterissuer
+
+      - name: Create azure-config secret and install externaldns
+        env:
+          EXTERNALDNSURI: "${{ inputs.HELMEXTERNALDNSURI }}"
+          DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
+        run: sh scripts/externaldns-config-install.sh

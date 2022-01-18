@@ -519,6 +519,18 @@ jobs:
       - name: Explain more
         run: echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
 
+  Post-Deploy:
+    needs: [Deploy, ReusableWF]
+    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@gb-certmanagerrefactor
+    with:
+      RG: ${{ needs.ReusableWF.outputs.RG }}
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      CERTMANAGEREMAIL: "gdogg@microsoft.com"
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
   SmokeTest_SimpleApp:
     needs: [Deploy, ReusableWF]
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
@@ -535,7 +547,7 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   SmokeTest_JavaApp-certmgr:
-    needs: [Deploy, ReusableWF]
+    needs: [Deploy, ReusableWF, Post-Deploy]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
     #concurrency: "Ag-${{ inputs.AGNAME}}"
     with:
@@ -553,7 +565,7 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   SmokeTest_JavaApp-appgw:
-    needs: [Deploy, ReusableWF, SmokeTest_JavaApp-certmgr]
+    needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr]
     uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
