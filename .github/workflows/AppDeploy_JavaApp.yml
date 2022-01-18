@@ -254,7 +254,7 @@ jobs:
           SECRETNAME: "${{ inputs.APPNAME }}-tls"
         run: |
           counter=1
-          while [ $counter -le 10 ]
+          while [ $counter -le 15 ]
           do
             kubectl get po
 
