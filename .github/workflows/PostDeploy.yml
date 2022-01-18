@@ -79,7 +79,7 @@ jobs:
           CERTMANAGERURI: "https://github.com/jetstack/cert-manager/releases/download/${{ inputs.CERTMANAGERVERSION }}/cert-manager.yaml"
           CERTMANAGERISSUERURI: "${{ inputs.HELMCERTMANAGERISSUERURI }}"
           EMAILAD: "${{ inputs.CERTMANAGEREMAIL }}"
-        run: sh post-deploy/scripts/certmanager-install.sh
+        run: sh postdeploy/scripts/certmanager-install.sh
 
       - name: Verify Cert Manager ClusterIssuer
         if: inputs.CERTMANAGER
@@ -89,4 +89,4 @@ jobs:
         env:
           EXTERNALDNSURI: "${{ inputs.HELMEXTERNALDNSURI }}"
           DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
-        run: sh post-deploy/scripts/externaldns-config-install.sh
+        run: sh postdeploy/scripts/externaldns-config-install.sh
