@@ -1,14 +1,15 @@
 # Workflow is for testing reusable workflows to expedite the developer inner loop.
 
-name: Test-Java App Deploy
+name: Test Harness for Reusable workflows
 
 on:
   workflow_dispatch:
-
-  #pull_request:
-  #  branches: [main]
-  #  paths:
-  #    - ".github/workflows/Test_ReusableWorkflows.yml"
+    inputs:
+      doSmokeTestUninstall:
+        description: 'Uninstall smoke test apps after tests'
+        default: 'true'
+        type: boolean
+        required: false
 
 concurrency: ci-${{ github.ref }}
 
@@ -16,57 +17,207 @@ env:
   RG: "Automation-Actions-AksDeployCI"
 
 jobs:
-  deploy-java-app-certmgr:
-    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+  ReusableWF:
+    runs-on: ubuntu-latest
+    outputs:
+      RG: ${{ env.RG }}
+      Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
+
+    steps:
+      - name: Dummy step
+        run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+
+  byo-cluster:
+    needs: [ReusableWF]
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
     with:
-      RG: Automation-Actions-AksDeployCI #$RG
+      RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: aks-Byo
-      DNSDOMAIN: azdemo.co.uk
-      DNSRG: domainssl
-      DNSRECORDNAME: openjdk-demo
-      AKVNAME: kv-Byo
       AGNAME: agw-Byo
-      APPNAME: openjdk-demo
-      FRONTENDCERTTYPE: certmanager-staging
-      MINIHELMBRANCH: main
-      UNINSTALLAFTERVERIFY: false
+      APPNAME: avote-public
+      INGRESSTYPE: "AGIC-Public-Ingress"
+      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
-  deploy-java-app-certmgr2:
-    needs: [deploy-java-app-certmgr, deploy-java-app-kvssl]
-    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+  test-run-cmd:
+    runs-on: ubuntu-latest
+    if: false
+    env:
+      AKSNAME: aks-Byo
+      AGNAME: agw-Boy
+      APPNAME: azure-vote-public
+      NAMESP: vote4
+    steps:
+      - name: File system prep
+        run: mkdir jsonout
+
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: false
+          environment: azurecloud
+          allow-no-subscriptions: false
+
+      - name: Verify Az Version
+        run: az version
+
+      - name: Create Default Deny NetworkPolicy
+        run:
+          netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/0.4.2-preview/k8smanifests/networkpolicy-deny-all.yml?raw=true";
+
+          if [ -z "$netpolicycmd" ];
+          then
+            echo 'wtf';
+          else
+            echo $netpolicycmd;
+          fi
+
+          echo "Sending command $netpolicycmd to $AKSNAME in $RG";
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
+          echo cmdOut;
+
+      - name: Getting nodes (Invoke)
+        run: |
+          echo "Connecting to $AKSNAME in $RG"
+
+          az aks command invoke -g $RG -n $AKSNAME --command "
+          kubectl get nodes
+          "
+
+          echo "Connecting to $AKSNAME in $RG (json output)"
+
+          az aks command invoke -g $RG -n $AKSNAME -o json --command "
+          kubectl get nodes
+          "
+
+      - name: Getting nodes json (Invoke and Result)
+        run: |
+          echo "Connecting to $AKSNAME in $RG"
+
+          commandId=$(az aks command invoke -g $RG -n $AKSNAME -o tsv --query id --command "
+          kubectl get nodes -ojson
+          ")
+          echo $commandId
+
+          echo "Retrieving result from id $commandId"
+          nodes=$(az aks command result  -g $RG -n $AKSNAME -i $commandId -o json --query logs)
+          echo $nodes > jsonout/nodes.json
+
+      - name: Getting service Ip via jsonpath
+        run: |
+          echo "Connecting to $AKSNAME in $RG"
+
+          command="kubectl get svc -n $NAMESP azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}'"
+          loadbalancerIngressIp=$(az aks command invoke -g $RG -n $AKSNAME --query logs --command "${command}")
+
+          echo $loadbalancerIngressIp
+
+      - name: Getting service Ip via jq
+        run: |
+          echo "Connecting to $AKSNAME in $RG"
+
+          command="kubectl get svc azure-vote-front -n $NAMESP -ojson"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          echo $cmdOut
+
+          #Debug
+          echo $cmdOut > jsonout/svc.json
+
+          ipAddress=$(echo $cmdOut | jq -r '.logs' | jq -r '.status.loadBalancer.ingress[0].ip')
+          echo "\nIPAddress is $ipAddress"
+
+      - name: Save Json output as Artifact
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Json out
+          path: jsonout/*.json
+
+  deploy-azure-vote-app-lb:
+    #needs: test-run-cmd
+    if: false
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
     with:
       RG: Automation-Actions-AksDeployCI #$RG
       AKSNAME: aks-Byo
-      DNSDOMAIN: azdemo.co.uk
-      DNSRG: domainssl
-      DNSRECORDNAME: openjdk-demo2
-      AKVNAME: kv-Byo
       AGNAME: agw-Byo
-      APPNAME: openjdk-demo2
-      FRONTENDCERTTYPE: certmanager-staging
-      MINIHELMBRANCH: main
-      UNINSTALLAFTERVERIFY: false
+      APPNAME: azure-vote-public
+      INGRESSTYPE: "PublicLoadBalancer"
+      UNINSTALLAFTERVERIFY: true
+      CURLRETRIES: 9
+      NAMESPACE: plb
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
-  deploy-java-app-kvssl:
-    needs: [deploy-java-app-certmgr]
-    #uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
-    uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+  deploy-azure-vote-app-ing:
+    #needs: test-run-cmd
+    if: false
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
     with:
-      RG: Automation-Actions-AksDeployCI #$RG
-      AKSNAME: aks-Byo
-      DNSDOMAIN: azdemo.co.uk
-      DNSRG: domainssl
-      DNSRECORDNAME: openjdk-kvssl
-      AKVNAME: kv-Byo
-      AGNAME: agw-Byo
-      APPNAME: openjdk-kvssl
-      FRONTENDCERTTYPE: appgw-selfsigned
-      MINIHELMBRANCH: main
+      RG: Automation-Actions-AksDeployCI
+      AKSNAME: aks-Priva
+      AGNAME: agw-Priva
+      APPNAME: azure-vote-public
+      INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer"
       UNINSTALLAFTERVERIFY: false
-
+      CURLRETRIES: 9
+      NAMESPACE: default
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+  # deploy-java-app-certmgr:
+  #   uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+  #   with:
+  #     RG: Automation-Actions-AksDeployCI #$RG
+  #     AKSNAME: aks-Byo
+  #     DNSDOMAIN: azdemo.co.uk
+  #     DNSRG: domainssl
+  #     DNSRECORDNAME: openjdk-demo
+  #     AKVNAME: kv-Byo
+  #     AGNAME: agw-Byo
+  #     APPNAME: openjdk-demo
+  #     FRONTENDCERTTYPE: certmanager-staging
+  #     MINIHELMBRANCH: main
+  #     UNINSTALLAFTERVERIFY: false
+  #   secrets:
+  #     AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+  # deploy-java-app-certmgr2:
+  #   needs: [deploy-java-app-certmgr, deploy-java-app-kvssl]
+  #   uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+  #   with:
+  #     RG: Automation-Actions-AksDeployCI #$RG
+  #     AKSNAME: aks-Byo
+  #     DNSDOMAIN: azdemo.co.uk
+  #     DNSRG: domainssl
+  #     DNSRECORDNAME: openjdk-demo2
+  #     AKVNAME: kv-Byo
+  #     AGNAME: agw-Byo
+  #     APPNAME: openjdk-demo2
+  #     FRONTENDCERTTYPE: certmanager-staging
+  #     MINIHELMBRANCH: main
+  #     UNINSTALLAFTERVERIFY: false
+  #   secrets:
+  #     AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+  # deploy-java-app-kvssl:
+  #   needs: [deploy-java-app-certmgr]
+  #   #uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@gb-privatelink-cicd
+  #   uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
+  #   with:
+  #     RG: Automation-Actions-AksDeployCI #$RG
+  #     AKSNAME: aks-Byo
+  #     DNSDOMAIN: azdemo.co.uk
+  #     DNSRG: domainssl
+  #     DNSRECORDNAME: openjdk-kvssl
+  #     AKVNAME: kv-Byo
+  #     AGNAME: agw-Byo
+  #     APPNAME: openjdk-kvssl
+  #     FRONTENDCERTTYPE: appgw-selfsigned
+  #     MINIHELMBRANCH: main
+  #     UNINSTALLAFTERVERIFY: false
+
+  #   secrets:
+  #     AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}

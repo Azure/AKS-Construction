@@ -8,7 +8,7 @@
     },
     "defaults": {
         "deploy": {
-            "kubernetesVersion": "1.20.9",
+            "kubernetesVersion": "1.21.7",
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
@@ -42,6 +42,7 @@
         },
         "addons": {
             "networkPolicy": "none",
+            "denydefaultNetworkPolicy": false,
             "azurepolicy": "none",
             "ingress": "none",
             "ingressEveryNode": false,
