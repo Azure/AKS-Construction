@@ -61,6 +61,9 @@ jobs:
           allow-no-subscriptions: false
 
       - name: AKS Connect
+        env:
+          RG: "${{ inputs.RG }}"
+          AKSNAME: "${{ inputs.AKSNAME }}"
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
