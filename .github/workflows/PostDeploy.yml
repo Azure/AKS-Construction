@@ -50,7 +50,6 @@ jobs:
         run: |
           echo "RG is ${{ inputs.RG }}"
           echo "AKS name is ${{ inputs.AKSNAME }}"
-          echo "FrontendCert type is ${{ inputs.FRONTENDCERTTYPE }}"
           echo "CertManager version is ${{ inputs.CERTMANAGERVERSION }}"
 
       - name: Azure Login
@@ -62,9 +61,6 @@ jobs:
           allow-no-subscriptions: false
 
       - name: AKS Connect
-        env:
-          RG: "${{ inputs.RG }}"
-          AKSNAME: "${{ inputs.AKSNAME }}"
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
