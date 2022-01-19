@@ -39,9 +39,9 @@ on:
 jobs:
   K8S:
     runs-on: ubuntu-latest
-#    env:
-#      RG: "${{ inputs.RG }}"
-#      AKSNAME: "${{ inputs.AKSNAME }}"
+    env:
+      RG: "${{ inputs.RG }}"
+      AKSNAME: "${{ inputs.AKSNAME }}"
     steps:
       - uses: actions/checkout@v2
         name: Script file download
@@ -61,9 +61,6 @@ jobs:
           allow-no-subscriptions: false
 
       - name: AKS Connect
-        env:
-          RG: "${{ inputs.RG }}"
-          AKSNAME: "${{ inputs.AKSNAME }}"
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
