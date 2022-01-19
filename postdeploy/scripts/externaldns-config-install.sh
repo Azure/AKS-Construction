@@ -17,6 +17,8 @@ cat<<EOF>$JSONSECRETPATH
 }
 EOF
 
+cat azure.json
+
 kubectl create secret generic azure-config-file --dry-run=client -o yaml --from-file=azure.json | kubectl apply -f -
 
 echo "Installing ExternalDns for $DNSDOMAIN"
