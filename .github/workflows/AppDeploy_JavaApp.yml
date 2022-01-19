@@ -1,3 +1,7 @@
+# This file is now been transferred to a new repository.
+# https://github.com/Azure-Samples/java-aks-keyvault-tls/blob/gb-workflow/.github/workflows/deployapp.yml
+# Retarget any workflows to use the it instead of this one.
+
 on:
   workflow_call:
     inputs:
