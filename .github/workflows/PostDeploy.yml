@@ -88,4 +88,5 @@ jobs:
         env:
           EXTERNALDNSURI: "${{ inputs.HELMEXTERNALDNSURI }}"
           DNSDOMAIN: "${{ inputs.DNSDOMAIN }}"
+          DNSRG: "${{ inputs.DNSRG }}"
         run: sh postdeploy/scripts/externaldns-config-install.sh
