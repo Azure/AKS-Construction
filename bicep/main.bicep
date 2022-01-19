@@ -198,7 +198,8 @@ param KeyVaultPurgeProtection bool = true
 @description('Add IP to KV firewall allow-list')
 param kvIPAllowlist array = []
 
-var akvName = 'kv-${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
+var akvRawName = 'kv-${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
+var akvName = length(akvRawName) > 24 ? substring(akvRawName, 0, 23) : akvRawName
 
 var kvIPRules = [for kvIp in kvIPAllowlist: {
   value: kvIp
