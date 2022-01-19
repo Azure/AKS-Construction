@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 echo "Retrieving KubeletId for $AKSNAME in $RG"
 KubeletId=$(az aks show -n $AKSNAME -g $RG --query "identityProfile.kubeletidentity.clientId" -o tsv)
