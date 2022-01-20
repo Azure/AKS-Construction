@@ -518,6 +518,8 @@ jobs:
         run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
       - name: Explain more
         run: echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
+      - name: Job parameter inspection
+        run: echo ${{ github.event.inputs.doSmokeTestUninstall }}
 
   Post-Deploy:
     needs: [Deploy, ReusableWF]
@@ -541,7 +543,7 @@ jobs:
       APPNAME: avote-public
       INGRESSTYPE: "AGIC-Public-Ingress"
       FORCEHELMCLEANINSTALL: true
-      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
+      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == 'true' }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -560,7 +562,7 @@ jobs:
       APPNAME: openjdk-demo
       FRONTENDCERTTYPE: certmanager-staging
       FORCEHELMCLEANINSTALL: true
-      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
+      UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == 'true' }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
