@@ -27,7 +27,20 @@ jobs:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
 
+  Post-Deploy:
+    needs: [ReusableWF]
+    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@gb-certmanagerrefactor
+    with:
+      RG: ${{ needs.ReusableWF.outputs.RG }}
+      AKSNAME: aks-Byo
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      CERTMANAGEREMAIL: "gdogg@microsoft.com"
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
   byo-cluster:
+    if: false
     needs: [ReusableWF]
     uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
     with:
@@ -65,7 +78,7 @@ jobs:
 
       - name: Create Default Deny NetworkPolicy
         run:
-          netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/0.4.2-preview/k8smanifests/networkpolicy-deny-all.yml?raw=true";
+          netpolicycmd="kubectl apply -f https://raw.githubusercontent.com/Azure/Aks-Construction/0.4.3-preview/postdeploy/k8smanifests/networkpolicy-deny-all.yml";
 
           if [ -z "$netpolicycmd" ];
           then

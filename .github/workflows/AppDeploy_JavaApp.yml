@@ -1,3 +1,8 @@
+# This file is now been transferred to a new repository.
+# https://github.com/Azure-Samples/java-aks-keyvault-tls/blob/0.9-preview/.github/workflows/deployapp.yml
+# Retarget any workflows to use the it instead of this one.
+# eg. uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9-preview
+
 on:
   workflow_call:
     inputs:
