@@ -715,7 +715,7 @@ jobs:
           sudo mv bin/linux_amd64/kubelogin /usr/bin
           kubelogin convert-kubeconfig -l azurecli
 
-      - name: Kubectl get event warnings
+      - name: Kubectl get event Warnings
         if: github.event.inputs.doDebugSteps == 'true'
         run: |
           kubectl get events --sort-by='.metadata.creationTimestamp' -A | grep Warning
@@ -727,7 +727,14 @@ jobs:
           APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
           kubectl describe po -n $NAMESP $APPGWPODNAME
 
-      - name: Grab AGIC pod logs
+      - name: Grab Invalid AGIC pod logs
+        env:
+          NAMESP: "kube-system"
+        run: |
+          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+          kubectl logs -n $NAMESP $APPGWPODNAME | grep Invalid
+          
+      - name: Grab full AGIC pod logs
         env:
           NAMESP: "kube-system"
         run: |
