@@ -559,7 +559,6 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-demo
       FRONTENDCERTTYPE: certmanager-staging
-      FORCEHELMCLEANINSTALL: true
       UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
@@ -578,7 +577,6 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: openjdk-kvssl
       FRONTENDCERTTYPE: appgw-selfsigned
-      FORCEHELMCLEANINSTALL: true
       UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
@@ -715,10 +713,10 @@ jobs:
           sudo mv bin/linux_amd64/kubelogin /usr/bin
           kubelogin convert-kubeconfig -l azurecli
 
-      - name: Kubectl get events
+      - name: Kubectl get event warnings
         if: github.event.inputs.doDebugSteps == 'true'
         run: |
-          kubectl get events
+          kubectl get events --sort-by='.metadata.creationTimestamp' -A | grep Warning
 
       - name: Describe AGIC Pod
         env:
