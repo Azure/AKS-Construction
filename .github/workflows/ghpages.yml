@@ -25,7 +25,7 @@ on:
         required: false
 
 env:
-  templateRelease: 0.4.0-preview
+  templateRelease: 0.4.3
   AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
   RG: "Automation-Actions-AksPublishCI"
 

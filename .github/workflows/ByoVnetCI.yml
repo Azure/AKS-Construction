@@ -492,7 +492,7 @@ jobs:
         run:
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
 
-          netpolicycmd="kubectl apply -f https://raw.githubusercontent.com/Azure/Aks-Construction/0.4.3-preview/postdeploy/k8smanifests/networkpolicy-deny-all.yml";
+          netpolicycmd="kubectl apply -f https://raw.githubusercontent.com/Azure/Aks-Construction/0.4.3/postdeploy/k8smanifests/networkpolicy-deny-all.yml";
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
@@ -523,7 +523,7 @@ jobs:
 
   Post-Deploy:
     needs: [Deploy, ReusableWF]
-    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@gb-certmanagerrefactor
+    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@0.4.3
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
