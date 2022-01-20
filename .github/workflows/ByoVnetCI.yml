@@ -492,7 +492,7 @@ jobs:
         run:
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
 
-          netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/0.4.2-preview/k8smanifests/networkpolicy-deny-all.yml?raw=true";
+          netpolicycmd="kubectl apply -f https://raw.githubusercontent.com/Azure/Aks-Construction/0.4.3-preview/postdeploy/k8smanifests/networkpolicy-deny-all.yml";
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
@@ -735,7 +735,7 @@ jobs:
         run: |
           APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
           kubectl logs -n $NAMESP $APPGWPODNAME | grep Invalid
-          
+
       - name: Grab full AGIC pod logs
         env:
           NAMESP: "kube-system"
