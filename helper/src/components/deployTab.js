@@ -154,7 +154,7 @@ ${cluster.apisecurity === "private" ? `"` : ``}
 # -----------------------------------
 # Create a default-deny network policy in your cluster to deny all traffic in the default namespace
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
-kubectl apply -f https://raw.githubusercontent.com/Azure/Aks-Construction/0.4.3-preview/postdeploy/k8smanifests/networkpolicy-deny-all.yml
+kubectl apply -f https://raw.githubusercontent.com/Azure/Aks-Construction/0.4.3/postdeploy/k8smanifests/networkpolicy-deny-all.yml
 ${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
 
