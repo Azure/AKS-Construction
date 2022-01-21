@@ -22,8 +22,9 @@ export const VMs = [
     { key: 'Standard_F2s_v2', text: '2 vCPU,  4 GiB RAM,  16GiB SSD,               (3200 IOPS)', eph: false }
 ]
 
-export default function ({ tabValues, updateFn, invalidArray }) {
+export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { cluster } = tabValues
+    const defenderFeatureFlag = featureFlag.includes('defender')
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -334,22 +335,23 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Separator className="notopmargin" />
 
-            <Stack.Item align="start">
-                <Label required={true}>
-                    Microsoft Defender for Containers  <Link target='_' href='https://docs.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction'>docs</Link>
-                </Label>
-                <ChoiceGroup
-                    selectedKey={cluster.DefenderForContainers}
-                    styles={{ root: { marginLeft: '50px' } }}
-                    options={[
-                        { key: false, text: 'Disable Microsoft Defender' },
-                        { key: true, text: 'Enable Microsoft Defender security alerting' }
+            { defenderFeatureFlag &&
+                <Stack.Item align="start">
+                    <Label required={true}>
+                        Microsoft Defender for Containers  <Link target='_' href='https://docs.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction'>docs</Link>
+                    </Label>
+                    <ChoiceGroup
+                        selectedKey={cluster.DefenderForContainers}
+                        styles={{ root: { marginLeft: '50px' } }}
+                        options={[
+                            { key: false, text: 'Disable Microsoft Defender' },
+                            { key: true, text: 'Enable Microsoft Defender security alerting' }
 
-                    ]}
-                    onChange={(ev, { key }) => updateFn("DefenderForContainers", key)}
-                />
-            </Stack.Item>
+                        ]}
+                        onChange={(ev, { key }) => updateFn("DefenderForContainers", key)}
+                    />
+                </Stack.Item>
+            }
         </Stack>
-
     )
 }

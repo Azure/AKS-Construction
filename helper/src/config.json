@@ -301,6 +301,7 @@
                                 "linksrc": "https://docs.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges"
                             },
                             {
+                                "visible": false,
                                 "description": "Microsoft Defender for Containers (preview)",
                                 "linksrc": "https://azure.microsoft.com/en-in/updates/public-preview-microsoft-defender-for-containers-adds-new-capabilities-for-kubernetes/"
                             }
@@ -404,6 +405,7 @@
                                 "linksrc": "https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
                             },
                             {
+                                "visible": false,
                                 "description": "Microsoft Defender for Containers (preview)",
                                 "linksrc": "https://azure.microsoft.com/en-in/updates/public-preview-microsoft-defender-for-containers-adds-new-capabilities-for-kubernetes/"
                             }

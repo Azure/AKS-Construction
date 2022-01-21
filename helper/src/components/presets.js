@@ -49,7 +49,7 @@ export default function ({ sections, selectedValues, updateSelected }) {
                             }
                             <Text variant="smallPlus" >
                                 <ul style={{ paddingInlineStart: "20px" }}>
-                                    {c.description.bulets.map((b, i) =>
+                                    {c.description.bulets.filter(b=>b.visible!==false).map((b, i) =>
                                         <li key={i}>
                                             {b.description}
                                             {b.linksrc && <span> (<a target="_nsg" href={b.linksrc}>docs</a>)</span>}
