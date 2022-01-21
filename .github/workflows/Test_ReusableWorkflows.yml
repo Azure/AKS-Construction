@@ -27,9 +27,22 @@ jobs:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
 
-  byo-cluster:
+  Post-Deploy:
     needs: [ReusableWF]
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
+    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@0.4.3
+    with:
+      RG: ${{ needs.ReusableWF.outputs.RG }}
+      AKSNAME: aks-Byo
+      DNSDOMAIN: azdemo.co.uk
+      DNSRG: domainssl
+      CERTMANAGEREMAIL: "gdogg@microsoft.com"
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+  byo-cluster:
+    if: false
+    needs: [ReusableWF]
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.3
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: aks-Byo
@@ -65,7 +78,7 @@ jobs:
 
       - name: Create Default Deny NetworkPolicy
         run:
-          netpolicycmd="kubectl apply -f https://github.com/Azure/Aks-Construction/blob/0.4.2-preview/k8smanifests/networkpolicy-deny-all.yml?raw=true";
+          netpolicycmd="kubectl apply -f https://raw.githubusercontent.com/Azure/Aks-Construction/0.4.3/postdeploy/k8smanifests/networkpolicy-deny-all.yml";
 
           if [ -z "$netpolicycmd" ];
           then
@@ -138,7 +151,7 @@ jobs:
   deploy-azure-vote-app-lb:
     #needs: test-run-cmd
     if: false
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.3
     with:
       RG: Automation-Actions-AksDeployCI #$RG
       AKSNAME: aks-Byo
@@ -154,7 +167,7 @@ jobs:
   deploy-azure-vote-app-ing:
     #needs: test-run-cmd
     if: false
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.3
     with:
       RG: Automation-Actions-AksDeployCI
       AKSNAME: aks-Priva
