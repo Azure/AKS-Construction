@@ -293,7 +293,7 @@ export default function PortalNav({ config }) {
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
-          <Presents sections={sections} selectedValues={selected.values} updateSelected={updateSelected} />
+          <Presents sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
 
           <Separator styles={{ root: { marginTop: "55px !important", marginBottom: "5px" } }}><b>Deploy</b> (optionally use 'Details' tabs for additional configuration)</Separator>
 
