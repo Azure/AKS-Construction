@@ -25,6 +25,7 @@
     ]
   },
   "devDependencies": {
+    "@fluentui/azure-themes": "^8.1.126",
     "@fluentui/react": "^8.36.3",
     "@microsoft/applicationinsights-web": "^2.7.0",
     "@playwright/test": "^1.15.2",

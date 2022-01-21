@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ThemeProvider, Link, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text } from '@fluentui/react';
+import { AzureThemeLight, AzureThemeDark } from '@fluentui/azure-themes';
+
 import Presents from './presets'
 
 import NetworkTab from './networkTab'
@@ -284,11 +286,13 @@ export default function PortalNav({ config }) {
     );
   }
 
-  return (
-    <main id="mainContent" className="wrapper">
-      <ThemeProvider>
-        <Header entScale={entScale} setEntScale={setEntScale} featureFlag={featureFlag} />
+  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const {semanticColors, palette } =  dark ? AzureThemeDark : AzureThemeLight
 
+  return (
+    <ThemeProvider theme={{semanticColors, palette}}>
+      <main id="mainContent" className="wrapper">
+        <Header entScale={entScale} setEntScale={setEntScale} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
@@ -315,8 +319,9 @@ export default function PortalNav({ config }) {
           </Pivot>
 
         </Stack>
-      </ThemeProvider>
-    </main >
+
+      </main >
+    </ThemeProvider>
   )
 }
 

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+import { mergeStyles } from '@fluentui/react';
 import * as serviceWorker from './serviceWorker';
 
 // Application Insights - https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-js
@@ -16,6 +17,15 @@ if (process.env.REACT_APP_APPINSIGHTS_KEY) {
 }
 
 export const ConfigContext = React.createContext()
+
+// Inject some global styles
+mergeStyles({
+  ':global(body,html,#root)': {
+    margin: 0,
+    padding: 0,
+    height: '100vh',
+  },
+});
 
 ReactDOM.render(
   <ConfigContext.Provider value={configData}>

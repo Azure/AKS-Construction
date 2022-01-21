@@ -1,7 +1,7 @@
 /* eslint-disable import/no-anonymous-default-export */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
-import { MessageBar, DocumentCardActivity, DocumentCardImage, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType } from '@fluentui/react';
+import { useTheme, MessageBar, DocumentCardActivity, DocumentCardImage, DocumentCardTitle, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType } from '@fluentui/react';
 
 const iconClass = mergeStyles({
     fontSize: 80,
@@ -10,6 +10,8 @@ const iconClass = mergeStyles({
 
 
 export default function ({ sections, selectedValues, updateSelected }) {
+
+    const bodyBackground = useTheme().semanticColors.bodyBackground;
 
     return sections.map(s => [
 
@@ -29,18 +31,20 @@ export default function ({ sections, selectedValues, updateSelected }) {
                     </DocumentCardDetails>
 
                     {c.imageSrc &&
-                        <DocumentCardImage styles={{ root: { backgroundColor: "white" } }} imageSrc={c.imageSrc} height={150} imageFit={ImageFit.centerContain} />
+                        <DocumentCardImage styles={{ root: { backgroundColor: bodyBackground } }} imageSrc={c.imageSrc} height={150} imageFit={ImageFit.centerContain} />
                     }
                     {c.icon &&
-                        <DocumentCardPreview styles={{ root: { backgroundColor: 'white', borderBottom: '0' } }} previewImages={[{
+                        <DocumentCardPreview styles={{ root: { backgroundColor: bodyBackground, borderBottom: '0' } }} previewImages={[{
                             previewIconProps: {
                                 iconName: c.icon, className: iconClass
                             }, height: 100
                         },]} />
                     }
 
+                    <DocumentCardTitle showAsSecondaryTitle={true} shouldTruncate={false} title={c.description.title}/>
+
                     <div style={{ padding: "8px 16px" }} >
-                        <Text >{c.description.title}
+                        <Text>
                             {c.description.titleWarning &&
                                 <MessageBar messageBarType={c.description.titleWarning.MessageBarType}>
                                     <Text >{c.description.titleWarning.description}</Text>
