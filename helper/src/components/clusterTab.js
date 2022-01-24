@@ -284,7 +284,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                 </>
                             }
 
-                            <Checkbox inputProps={{ "data-testid": "cluster-localaccounts-Checkbox"}} disabled={!cluster.enableAzureRBAC} checked={cluster.AksDisableLocalAccounts} onChange={(ev, val) => updateFn("AksDisableLocalAccounts", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Disable Local Kubernetes Accounts <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/managed-aad#disable-local-accounts'>docs</Link>**</Text>} />
+                            <Checkbox inputProps={{ "data-testid": "cluster-localaccounts-Checkbox"}} disabled={!cluster.enableAzureRBAC} checked={cluster.AksDisableLocalAccounts} onChange={(ev, val) => updateFn("AksDisableLocalAccounts", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Disable Local Kubernetes Accounts <Link target='_' href='https://docs.microsoft.com/azure/aks/managed-aad#disable-local-accounts'>docs</Link>**</Text>} />
 
                         </Stack>
                     }
@@ -333,25 +333,26 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 </Stack>
             </Stack.Item>
 
-            <Separator className="notopmargin" />
-
             { defenderFeatureFlag &&
+            <>
+                <Separator className="notopmargin" />
+
                 <Stack.Item align="start">
                     <Label required={true}>
-                        Microsoft Defender for Containers  <Link target='_' href='https://docs.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction'>docs</Link>
+                        Microsoft Defender for Containers  <Link target='_' href='https://docs.microsoft.com/azure/defender-for-cloud/defender-for-cloud-introduction'>docs</Link>
                     </Label>
                     <ChoiceGroup
                         selectedKey={cluster.DefenderForContainers}
                         styles={{ root: { marginLeft: '50px' } }}
                         options={[
-                            { key: false, text: 'Disable Microsoft Defender' },
+                            { key: false, text: 'Disable Microsoft Defender security alerting' },
                             { key: true, text: 'Enable Microsoft Defender security alerting' }
 
                         ]}
                         onChange={(ev, { key }) => updateFn("DefenderForContainers", key)}
                     />
                 </Stack.Item>
-            }
+            </>}
         </Stack>
     )
 }
