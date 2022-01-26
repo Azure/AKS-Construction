@@ -1,23 +1,10 @@
 /* eslint-disable import/no-anonymous-default-export */
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
 
-import certmanagerScriptURL from './_deployscripts/certmanager-install.sh'
-import externaldnsScriptURL from './_deployscripts/externaldns-config-install.sh'
-
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
-
-  const [ certmanagerScript, setCertmanagerScript ] = useState("")
-  const [ externaldnsScript, setExternaldnsScript ] = useState("")
-  // using react-scripts, so cannot modify webpack config to allow .sh files to be loaded as "asset/source"
-  useEffect(() => {
-    (async () => {
-      setCertmanagerScript (await fetch(certmanagerScriptURL).then(b => b.text()))
-      setExternaldnsScript (await fetch(externaldnsScriptURL).then(b => b.text()))
-    })();
-  }, []);
 
   const { net, addons, cluster, deploy } = tabValues
   const allok = !(invalidTabs && invalidTabs.length > 0)
@@ -247,8 +234,8 @@ helm upgrade --install externaldns https://github.com/kubernetes-sigs/external-d
 # ------------------------------------------------
 #                             Install cert-manager
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${addons.ingress === 'appgw' ? 'v1.5.3' : 'v1.6.0'}/cert-manager.yaml
-sleep 20s # wait for cert-manager webhook to install
-helm upgrade --install letsencrypt-issuer ${process.env.REACT_APP_BASE_URL || '.'}/postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz \\
+sleep 30s # wait for cert-manager webhook to install
+helm upgrade --install letsencrypt-issuer ${process.env.REACT_APP_BASE_URL || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_BASE_URL ? '' : '/postdeploy/helm'}/Az-CertManagerIssuer-0.3.0.tgz \\
     --set email=${addons.certEmail}  \\
     --set ingressClass=${addons.ingress === 'appgw' ? "azure/application-gateway" : addons.ingress}
 `: '')
@@ -265,7 +252,7 @@ ${postscript_cluster}` : `
 #           Private cluster, so use command invoke
 az aks command invoke -g ${deploy.rg} -n ${aks}  --command "
 ${postscript_cluster.replaceAll('"', '\\"')}
-"  ${process.env.REACT_APP_BASE_URL ? '' : '--file  ./postdeploy'}  `) : ''}`
+"  ${process.env.REACT_APP_BASE_URL ? '' : '--file  ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz'}  `) : ''}`
 
   return (
 

@@ -4,8 +4,8 @@
   "private": true,
   "homepage": "/Aks-Construction/",
   "scripts": {
-    "start": "ln -sf ../../../postdeploy/scripts ./src/components/_deployscripts && react-scripts start",
-    "build": "ln -sf ../../../postdeploy/scripts ./src/components/_deployscripts && CI=false react-scripts build",
+    "start": "react-scripts start",
+    "build": "CI=false react-scripts build",
     "test": "playwright test .playwrighttests/helper-fragile-test-fullsecure.spec.js",
     "eject": "react-scripts eject"
   },

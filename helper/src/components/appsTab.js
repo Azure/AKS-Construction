@@ -11,7 +11,7 @@ export default function AppsTab({  tabValues }) {
     const deploycmd = `
 # Build app
 export ACRNAME=$(az acr list -g ${deploy.rg} --query [0].name -o tsv)
-az acr build -r $ACRNAME -t openjdk-demo:0.0.1  ${net.vnetprivateend ? "--agent-pool private-pool" : ""} https://github.com/khowling/e2e-tls-java-aks.git
+az acr build -r $ACRNAME -t openjdk-demo:0.0.1  ${net.vnetprivateend ? "--agent-pool private-pool" : ""} https://github.com/Azure-Samples/java-aks-keyvault-tls.git
 
 
 
@@ -35,7 +35,15 @@ az network application-gateway root-cert create \\
 # Install
 export APPNAME=openjdk-demo
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
-helm upgrade --install $APPNAME https://github.com/khowling/e2e-tls-java-aks/blob/main/openjdk-demo-3.1.0.tgz?raw=true  --set ingressType=${addons.ingress},letsEncrypt.issuer=letsencrypt-prod,image.repository=$\{ACRNAME}.azurecr.io/openjdk-demo,image.tag=0.0.1,csisecrets.vaultname=$\{KVNAME},csisecrets.tenantId=$(az account show --query tenantId -o tsv),csisecrets.clientId=$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv),dnsname=$\{APPNAME}.${addons.dnsZoneId.split('/')[8]}
+helm upgrade --install $APPNAME https://github.com/Azure-Samples/java-aks-keyvault-tls/blob/main/helm/openjdk-demo-3.5.0.tgz?raw=true \\
+  --set ingressType=${addons.ingress} \\
+  --set letsEncrypt.issuer=letsencrypt-prod \\
+  --set image.repository=$\{ACRNAME}.azurecr.io/openjdk-demo \\
+  --set image.tag=0.0.1 \\
+  --set csisecrets.vaultname=$\{KVNAME} \\
+  --set csisecrets.tenantId=$(az account show --query tenantId -o tsv) \\
+  --set csisecrets.clientId=$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv) \\
+  --set dnsname=$\{APPNAME}.${addons.dnsZoneId.split('/')[8]}
 ${cluster.apisecurity === "private" ? `"` : ``}
 `
 
