@@ -8,6 +8,11 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
+        "dnsname",
+        "Kubelet",
+        "postdeploy",
+        "smanifests",
+        "networkpolicy",
         "aadgroupids",
         "accv",
         "ACRNAME",
