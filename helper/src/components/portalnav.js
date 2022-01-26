@@ -79,7 +79,8 @@ export default function PortalNav({ config }) {
   const [urlParams, setUrlParams] = useState(new URLSearchParams(window.location.search))
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
 
-  const featureFlag = urlParams.has('feature')
+  const featureFlag = urlParams.getAll('feature')
+
   const [entScale, setEntScale] = useState(() => urlParams.has('entScale'))
 
 
@@ -296,7 +297,7 @@ export default function PortalNav({ config }) {
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
-          <Presents sections={sections} selectedValues={selected.values} updateSelected={updateSelected} />
+          <Presents sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
 
           <Separator styles={{ root: { marginTop: "55px !important", marginBottom: "5px" } }}><b>Deploy</b> (optionally use 'Details' tabs for additional configuration)</Separator>
 
@@ -305,7 +306,7 @@ export default function PortalNav({ config }) {
               <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} urlParams={urlParams} />
             </PivotItem>
             <PivotItem headerText={tabLabels.cluster} itemKey="cluster" onRenderItemLink={(a, b) => _customRenderer('cluster', a, b)} >
-              <ClusterTab tabValues={tabValues} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
+              <ClusterTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
             </PivotItem>
             <PivotItem headerText={tabLabels.addons} itemKey="addons" onRenderItemLink={(a, b) => _customRenderer('addons', a, b)} >
               <AddonsTab tabValues={tabValues} updateFn={(field, value) => mergeState("addons", field, value)} invalidArray={invalidArray['addons']} />

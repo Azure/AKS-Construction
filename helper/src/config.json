@@ -37,7 +37,8 @@
             "aad_tenant_id": "",
             "enableAzureRBAC": true,
             "aadgroupids": "",
-            "availabilityZones": "no"
+            "availabilityZones": "no",
+            "DefenderForContainers" : false
         },
         "addons": {
             "networkPolicy": "none",
@@ -109,7 +110,8 @@
                         "cluster": {
                             "SystemPoolType": "none",
                             "autoscale": false,
-                            "upgradeChannel": "none"
+                            "upgradeChannel": "none",
+                            "DefenderForContainers" : false
                         },
                         "addons": {
                             "registry": "none",
@@ -241,7 +243,8 @@
                         "cluster": {
                             "enable_aad": false,
                             "AksDisableLocalAccounts": false,
-                            "apisecurity": "none"
+                            "apisecurity": "none",
+                            "DefenderForContainers" : false
                         },
                         "addons": {
                             "networkPolicy": "none",
@@ -296,6 +299,11 @@
                             {
                                 "description": "Authorized IP address ranges",
                                 "linksrc": "https://docs.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges"
+                            },
+                            {
+                                "featureFlag" : "defender",
+                                "description": "Microsoft Defender for Containers (preview)",
+                                "linksrc": "https://azure.microsoft.com/en-in/updates/public-preview-microsoft-defender-for-containers-adds-new-capabilities-for-kubernetes/"
                             }
                         ]
                     },
@@ -307,7 +315,8 @@
                         "cluster": {
                             "enable_aad": true,
                             "AksDisableLocalAccounts": true,
-                            "apisecurity": "whitelist"
+                            "apisecurity": "whitelist",
+                            "DefenderForContainers" : true
                         },
                         "addons": {
                             "networkPolicy": "azure",
@@ -392,8 +401,13 @@
                                 "linksrc": "https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#restrict-egress-traffic-using-azure-firewall"
                             },
                             {
-                                "description": "Store Kubernetes Secrets in Azure KeyVault,",
+                                "description": "Store Kubernetes Secrets in Azure KeyVault",
                                 "linksrc": "https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+                            },
+                            {
+                                "featureFlag" : "defender",
+                                "description": "Microsoft Defender for Containers (preview)",
+                                "linksrc": "https://azure.microsoft.com/en-in/updates/public-preview-microsoft-defender-for-containers-adds-new-capabilities-for-kubernetes/"
                             }
                         ]
                     },
@@ -405,7 +419,8 @@
                         "cluster": {
                             "enable_aad": true,
                             "AksDisableLocalAccounts": true,
-                            "apisecurity": "private"
+                            "apisecurity": "private",
+                            "DefenderForContainers" : true
                         },
                         "addons": {
                             "networkPolicy": "azure",
@@ -506,7 +521,8 @@
                             "autoscale": true,
                             "agentCount": 2,
                             "maxCount": 4,
-                            "upgradeChannel": "none"
+                            "upgradeChannel": "none",
+                            "DefenderForContainers" : true
                         },
                         "addons": {
                             "networkPolicy": "none",
@@ -588,7 +604,8 @@
                             "AksDisableLocalAccounts": true,
                             "apisecurity": "private",
                             "autoscale": true,
-                            "upgradeChannel": "none"
+                            "upgradeChannel": "none",
+                            "DefenderForContainers" : true
                         },
                         "addons": {
                             "networkPolicy": "azure",
@@ -670,7 +687,8 @@
                             "AksDisableLocalAccounts": true,
                             "apisecurity": "private",
                             "autoscale": true,
-                            "upgradeChannel": "none"
+                            "upgradeChannel": "none",
+                            "DefenderForContainers" : true
                         },
                         "addons": {
                             "networkPolicy": "azure",

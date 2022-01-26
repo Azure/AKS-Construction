@@ -174,7 +174,7 @@ jobs:
           #$aksfeatures = $allfeatures | Where-Object {$_.Name -like 'Microsoft.ContainerService*'}
           $registeringfeatures = $aksfeatures |  Where-Object {$_.properties.state -eq 'Registering'}
 
-          if ($registeringfeatures -gt 0) {
+          if ($registeringfeatures.count -gt 0) {
             Write-Error "There are still features registering"
           } else { Write-Output "-- All good, no features in the process of registering" }
 

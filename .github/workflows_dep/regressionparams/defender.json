@@ -1,0 +1,49 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "metadata": {
+        "template": "bicep/compiled/main.json",
+        "config" : "https://azure.github.io/Aks-Construction?secure=normal&net.dnsServiceIP=172.10.0.10&ops=managed&cluster.SystemPoolType=Standard&cluster.availabilityZones=yes&cluster.apisecurity=whitelist&addons.ingress=appgw&addons.registry=Premium&addons.appGWcount=2"
+    },
+    "parameters": {
+        "resourceName": {
+            "value": "az-k8s-def"
+          },
+          "agentVMSize": {
+            "value": "Standard_DS3_v2"
+          },
+          "agentCountMax": {
+            "value": 3
+          },
+          "custom_vnet": {
+            "value": true
+          },
+          "enable_aad": {
+            "value": true
+          },
+          "enableAzureRBAC": {
+            "value": true
+          },
+          "registries_sku": {
+            "value": "Premium"
+          },
+          "omsagent": {
+            "value": true
+          },
+          "retentionInDays": {
+            "value": 30
+          },
+          "networkPolicy": {
+            "value": "azure"
+          },
+          "azurepolicy": {
+            "value": "audit"
+          },
+          "AksDisableLocalAccounts": {
+            "value": true
+          },
+          "DefenderForContainers": {
+              "value": true
+          }
+    }
+}
