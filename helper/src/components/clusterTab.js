@@ -201,7 +201,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         { key: 'none', text: 'Disables auto-upgrades' },
                         { key: 'patch', text: 'Patch: auto-upgrade cluster to the latest supported patch version when it becomes available while keeping the minor version the same.' },
                         { key: 'stable', text: 'Stable: auto-upgrade cluster to the latest supported patch release on minor version N-1, where N is the latest supported minor version' },
-                        { key: 'rapid', text: 'Rapid: auto-upgrade cluster to the latest supported patch release on the latest supported minor version.' }
+                        { key: 'rapid', text: 'Rapid: auto-upgrade cluster to the latest supported patch release on the latest supported minor version.' },
+                        { key: 'node-image', text: 'Node-Image: auto-upgrade cluster node images to the latest version available.' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("upgradeChannel", key)}
