@@ -1,10 +1,23 @@
 /* eslint-disable import/no-anonymous-default-export */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
 
+import certmanagerScriptURL from './_deployscripts/certmanager-install.sh'
+import externaldnsScriptURL from './_deployscripts/externaldns-config-install.sh'
+
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
+
+  const [ certmanagerScript, setCertmanagerScript ] = useState("")
+  const [ externaldnsScript, setExternaldnsScript ] = useState("")
+  // using react-scripts, so cannot modify webpack config to allow .sh files to be loaded as "asset/source"
+  useEffect(() => {
+    (async () => {
+      setCertmanagerScript (await fetch(certmanagerScriptURL).then(b => b.text()))
+      setExternaldnsScript (await fetch(externaldnsScriptURL).then(b => b.text()))
+    })();
+  }, []);
 
   const { net, addons, cluster, deploy } = tabValues
   const allok = !(invalidTabs && invalidTabs.length > 0)
@@ -101,7 +114,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Resource Group \n` +
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
-    `az deployment group create -g ${deploy.rg}  ${process.env.REACT_APP_AZ_TEMPLATE_ARG} --parameters` + params2CLI(finalParams)
+    `az deployment group create -g ${deploy.rg}  ${process.env.REACT_APP_BASE_URL ? `----template-uri ${process.env.REACT_APP_BASE_URL}/main.json` : '--template-file ./bicep/main.bicep' } --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
   const prometheus_namespace = 'monitoring'
@@ -110,13 +123,15 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const nginx_helm_release_name = 'nginx-ingress'
 
   const EXTERNAL_DNS_REGISTRY = 'k8s.gcr.io'
-  const EXTERNAL_DNS_REPO = 'external-dns/external-dns:v0.8.0'
+  const EXTERNAL_DNS_REPO = 'external-dns/external-dns'
+  // appVersion :: https://raw.githubusercontent.com/kubernetes-sigs/external-dns/master/charts/external-dns/Chart.yaml
+  const EXTERNAL_DNS_TAG = 'v0.10.2'
 
-  const postscript =
+  const postscript_az =
     // App Gateway addon: see main.bicep DEPLOY_APPGW_ADDON
     (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `
-# ---------------------------------------------------------------------
-# Workaround to enable AGIC with BYO VNET (until supported by template)
+# ------------------------------------------------
+#          Workaround to enable AGIC with BYO VNET
 APPGW_RG_ID="$(az group show -n ${deploy.rg} --query id -o tsv)"
 APPGW_ID="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query id -o tsv)"
 az aks enable-addons -n ${aks} -g ${deploy.rg} -a ingress-appgw --appgw-id $APPGW_ID
@@ -128,41 +143,37 @@ az role assignment create --role "Reader" --assignee-principal-type ServicePrinc
 APPGW_IDENTITY="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
 az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
 ` : '') +
+    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
+# Variables for external-dns
+KubeletId=$(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
+TenantId=$(az account show --query tenantId -o tsv)
+${cluster.apisecurity === "private" ? `
+# Import external-dns Image to ACR
+export ACRNAME=$(az acr list -g ${deploy.rg} --query [0].name -o tsv)
+az acr import -n $ACRNAME --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG} --image ${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG}
+`:''} `:'')
 
-
-    // Get credentials
-    (cluster.apisecurity !== "private" ? `
-# ----------------------------------------
-# Get credentials for your new AKS cluster
-az aks get-credentials -g ${deploy.rg} -n ${aks}
-` : '') +
-
-
+  const postscript_cluster =
     // Prometheus
     (addons.monitor === 'oss' ? `
-# -----------------------------------
-# Install kube-prometheus-stack chart
-${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
+# ------------------------------------------------
+#              Install kube-prometheus-stack chart
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 kubectl create namespace ${prometheus_namespace}
 helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}
-${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
     // Default Deny All Network Policy, east-west traffic in cluster
     (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `
-# -----------------------------------
-# Create a default-deny network policy in your cluster to deny all traffic in the default namespace
-${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
-kubectl apply -f https://raw.githubusercontent.com/Azure/Aks-Construction/0.4.3/postdeploy/k8smanifests/networkpolicy-deny-all.yml
-${cluster.apisecurity === "private" ? `"` : ``}
+# ------------------------------------------------
+#   Create a default-deny namespace network policy
+kubectl apply -f ${process.env.REACT_APP_BASE_URL || '.' }/postdeploy/k8smanifests/networkpolicy-deny-all.yml
 ` : '') +
 
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `
-# --------------------------------
-# Install Nginx Ingress Controller
-${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
+# ------------------------------------------------
+#                 Install Nginx Ingress Controller
 kubectl create namespace ${nginx_namespace}
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
@@ -178,16 +189,13 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
   --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \\
 ` : '') +
       `  --namespace ${nginx_namespace}
-${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
 
     // Contour Ingress Controller
     (addons.ingress === 'contour' ? `
-# ----------------------------------
-# Install Contour Ingress Controller
-${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
+# ------------------------------------------------
+#               Install Contour Ingress Controller
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
-${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
 
 
@@ -195,31 +203,23 @@ ${cluster.apisecurity === "private" ? `"` : ``}
     // external-dns needs permissions to make changes in the Azure DNS server.
     // https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/azure.md#azure-managed-service-identity-msi
     (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
-# --------------------
-# Install external-dns
-${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
-kubectl create secret generic azure-config-file --from-file=azure.json=/dev/stdin<<EOF
-{
-  userAssignedIdentityID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv),
-  tenantId: $(az account show --query tenantId -o tsv),
+# ------------------------------------------------
+#                             Install external-dns
+kubectl create secret generic aks-kube-msi --from-literal=azure.json="{
+  userAssignedIdentityID: $KubeletId,
+  tenantId: $TenantId,
   useManagedIdentityExtension: true,
   subscriptionId: ${addons.dnsZoneId.split('/')[2]},
   resourceGroup: ${addons.dnsZoneId.split('/')[4]}
-}
-EOF
-${cluster.apisecurity === "private" ? `"
-# Import Image to ACR
-export ACRNAME=$(az acr list -g ${deploy.rg} --query [0].name -o tsv)
-az acr import -n $ACRNAME --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO} --image ${EXTERNAL_DNS_REPO}
-` : ``}
+}"
 
-# external-dns manifest (for clusters with RBAC)
-curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{image}}|${cluster.apisecurity === "private" ? `$ACRNAME.azurecr.io/${EXTERNAL_DNS_REPO}` : `${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}`}|g" -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
-${cluster.apisecurity === "private" ?
-  `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-ext-dns.yml" --file  /tmp/aks-ext-dns.yml`
-:
-  `kubectl apply -f /tmp/aks-ext-dns.yml`}
-
+helm upgrade --install externaldns https://github.com/kubernetes-sigs/external-dns/releases/download/external-dns-helm-chart-1.7.1/external-dns-1.7.1.tgz \\
+  --set domainFilters={"${addons.dnsZoneId.split('/')[8]}"} \\
+  --set provider="${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}" \\
+  --set extraVolumeMounts[0].name=aks-kube-msi,extraVolumeMounts[0].mountPath=/etc/kubernetes,extraVolumeMounts[0].readOnly=true \\
+  --set extraVolumes[0].name=aks-kube-msi,extraVolumes[0].secret.secretName=aks-kube-msi${false? ',extraVolumes[0].secret.items[0].key=externaldns-config.json,extraVolumes[0].secret.items[0].path=azure.json':''} ${cluster.apisecurity === "private" ? `\\
+  --set image.repository="$ACRNAME.azurecr.io/${EXTERNAL_DNS_REPO}"
+  --set image.tag="${EXTERNAL_DNS_TAG}"` : ''}
 ` : '') +
 
 
@@ -243,40 +243,29 @@ ${cluster.apisecurity === "private" ?
             clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
 
     */
-
     (addons.ingress !== 'none' && addons.certMan ? `
-# --------------------
-# Install cert-manager
-${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
+# ------------------------------------------------
+#                             Install cert-manager
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${addons.ingress === 'appgw' ? 'v1.5.3' : 'v1.6.0'}/cert-manager.yaml
-${cluster.apisecurity === "private" ? `"` : ``}
-# Wait for cert-manager to install
-sleep 30s
+sleep 20s # wait for cert-manager webhook to install
+helm upgrade --install letsencrypt-issuer ${process.env.REACT_APP_BASE_URL || '.'}/postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz \\
+    --set email=${addons.certEmail}  \\
+    --set ingressClass=${addons.ingress === 'appgw' ? "azure/application-gateway" : addons.ingress}
+`: '')
 
-cat >/tmp/aks-issuer.yml<<EOF
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    # The ACME server URL
-    server: https://acme-v02.api.letsencrypt.org/directory
-    # Email address used for ACME registration
-    email: ${addons.certEmail}
-    # Name of a secret used to store the ACME account private key
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    # Enable the HTTP-01 challenge provider
-    solvers:
-    - http01:
-        ingress:
-          class: ${(addons.ingress === 'contour' ? 'contour' : (addons.ingress === 'nginx' ? "nginx" : "azure/application-gateway"))}
-EOF
-${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-issuer.yml" --file  /tmp/aks-issuer.yml`
-:
- `kubectl apply -f /tmp/aks-issuer.yml`}
-` : '')
+  const postscript = `${postscript_az}
+${postscript_cluster ?
+      // Get credentials
+      (cluster.apisecurity !== "private" ? `
+# ------------------------------------------------
+#         Get credentials for your new AKS cluster
+az aks get-credentials -g ${deploy.rg} -n ${aks}
+${postscript_cluster}` : `
+# ------------------------------------------------
+#           Private cluster, so use command invoke
+az aks command invoke -g ${deploy.rg} -n ${aks}  --command "
+${postscript_cluster.replaceAll('"', '\\"')}
+"  ${process.env.REACT_APP_BASE_URL ? '' : '--file  ./postdeploy'}  `) : ''}`
 
   return (
 

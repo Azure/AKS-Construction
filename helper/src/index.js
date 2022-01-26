@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import { mergeStyles } from '@fluentui/react';
-import * as serviceWorker from './serviceWorker';
 
 // Application Insights - https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-js
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
@@ -28,11 +27,9 @@ mergeStyles({
 });
 
 ReactDOM.render(
-  <ConfigContext.Provider value={configData}>
-    <App />
-  </ConfigContext.Provider>, document.getElementById('root'));
+  <React.StrictMode>
+      <ConfigContext.Provider value={configData}>
+        <App />
+      </ConfigContext.Provider>
+    </React.StrictMode>, document.getElementById('root'));
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
