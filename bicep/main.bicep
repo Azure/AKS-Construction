@@ -1,3 +1,5 @@
+//Minimum Bicep version required : v0.4.1124
+
 @minLength(2)
 @description('The location to use for the deployment. defaults to Resource Groups location.')
 param location string = resourceGroup().location
