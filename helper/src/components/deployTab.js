@@ -97,7 +97,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const finalParams = { ...params, ...(!deploy.disablePreviews && preview_params) }
   const aks = `aks-${deploy.clusterName}`
-  const agw = `agw-${deploy.clusterName}`
+
   const deploycmd =
     `# Create Resource Group \n` +
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
@@ -105,155 +105,29 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az deployment group create -g ${deploy.rg}  ${process.env.REACT_APP_BASE_URL ? `----template-uri ${process.env.REACT_APP_BASE_URL}/main.json` : '--template-file ./bicep/main.bicep' } --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
-  const prometheus_namespace = 'monitoring'
-  const prometheus_helm_release_name = 'monitoring'
-  const nginx_namespace = 'ingress-basic'
-  const nginx_helm_release_name = 'nginx-ingress'
 
-  const EXTERNAL_DNS_REGISTRY = 'k8s.gcr.io'
-  const EXTERNAL_DNS_REPO = 'external-dns/external-dns'
-  // appVersion :: https://raw.githubusercontent.com/kubernetes-sigs/external-dns/master/charts/external-dns/Chart.yaml
-  const EXTERNAL_DNS_TAG = 'v0.10.2'
+  const post_script = `sh ${process.env.REACT_APP_BASE_URL || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_BASE_URL ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks}  ${process.env.REACT_APP_BASE_URL ? `-r ${process.env.REACT_APP_BASE_URL}` : ''} \\
+    -p vnet_opt=${net.vnet_opt} \\
+    ${addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `-p denydefaultNetworkPolicy=${addons.denydefaultNetworkPolicy} \\` : '' }
+    ${addons.ingress == "appgw" ? `-p agw=agw-${deploy.clusterName} \\` : ''}
+    ${addons.ingress !== "none" ? `-p ingress=${addons.ingress} \\` : ''}
+    ${cluster.apisecurity !== "none" ? `-p apisecurity=${cluster.apisecurity} \\` : '' }
+    ${cluster.monitor !== "none" ? `-p monitor=${addons.monitor} \\` : '' }
+    ${addons.ingressEveryNode ? `-p ingressEveryNode=${addons.ingressEveryNode} \\` : '' }
+    ${addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `-p dnsZoneId=${addons.dnsZoneId} \\` : '' }
+    ${addons.ingress !== 'none' && addons.certMan ? `-p certMan=${addons.certMan}` : '' }
+  `
 
-  const postscript_az =
-    // App Gateway addon: see main.bicep DEPLOY_APPGW_ADDON
-    (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `
-# ------------------------------------------------
-#          Workaround to enable AGIC with BYO VNET
-APPGW_RG_ID="$(az group show -n ${deploy.rg} --query id -o tsv)"
-APPGW_ID="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query id -o tsv)"
-az aks enable-addons -n ${aks} -g ${deploy.rg} -a ingress-appgw --appgw-id $APPGW_ID
-AKS_AGIC_IDENTITY_ID="$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.ingressApplicationGateway.identity.objectId -o tsv)"
-az role assignment create --role "Contributor" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_ID
-az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
-` : '') +
-    (net.vnet_opt === "byo" && addons.ingress === 'appgw' /* && appgwKVIntegration */ ? `
-APPGW_IDENTITY="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
-az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
-` : '') +
-    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
-# Variables for external-dns
-KubeletId=$(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
-TenantId=$(az account show --query tenantId -o tsv)
-${cluster.apisecurity === "private" ? `
-# Import external-dns Image to ACR
-export ACRNAME=$(az acr list -g ${deploy.rg} --query [0].name -o tsv)
-az acr import -n $ACRNAME --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG} --image ${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG}
-`:''} `:'')
-
-  const postscript_cluster =
-    // Prometheus
-    (addons.monitor === 'oss' ? `
-# ------------------------------------------------
-#              Install kube-prometheus-stack chart
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-kubectl create namespace ${prometheus_namespace}
-helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}
-` : '') +
-    // Default Deny All Network Policy, east-west traffic in cluster
-    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `
-# ------------------------------------------------
-#   Create a default-deny namespace network policy
-kubectl apply -f ${process.env.REACT_APP_BASE_URL || '.' }/postdeploy/k8smanifests/networkpolicy-deny-all.yml
-` : '') +
-
-    // Nginx Ingress Controller
-    (addons.ingress === 'nginx' ? `
-# ------------------------------------------------
-#                 Install Nginx Ingress Controller
-kubectl create namespace ${nginx_namespace}
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
-  --set controller.publishService.enabled=true \\
-` + (addons.ingressEveryNode ?
-        `  --set controller.kind=DaemonSet \\
-  --set controller.service.externalTrafficPolicy=Local \\
-` : '') +
-      (addons.monitor === 'oss' ?
-        `  --set controller.metrics.enabled=true \\
-  --set controller.metrics.serviceMonitor.enabled=true \\
-  --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \\
-  --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \\
-` : '') +
-      `  --namespace ${nginx_namespace}
-` : '') +
-
-    // Contour Ingress Controller
-    (addons.ingress === 'contour' ? `
-# ------------------------------------------------
-#               Install Contour Ingress Controller
-kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
-` : '') +
-
-
-    // External DNS
-    // external-dns needs permissions to make changes in the Azure DNS server.
-    // https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/azure.md#azure-managed-service-identity-msi
-    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
-# ------------------------------------------------
-#                             Install external-dns
-kubectl create secret generic aks-kube-msi --from-literal=azure.json="{
-  userAssignedIdentityID: $KubeletId,
-  tenantId: $TenantId,
-  useManagedIdentityExtension: true,
-  subscriptionId: ${addons.dnsZoneId.split('/')[2]},
-  resourceGroup: ${addons.dnsZoneId.split('/')[4]}
-}"
-
-helm upgrade --install externaldns https://github.com/kubernetes-sigs/external-dns/releases/download/external-dns-helm-chart-1.7.1/external-dns-1.7.1.tgz \\
-  --set domainFilters={"${addons.dnsZoneId.split('/')[8]}"} \\
-  --set provider="${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}" \\
-  --set extraVolumeMounts[0].name=aks-kube-msi,extraVolumeMounts[0].mountPath=/etc/kubernetes,extraVolumeMounts[0].readOnly=true \\
-  --set extraVolumes[0].name=aks-kube-msi,extraVolumes[0].secret.secretName=aks-kube-msi${false? ',extraVolumes[0].secret.items[0].key=externaldns-config.json,extraVolumes[0].secret.items[0].path=azure.json':''} ${cluster.apisecurity === "private" ? `\\
-  --set image.repository="$ACRNAME.azurecr.io/${EXTERNAL_DNS_REPO}"
-  --set image.tag="${EXTERNAL_DNS_TAG}"` : ''}
-` : '') +
-
-
-    // Cert-Manager
-    // https://cert-manager.io/docs/installation/
-    // Cannot use 1.6.0 with AGIC https://github.com/jetstack/cert-manager/issues/4547
-    // cert-manager ACME ClusterIssuer Configuration (client owns the domain)
-    // Lets Encrypt production Issuer, using either HTTP01 for external services, or DNS01 for internal
-    // https://cert-manager.io/docs/configuration/acme/
-
-    /*
-    - dns01:
-        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
-        azureDNS:
-          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
-          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
-          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
-          managedIdentity:
-            # client id of the node pool managed identity (can not be set at the same time as resourceID)
-            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
-            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
-
-    */
-    (addons.ingress !== 'none' && addons.certMan ? `
-# ------------------------------------------------
-#                             Install cert-manager
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${addons.ingress === 'appgw' ? 'v1.5.3' : 'v1.6.0'}/cert-manager.yaml
-sleep 30s # wait for cert-manager webhook to install
-helm upgrade --install letsencrypt-issuer ${process.env.REACT_APP_BASE_URL || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_BASE_URL ? '' : '/postdeploy/helm'}/Az-CertManagerIssuer-0.3.0.tgz \\
-    --set email=${addons.certEmail}  \\
-    --set ingressClass=${addons.ingress === 'appgw' ? "azure/application-gateway" : addons.ingress}
-`: '')
-
-  const postscript = `${postscript_az}
-${postscript_cluster ?
-      // Get credentials
-      (cluster.apisecurity !== "private" ? `
+  const postscript = (cluster.apisecurity !== "private" ? `
 # ------------------------------------------------
 #         Get credentials for your new AKS cluster
 az aks get-credentials -g ${deploy.rg} -n ${aks}
-${postscript_cluster}` : `
+${post_script}` : `
 # ------------------------------------------------
 #           Private cluster, so use command invoke
 az aks command invoke -g ${deploy.rg} -n ${aks}  --command "
-${postscript_cluster.replaceAll('"', '\\"')}
-"  ${process.env.REACT_APP_BASE_URL ? '' : '--file  ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz'}  `) : ''}`
+${post_script}
+"  ${process.env.REACT_APP_BASE_URL ? '' : '--file  ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz'}  `)
 
   return (
 
@@ -295,28 +169,29 @@ ${postscript_cluster.replaceAll('"', '\\"')}
             styles={{ dropdown: { width: 300 } }}
           />
         </Stack>
-        <Stack tokens={{ childrenGap: 20 }} styles={{ root: { width: "400px" } }}>
+        <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: "400px" } }}>
 
           <Separator ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Environment Access & Build Agents</b></div> </Separator>
 
           <TextField label="Current IP Address" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
 
-          <Stack.Item>
-            <Label>Grant AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
-            <Checkbox disabled={cluster.enable_aad === false || cluster.enableAzureRBAC === false} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
-            <Checkbox disabled={cluster.apisecurity !== "whitelist"}  onChange={(ev, val) => updateFn("clusterIPWhitelist", val)} checked={deploy.clusterIPWhitelist} label="Add current IP to AKS firewall (applicable to AKS IP ranges)"  />
-          </Stack.Item>
 
-          <Stack.Item>
+            <Label>Grant AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
+            <Stack.Item>
+              <Checkbox disabled={cluster.enable_aad === false || cluster.enableAzureRBAC === false} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
+              <Checkbox disabled={cluster.apisecurity !== "whitelist"}  onChange={(ev, val) => updateFn("clusterIPWhitelist", val)} checked={deploy.clusterIPWhitelist} label="Add current IP to AKS firewall (applicable to AKS IP ranges)"  />
+            </Stack.Item>
+
+
             <Label>Grant Azure Container Registry (ACR) Push role </Label>
             <Checkbox disabled={addons.registry === "none"} checked={deploy.acrPushRole} onChange={(ev, v) => updateFn("acrPushRole", v)} label="Assign deployment user 'AcrPush'" />
-          </Stack.Item>
 
-          <Stack.Item>
             <Label>Grant Key Vault Certificate and Secret Officer role <a target="_target" href="https://docs.microsoft.com/azure/key-vault/general/rbac-guide?tabs=azure-cli#azure-built-in-roles-for-key-vault-data-plane-operations">docs</a></Label>
+            <Stack.Item>
             <Checkbox disabled={addons.csisecret !== 'akvNew'} checked={deploy.kvCertSecretRole} onChange={(ev, v) => updateFn("kvCertSecretRole", v)} label="Assign deployment user Certificate and Secret Officer" />
             <Checkbox disabled={addons.csisecret !== 'akvNew' || !net.vnetprivateend} checked={deploy.kvIPAllowlist} onChange={(ev, v) => updateFn("kvIPAllowlist", v)} label="Add current IP to KeyVault firewall (applicable to private link)" />
-          </Stack.Item>
+            </Stack.Item>
+            { deploy.kvIPAllowlist && net.vnetprivateend && <MessageBar messageBarType={MessageBarType.info}> <Text >"Add current IP to KeyVault firewall" will enable KeyVaults  PublicNetworkAccess property</Text></MessageBar> }
 
         </Stack>
 
