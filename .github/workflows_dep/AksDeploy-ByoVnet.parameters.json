@@ -85,9 +85,6 @@
         },
         "dnsZoneId" : {
             "value" : "/this/parameter/is/overridden/in/my/script/valuefromsecrets"
-        },
-        "openServiceMeshAddon" : {
-            "value" : true
         }
     }
 }
