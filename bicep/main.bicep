@@ -400,18 +400,15 @@ resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = i
   }
 }
 
-resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
-  name: 'private-pool'
-  location: location
-  parent: acr
-  properties: {
-    count: 1
-    os: 'Linux'
-    tier: 'S1'
-    virtualNetworkSubnetResourceId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
+//resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
+module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
+  name: 'acrprivatepool'
+  params: {
+    acrName: acr.name
+    acrPoolSubnetId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
+    location: location
   }
 }
-
 
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
@@ -1043,6 +1040,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
     networkProfile: {
       loadBalancerSku: 'standard'
       networkPlugin: networkPlugin
+      #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
       networkPolicy: networkPolicy
       podCidr: podCidr
       serviceCidr: serviceCidr
