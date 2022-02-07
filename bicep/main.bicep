@@ -189,6 +189,9 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 @description('Installs the AKS KV CSI provider')
 param azureKeyvaultSecretsProvider bool = false //This is a preview feature
 
+@description('Enables Open Service Mesh')
+param openServiceMeshAddon bool = false
+
 @description('Creates a Key Vault')
 param createKV bool = false
 
@@ -1010,6 +1013,13 @@ var aks_addons5 = azureKeyvaultSecretsProvider ? union(aks_addons4, {
   }
 }) : aks_addons4
 
+var aks_addons6 = openServiceMeshAddon ? union(aks_addons5, {
+  openServiceMesh: {
+    enabled: true
+    config: {}
+}
+}) : aks_addons5
+
 var aks_identity = {
   type: 'UserAssigned'
   userAssignedIdentities: {
@@ -1057,7 +1067,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
     autoUpgradeProfile: !empty(upgradeChannel) ? {
       upgradeChannel: upgradeChannel
     } : {}
-    addonProfiles: !empty(aks_addons5) ? aks_addons5 : {}
+    addonProfiles: !empty(aks_addons6) ? aks_addons6 : {}
   }
   identity: aks_byo_identity ? aks_identity : {
     type: 'SystemAssigned'
