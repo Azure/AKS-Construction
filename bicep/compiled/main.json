@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "12812781599439011049"
+      "templateHash": "3433194107144435189"
     }
   },
   "parameters": {
@@ -882,23 +882,6 @@
       "dependsOn": [
         "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
         "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
-      ]
-    },
-    {
-      "condition": "[and(and(and(parameters('custom_vnet'), not(empty(parameters('registries_sku')))), parameters('privateLinks')), parameters('acrPrivatePool'))]",
-      "type": "Microsoft.ContainerRegistry/registries/agentPools",
-      "apiVersion": "2019-06-01-preview",
-      "name": "[format('{0}/{1}', variables('acrName'), 'private-pool')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "count": 1,
-        "os": "Linux",
-        "tier": "S1",
-        "virtualNetworkSubnetResourceId": "[if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2020-10-01').outputs.acrPoolSubnetId.value, '')]"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
-        "[resourceId('Microsoft.Resources/deployments', 'network')]"
       ]
     },
     {
@@ -2073,6 +2056,71 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.Resources/deployments', 'network')]"
+      ]
+    },
+    {
+      "condition": "[and(and(and(parameters('custom_vnet'), not(empty(parameters('registries_sku')))), parameters('privateLinks')), parameters('acrPrivatePool'))]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "acrprivatepool",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "acrName": {
+            "value": "[variables('acrName')]"
+          },
+          "acrPoolSubnetId": {
+            "value": "[if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network'), '2020-10-01').outputs.acrPoolSubnetId.value, '')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "1121290615908472094"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "acrName": {
+              "type": "string"
+            },
+            "acrPoolSubnetId": {
+              "type": "string",
+              "defaultValue": ""
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ContainerRegistry/registries/agentPools",
+              "apiVersion": "2019-06-01-preview",
+              "name": "[format('{0}/{1}', parameters('acrName'), 'private-pool')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "count": 1,
+                "os": "Linux",
+                "tier": "S1",
+                "virtualNetworkSubnetResourceId": "[parameters('acrPoolSubnetId')]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
         "[resourceId('Microsoft.Resources/deployments', 'network')]"
       ]
     },
