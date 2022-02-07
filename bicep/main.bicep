@@ -1059,10 +1059,10 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
     }
     disableLocalAccounts: AksDisableLocalAccounts && enable_aad
     securityProfile: {
-      azureDefender: {
-        enabled: DefenderForContainers && omsagent
-        logAnalyticsWorkspaceResourceId: DefenderForContainers && omsagent ? aks_law.id : json('null')
-      }
+      // azureDefender: {
+      //   enabled: DefenderForContainers && omsagent
+      //   logAnalyticsWorkspaceResourceId: DefenderForContainers && omsagent ? aks_law.id : json('null')
+      // }
     }
     autoUpgradeProfile: !empty(upgradeChannel) ? {
       upgradeChannel: upgradeChannel
