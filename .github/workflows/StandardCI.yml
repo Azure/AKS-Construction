@@ -82,6 +82,7 @@ jobs:
 
   Deploy:
     runs-on: ubuntu-latest
+    environment: ${{ env.GhDeployEnvironment }}
     needs: [Validation]
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
     environment: azurecirgs
@@ -119,6 +120,7 @@ jobs:
 
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
+    environment: ${{ env.GhDeployEnvironment }}
     needs: [Deploy]
     environment: azurecirgs
     steps:
@@ -182,6 +184,7 @@ jobs:
 
   Cleanup:
     runs-on: ubuntu-latest
+    environment: ${{ env.GhDeployEnvironment }}
     needs: [Validation, Deploy, SmokeTest_SimpleApp]
     if: github.event_name == 'schedule'
     steps:
