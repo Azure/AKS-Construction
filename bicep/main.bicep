@@ -1017,6 +1017,13 @@ var aks_identity = {
   }
 }
 
+var azureDefenderSecurityProfile = {
+  azureDefender: {
+    enabled: true
+    logAnalyticsWorkspaceResourceId: aks_law.id
+  }
+}
+
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
   name: 'aks-${resourceName}'
   location: location
@@ -1048,11 +1055,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
       dockerBridgeCidr: dockerBridgeCidr
     }
     disableLocalAccounts: AksDisableLocalAccounts && enable_aad
-    securityProfile: {
-      azureDefender: {
-        enabled: false
-      }
-    }
+    securityProfile : DefenderForContainers && omsagent ? azureDefenderSecurityProfile : json('null')
     autoUpgradeProfile: !empty(upgradeChannel) ? {
       upgradeChannel: upgradeChannel
     } : {}
