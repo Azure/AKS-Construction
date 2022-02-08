@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "metadata": {
         "template": "bicep/compiled/main.json",
-        "config" : "https://azure.github.io/Aks-Construction?secure=normal&net.dnsServiceIP=172.10.0.10&ops=managed&cluster.SystemPoolType=Standard&cluster.availabilityZones=yes&cluster.apisecurity=whitelist&addons.ingress=appgw&addons.registry=Premium&addons.appGWcount=2"
+        "config" : "https://azure.github.io/AKS-Construction?secure=normal&net.dnsServiceIP=172.10.0.10&ops=managed&cluster.SystemPoolType=Standard&cluster.availabilityZones=yes&cluster.apisecurity=whitelist&addons.ingress=appgw&addons.registry=Premium&addons.appGWcount=2"
     },
     "parameters": {
         "resourceName": {
