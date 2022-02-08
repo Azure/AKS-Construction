@@ -1051,6 +1051,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
     securityProfile: {
       azureDefender: {
         enabled: false
+      }
     }
     autoUpgradeProfile: !empty(upgradeChannel) ? {
       upgradeChannel: upgradeChannel
