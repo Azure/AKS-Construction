@@ -24,6 +24,7 @@ on:
     # At 11:00pm, every Tuesday week
     - cron: "0 23 * * 2"
 env:
+  GhDeployEnvironment: "csu"
   RG: "Automation-Actions-AksDeployStanCI" #The resource group we're deploying to.
   ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
@@ -33,6 +34,7 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
+    environment: ${{ env.GhDeployEnvironment }}
     if: ${{ !github.event.pull_request.head.repo.fork }}
 
     steps:
