@@ -276,7 +276,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
             <Stack.Item align="start">
                 <Label required={true}>
                     CSI Secrets : Store Kubernetes Secrets in Azure KeyVault, using AKS Managed Identity (**Preview)
-                    (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver">docs</a>)
+                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/csi-secrets-store-driver">docs</a>)
                 </Label>
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
@@ -296,6 +296,16 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                         <TextField value={addons.kvId} onChange={(ev, v) => updateFn("kvId", v)} errorMessage={getError(invalidArray, 'kvId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Azure Key Vault Resource Id</Text>} />
                     }
                 </Stack>
+            </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Open Service Mesh : Enable Open Service Mesh on the AKS Cluster
+                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/open-service-mesh-about">docs</a>)
+                </Label>
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-osm-Checkbox"}} checked={addons.openServiceMeshAddon} onChange={(ev, v) => updateFn("openServiceMeshAddon", v)} label="Install the Open Service Mesh AddOn" />
             </Stack.Item>
 
             {/*

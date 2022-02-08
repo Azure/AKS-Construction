@@ -42,6 +42,7 @@
         },
         "addons": {
             "networkPolicy": "none",
+            "openServiceMeshAddon": false,
             "denydefaultNetworkPolicy": false,
             "azurepolicy": "none",
             "ingress": "none",
