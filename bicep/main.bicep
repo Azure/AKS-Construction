@@ -1051,6 +1051,7 @@ var aksProperties = {
   addonProfiles: !empty(aks_addons5) ? aks_addons5 : {}
 }
 
+@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
 var azureDefenderSecurityProfile = {
   securityProfile : {
     azureDefender: {
