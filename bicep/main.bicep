@@ -1055,7 +1055,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
       dockerBridgeCidr: dockerBridgeCidr
     }
     disableLocalAccounts: AksDisableLocalAccounts && enable_aad
-    securityProfile : DefenderForContainers && omsagent ? azureDefenderSecurityProfile : json('null')
+    securityProfile : DefenderForContainers && omsagent ? azureDefenderSecurityProfile : {}
     autoUpgradeProfile: !empty(upgradeChannel) ? {
       upgradeChannel: upgradeChannel
     } : {}
