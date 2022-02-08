@@ -1017,50 +1017,53 @@ var aks_identity = {
   }
 }
 
+var aksProperties = {
+  kubernetesVersion: kubernetesVersion
+  enableRBAC: true
+  dnsPrefix: dnsPrefix
+  aadProfile: enable_aad ? {
+    managed: true
+    enableAzureRBAC: enableAzureRBAC
+    tenantID: aad_tenant_id
+  } : null
+  apiServerAccessProfile: !empty(authorizedIPRanges) ? {
+    authorizedIPRanges: authorizedIPRanges
+  } : {
+    enablePrivateCluster: enablePrivateCluster
+    privateDNSZone: enablePrivateCluster ? 'none' : ''
+    enablePrivateClusterPublicFQDN: enablePrivateCluster
+  }
+  agentPoolProfiles: agentPoolProfiles
+  networkProfile: {
+    loadBalancerSku: 'standard'
+    networkPlugin: networkPlugin
+    #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
+    networkPolicy: networkPolicy
+    podCidr: podCidr
+    serviceCidr: serviceCidr
+    dnsServiceIP: dnsServiceIP
+    dockerBridgeCidr: dockerBridgeCidr
+  }
+  disableLocalAccounts: AksDisableLocalAccounts && enable_aad
+  autoUpgradeProfile: !empty(upgradeChannel) ? {
+    upgradeChannel: upgradeChannel
+  } : {}
+  addonProfiles: !empty(aks_addons5) ? aks_addons5 : {}
+}
+
 var azureDefenderSecurityProfile = {
-  azureDefender: {
-    enabled: true
-    logAnalyticsWorkspaceResourceId: aks_law.id
+  securityProfile : {
+    azureDefender: {
+      enabled: true
+      logAnalyticsWorkspaceResourceId: aks_law.id
+    }
   }
 }
 
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
   name: 'aks-${resourceName}'
   location: location
-  properties: {
-    kubernetesVersion: kubernetesVersion
-    enableRBAC: true
-    dnsPrefix: dnsPrefix
-    aadProfile: enable_aad ? {
-      managed: true
-      enableAzureRBAC: enableAzureRBAC
-      tenantID: aad_tenant_id
-    } : null
-    apiServerAccessProfile: !empty(authorizedIPRanges) ? {
-      authorizedIPRanges: authorizedIPRanges
-    } : {
-      enablePrivateCluster: enablePrivateCluster
-      privateDNSZone: enablePrivateCluster ? 'none' : ''
-      enablePrivateClusterPublicFQDN: enablePrivateCluster
-    }
-    agentPoolProfiles: agentPoolProfiles
-    networkProfile: {
-      loadBalancerSku: 'standard'
-      networkPlugin: networkPlugin
-      #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
-      networkPolicy: networkPolicy
-      podCidr: podCidr
-      serviceCidr: serviceCidr
-      dnsServiceIP: dnsServiceIP
-      dockerBridgeCidr: dockerBridgeCidr
-    }
-    disableLocalAccounts: AksDisableLocalAccounts && enable_aad
-    securityProfile : DefenderForContainers && omsagent ? azureDefenderSecurityProfile : {}
-    autoUpgradeProfile: !empty(upgradeChannel) ? {
-      upgradeChannel: upgradeChannel
-    } : {}
-    addonProfiles: !empty(aks_addons5) ? aks_addons5 : {}
-  }
+  properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
   identity: aks_byo_identity ? aks_identity : {
     type: 'SystemAssigned'
   }
