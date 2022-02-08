@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "3433194107144435189"
+      "templateHash": "12491676784678940335"
     }
   },
   "parameters": {
@@ -1055,8 +1055,7 @@
         "disableLocalAccounts": "[and(parameters('AksDisableLocalAccounts'), parameters('enable_aad'))]",
         "securityProfile": {
           "azureDefender": {
-            "enabled": "[and(parameters('DefenderForContainers'), parameters('omsagent'))]",
-            "logAnalyticsWorkspaceResourceId": "[if(and(parameters('DefenderForContainers'), parameters('omsagent')), resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')), json('null'))]"
+            "enabled": false
           }
         },
         "autoUpgradeProfile": "[if(not(empty(parameters('upgradeChannel'))), createObject('upgradeChannel', parameters('upgradeChannel')), createObject())]",
