@@ -7,11 +7,6 @@ on:
   #Run on Manual execution
   workflow_dispatch:
 
-  #Run when our bicep code changes
-  push:
-    paths:
-      - "bicep/*"
-
   #Run when PR's are made to main, where the changes are in the bicep directory or this workflow file itself
   pull_request:
     branches: [main]
@@ -24,7 +19,7 @@ on:
     # At 11:00pm, every Tuesday week
     - cron: "0 23 * * 2"
 env:
-  RG: "Automation-Actions-AksDeployStanCI" #The resource group we're deploying to.
+  RG: "AksBicepAcc-Ci-BasicCluster" #The resource group we're deploying to.
   ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
@@ -33,6 +28,7 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
+    environment: csu
     if: ${{ !github.event.pull_request.head.repo.fork }}
 
     steps:
@@ -73,16 +69,14 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
-            RESNAME='${{ env.RESNAME }}'
-            DEPNAME='Dep${{ github.run_number }}'
+            az account show --query name -o tsv
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME
 
   Deploy:
     runs-on: ubuntu-latest
+    environment: csu
     needs: [Validation]
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
-    environment: azurecirgs
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
     steps:
@@ -102,9 +96,6 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
-            RESNAME='${{ env.RESNAME }}'
-            DEPNAME='Dep${{ github.run_number }}'
             az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --name $DEPNAME --verbose
 
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
@@ -113,12 +104,12 @@ jobs:
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
             echo "AKSName returned from az deployment = $AKSNAME"
-            echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
+            echo "::set-output name=AKSNAME::$AKSNAME"
 
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
+    environment: csu
     needs: [Deploy]
-    environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
 
@@ -130,17 +121,10 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
 
-      # - name: AKS Connect
-      #   uses: Azure/aks-set-context@v1
-      #   with:
-      #     creds: '${{ secrets.AZURE_CREDENTIALS }}'
-      #     cluster-name: ${{ needs.Deploy.outputs.AKSNAME }}
-      #     resource-group: ${{ env.RG }}
-
       - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+        env:
+          AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
+        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
         env:
@@ -180,6 +164,7 @@ jobs:
 
   Cleanup:
     runs-on: ubuntu-latest
+    environment: csu
     needs: [Validation, Deploy, SmokeTest_SimpleApp]
     if: github.event_name == 'schedule'
     steps:
