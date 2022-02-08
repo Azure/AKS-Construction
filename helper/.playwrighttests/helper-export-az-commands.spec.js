@@ -3,7 +3,7 @@ const fs = require('fs');
 
 test('test', async ({ page }) => {
 
-  await page.goto('http://localhost:3000/Aks-Construction');
+  await page.goto('http://localhost:3000/AKS-Construction');
 
   //Select the Private Cluster preset
   const privateClusterPresetCheckboxSelector='.ms-Stack:nth-child(6) > .ms-DocumentCard:nth-child(3) > .ms-DocumentCardDetails > .ms-Checkbox > .ms-Checkbox-label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark';
