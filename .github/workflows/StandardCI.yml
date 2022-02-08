@@ -85,7 +85,6 @@ jobs:
     environment: ${{ env.GhDeployEnvironment }}
     needs: [Validation]
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
-    environment: azurecirgs
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
     steps:
@@ -122,7 +121,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ env.GhDeployEnvironment }}
     needs: [Deploy]
-    environment: azurecirgs
     steps:
       - uses: actions/checkout@v2
 
