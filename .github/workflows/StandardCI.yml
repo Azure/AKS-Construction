@@ -24,7 +24,7 @@ on:
     # At 11:00pm, every Tuesday week
     - cron: "0 23 * * 2"
 env:
-  RG: "Automation-Actions-AksDeployStanCI" #The resource group we're deploying to.
+  RG: "AksBicepAcc-Ci-BasicCluster" #The resource group we're deploying to.
   ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
