@@ -24,7 +24,6 @@ on:
     # At 11:00pm, every Tuesday week
     - cron: "0 23 * * 2"
 env:
-  GhDeployEnvironment: "csu"
   RG: "Automation-Actions-AksDeployStanCI" #The resource group we're deploying to.
   ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
@@ -34,7 +33,7 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
-    environment: ${{ env.GhDeployEnvironment }}
+    environment: csu
     if: ${{ !github.event.pull_request.head.repo.fork }}
 
     steps:
@@ -82,7 +81,7 @@ jobs:
 
   Deploy:
     runs-on: ubuntu-latest
-    environment: ${{ env.GhDeployEnvironment }}
+    environment: csu
     needs: [Validation]
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
     outputs:
@@ -119,7 +118,7 @@ jobs:
 
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
-    environment: ${{ env.GhDeployEnvironment }}
+    environment: csu
     needs: [Deploy]
     steps:
       - uses: actions/checkout@v2
@@ -182,7 +181,7 @@ jobs:
 
   Cleanup:
     runs-on: ubuntu-latest
-    environment: ${{ env.GhDeployEnvironment }}
+    environment: csu
     needs: [Validation, Deploy, SmokeTest_SimpleApp]
     if: github.event_name == 'schedule'
     steps:
