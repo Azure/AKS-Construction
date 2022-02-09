@@ -30,6 +30,7 @@ env:
 jobs:
   GetParamFiles:
     runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.head.repo.fork }}
     name: Get Param File List
     outputs:
       FILELIST: ${{ steps.getfiles.outputs.FILELIST}}

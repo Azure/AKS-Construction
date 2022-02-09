@@ -187,7 +187,7 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 |__|\__\ |_______|    |__|            \__/ /__/     \__\ \______/  |_______|    |__|     */
 
 @description('Installs the AKS KV CSI provider')
-param azureKeyvaultSecretsProvider bool = false //This is a preview feature
+param azureKeyvaultSecretsProvider bool = false
 
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false

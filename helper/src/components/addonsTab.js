@@ -275,8 +275,8 @@ export default function ({ tabValues, updateFn, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    CSI Secrets : Store Kubernetes Secrets in Azure KeyVault, using AKS Managed Identity (**Preview)
-                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/csi-secrets-store-driver">docs</a>)
+                    CSI Secrets : Store Kubernetes Secrets in Azure KeyVault, using AKS Managed Identity
+                    (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver">docs</a>)
                 </Label>
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
