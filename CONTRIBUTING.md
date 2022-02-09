@@ -4,7 +4,7 @@ A few important factoids to consume about the Repo, before you contribute.
 
 ## Opportunities to contribute
 
-Start by looking through the active issues for [low hanging fruit](https://github.com/Azure/Aks-Construction/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+Start by looking through the active issues for [low hanging fruit](https://github.com/Azure/AKS-Construction/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 Another area that will help you get more familiar with the project is by running the Helper Web App locally and writing some new [Playwright web tests](helper/.playwrighttests) to make our web publishing/testing process more robust.
 
 ## Action Workflows
@@ -106,7 +106,7 @@ Assert-PSRule -Module 'PSRule.Rules.Azure' -InputPath $paramPath -Format File -o
 
 ### The Wizard Web App
 
-The [configuration experience](https://azure.github.io/Aks-Construction/) is hosted in GitHub pages. It's a static web app, written in NodeJS using [FluentUI](https://developer.microsoft.com/en-us/fluentui).
+The [configuration experience](https://azure.github.io/AKS-Construction/) is hosted in GitHub pages. It's a static web app, written in NodeJS using [FluentUI](https://developer.microsoft.com/en-us/fluentui).
 
 #### Playwright tests
 
@@ -127,7 +127,7 @@ Running the Wizard GUI app
 ```bash
 cd helper
 npm start
-#Browser should automatically open. Web app runs on port 3000 on path /Aks-Construction
+#Browser should automatically open. Web app runs on port 3000 on path /AKS-Construction
 ```
 
 Running the playwright tests after starting the Wizard web app

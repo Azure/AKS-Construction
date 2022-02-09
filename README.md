@@ -14,10 +14,10 @@ This projects focus is split equally over 3 areas, configuration, modular templa
 
 ### Wizard experience
 
-To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/Aks-Construction/), which will provide a set of parameters and scripts to make deployment simple. It uses several preset configurations to guide configuration decisions.
+To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/AKS-Construction/), which will provide a set of parameters and scripts to make deployment simple. It uses several preset configurations to guide configuration decisions.
 The deployment helper provides links to the official Microsoft documentation to help provide additional context for each feature.
 
-[![preview screenshot of the helper wizard](helper_preview_es.png)](https://azure.github.io/Aks-Construction/)
+[![preview screenshot of the helper wizard](helper_preview_es.png)](https://azure.github.io/AKS-Construction/)
 
 ### IaC - Bicep code files
 
@@ -27,14 +27,14 @@ Releases are used to version the bicep code files, they can be leveraged directl
 
 ### DevOps - GitHub Actions
 
-A number of [GitHub actions](https://github.com/Azure/Aks-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. A robust deployment pipeline is essential when coordinating the deployment of multiple Azure services that work together, additionally there is configuration that cannot be set in the template and that needs to be automated (and tested) consistently.
+A number of [GitHub actions](https://github.com/Azure/AKS-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. A robust deployment pipeline is essential when coordinating the deployment of multiple Azure services that work together, additionally there is configuration that cannot be set in the template and that needs to be automated (and tested) consistently.
 ![preview screenshot of the helper wizard](docassets/ghactionworkflow.jpg)
 
 CI Name | Actions Workflow | Parameter file | CI Status | Notes
 |--------|--------|--------|-----------|------|
-| Starter cluster | [StandardCI.yml](https://github.com/Azure/Aks-Construction/blob/main/.github/workflows/StandardCI.yml) | [ESLZ Sandbox](.github/workflows_dep/AksDeploy-Basic.parameters.json) | [![AksStandardCI](https://github.com/Azure/Aks-Construction/actions/workflows/StandardCI.yml/badge.svg)](https://github.com/Azure/Aks-Construction/actions/workflows/StandardCI.yml) | A simple deployment example, good for first time users of this project to start with  |
-| BYO Vnet | [ByoVnetCI.yml](https://github.com/Azure/Aks-Construction/blob/main/.github/workflows/ByoVnetCI.yml) | [ESLZ Byo peered vnet](.github/workflows_dep/AksDeploy-ByoVnet.parameters.json) | [![ByoVnetCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml/badge.svg?branch=main)](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetCI.yml) | Comprehensive IaC flow deploying multiple smoke-test apps |
-| Private cluster | [ByoVnetPrivateCI.yml](https://github.com/Azure/Aks-Construction/blob/main/.github/workflows/ByoVnetPrivateCI.yml) | [ESLZ Byo private vnet](.github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json) | [![ByoVNetPrivateCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml/badge.svg)](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml)| A private AKS cluster that deploys a vnet with private link services. |
+| Starter cluster | [StandardCI.yml](https://github.com/Azure/AKS-Construction/blob/main/.github/workflows/StandardCI.yml) | [ESLZ Sandbox](.github/workflows_dep/AksDeploy-Basic.parameters.json) | [![AksStandardCI](https://github.com/Azure/AKS-Construction/actions/workflows/StandardCI.yml/badge.svg)](https://github.com/Azure/AKS-Construction/actions/workflows/StandardCI.yml) | A simple deployment example, good for first time users of this project to start with  |
+| BYO Vnet | [ByoVnetCI.yml](https://github.com/Azure/AKS-Construction/blob/main/.github/workflows/ByoVnetCI.yml) | [ESLZ Byo peered vnet](.github/workflows_dep/AksDeploy-ByoVnet.parameters.json) | [![ByoVnetCI](https://github.com/Azure/AKS-Construction/actions/workflows/ByoVnetCI.yml/badge.svg?branch=main)](https://github.com/Azure/AKS-Construction/actions/workflows/ByoVnetCI.yml) | Comprehensive IaC flow deploying multiple smoke-test apps |
+| Private cluster | [ByoVnetPrivateCI.yml](https://github.com/Azure/Aks-Construction/blob/main/.github/workflows/ByoVnetPrivateCI.yml) | [ESLZ Byo private vnet](.github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json) | [![ByoVNetPrivateCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml/badge.svg)](https://github.com/Azure/AKS-Construction/actions/workflows/ByoVnetPrivateCI.yml)| A private AKS cluster that deploys a vnet with private link services. |
 
 For a more in depth look at the GitHub Actions used in this project, which steps are performed and the different CI practices they demonstrate, please refer to [this page](GhActions.md).
 
@@ -44,7 +44,7 @@ For a more in depth look at the GitHub Actions used in this project, which steps
 
 If this is the first time you're using the project, follow these steps.
 
-1. Use the [Deployment Helper](https://azure.github.io/Aks-Construction/) to guide your AKS configuration.
+1. Use the [Deployment Helper](https://azure.github.io/AKS-Construction/) to guide your AKS configuration.
 1. Run the commands in the *Provision Environment* tab to create your AKS Environment in your Azure subscription
 1. Run the commands in the *Post Configuration* tab to complete your implementation
 1. [Connect to your AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster), and deploy your applications as you see fit.
@@ -53,17 +53,17 @@ If this is the first time you're using the project, follow these steps.
 
 If you're looking to use this project as part of your deployments, follow these steps.
 
-1. Use the [Deployment Helper](https://azure.github.io/Aks-Construction/) to guide your AKS configuration.
+1. Use the [Deployment Helper](https://azure.github.io/AKS-Construction/) to guide your AKS configuration.
 1. Capture the parameters on the *Template Parameters File* tab to a file - this is your configuration
 1. Check the *Post Configuration* tab for any commands and save them to a file
-1. Grab the [latest release](https://github.com/Azure/Aks-Construction/releases) of the bicep code
-1. (optionally) Author an Application Main bicep to represent *your application* (see [here](https://github.com/Azure/Aks-Construction/blob/main/samples/SampleAppMain.bicep) for an example)
+1. Grab the [latest release](https://github.com/Azure/AKS-Construction/releases) of the bicep code
+1. (optionally) Author an Application Main bicep to represent *your application* (see [here](https://github.com/Azure/AKS-Construction/blob/main/samples/SampleAppMain.bicep) for an example)
 1. In your CI/CD system, either using one of the GitHub Action Workflow files as a base, or by coding it yourself - initiate a deployment of the bicep code, using your parameter file
 1. In your CI/CD system, deploy your application(s) to the AKS cluster
 
 ## Project Principals
 
-The guiding principal we have with this project is to focus on the the *downstream use* of the project (see [releases](https://github.com/Azure/Aks-Construction/releases)). As such, these are our specific practices.
+The guiding principal we have with this project is to focus on the the *downstream use* of the project (see [releases](https://github.com/Azure/AKS-Construction/releases)). As such, these are our specific practices.
 
 1. Deploy all components through a single, modular, idempotent bicep template Converge on a single bicep template, which can easily be consumed as a module
 2. Provide best-practice defaults, then use parameters for different environment deployments
