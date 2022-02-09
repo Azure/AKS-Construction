@@ -1,3 +1,5 @@
+//Minimum Bicep version required : v0.4.1124
+
 @minLength(2)
 @description('The location to use for the deployment. defaults to Resource Groups location.')
 param location string = resourceGroup().location
@@ -142,6 +144,7 @@ module network './network.bicep' = if (custom_vnet) {
     availabilityZones: availabilityZones
     workspaceDiagsId: createLaw ? aks_law.id : ''
     networkSecurityGroups: CreateNetworkSecurityGroups
+    ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
   }
 }
 
@@ -339,6 +342,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
   name: acrName
   location: location
   sku: {
+    #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no ACR required.
     name: registries_sku
   }
   properties: {
@@ -397,18 +401,15 @@ resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = i
   }
 }
 
-resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
-  name: 'private-pool'
-  location: location
-  parent: acr
-  properties: {
-    count: 1
-    os: 'Linux'
-    tier: 'S1'
-    virtualNetworkSubnetResourceId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
+//resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
+module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
+  name: 'acrprivatepool'
+  params: {
+    acrName: acr.name
+    acrPoolSubnetId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
+    location: location
   }
 }
-
 
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
@@ -451,6 +452,14 @@ param azureFirewalls bool = false
 @description('Add application rules to the firewall for certificate management.')
 param certManagerFW bool = false
 
+// @allowed([
+//   'AllowAllIn'
+//   'AllowAcrSubnetIn'
+//   ''
+// ])
+// @description('Allow Http traffic (80/443) into AKS from specific sources')
+// param inboundHttpFW string = ''
+
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
   params: {
@@ -463,6 +472,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     appDnsZoneName: dnsZoneName
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
+    // inboundHttpFW: inboundHttpFW
     availabilityZones: availabilityZones
   }
 }
@@ -848,6 +858,9 @@ param dnsServiceIP string = '172.10.0.10'
 @description('The address range to use for the docker bridge')
 param dockerBridgeCidr string = '172.17.0.1/16'
 
+@description('Enable Microsoft Defender for Containers (currently preview)')
+param DefenderForContainers bool = false
+
 @description('Only use the system node pool')
 param JustUseSystemPool bool = false
 
@@ -941,41 +954,6 @@ var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPool
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
-var aks_properties_base = {
-  kubernetesVersion: kubernetesVersion
-  enableRBAC: true
-  dnsPrefix: dnsPrefix
-  aadProfile: enable_aad ? {
-    managed: true
-    enableAzureRBAC: enableAzureRBAC
-    tenantID: aad_tenant_id
-  } : null
-  apiServerAccessProfile: !empty(authorizedIPRanges) ? {
-    authorizedIPRanges: authorizedIPRanges
-  } : {
-    enablePrivateCluster: enablePrivateCluster
-    privateDNSZone: enablePrivateCluster ? 'none' : ''
-    enablePrivateClusterPublicFQDN: enablePrivateCluster
-  }
-  agentPoolProfiles: agentPoolProfiles
-  networkProfile: {
-    loadBalancerSku: 'standard'
-    networkPlugin: networkPlugin
-    networkPolicy: networkPolicy
-    podCidr: podCidr
-    serviceCidr: serviceCidr
-    dnsServiceIP: dnsServiceIP
-    dockerBridgeCidr: dockerBridgeCidr
-  }
-  disableLocalAccounts: AksDisableLocalAccounts && enable_aad
-}
-
-var aks_properties1 = !empty(upgradeChannel) ? union(aks_properties_base, {
-  autoUpgradeProfile: {
-    upgradeChannel: upgradeChannel
-  }
-}) : aks_properties_base
-
 var aks_addons = {}
 var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   ingressApplicationGateway: {
@@ -1033,10 +1011,6 @@ var aks_addons5 = azureKeyvaultSecretsProvider ? union(aks_addons4, {
   }
 }) : aks_addons4
 
-var aks_properties2 = !empty(aks_addons5) ? union(aks_properties1, {
-  addonProfiles: aks_addons5
-}) : aks_properties1
-
 var aks_identity = {
   type: 'UserAssigned'
   userAssignedIdentities: {
@@ -1044,10 +1018,54 @@ var aks_identity = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-07-01' = {
+var aksProperties = {
+  kubernetesVersion: kubernetesVersion
+  enableRBAC: true
+  dnsPrefix: dnsPrefix
+  aadProfile: enable_aad ? {
+    managed: true
+    enableAzureRBAC: enableAzureRBAC
+    tenantID: aad_tenant_id
+  } : null
+  apiServerAccessProfile: !empty(authorizedIPRanges) ? {
+    authorizedIPRanges: authorizedIPRanges
+  } : {
+    enablePrivateCluster: enablePrivateCluster
+    privateDNSZone: enablePrivateCluster ? 'none' : ''
+    enablePrivateClusterPublicFQDN: enablePrivateCluster
+  }
+  agentPoolProfiles: agentPoolProfiles
+  networkProfile: {
+    loadBalancerSku: 'standard'
+    networkPlugin: networkPlugin
+    #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
+    networkPolicy: networkPolicy
+    podCidr: podCidr
+    serviceCidr: serviceCidr
+    dnsServiceIP: dnsServiceIP
+    dockerBridgeCidr: dockerBridgeCidr
+  }
+  disableLocalAccounts: AksDisableLocalAccounts && enable_aad
+  autoUpgradeProfile: !empty(upgradeChannel) ? {
+    upgradeChannel: upgradeChannel
+  } : {}
+  addonProfiles: !empty(aks_addons5) ? aks_addons5 : {}
+}
+
+@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
+var azureDefenderSecurityProfile = {
+  securityProfile : {
+    azureDefender: {
+      enabled: true
+      logAnalyticsWorkspaceResourceId: aks_law.id
+    }
+  }
+}
+
+resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
   name: 'aks-${resourceName}'
   location: location
-  properties: aks_properties2
+  properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
   identity: aks_byo_identity ? aks_identity : {
     type: 'SystemAssigned'
   }

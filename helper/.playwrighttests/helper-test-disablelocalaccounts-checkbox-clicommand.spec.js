@@ -8,7 +8,7 @@ const chk = '+ label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark' //dom hac
 
 test('disablelocalaccounts-not-present-by-on-simple-config', async ({ page }) => {
 
-  await page.goto('http://localhost:3000/Aks-Construction');
+  await page.goto('http://localhost:3000/AKS-Construction');
 
   //Configure presets
   await page.waitForSelector('[data-testid="portalnav-presets-secure-low-Checkbox"]')
@@ -25,7 +25,7 @@ test('disablelocalaccounts-not-present-by-on-simple-config', async ({ page }) =>
 
 test('disablelocalaccounts-is-present-by-on-default-config', async ({ page }) => {
 
-  await page.goto('http://localhost:3000/Aks-Construction');
+  await page.goto('http://localhost:3000/AKS-Construction');
 
   //Is the CLI textarea there and visible?
   //const cliboxvis = await page.isVisible('[data-testid="deploy-deploycmd"]');

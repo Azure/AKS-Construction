@@ -79,7 +79,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.acrPrivatePool !== defaults.addons.acrPrivatePool && {acrPrivatePool: addons.acrPrivatePool}),
         ...(addons.acrPrivatePool && defaults.net.acrAgentPoolSubnetAddressPrefix !== net.acrAgentPoolSubnetAddressPrefix && {acrAgentPoolSubnetAddressPrefix: net.acrAgentPoolSubnetAddressPrefix})
       })
-    })
+    }),
+    ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
   }
 
   const params2CLI = p => Object.keys(p).map(k => {
@@ -120,7 +121,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 APPGW_RG_ID="$(az group show -n ${deploy.rg} --query id -o tsv)"
 APPGW_ID="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query id -o tsv)"
 az aks enable-addons -n ${aks} -g ${deploy.rg} -a ingress-appgw --appgw-id $APPGW_ID
-AKS_AGIC_IDENTITY_ID="$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.ingressApplicationGateway.identity.clientId -o tsv)"
+AKS_AGIC_IDENTITY_ID="$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.ingressApplicationGateway.identity.objectId -o tsv)"
 az role assignment create --role "Contributor" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_ID
 az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
 ` : '') +
@@ -149,7 +150,14 @@ kubectl create namespace ${prometheus_namespace}
 helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}
 ${cluster.apisecurity === "private" ? `"` : ``}
 ` : '') +
-
+    // Default Deny All Network Policy, east-west traffic in cluster
+    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `
+# -----------------------------------
+# Create a default-deny network policy in your cluster to deny all traffic in the default namespace
+${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
+kubectl apply -f https://raw.githubusercontent.com/Azure/AKS-Construction/0.4.3/postdeploy/k8smanifests/networkpolicy-deny-all.yml
+${cluster.apisecurity === "private" ? `"` : ``}
+` : '') +
 
     // Nginx Ingress Controller
     (addons.ingress === 'nginx' ? `
@@ -207,7 +215,7 @@ az acr import -n $ACRNAME --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}
 ` : ``}
 
 # external-dns manifest (for clusters with RBAC)
-curl https://raw.githubusercontent.com/Azure/Aks-Construction/main/helper/config/external-dns.yml | sed -e "s|{{image}}|${cluster.apisecurity === "private" ? `$ACRNAME.azurecr.io/${EXTERNAL_DNS_REPO}` : `${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}`}|g" -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
+curl https://raw.githubusercontent.com/Azure/AKS-Construction/main/helper/config/external-dns.yml | sed -e "s|{{image}}|${cluster.apisecurity === "private" ? `$ACRNAME.azurecr.io/${EXTERNAL_DNS_REPO}` : `${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}`}|g" -e "s|{{domain-filter}}|${addons.dnsZoneId.split('/')[8]}|g" -e "s|{{provider}}|${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}|g"  >/tmp/aks-ext-dns.yml
 ${cluster.apisecurity === "private" ?
   `az aks command invoke -g ${deploy.rg} -n ${aks} --command "kubectl apply -f ./aks-ext-dns.yml" --file  /tmp/aks-ext-dns.yml`
 :

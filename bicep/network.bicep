@@ -5,6 +5,7 @@ param vnetAddressPrefix string
 param vnetFirewallSubnetAddressPrefix string = ''
 
 param ingressApplicationGateway bool = false
+param ingressApplicationGatewayPublic bool = false
 param azureFirewalls bool = false
 
 param vnetAksSubnetAddressPrefix string
@@ -311,5 +312,6 @@ module nsgAppGw 'nsgAppGw.bicep' = if(ingressApplicationGateway && networkSecuri
     location: location
     resourceName: resourceName
     workspaceDiagsId: workspaceDiagsId
+    allowInternetHttpIn: ingressApplicationGatewayPublic
   }
 }
