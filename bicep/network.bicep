@@ -1,10 +1,11 @@
 param resourceName string
 param location string
 param vnetAddressPrefix string
-//param vnetInternalLBSubnetAddressPrefix string = '10.241.128.0/24'
+
 param vnetFirewallSubnetAddressPrefix string = ''
 
 param ingressApplicationGateway bool = false
+param ingressApplicationGatewayPublic bool = false
 param azureFirewalls bool = false
 
 param vnetAksSubnetAddressPrefix string
@@ -23,6 +24,10 @@ param bastion bool =false
 param bastionSubnetAddressPrefix string = ''
 
 param availabilityZones array = []
+
+param workspaceDiagsId string = ''
+
+param networkSecurityGroups bool = true
 
 var bastion_subnet_name = 'AzureBastionSubnet'
 var bastion_subnet = {
@@ -55,6 +60,9 @@ var appgw_subnet = {
   name: appgw_subnet_name
   properties: {
     addressPrefix: vnetAppGatewaySubnetAddressPrefix
+    networkSecurityGroup: ingressApplicationGateway && networkSecurityGroups ? {
+      id: nsgAppGw.outputs.nsgId
+    } : {}
   }
 }
 var fw_subnet_name = 'AzureFirewallSubnet' // Required by FW
@@ -149,11 +157,12 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
 
 
 /*   --------------------------------------------------------------------------  Private Link for ACR      */
-var privateLinkAcrName = 'vnet-pl-acr-${resourceName}'
+var privateLinkAcrName = 'pl-acr-${resourceName}'
 resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAcrId)) {
   name: privateLinkAcrName
   location: location
   properties: {
+    //customNetworkInterfaceName: 'nic-${privateLinkAcrName}' needs AllowPrivateEndpointCustomNicName registered in subscription in order to rename
     privateLinkServiceConnections: [
       {
         name: 'Acr-Connection'
@@ -206,11 +215,12 @@ resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
 
 
 /*   --------------------------------------------------------------------------  Private Link for KeyVault      */
-var privateLinkAkvName = 'vnet-pl-akv-${resourceName}'
+var privateLinkAkvName = 'pl-akv-${resourceName}'
 resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAkvId)) {
   name: privateLinkAkvName
   location: location
   properties: {
+    //customNetworkInterfaceName: 'nic-${privateLinkAkvName}' needs AllowPrivateEndpointCustomNicName registered in subscription in order to rename
     privateLinkServiceConnections: [
       {
         name: 'Akv-Connection'
@@ -264,7 +274,7 @@ resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
 param bastionHostName string = 'bas-${resourceName}'
 var publicIpAddressName = 'pip-${bastionHostName}'
 
-resource bastionPip 'Microsoft.Network/publicIpAddresses@2020-05-01' = {
+resource bastionPip 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
   name: publicIpAddressName
   location: location
   sku: {
@@ -293,5 +303,15 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2020-05-01' = if(bastion) {
         }
       }
     ]
+  }
+}
+
+module nsgAppGw 'nsgAppGw.bicep' = if(ingressApplicationGateway && networkSecurityGroups) {
+  name: 'nsgAppGw'
+  params: {
+    location: location
+    resourceName: resourceName
+    workspaceDiagsId: workspaceDiagsId
+    allowInternetHttpIn: ingressApplicationGatewayPublic
   }
 }

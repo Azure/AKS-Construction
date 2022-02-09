@@ -11,9 +11,6 @@
         "resourceName": {
             "value": "byo"
         },
-        "kubernetesVersion": {
-            "value": "1.21.2"
-        },
         "agentCount": {
             "value": 1
         },

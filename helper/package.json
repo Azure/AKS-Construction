@@ -2,7 +2,7 @@
   "name": "aks-deploy-guide2",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/Aks-Construction/",
+  "homepage": "/AKS-Construction/",
   "scripts": {
     "start": "REACT_APP_AZ_TEMPLATE_ARG=\"--template-file ./bicep/main.bicep\" react-scripts start",
     "build": "CI=false react-scripts build",

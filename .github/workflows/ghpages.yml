@@ -25,7 +25,7 @@ on:
         required: false
 
 env:
-  templateRelease: 0.3.4-preview
+  templateRelease: 0.4.5
   AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
   RG: "Automation-Actions-AksPublishCI"
 
@@ -51,7 +51,7 @@ jobs:
         run: |
           cd helper
           npm install
-          REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/${{env.templateRelease}}/main.json" npm run build
+          REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/AKS-Construction/releases/download/${{env.templateRelease}}/main.json" npm run build
           npm run start&
 
       - name: Playwright - Install w/ OS dependencies
@@ -62,7 +62,7 @@ jobs:
           npm i -D playwright-expect
 
       - name: Test web server is up
-        run: curl http://localhost:3000/Aks-Construction
+        run: curl http://localhost:3000/AKS-Construction
 
       - name: Verifying Playwright install
         run: |
@@ -181,7 +181,7 @@ jobs:
         run: |
           cd helper
           npm install
-          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_K8S_VERSION="1.20.9" REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/Aks-Construction/releases/download/${{env.templateRelease}}/main.json" npm run build
+          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_AZ_TEMPLATE_ARG="--template-uri https://github.com/Azure/AKS-Construction/releases/download/${{env.templateRelease}}/main.json" npm run build
 
       - name: Deploy to GitHub Pages
         uses: crazy-max/ghaction-github-pages@v2

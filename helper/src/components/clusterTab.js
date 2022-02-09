@@ -22,8 +22,9 @@ export const VMs = [
     { key: 'Standard_F2s_v2', text: '2 vCPU,  4 GiB RAM,  16GiB SSD,               (3200 IOPS)', eph: false }
 ]
 
-export default function ({ tabValues, updateFn, invalidArray }) {
+export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { cluster } = tabValues
+    const defenderFeatureFlag = featureFlag.includes('defender')
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -200,7 +201,8 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                         { key: 'none', text: 'Disables auto-upgrades' },
                         { key: 'patch', text: 'Patch: auto-upgrade cluster to the latest supported patch version when it becomes available while keeping the minor version the same.' },
                         { key: 'stable', text: 'Stable: auto-upgrade cluster to the latest supported patch release on minor version N-1, where N is the latest supported minor version' },
-                        { key: 'rapid', text: 'Rapid: auto-upgrade cluster to the latest supported patch release on the latest supported minor version.' }
+                        { key: 'rapid', text: 'Rapid: auto-upgrade cluster to the latest supported patch release on the latest supported minor version.' },
+                        { key: 'node-image', text: 'Node-Image: auto-upgrade cluster node images to the latest version available.' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("upgradeChannel", key)}
@@ -283,7 +285,7 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                                 </>
                             }
 
-                            <Checkbox inputProps={{ "data-testid": "cluster-localaccounts-Checkbox"}} disabled={!cluster.enableAzureRBAC} checked={cluster.AksDisableLocalAccounts} onChange={(ev, val) => updateFn("AksDisableLocalAccounts", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Disable Local Kubernetes Accounts <Link target='_' href='https://docs.microsoft.com/en-us/azure/aks/managed-aad#disable-local-accounts'>docs</Link>**</Text>} />
+                            <Checkbox inputProps={{ "data-testid": "cluster-localaccounts-Checkbox"}} disabled={!cluster.enableAzureRBAC} checked={cluster.AksDisableLocalAccounts} onChange={(ev, val) => updateFn("AksDisableLocalAccounts", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Disable Local Kubernetes Accounts <Link target='_' href='https://docs.microsoft.com/azure/aks/managed-aad#disable-local-accounts'>docs</Link>**</Text>} />
 
                         </Stack>
                     }
@@ -331,7 +333,27 @@ export default function ({ tabValues, updateFn, invalidArray }) {
                     }
                 </Stack>
             </Stack.Item>
-        </Stack>
 
+            { defenderFeatureFlag &&
+            <>
+                <Separator className="notopmargin" />
+
+                <Stack.Item align="start">
+                    <Label required={true}>
+                        Microsoft Defender for Containers  <Link target='_' href='https://docs.microsoft.com/azure/defender-for-cloud/defender-for-cloud-introduction'>docs</Link>
+                    </Label>
+                    <ChoiceGroup
+                        selectedKey={cluster.DefenderForContainers}
+                        styles={{ root: { marginLeft: '50px' } }}
+                        options={[
+                            { key: false, text: 'Disable Microsoft Defender security alerting' },
+                            { key: true, text: 'Enable Microsoft Defender security alerting' }
+
+                        ]}
+                        onChange={(ev, { key }) => updateFn("DefenderForContainers", key)}
+                    />
+                </Stack.Item>
+            </>}
+        </Stack>
     )
 }

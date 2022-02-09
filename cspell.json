@@ -38,6 +38,7 @@
         "currv",
         "Daemonset",
         "demoapp",
+        "denydefault",
         "deploycmd",
         "DNAT",
         "dnszones",
