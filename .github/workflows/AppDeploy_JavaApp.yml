@@ -1,3 +1,8 @@
+# This file is now been transferred to a new repository.
+# https://github.com/Azure-Samples/java-aks-keyvault-tls/blob/0.9/.github/workflows/deployapp.yml
+# Retarget any workflows to use the it instead of this one.
+# eg. uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9
+
 on:
   workflow_call:
     inputs:
@@ -55,7 +60,7 @@ on:
 jobs:
   App_Create:
     runs-on: ubuntu-latest
-    concurrency: ${{ inputs.AGNAME}} #AppGateway doesn't like concurrent updates
+    concurrency: "Ag-${{ inputs.AGNAME}}" #AppGateway doesn't like concurrent updates
     steps:
       - uses: actions/checkout@v2
 
@@ -64,6 +69,7 @@ jobs:
           echo "RG is ${{ inputs.RG }}"
           echo "AKS name is ${{ inputs.AKSNAME }}"
           echo "FrontendCert type is ${{ inputs.FRONTENDCERTTYPE }}"
+          echo "CertManager version is ${{ inputs.CERTMANAGERVERSION }}"
 
       - name: Azure Login
         uses: Azure/login@v1
@@ -302,6 +308,13 @@ jobs:
             sleep 10s
           done
 
+          if [ "$dnsrecords" == "[]" ]
+          then
+            echo "ExternalDNS has not created Azure DNS Records in a timely fashion, suggest you examine the ExternalDNS pod logs with; kubectl logs -l app=externaldns"
+            kubectl logs -l app=externaldns
+            exit 1
+          fi
+
       - name: Wait for Cert Manager to issue certificate
         if: startsWith(inputs.FRONTENDCERTTYPE, 'certmanager' )
         env:
@@ -324,6 +337,13 @@ jobs:
             ((counter++))
             sleep 10s
           done
+
+          if [ -z "$secret" ]
+          then
+            echo "CertManager ClusterIssuer has not created the certificate secret in a timely fashion, suggest you examine the logs"
+            kubectl get pods
+            exit 1
+          fi
 
       - name: Verify Java App is reachable
         env:

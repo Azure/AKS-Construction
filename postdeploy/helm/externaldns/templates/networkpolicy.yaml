@@ -1,0 +1,13 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-{{ include "app.name" . }}-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ include "app.name" . }}
+  egress:
+  - {}
+  policyTypes:
+  - Egress

@@ -20,17 +20,8 @@
 		"custom_vnet": {
 			"value": true
 		},
-		"serviceCidr": {
-			"value": "172.10.0.0/16"
-		},
-		"dnsServiceIP": {
-			"value": "172.10.0.10"
-		},
-		"vnetAddressPrefix": {
-			"value": "10.0.0.0/8"
-		},
-		"vnetAksSubnetAddressPrefix": {
-			"value": "10.240.0.0/16"
+		"bastion": {
+			"value": true
 		},
 		"enable_aad": {
 			"value": true
@@ -41,9 +32,6 @@
 		"azureFirewalls": {
 			"value": true
 		},
-		"vnetFirewallSubnetAddressPrefix": {
-			"value": "10.241.0.0/24"
-		},
 		"omsagent": {
 			"value": true
 		},
@@ -51,7 +39,7 @@
 			"value": 30
 		},
 		"networkPolicy": {
-			"value": "calico"
+			"value": "azure"
 		},
 		"azurepolicy": {
 			"value": "audit"

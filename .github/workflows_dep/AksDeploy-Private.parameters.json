@@ -8,14 +8,14 @@
         "resourceName": {
             "value": "priv"
           },
-          "kubernetesVersion": {
-            "value": "1.21.2"
-          },
           "agentVMSize": {
             "value": "Standard_DS3_v2"
           },
           "agentCountMax": {
-            "value": 3
+              "value": 2
+          },
+          "JustUseSystemPool": {
+            "value": true
           },
           "custom_vnet": {
             "value": true
@@ -24,7 +24,7 @@
             "value": true
           },
           "aksDisableLocalAccounts": {
-            "value": true
+            "value": false
           },
           "enableAzureRBAC": {
             "value": true
@@ -33,7 +33,7 @@
             "value": "Premium"
           },
           "acrPrivatePool": {
-            "value": true
+            "value": false
           },
           "azureFirewalls": {
             "value": true

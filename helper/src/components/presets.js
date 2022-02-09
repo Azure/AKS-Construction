@@ -9,7 +9,7 @@ const iconClass = mergeStyles({
 });
 
 
-export default function ({ sections, selectedValues, updateSelected }) {
+export default function ({ sections, selectedValues, updateSelected, featureFlag }) {
 
     return sections.map(s => [
 
@@ -49,7 +49,7 @@ export default function ({ sections, selectedValues, updateSelected }) {
                             }
                             <Text variant="smallPlus" >
                                 <ul style={{ paddingInlineStart: "20px" }}>
-                                    {c.description.bulets.map((b, i) =>
+                                    {c.description.bulets.filter(b=> !b.hasOwnProperty('featureFlag') || featureFlag.includes(b.featureFlag) ).map((b, i) =>
                                         <li key={i}>
                                             {b.description}
                                             {b.linksrc && <span> (<a target="_nsg" href={b.linksrc}>docs</a>)</span>}

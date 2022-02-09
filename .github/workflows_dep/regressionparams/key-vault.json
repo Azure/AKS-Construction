@@ -38,7 +38,7 @@
     "createKV": {
       "value": true
     },
-    "kvIPWhitelist": {
+    "kvIPAllowlist": {
       "value": [
         "1.2.3.4/32"
       ]
