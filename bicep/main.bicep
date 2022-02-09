@@ -202,7 +202,7 @@ param KeyVaultPurgeProtection bool = true
 param kvIPAllowlist array = []
 
 var akvRawName = 'kv-${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
-var akvName = length(akvRawName) > 24 ? substring(akvRawName, 0, 23) : akvRawName
+var akvName = length(akvRawName) > 24 ? substring(akvRawName, 0, 24) : akvRawName
 
 var kvIPRules = [for kvIp in kvIPAllowlist: {
   value: kvIp
