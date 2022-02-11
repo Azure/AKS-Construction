@@ -119,7 +119,7 @@ param acrPrivatePool bool = false
 param bastion bool = false
 
 @description('Deploy NSGs to your vnet. (works with Custom Networking only, not BYO)')
-param CreateNetworkSecurityGroups bool = true
+param CreateNetworkSecurityGroups bool = false
 
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
