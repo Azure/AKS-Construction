@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceName": {
-      "value": "az-k8s-osm"
+      "value": "az-k8s-osmd"
     },
     "openServiceMeshAddon" : {
         "value" : true
