@@ -119,7 +119,7 @@ param acrPrivatePool bool = false
 param bastion bool = false
 
 @description('Deploy NSGs to your vnet. (works with Custom Networking only, not BYO)')
-param CreateNetworkSecurityGroups bool = true
+param CreateNetworkSecurityGroups bool = false
 
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
@@ -188,6 +188,9 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 
 @description('Installs the AKS KV CSI provider')
 param azureKeyvaultSecretsProvider bool = false
+
+@description('Enables Open Service Mesh')
+param openServiceMeshAddon bool = false
 
 @description('Creates a Key Vault')
 param createKV bool = false
@@ -954,7 +957,41 @@ var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPool
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
-var aks_addons = {}
+
+var aks_addons = {
+  omsagent: {
+    enabled: createLaw && omsagent
+    config: {
+      logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
+    }
+  }
+  gitops: {
+    //    config": null,
+    enabled: !empty(gitops)
+    //    identity: {
+    //      clientId: 'xxx',
+    //      objectId: 'xxx',
+    //      resourceId: '/subscriptions/95efa97a-9b5d-4f74-9f75-a3396e23344d/resourcegroups/xxx/providers/Microsoft.ManagedIdentity/userAssignedIdentities/xxx'
+    //    }
+  }
+  azurepolicy: {
+    config: {
+      version: !empty(azurepolicy) ? 'v2' : json('null')
+    }
+    enabled: !empty(azurepolicy)
+  }
+  azureKeyvaultSecretsProvider: {
+    config: {
+      enableSecretRotation: 'false'
+    }
+    enabled: azureKeyvaultSecretsProvider
+  }
+  openServiceMesh: {
+    enabled: openServiceMeshAddon
+    config: {}
+  }
+}
+
 var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   ingressApplicationGateway: {
     config: {
@@ -972,44 +1009,6 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
   }
 }) : aks_addons
 
-var aks_addons2 = createLaw && omsagent ? union(aks_addons1, {
-  omsagent: {
-    enabled: true
-    config: {
-      logAnalyticsWorkspaceResourceID: aks_law.id
-    }
-  }
-}) : aks_addons1
-
-var aks_addons3 = !empty(gitops) ? union(aks_addons2, {
-  gitops: {
-    //    config": null,
-    enabled: true
-    //    identity: {
-    //      clientId: 'xxx',
-    //      objectId: 'xxx',
-    //      resourceId: '/subscriptions/95efa97a-9b5d-4f74-9f75-a3396e23344d/resourcegroups/xxx/providers/Microsoft.ManagedIdentity/userAssignedIdentities/xxx'
-    //    }
-  }
-}) : aks_addons2
-
-var aks_addons4 = !empty(azurepolicy) ? union(aks_addons3, {
-  azurepolicy: {
-    config: {
-      version: 'v2'
-    }
-    enabled: true
-  }
-}) : aks_addons3
-
-var aks_addons5 = azureKeyvaultSecretsProvider ? union(aks_addons4, {
-  azureKeyvaultSecretsProvider: {
-    config: {
-      enableSecretRotation: 'false'
-    }
-    enabled: true
-  }
-}) : aks_addons4
 
 var aks_identity = {
   type: 'UserAssigned'
@@ -1049,7 +1048,7 @@ var aksProperties = {
   autoUpgradeProfile: !empty(upgradeChannel) ? {
     upgradeChannel: upgradeChannel
   } : {}
-  addonProfiles: !empty(aks_addons5) ? aks_addons5 : {}
+  addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
 }
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
