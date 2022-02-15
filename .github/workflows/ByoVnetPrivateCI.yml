@@ -315,7 +315,10 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az ad signed-in-user show
+            accountinfo=$(az account show)
+            echo $accountinfo
+            id=$(echo $accountinfo | jq -r ".user.id")
+            az ad sp show --id $id
 
       - name: Log Analytics log table verification
         shell: pwsh
