@@ -42,7 +42,7 @@ on:
     - cron: '0 23 * * 2'
 
 env:
-  RG: 'Automation-Actions-AksDeployCI'
+  RG: 'AksBicepAcc-Ci-PrivateCluster'
   ParamFilePath: ".github/workflows_dep/AksDeploy-Private.parameters.json"
   RESNAME: 'Priv'
   DEPNAME: 'DepPriv${{ github.run_number }}'
