@@ -317,8 +317,10 @@ jobs:
           inlineScript: |
             accountinfo=$(az account show)
             echo $accountinfo
-            id=$(echo $accountinfo | jq -r ".user.id")
-            az ad sp show --id $id
+            username=$(echo $accountinfo | jq -r ".user.name")
+            echo $username
+            spObjId=$(az ad sp list --display-name $username --query [].objectId -o tsv)
+            az ad sp show --id $spObjId
 
       - name: Log Analytics log table verification
         shell: pwsh
