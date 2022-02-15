@@ -113,7 +113,7 @@ jobs:
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         if: github.event.inputs.doDebugSteps == 'true'
         id: activedeps
-        uses: Azure/cli@1.0.6
+        uses: Azure/cli@v1.0.6
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -134,7 +134,7 @@ jobs:
             fi
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@1.0.6
+        uses: Azure/cli@v1.0.6
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -142,7 +142,7 @@ jobs:
 
       - name: What If
         if: github.event.inputs.doDebugSteps == 'true'
-        uses: Azure/cli@1.0.6
+        uses: Azure/cli@v1.0.6
         continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -192,7 +192,7 @@ jobs:
 
       - name: Deploy Infrastructure
         id:  deployAks
-        uses: Azure/cli@1.0.6
+        uses: Azure/cli@v1.0.6
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -215,7 +215,7 @@ jobs:
             echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
 
       - name: Enable AGIC Addon
-        uses: Azure/cli@1.0.6
+        uses: Azure/cli@v1.0.6
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -311,7 +311,7 @@ jobs:
           allow-no-subscriptions: false
 
       - name: Verify logged in user
-        uses: Azure/cli@1.0.6
+        uses: Azure/cli@v1.0.6
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -340,7 +340,7 @@ jobs:
           Write-Output $containers
 
       - name: Check Run Command
-        uses: Azure/cli@1.0.6
+        uses: Azure/cli@v1.0.6
         env:
           AKSNAME: '${{ needs.Deploy.outputs.AKSNAME}}'
         with:
