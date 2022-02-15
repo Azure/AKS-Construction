@@ -103,7 +103,7 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -183,7 +183,7 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -303,7 +303,7 @@ jobs:
           az extension add -n log-analytics -y
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -363,7 +363,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
