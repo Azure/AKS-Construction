@@ -1,5 +1,5 @@
 param resourceName string
-param location string
+param location string = resourceGroup().location
 param vnetAddressPrefix string
 
 param vnetFirewallSubnetAddressPrefix string = ''

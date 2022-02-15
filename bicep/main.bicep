@@ -1187,6 +1187,7 @@ module aksmetricalerts './aksmetricalerts.bicep' = if (createLaw) {
     evalFrequency: AlertFrequency.evalFrequency
     windowSize: AlertFrequency.windowSize
     alertSeverity: 'Informational'
+    logAnalyticsWorkspaceLocation: location
   }
 }
 
