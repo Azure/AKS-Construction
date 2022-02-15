@@ -329,6 +329,15 @@ jobs:
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
 
+      - name: Check Run Command
+        env:
+          AKSNAME: '${{ needs.Deploy.outputs.AKSNAME}}'
+        run: |
+          command="kubectl get nodes"
+          echo "Sending command $command to AKS"
+          cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+          echo $cmdOut
+
   Infra_Destroy:
     runs-on: ubuntu-latest
     environment: csu
