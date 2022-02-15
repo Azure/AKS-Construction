@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1272.37030",
-      "templateHash": "17280152632270894039"
+      "templateHash": "5197873979607734103"
     }
   },
   "parameters": {
@@ -1336,7 +1336,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1272.37030",
-              "templateHash": "8270887424717757031"
+              "templateHash": "9144358764004418795"
             }
           },
           "parameters": {
@@ -1344,7 +1344,8 @@
               "type": "string"
             },
             "location": {
-              "type": "string"
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
             },
             "vnetAddressPrefix": {
               "type": "string"
@@ -1792,7 +1793,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.4.1272.37030",
-                      "templateHash": "236369340977006108"
+                      "templateHash": "10097182873946399317"
                     }
                   },
                   "parameters": {
@@ -1800,7 +1801,8 @@
                       "type": "string"
                     },
                     "location": {
-                      "type": "string"
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
                     },
                     "workspaceDiagsId": {
                       "type": "string",
@@ -2196,7 +2198,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1272.37030",
-              "templateHash": "7795858205167553791"
+              "templateHash": "612796500194895147"
             }
           },
           "parameters": {
@@ -2204,7 +2206,8 @@
               "type": "string"
             },
             "location": {
-              "type": "string"
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
             },
             "workspaceDiagsId": {
               "type": "string",
@@ -2336,7 +2339,7 @@
               "type": "Microsoft.Network/firewallPolicies",
               "apiVersion": "2020-11-01",
               "name": "[format('afwp-{0}', parameters('resourceName'))]",
-              "location": "westeurope",
+              "location": "[parameters('location')]",
               "properties": {
                 "sku": {
                   "tier": "Standard"
@@ -2415,6 +2418,9 @@
           },
           "alertSeverity": {
             "value": "Informational"
+          },
+          "logAnalyticsWorkspaceLocation": {
+            "value": "[parameters('location')]"
           }
         },
         "template": {
