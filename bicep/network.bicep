@@ -56,15 +56,23 @@ var private_link_subnet = {
 }
 
 var appgw_subnet_name = 'appgw-sn'
-var appgw_subnet = {
+var appgw_baseSubnet = {
   name: appgw_subnet_name
   properties: {
     addressPrefix: vnetAppGatewaySubnetAddressPrefix
-    networkSecurityGroup: ingressApplicationGateway && networkSecurityGroups ? {
-      id: nsgAppGw.outputs.nsgId
-    } : {}
   }
 }
+
+var appGw_nsg = {
+  properties: {
+    networkSecurityGroup: {
+      id: nsgAppGw.outputs.nsgId
+    }
+  }
+}
+
+var appgw_subnet = ingressApplicationGateway && networkSecurityGroups ? union(appgw_baseSubnet,appGw_nsg) : appgw_baseSubnet
+
 var fw_subnet_name = 'AzureFirewallSubnet' // Required by FW
 var fw_subnet = {
   name: fw_subnet_name
@@ -114,12 +122,10 @@ var aks_subnet =  {
     }: {})
 }
 
-
 var subnets_1 = azureFirewalls ? concat(array(aks_subnet), array(fw_subnet)) : array(aks_subnet)
 var subnets_2 = privateLinks ? concat(array(subnets_1), array(private_link_subnet)) : array(subnets_1)
 var subnets_3 = acrPrivatePool ? concat(array(subnets_2), array(acrpool_subnet)) : array(subnets_2)
 var subnets_4 = bastion ? concat(array(subnets_3), array(bastion_subnet)) : array(subnets_3)
-
 
 // DONT create appgw subnet, the addon will create it for us
 

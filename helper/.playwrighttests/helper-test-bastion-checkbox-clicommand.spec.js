@@ -8,7 +8,7 @@ const chk = '+ label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark' //dom hac
 
 test('networkpolicy-test-defaul-is-azure', async ({ page }) => {
 
-  await page.goto('http://localhost:3000/Aks-Construction');
+  await page.goto('http://localhost:3000/AKS-Construction');
 
   //Is the CLI textarea there and visible?
   const cliboxvis = await page.isVisible('[data-testid="deploy-deploycmd"]');

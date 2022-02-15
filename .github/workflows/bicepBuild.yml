@@ -125,7 +125,7 @@ jobs:
         run: |
 
           if (test-path "ghpr.html") {
-            gh pr review ${{ github.event.pull_request.number }} -r -F "ghpr.html"
+            gh pr comment ${{ github.event.pull_request.number }} -F "ghpr.html"
           }
           else {
             write-output "ghpr.html not found, no pr comment required"

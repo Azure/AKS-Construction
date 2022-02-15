@@ -1,3 +1,5 @@
+//Minimum Bicep version required : v0.4.1124
+
 @minLength(2)
 @description('The location to use for the deployment. defaults to Resource Groups location.')
 param location string = resourceGroup().location
@@ -117,7 +119,7 @@ param acrPrivatePool bool = false
 param bastion bool = false
 
 @description('Deploy NSGs to your vnet. (works with Custom Networking only, not BYO)')
-param CreateNetworkSecurityGroups bool = true
+param CreateNetworkSecurityGroups bool = false
 
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
@@ -185,7 +187,10 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 |__|\__\ |_______|    |__|            \__/ /__/     \__\ \______/  |_______|    |__|     */
 
 @description('Installs the AKS KV CSI provider')
-param azureKeyvaultSecretsProvider bool = false //This is a preview feature
+param azureKeyvaultSecretsProvider bool = false
+
+@description('Enables Open Service Mesh')
+param openServiceMeshAddon bool = false
 
 @description('Creates a Key Vault')
 param createKV bool = false
@@ -199,7 +204,8 @@ param KeyVaultPurgeProtection bool = true
 @description('Add IP to KV firewall allow-list')
 param kvIPAllowlist array = []
 
-var akvName = 'kv-${replace(resourceName, '-', '')}'
+var akvRawName = 'kv-${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
+var akvName = length(akvRawName) > 24 ? substring(akvRawName, 0, 24) : akvRawName
 
 var kvIPRules = [for kvIp in kvIPAllowlist: {
   value: kvIp
@@ -398,18 +404,15 @@ resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = i
   }
 }
 
-resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
-  name: 'private-pool'
-  location: location
-  parent: acr
-  properties: {
-    count: 1
-    os: 'Linux'
-    tier: 'S1'
-    virtualNetworkSubnetResourceId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
+//resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
+module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
+  name: 'acrprivatepool'
+  params: {
+    acrName: acr.name
+    acrPoolSubnetId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
+    location: location
   }
 }
-
 
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
@@ -954,7 +957,41 @@ var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPool
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
-var aks_addons = {}
+
+var aks_addons = {
+  omsagent: {
+    enabled: createLaw && omsagent
+    config: {
+      logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
+    }
+  }
+  gitops: {
+    //    config": null,
+    enabled: !empty(gitops)
+    //    identity: {
+    //      clientId: 'xxx',
+    //      objectId: 'xxx',
+    //      resourceId: '/subscriptions/95efa97a-9b5d-4f74-9f75-a3396e23344d/resourcegroups/xxx/providers/Microsoft.ManagedIdentity/userAssignedIdentities/xxx'
+    //    }
+  }
+  azurepolicy: {
+    config: {
+      version: !empty(azurepolicy) ? 'v2' : json('null')
+    }
+    enabled: !empty(azurepolicy)
+  }
+  azureKeyvaultSecretsProvider: {
+    config: {
+      enableSecretRotation: 'false'
+    }
+    enabled: azureKeyvaultSecretsProvider
+  }
+  openServiceMesh: {
+    enabled: openServiceMeshAddon
+    config: {}
+  }
+}
+
 var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   ingressApplicationGateway: {
     config: {
@@ -972,44 +1009,6 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
   }
 }) : aks_addons
 
-var aks_addons2 = createLaw && omsagent ? union(aks_addons1, {
-  omsagent: {
-    enabled: true
-    config: {
-      logAnalyticsWorkspaceResourceID: aks_law.id
-    }
-  }
-}) : aks_addons1
-
-var aks_addons3 = !empty(gitops) ? union(aks_addons2, {
-  gitops: {
-    //    config": null,
-    enabled: true
-    //    identity: {
-    //      clientId: 'xxx',
-    //      objectId: 'xxx',
-    //      resourceId: '/subscriptions/95efa97a-9b5d-4f74-9f75-a3396e23344d/resourcegroups/xxx/providers/Microsoft.ManagedIdentity/userAssignedIdentities/xxx'
-    //    }
-  }
-}) : aks_addons2
-
-var aks_addons4 = !empty(azurepolicy) ? union(aks_addons3, {
-  azurepolicy: {
-    config: {
-      version: 'v2'
-    }
-    enabled: true
-  }
-}) : aks_addons3
-
-var aks_addons5 = azureKeyvaultSecretsProvider ? union(aks_addons4, {
-  azureKeyvaultSecretsProvider: {
-    config: {
-      enableSecretRotation: 'false'
-    }
-    enabled: true
-  }
-}) : aks_addons4
 
 var aks_identity = {
   type: 'UserAssigned'
@@ -1018,47 +1017,54 @@ var aks_identity = {
   }
 }
 
+var aksProperties = {
+  kubernetesVersion: kubernetesVersion
+  enableRBAC: true
+  dnsPrefix: dnsPrefix
+  aadProfile: enable_aad ? {
+    managed: true
+    enableAzureRBAC: enableAzureRBAC
+    tenantID: aad_tenant_id
+  } : null
+  apiServerAccessProfile: !empty(authorizedIPRanges) ? {
+    authorizedIPRanges: authorizedIPRanges
+  } : {
+    enablePrivateCluster: enablePrivateCluster
+    privateDNSZone: enablePrivateCluster ? 'none' : ''
+    enablePrivateClusterPublicFQDN: enablePrivateCluster
+  }
+  agentPoolProfiles: agentPoolProfiles
+  networkProfile: {
+    loadBalancerSku: 'standard'
+    networkPlugin: networkPlugin
+    #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
+    networkPolicy: networkPolicy
+    podCidr: podCidr
+    serviceCidr: serviceCidr
+    dnsServiceIP: dnsServiceIP
+    dockerBridgeCidr: dockerBridgeCidr
+  }
+  disableLocalAccounts: AksDisableLocalAccounts && enable_aad
+  autoUpgradeProfile: !empty(upgradeChannel) ? {
+    upgradeChannel: upgradeChannel
+  } : {}
+  addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
+}
+
+@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
+var azureDefenderSecurityProfile = {
+  securityProfile : {
+    azureDefender: {
+      enabled: true
+      logAnalyticsWorkspaceResourceId: aks_law.id
+    }
+  }
+}
+
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
   name: 'aks-${resourceName}'
   location: location
-  properties: {
-    kubernetesVersion: kubernetesVersion
-    enableRBAC: true
-    dnsPrefix: dnsPrefix
-    aadProfile: enable_aad ? {
-      managed: true
-      enableAzureRBAC: enableAzureRBAC
-      tenantID: aad_tenant_id
-    } : null
-    apiServerAccessProfile: !empty(authorizedIPRanges) ? {
-      authorizedIPRanges: authorizedIPRanges
-    } : {
-      enablePrivateCluster: enablePrivateCluster
-      privateDNSZone: enablePrivateCluster ? 'none' : ''
-      enablePrivateClusterPublicFQDN: enablePrivateCluster
-    }
-    agentPoolProfiles: agentPoolProfiles
-    networkProfile: {
-      loadBalancerSku: 'standard'
-      networkPlugin: networkPlugin
-      networkPolicy: networkPolicy
-      podCidr: podCidr
-      serviceCidr: serviceCidr
-      dnsServiceIP: dnsServiceIP
-      dockerBridgeCidr: dockerBridgeCidr
-    }
-    disableLocalAccounts: AksDisableLocalAccounts && enable_aad
-    securityProfile: {
-      azureDefender: {
-        enabled: DefenderForContainers && omsagent
-        logAnalyticsWorkspaceResourceId: DefenderForContainers && omsagent ? aks_law.id : json('null')
-      }
-    }
-    autoUpgradeProfile: !empty(upgradeChannel) ? {
-      upgradeChannel: upgradeChannel
-    } : {}
-    addonProfiles: !empty(aks_addons5) ? aks_addons5 : {}
-  }
+  properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
   identity: aks_byo_identity ? aks_identity : {
     type: 'SystemAssigned'
   }

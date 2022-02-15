@@ -2,7 +2,7 @@
   "name": "aks-deploy-guide2",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/Aks-Construction/",
+  "homepage": "/AKS-Construction/",
   "scripts": {
     "start": "react-scripts start",
     "build": "CI=false react-scripts build",

@@ -37,7 +37,7 @@ function Header({ entScale, setEntScale, featureFlag }) {
       <img src="aks.svg" alt="Kubernetes Service" style={{ width: "6%", height: "auto" }}></img>
       <Stack tokens={{ padding: 10 }}>
         <Text variant="xLarge">AKS Deploy helper</Text>
-        <Text >Provide the requirements of your AKS deployment to generate the assets to create a full operational environment, incorporating best-practices guidance. For documentation, and CI/CD samples - please refer to our <a href="https://github.com/Azure/Aks-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
+        <Text >Provide the requirements of your AKS deployment to generate the assets to create a full operational environment, incorporating best-practices guidance. For documentation, and CI/CD samples - please refer to our <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
       <Stack.Item tokens={{ padding: 10 }}>
         <Toggle
@@ -333,7 +333,7 @@ export default function PortalNav({ config }) {
               <ClusterTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
             </PivotItem>
             <PivotItem headerText={tabLabels.addons} itemKey="addons" onRenderItemLink={(a, b) => _customRenderer('addons', a, b)} >
-              <AddonsTab tabValues={tabValues} updateFn={(field, value) => mergeState("addons", field, value)} invalidArray={invalidArray['addons']} />
+              <AddonsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("addons", field, value)} invalidArray={invalidArray['addons']} />
             </PivotItem>
             <PivotItem headerText={tabLabels.net} itemKey="net" onRenderItemLink={(a, b) => _customRenderer('net', a, b)}>
               <NetworkTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("net", field, value)} invalidArray={invalidArray['net']} />

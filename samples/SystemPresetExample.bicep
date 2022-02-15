@@ -57,7 +57,7 @@ var envSystemPoolPresetMap = {
 }
 
 //---------Kubernetes Construction---------
-//ref: https://github.com/Azure/Aks-Construction
+//ref: https://github.com/Azure/AKS-Construction
 
 module aksconst '../bicep/main.bicep' = {
   name: 'aksconstruction'
