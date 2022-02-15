@@ -102,21 +102,19 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Resource Group \n` +
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
-    `az deployment group create -g ${deploy.rg}  ${process.env.REACT_APP_BASE_URL ? `----template-uri ${process.env.REACT_APP_BASE_URL}/main.json` : '--template-file ./bicep/main.bicep' } --parameters` + params2CLI(finalParams)
+    `az deployment group create -g ${deploy.rg}  ${deploy.templateVersions ? `--template-uri ${deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` : '--template-file ./bicep/main.bicep' } --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
 
-  const post_script = `sh ${process.env.REACT_APP_BASE_URL || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_BASE_URL ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks}  ${process.env.REACT_APP_BASE_URL ? `-r ${process.env.REACT_APP_BASE_URL}` : ''} \\
-    -p vnet_opt=${net.vnet_opt} \\
-    ${addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `-p denydefaultNetworkPolicy=${addons.denydefaultNetworkPolicy} \\` : '' }
-    ${addons.ingress == "appgw" ? `-p agw=agw-${deploy.clusterName} \\` : ''}
-    ${addons.ingress !== "none" ? `-p ingress=${addons.ingress} \\` : ''}
-    ${cluster.apisecurity !== "none" ? `-p apisecurity=${cluster.apisecurity} \\` : '' }
-    ${cluster.monitor !== "none" ? `-p monitor=${addons.monitor} \\` : '' }
-    ${addons.ingressEveryNode ? `-p ingressEveryNode=${addons.ingressEveryNode} \\` : '' }
-    ${addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `-p dnsZoneId=${addons.dnsZoneId} \\` : '' }
-    ${addons.ingress !== 'none' && addons.certMan ? `-p certMan=${addons.certMan}` : '' }
-  `
+  const post_script = `sh ${process.env.REACT_APP_BASE_URL || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_BASE_URL ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_BASE_URL ? `-r ${process.env.REACT_APP_BASE_URL}` : ''} -p vnet_opt=${net.vnet_opt}` +
+    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `,denydefaultNetworkPolicy=${addons.denydefaultNetworkPolicy}` : '') +
+    (addons.ingress == "appgw" ? `,agw=agw-${deploy.clusterName}` : '') +
+    (addons.ingress !== "none" ? `,ingress=${addons.ingress}` : '') +
+    (cluster.apisecurity !== "none" ? `,apisecurity=${cluster.apisecurity}` : '') +
+    (cluster.monitor !== "none" ? `,monitor=${addons.monitor}` : '') +
+    (addons.ingressEveryNode ? `,ingressEveryNode=${addons.ingressEveryNode}` : '') +
+    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `,dnsZoneId=${addons.dnsZoneId}` : '') +
+    (addons.ingress !== 'none' && addons.certMan ? `,certMan=${addons.certMan}` : '')
 
   const postscript = (cluster.apisecurity !== "private" ? `
 # ------------------------------------------------
@@ -212,12 +210,28 @@ ${post_script}
 
         <PivotItem headerText="Provision Environment (CLI)"  >
 
-          <Label style={{marginTop: '10px'}}>Commands to deploy your fully operational environment</Label>
-          <Text>
-            Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI</Link>, or, execute in the
-            <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+          <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
+            <Stack.Item>
+              <Label >Commands to deploy your fully operational environment</Label>
+              <Text>
+                Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI</Link>, or, execute in the
+                <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
 
-          </Text>
+              </Text>
+            </Stack.Item>
+
+            <Stack.Item  align="end">
+              <Stack horizontal tokens={{childrenGap: 5}}>
+              <Label>Template Version</Label>
+              <Dropdown
+                    selectedKey={deploy.selectedTemplate}
+                    onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
+                    options={deploy.templateVersions}
+                    styles={{ dropdown: { width: 200 } }}
+                  />
+              </Stack>
+            </Stack.Item>
+          </Stack>
 
           <CodeBlock deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 

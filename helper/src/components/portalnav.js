@@ -204,6 +204,30 @@ export default function PortalNav({ config }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    fetch('https://api.github.com/repos/Azure/Aks-Construction/releases').then(response => {
+      return response.json();
+    }).then((res) => {
+      console.log (`useEffect Get template versions`)
+      const releases = res.filter(rel => rel.assets.find(a => a.name === 'main.json') && rel.draft === false).map((rel, i) => { return {
+        key: rel.tag_name,
+        text: `${rel.tag_name}${i === 0 ? ' (latest)': ''}`,
+        url: rel.assets.find(a => a.name === 'main.json').browser_download_url
+      }})
+      console.log (releases)
+      setTabValues(currentTabValues => { return {
+          ...currentTabValues,
+          deploy: {
+            ...currentTabValues.deploy,
+            selectedTemplate: releases[0].key,
+            templateVersions: releases
+          }
+        }
+      })
+
+    }).catch((err) => console.error('Problem fetching my IP', err))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function _handleLinkClick(item) {
     setPivotkey(item.props.itemKey)

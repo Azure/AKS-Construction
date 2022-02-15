@@ -12,13 +12,17 @@ certEmail=""
 while getopts "p:g:n:r:" opt; do
   case ${opt} in
     p )
-      if [[ $OPTARG =~ (agw|vnet_opt|ingress|apisecurity|monitor|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail)=([^ ]*) ]]; then
-        declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
-      else
-        echo "Unknown paramter $OPTARG"
-        show_usage=true
-        break
-      fi
+        IFS=',' read -ra params <<< "$OPTARG"
+        for i in "${params[@]}"; do
+            if [[ $i =~ (agw|vnet_opt|ingress|apisecurity|monitor|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail)=([^ ]*) ]]; then
+                echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
+                declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
+            else
+                echo "Unknown paramter $i"
+                show_usage=true
+                break
+            fi
+        done
       ;;
 
     g )
@@ -78,7 +82,7 @@ if [ -z "$agw" ] && [ "$ingress" = "appgw" ]; then
  show_usage=true
 fi
 
-if [ -z "$monitor" ] && [ ! "$monitor" = "oss" ]; then
+if [  "$monitor" ] && [[ ! "$monitor" = "oss" ]]; then
  echo "supported monitor parameter values are (oss)"
  show_usage=true
 fi
@@ -242,14 +246,14 @@ fi
 
 
 
+if [ "$certEmail"]; then
+
 #    // Cert-Manager
 #    // https://cert-manager.io/docs/installation/
 #    // Cannot use 1.6.0 with AGIC https://github.com/jetstack/cert-manager/issues/4547
 #    // cert-manager ACME ClusterIssuer Configuration (client owns the domain)
 #    // Lets Encrypt production Issuer, using either HTTP01 for external services, or DNS01 for internal
 #    // https://cert-manager.io/docs/configuration/acme/
-
-
 #    - dns01:
 #        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
 #        azureDNS:
@@ -261,8 +265,6 @@ fi
 #            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
 #            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
 
-
-if [ "$certEmail"]; then
 
     echo "# ------------------------------------------------"
     echo "#                             Install cert-manager"
