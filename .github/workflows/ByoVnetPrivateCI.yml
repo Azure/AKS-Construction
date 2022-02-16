@@ -268,13 +268,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       RG: ${{ env.RG }}
-      ENVIRONMENT: ""
+      ENVIRONMENT: ${{ steps.CalcEnv.outputs.ENVIRONMENT }}
       #Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
     steps:
       - name: Environment Parse
+        id: CalcEnv
         run: |
           echo "${{ github.event.inputs.environment }}"
-          $GHENV="${{ github.event.inputs.environment }}"
+          GHENV="${{ github.event.inputs.environment }}"
           echo "::set-output name=ENVIRONMENT::$GHENV"
       - name: Reusable workflow
         run: |
