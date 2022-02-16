@@ -26,7 +26,13 @@ on:
         default: 'true'
         type: boolean
         required: false
-
+      environment:
+        description: 'Which environment to deploy to'
+        required: false
+        default: "azurecirgs"
+        options:
+          - "azurecirgs"
+          - "csu"
   push:
     paths:
       - 'bicep/*'
@@ -53,7 +59,7 @@ concurrency: ci-${{ github.ref }}
 jobs:
   Well_Architected:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: github.event.inputs.environment
     if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
     steps:
       - uses: actions/checkout@v2
@@ -73,7 +79,7 @@ jobs:
 
   Validation:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: github.event.inputs.environment
     if: ${{ !github.event.pull_request.head.repo.fork }}
 
     steps:
@@ -151,7 +157,7 @@ jobs:
 
   Deploy:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: github.event.inputs.environment
     needs: [Validation]
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop' || contains( github.event.pull_request.labels.*.name, 'test-deploy-privateconfig')
     outputs:
@@ -284,7 +290,7 @@ jobs:
 
   InfraTests:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: github.event.inputs.environment
     needs: [Deploy]
     steps:
       - name: Job parameter check
@@ -355,7 +361,7 @@ jobs:
 
   Infra_Destroy:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: github.event.inputs.environment
     needs: [Validation, Deploy, InfraTests, SmokeTest_KnownGoodApp, Well_Architected]
     if: github.event_name == 'schedule'
     steps:
