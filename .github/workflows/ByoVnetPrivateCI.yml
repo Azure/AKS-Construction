@@ -210,16 +210,16 @@ jobs:
 
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
-            echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
+            echo "::set-output name=AKSNAME::$AKSNAME"
 
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
-            echo "::set-output name=AGNAME::$AGNAME" #outputting for conditon
+            echo "::set-output name=AGNAME::$AGNAME"
 
             LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
-            echo "::set-output name=LANAME::$LANAME" #outputting for conditon
+            echo "::set-output name=LANAME::$LANAME"
 
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
-            echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
+            echo "::set-output name=LAWGUID::$LAWGUID"
 
       - name: Enable AGIC Addon
         uses: Azure/cli@v1.0.6
@@ -264,22 +264,30 @@ jobs:
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
 
-  ReusableWF:
+  SetupWF:
     runs-on: ubuntu-latest
     outputs:
       RG: ${{ env.RG }}
+      ENVIRONMENT: ""
       #Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
     steps:
-      - name: Dummy step
-        run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
-      - name: Explain more
-        run: echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
+      - name: Environment Parse
+        run: |
+          echo "${{ github.event.inputs.environment }}"
+          $GHENV="${{ github.event.inputs.environment }}"
+          echo "::set-output name=ENVIRONMENT::$GHENV"
+      - name: Reusable workflow
+        run: |
+          echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+          echo "So we need this job to be able to access the value in env.RG"
+          echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
+
 
   SmokeTest_KnownGoodApp:
-    needs: [ReusableWF, Deploy]
+    needs: [SetupWF, Deploy]
     uses: ./.github/workflows/AppDeploy_AzureVote.yml
     with:
-      RG: ${{ needs.ReusableWF.outputs.RG }}
+      RG: ${{ needs.SetupWF.outputs.RG }}
       AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: azure-vote-public
@@ -325,9 +333,7 @@ jobs:
             accountinfo=$(az account show)
             echo $accountinfo
             username=$(echo $accountinfo | jq -r ".user.name")
-            echo $username
-            spObjId=$(az ad sp list --display-name $username --query [].objectId -o tsv)
-            az ad sp show --id $spObjId
+            echo "Username: $username"
 
       - name: Log Analytics log table verification
         shell: pwsh
