@@ -34,6 +34,7 @@ on:
         options:
           - "azurecirgs"
           - "csu"
+          - ""
   push:
     paths:
       - 'bicep/*'
@@ -293,7 +294,7 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: azure-vote-public
       INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer" (If you're using AzFw, then you gotta be using AGIC or doing the NAT dance on the Fw)
-      UNINSTALLAFTERVERIFY: false
+      UNINSTALLAFTERVERIFY: true
       CURLRETRIES: 10
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
