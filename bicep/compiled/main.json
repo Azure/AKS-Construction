@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1272.37030",
-      "templateHash": "8979067232871660514"
+      "templateHash": "4091029226275332080"
     }
   },
   "parameters": {
@@ -3244,11 +3244,11 @@
   "outputs": {
     "CustomVnetId": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.vnetId.value]"
+      "value": "[if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.vnetId.value, '')]"
     },
     "CustomVnetPrivateLinkSubnetId": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.privateLinkSubnetId.value]"
+      "value": "[if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.privateLinkSubnetId.value, '')]"
     },
     "keyVaultName": {
       "type": "string",
