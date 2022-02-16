@@ -74,6 +74,7 @@ jobs:
 
       - name: Job parameter inspection
         run: |
+          echo "Environment is ${{ inputs.Environment }}"
           echo "RG is ${{ inputs.RG }}"
           echo "AKS name is ${{ inputs.AKSNAME }}"
 
