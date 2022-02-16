@@ -195,10 +195,11 @@ helm upgrade --install  ${nginx_helm_release_name} ingress-nginx/ingress-nginx \
 # ------------------------------------------------
 #               Install Contour Ingress Controller
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm upgrade --install  ${contour_helm_release_name} bitnami/contour --version 7.3.4 --namespace ${contour_namespace} --create-namespace \
-    --set envoy.kind=${addons.ingressEveryNode ? 'daemonset' : 'deployment'} \
-    --set contour.service.externalTrafficPolicy=${addons.ingressEveryNode ? 'local' : 'cluster'} \
-    --set metrics.serviceMonitor.enabled=${addons.monitor === 'oss' ? 'true' : 'false'} \
+helm upgrade --install  ${contour_helm_release_name} bitnami/contour --version 7.3.4 --namespace ${contour_namespace} --create-namespace \\
+    --set envoy.kind=${addons.ingressEveryNode ? 'daemonset' : 'deployment'} \\
+    --set contour.service.externalTrafficPolicy=${addons.ingressEveryNode ? 'local' : 'cluster'} \\
+    --set metrics.serviceMonitor.enabled=${addons.monitor === 'oss' ? 'true' : 'false'} \\
+    --set commonLabels."release"=${prometheus_helm_release_name} \\
     --set metrics.serviceMonitor.namespace=${prometheus_namespace}
 ` : '') +
 
