@@ -8,6 +8,9 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
+        "TEMPLATERELEASE",
+        "bitnami",
+        "externaldns",
         "dnsname",
         "Kubelet",
         "postdeploy",

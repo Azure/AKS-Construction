@@ -107,7 +107,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
 
-  /*  WIP - Want the UI to call a common post-install script, instread of outputting the individual commands!
+  /*  WIP - Want the UI to call a common post-install script, instead of outputting the individual commands!
    *
   const post_script = `sh ${process.env.REACT_APP_TEMPLATERELEASE || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_TEMPLATERELEASE ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_TEMPLATERELEASE ? `-r ${process.env.REACT_APP_TEMPLATERELEASE}` : ''} -p vnet_opt=${net.vnet_opt}` +
     (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `,denydefaultNetworkPolicy=${addons.denydefaultNetworkPolicy}` : '') +
