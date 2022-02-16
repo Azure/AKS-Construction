@@ -293,9 +293,9 @@ jobs:
       AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: azure-vote-public
-      INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer" (If you're using AzFw, then you gotta be using AGIC or doing the NAT dance on the Fw)
-      UNINSTALLAFTERVERIFY: true
-      CURLRETRIES: 10
+      INGRESSTYPE: "AGIC-Public-Ingress"
+      UNINSTALLAFTERVERIFY: false
+      FORCEHELMCLEANINSTALL: true
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
