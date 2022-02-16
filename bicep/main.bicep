@@ -147,6 +147,8 @@ module network './network.bicep' = if (custom_vnet) {
     ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
   }
 }
+output CustomVnetId string = network.outputs.vnetId
+output CustomVnetPrivateLinkSubnetId string = network.outputs.privateLinkSubnetId
 
 var appGatewaySubnetAddressPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : vnetAppGatewaySubnetAddressPrefix
 var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
