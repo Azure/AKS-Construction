@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1272.37030",
-      "templateHash": "5197873979607734103"
+      "templateHash": "8979067232871660514"
     }
   },
   "parameters": {
@@ -1336,7 +1336,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1272.37030",
-              "templateHash": "9144358764004418795"
+              "templateHash": "11605533850478758490"
             }
           },
           "parameters": {
@@ -1972,6 +1972,10 @@
             "appGwSubnetId": {
               "type": "string",
               "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('appgw_subnet_name'))]"
+            },
+            "privateLinkSubnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('private_link_subnet_name'))]"
             }
           }
         }
@@ -3238,6 +3242,14 @@
     }
   ],
   "outputs": {
+    "CustomVnetId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.vnetId.value]"
+    },
+    "CustomVnetPrivateLinkSubnetId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.privateLinkSubnetId.value]"
+    },
     "keyVaultName": {
       "type": "string",
       "value": "[if(parameters('createKV'), variables('akvName'), '')]"
