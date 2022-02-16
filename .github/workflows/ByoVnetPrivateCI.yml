@@ -30,6 +30,7 @@ on:
         description: 'Which environment to deploy to'
         required: false
         default: "azurecirgs"
+        type: choice
         options:
           - "azurecirgs"
           - "csu"
