@@ -56,7 +56,7 @@ env:
   DEPNAME: 'DepPriv${{ github.run_number }}'
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
 
-concurrency: ci-${{ github.ref }}
+concurrency: ci-${{ github.event.inputs.environment }}-${{ github.ref }}
 
 jobs:
   Well_Architected:
