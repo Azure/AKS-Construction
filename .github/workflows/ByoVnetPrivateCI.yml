@@ -271,23 +271,23 @@ jobs:
       ENVIRONMENT: ${{ steps.CalcEnv.outputs.ENVIRONMENT }}
       #Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
     steps:
+      - name: Reusable workflow
+        run: |
+          echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+          echo "So we need this job to be able to access the value in env.RG"
+          echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
       - name: Environment Parse
         id: CalcEnv
         run: |
           echo "${{ github.event.inputs.environment }}"
           GHENV="${{ github.event.inputs.environment }}"
           echo "::set-output name=ENVIRONMENT::$GHENV"
-      - name: Reusable workflow
-        run: |
-          echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
-          echo "So we need this job to be able to access the value in env.RG"
-          echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
-
 
   SmokeTest_KnownGoodApp:
     needs: [SetupWF, Deploy]
     uses: ./.github/workflows/AppDeploy_AzureVote.yml
     with:
+      Environment: ${{ needs.SetupWF.outputs.ENVIRONMENT }}
       RG: ${{ needs.SetupWF.outputs.RG }}
       AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}

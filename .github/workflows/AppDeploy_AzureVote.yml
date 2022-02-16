@@ -6,6 +6,9 @@ name: AppDeploy - Azure Vote
 on:
   workflow_call:
     inputs:
+      Environment:
+        required: true
+        type: string
       RG:
         required: true
         type: string
@@ -59,6 +62,7 @@ on:
 jobs:
   App_Create:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.Environment }}
     concurrency: "Ag-${{ inputs.AGNAME}}" #AppGateway doesn't like concurrent updates
     env:
       APPNAME: "${{ inputs.APPNAME }}"
@@ -80,29 +84,29 @@ jobs:
           enable-AzPSSession: false
           environment: azurecloud
           allow-no-subscriptions: false
-          
+
       - name: Check for and uninstall the Vote app
         if: inputs.FORCEHELMCLEANINSTALL == true
         run: |
-        
+
           command="helm list --namespace $NAMESP -o json -f $APPNAME"
           echo "Sending command $command to AKS"
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
           echo $cmdOut
-          
+
           voteAppInstalled=$(echo $cmdOut | jq -r '.logs' | jq 'length')
           echo "voteAppInstalled is $voteAppInstalled"
-          
-          if [ $voteAppInstalled -gt 0 ]; 
+
+          if [ $voteAppInstalled -gt 0 ];
           then
             command="helm uninstall --namespace $NAMESP $APPNAME"
             echo "Sending command $command to AKS"
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
             echo $cmdOut
-            
+
             sleep 20s
           fi
-          
+
       - name: Install the Vote app
         id: installapp
         env:
@@ -236,7 +240,7 @@ jobs:
 
       - name: Test App with Playwright
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
-        env: 
+        env:
           testfile: .github/workflows_dep/playwrighttests/azurevote-catswin.spec.js
         run: |
           ipAddress='${{ steps.waitforip.outputs.IPADDRESS}}'
