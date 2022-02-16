@@ -98,16 +98,18 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const finalParams = { ...params, ...(!deploy.disablePreviews && preview_params) }
   const aks = `aks-${deploy.clusterName}`
-
+  const agw = `agw-${deploy.clusterName}`
   const deploycmd =
     `# Create Resource Group \n` +
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
-    `az deployment group create -g ${deploy.rg}  ${deploy.templateVersions ? `--template-uri ${deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` : '--template-file ./bicep/main.bicep' } --parameters` + params2CLI(finalParams)
+    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` + params2CLI(finalParams)
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
 
-  const post_script = `sh ${process.env.REACT_APP_BASE_URL || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_BASE_URL ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_BASE_URL ? `-r ${process.env.REACT_APP_BASE_URL}` : ''} -p vnet_opt=${net.vnet_opt}` +
+  /*  WIP - Want the UI to call a common post-install script, instread of outputting the individual commands!
+   *
+  const post_script = `sh ${process.env.REACT_APP_TEMPLATERELEASE || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_TEMPLATERELEASE ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_TEMPLATERELEASE ? `-r ${process.env.REACT_APP_TEMPLATERELEASE}` : ''} -p vnet_opt=${net.vnet_opt}` +
     (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `,denydefaultNetworkPolicy=${addons.denydefaultNetworkPolicy}` : '') +
     (addons.ingress == "appgw" ? `,agw=agw-${deploy.clusterName}` : '') +
     (addons.ingress !== "none" ? `,ingress=${addons.ingress}` : '') +
@@ -117,16 +119,165 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `,dnsZoneId=${addons.dnsZoneId}` : '') +
     (addons.ingress !== 'none' && addons.certMan ? `,certMan=${addons.certMan}` : '')
 
-  const postscript = (cluster.apisecurity !== "private" ? `
+  */
+
+  /*  Post Script START - To be replaced with external common script
+   *  --------------------------------------------------------------
+  */
+
+  const prometheus_namespace = 'monitoring'
+  const prometheus_helm_release_name = 'monitoring'
+  const nginx_namespace = 'ingress-basic'
+  const nginx_helm_release_name = 'nginx-ingress'
+  const contour_namespace = 'ingress-basic'
+  const contour_helm_release_name = 'contour-ingress'
+
+  const EXTERNAL_DNS_REGISTRY = 'k8s.gcr.io'
+  const EXTERNAL_DNS_REPO = 'external-dns/external-dns'
+  // appVersion :: https://raw.githubusercontent.com/kubernetes-sigs/external-dns/master/charts/external-dns/Chart.yaml
+  const EXTERNAL_DNS_TAG = 'v0.10.2'
+
+
+  const postscript_az =
+    // App Gateway addon: see main.bicep DEPLOY_APPGW_ADDON
+    (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `
+# ------------------------------------------------
+#          Workaround to enable AGIC with BYO VNET
+APPGW_RG_ID="$(az group show -n ${deploy.rg} --query id -o tsv)"
+APPGW_ID="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query id -o tsv)"
+az aks enable-addons -n ${aks} -g ${deploy.rg} -a ingress-appgw --appgw-id $APPGW_ID
+AKS_AGIC_IDENTITY_ID="$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfiles.ingressApplicationGateway.identity.objectId -o tsv)"
+az role assignment create --role "Contributor" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_ID
+az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
+` : '') +
+    (net.vnet_opt === "byo" && addons.ingress === 'appgw' /* && appgwKVIntegration */ ? `
+APPGW_IDENTITY="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
+az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
+` : '') +
+    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId && cluster.apisecurity === "private" ? `
+# ------------------------------------------------
+#                 Import external-dns Image to ACR
+export ACRNAME=$(az acr list -g ${deploy.rg} --query [0].name -o tsv)
+az acr import -n $ACRNAME --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG} --image ${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG}
+`:'')
+
+const postscript_cluster =
+    // Prometheus
+    (addons.monitor === 'oss' ? `
+# ------------------------------------------------
+#              Install kube-prometheus-stack chart
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+kubectl create namespace ${prometheus_namespace}
+helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}
+` : '') +
+    // Default Deny All Network Policy, east-west traffic in cluster
+    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `
+# ------------------------------------------------
+#   Create a default-deny namespace network policy
+kubectl apply -f ${deploy.selectedTemplate === "local" ? (cluster.apisecurity !== "private" ? './postdeploy/k8smanifests/' : './') : 'https://raw.githubusercontent.com/Azure/AKS-Construction/main/postdeploy/k8smanifests/'}networkpolicy-deny-all.yml
+` : '') +
+
+    // Nginx Ingress Controller
+    (addons.ingress === 'nginx' ? `
+# ------------------------------------------------
+#                 Install Nginx Ingress Controller
+kubectl create namespace ${nginx_namespace}
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
+  --set controller.publishService.enabled=true \\
+` + (addons.ingressEveryNode ?
+        `  --set controller.kind=DaemonSet \\
+  --set controller.service.externalTrafficPolicy=Local \\
+` : '') +
+      (addons.monitor === 'oss' ?
+        `  --set controller.metrics.enabled=true \\
+  --set controller.metrics.serviceMonitor.enabled=true \\
+  --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \\
+  --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \\
+` : '') +
+      `  --namespace ${nginx_namespace}
+` : '') +
+
+    // Contour Ingress Controller
+    (addons.ingress === 'contour' ? `
+# ------------------------------------------------
+#               Install Contour Ingress Controller
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install ${contour_helm_release_name} bitnami/contour --namespace ${contour_namespace} --create-namespace \
+    --set envoy.kind=${addons.ingressEveryNode ? 'daemonset' : 'deployment'} \
+    --set contour.service.externalTrafficPolicy=${addons.ingressEveryNode ? 'local' : 'cluster'} \
+    --set metrics.serviceMonitor.enabled=${addons.monitor === 'oss' ? 'true' : 'false'} \
+    --set metrics.serviceMonitor.namespace=${prometheus_namespace}
+` : '') +
+
+    // External DNS
+    // external-dns needs permissions to make changes in the Azure DNS server.
+    // https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/azure.md#azure-managed-service-identity-msi
+    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
+# ------------------------------------------------
+#                             Install external-dns
+kubectl create secret generic aks-kube-msi --from-literal=azure.json="{
+  userAssignedIdentityID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv),
+  tenantId: $(az account show --query tenantId -o tsv),
+  useManagedIdentityExtension: true,
+  subscriptionId: ${addons.dnsZoneId.split('/')[2]},
+  resourceGroup: ${addons.dnsZoneId.split('/')[4]}
+}"
+helm upgrade --install externaldns https://github.com/kubernetes-sigs/external-dns/releases/download/external-dns-helm-chart-1.7.1/external-dns-1.7.1.tgz \\
+  --set domainFilters={"${addons.dnsZoneId.split('/')[8]}"} \\
+  --set provider="${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}" \\
+  --set extraVolumeMounts[0].name=aks-kube-msi,extraVolumeMounts[0].mountPath=/etc/kubernetes,extraVolumeMounts[0].readOnly=true \\
+  --set extraVolumes[0].name=aks-kube-msi,extraVolumes[0].secret.secretName=aks-kube-msi${false? ',extraVolumes[0].secret.items[0].key=externaldns-config.json,extraVolumes[0].secret.items[0].path=azure.json':''} ${cluster.apisecurity === "private" ? `\\
+  --set image.repository="$ACRNAME.azurecr.io/${EXTERNAL_DNS_REPO}"
+  --set image.tag="${EXTERNAL_DNS_TAG}"` : ''}
+` : '') +
+    // Cert-Manager
+    // https://cert-manager.io/docs/installation/
+    // Cannot use 1.6.0 with AGIC https://github.com/jetstack/cert-manager/issues/4547
+    // cert-manager ACME ClusterIssuer Configuration (client owns the domain)
+    // Lets Encrypt production Issuer, using either HTTP01 for external services, or DNS01 for internal
+    // https://cert-manager.io/docs/configuration/acme/
+
+    /*
+    - dns01:
+        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
+        azureDNS:
+          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
+          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
+          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
+          managedIdentity:
+            # client id of the node pool managed identity (can not be set at the same time as resourceID)
+            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
+            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
+    */
+    (addons.ingress !== 'none' && addons.certMan ? `
+# ------------------------------------------------
+#                             Install cert-manager
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${addons.ingress === 'appgw' ? 'v1.5.3' : 'v1.6.0'}/cert-manager.yaml
+sleep 20s # wait for cert-manager webhook to install
+helm upgrade --install letsencrypt-issuer ${deploy.selectedTemplate === "local" ? (cluster.apisecurity !== "private" ? './postdeploy/helm/' : './') : 'https://raw.githubusercontent.com/Azure/AKS-Construction/main/postdeploy/helm/'}Az-CertManagerIssuer-0.3.0.tgz \\
+    --set email=${addons.certEmail}  \\
+    --set ingressClass=${addons.ingress === 'appgw' ? "azure/application-gateway" : addons.ingress}
+`: '')
+
+
+  /*  Post Script END - To be replaced with external common script
+   *  --------------------------------------------------------------
+  */
+
+
+  const postscript = `${postscript_az}
+${postscript_cluster ? (cluster.apisecurity !== "private" ? `
 # ------------------------------------------------
 #         Get credentials for your new AKS cluster
 az aks get-credentials -g ${deploy.rg} -n ${aks}
-${post_script}` : `
+${postscript_cluster}` : `
 # ------------------------------------------------
 #           Private cluster, so use command invoke
 az aks command invoke -g ${deploy.rg} -n ${aks}  --command "
-${post_script}
-"  ${process.env.REACT_APP_BASE_URL ? '' : '--file  ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz'}  `)
+${postscript_cluster.replaceAll('"', '\\"')}
+"  ${addons.certMan && deploy.selectedTemplate === "local" ? '--file  ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz' : ''} ${addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy && deploy.selectedTemplate === "local" ? '--file  ./postdeploy/k8smanifests/networkpolicy-deny-all.yml' : ''}  `): ''}`
 
   return (
 
@@ -225,6 +376,7 @@ ${post_script}
               <Stack horizontal tokens={{childrenGap: 5}}>
               <Label>Template Version</Label>
               <Dropdown
+                    disabled={process.env.REACT_APP_TEMPLATERELEASE}
                     selectedKey={deploy.selectedTemplate}
                     onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
                     options={deploy.templateVersions}

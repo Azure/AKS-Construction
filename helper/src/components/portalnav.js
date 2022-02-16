@@ -213,13 +213,13 @@ export default function PortalNav({ config }) {
         key: rel.tag_name,
         text: `${rel.tag_name}${i === 0 ? ' (latest)': ''}`,
         url: rel.assets.find(a => a.name === 'main.json').browser_download_url
-      }})
+      }}).concat(defaults.deploy.templateVersions)
       console.log (releases)
       setTabValues(currentTabValues => { return {
           ...currentTabValues,
           deploy: {
             ...currentTabValues.deploy,
-            selectedTemplate: releases[0].key,
+            ...(process.env.REACT_APP_TEMPLATERELEASE && {selectedTemplate: process.env.REACT_APP_TEMPLATERELEASE }),
             templateVersions: releases
           }
         }

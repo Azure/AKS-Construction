@@ -132,8 +132,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         <MessageBar messageBarType={MessageBarType.warning}>You requested a high security cluster. The DNS and Certificate options are disabled as they require additional egress application firewall rules for image download and webhook requirements. You can apply these rules and install the helm chart after provisioning</MessageBar>
                     }
 
-                    {addons.ingress === "nginx" &&
-                        <Checkbox checked={addons.ingressEveryNode} onChange={(ev, v) => updateFn("ingressEveryNode", v)} label={<Text>Run nginx on every node (deploy as Daemonset)</Text>} />
+                    {(addons.ingress === "nginx" || addons.ingress === "contour") &&
+                        <Checkbox checked={addons.ingressEveryNode} onChange={(ev, v) => updateFn("ingressEveryNode", v)} label={<Text>Run proxy on every node (deploy as Daemonset)</Text>} />
                     }
 
                     {addons.ingress === "appgw" && (

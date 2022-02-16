@@ -51,7 +51,7 @@ jobs:
         run: |
           cd helper
           npm install
-          REACT_APP_BASE_URL="https://raw.githubusercontent.com/Azure/Aks-Construction/${{env.templateRelease}}" npm run build
+          REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}" npm run build
           npm run start&
 
       - name: Playwright - Install w/ OS dependencies
@@ -181,7 +181,7 @@ jobs:
         run: |
           cd helper
           npm install
-          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_BASE_URL="https://raw.githubusercontent.com/Azure/Aks-Construction/${{env.templateRelease}}"  npm run build
+          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
 
       - name: Deploy to GitHub Pages
         uses: crazy-max/ghaction-github-pages@v2

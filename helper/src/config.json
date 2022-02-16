@@ -17,7 +17,12 @@
             "kvCertSecretRole": true,
             "kvIPAllowlist": false,
             "clusterAdminRole": true,
-            "clusterIPWhitelist" : true
+            "clusterIPWhitelist" : true,
+            "templateVersions": [{
+                "key": "local",
+                "text": "local"
+            }],
+            "selectedTemplate": "local"
         },
         "cluster": {
             "AksPaidSkuForSLA": false,

@@ -1,4 +1,9 @@
-
+#!/bin/bash
+#
+#  Work In Progress - File not currently used!
+#  Looking to remove the Post-Install scripting out of the react app, and to just call a bash file
+#  This way, the UI and the github actions can call a common script for all the cluster post-install configuration
+#
 agw=""
 vnet_opt=""
 ingress=""
