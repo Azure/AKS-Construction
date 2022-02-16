@@ -162,15 +162,6 @@ az acr import -n $ACRNAME --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}
 `:'')
 
 const postscript_cluster =
-    // Prometheus
-    (addons.monitor === 'oss' ? `
-# ------------------------------------------------
-#              Install kube-prometheus-stack chart
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-kubectl create namespace ${prometheus_namespace}
-helm install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace}
-` : '') +
     // Default Deny All Network Policy, east-west traffic in cluster
     (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `
 # ------------------------------------------------
@@ -184,7 +175,7 @@ kubectl apply -f ${deploy.selectedTemplate === "local" ? (cluster.apisecurity !=
 #                 Install Nginx Ingress Controller
 kubectl create namespace ${nginx_namespace}
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
+helm upgrade --install  ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
   --set controller.publishService.enabled=true \\
 ` + (addons.ingressEveryNode ?
         `  --set controller.kind=DaemonSet \\
@@ -204,7 +195,7 @@ helm install ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
 # ------------------------------------------------
 #               Install Contour Ingress Controller
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm install ${contour_helm_release_name} bitnami/contour --namespace ${contour_namespace} --create-namespace \
+helm upgrade --install  ${contour_helm_release_name} bitnami/contour --version 7.3.4 --namespace ${contour_namespace} --create-namespace \
     --set envoy.kind=${addons.ingressEveryNode ? 'daemonset' : 'deployment'} \
     --set contour.service.externalTrafficPolicy=${addons.ingressEveryNode ? 'local' : 'cluster'} \
     --set metrics.serviceMonitor.enabled=${addons.monitor === 'oss' ? 'true' : 'false'} \
@@ -259,7 +250,23 @@ sleep 20s # wait for cert-manager webhook to install
 helm upgrade --install letsencrypt-issuer ${deploy.selectedTemplate === "local" ? (cluster.apisecurity !== "private" ? './postdeploy/helm/' : './') : 'https://raw.githubusercontent.com/Azure/AKS-Construction/main/postdeploy/helm/'}Az-CertManagerIssuer-0.3.0.tgz \\
     --set email=${addons.certEmail}  \\
     --set ingressClass=${addons.ingress === 'appgw' ? "azure/application-gateway" : addons.ingress}
-`: '')
+`: '') +
+    // Prometheus
+    (addons.monitor === 'oss' ? `
+# ------------------------------------------------
+#              Install kube-prometheus-stack chart
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+kubectl create namespace ${prometheus_namespace}
+helm upgrade --install  ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace} ${addons.monitor === 'oss' && addons.enableMonitorIngress && addons.dns && addons.dnsZoneId ? `\\
+  --set grafana.ingress.enabled=true \\
+  --set grafana.ingress.annotations."cert-manager\\.io/cluster-issuer"=letsencrypt-prod \\
+  --set grafana.ingress.annotations."ingress\\.kubernetes\\.io/force-ssl-redirect"="true" \\
+  --set grafana.ingress.ingressClassName=${addons.ingress} \\
+  --set grafana.ingress.hosts[0]=grafana.${addons.dnsZoneId.split('/')[8]} \\
+  --set grafana.ingress.tls[0].hosts[0]=grafana.${addons.dnsZoneId.split('/')[8]},grafana.ingress.tls[0].secretName=aks-grafana
+`: ''}
+` : '')
 
 
   /*  Post Script END - To be replaced with external common script
