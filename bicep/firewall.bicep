@@ -1,5 +1,5 @@
 param resourceName string
-param location string
+param location string = resourceGroup().location
 param workspaceDiagsId string = ''
 param fwSubnetId string
 param vnetAksSubnetAddressPrefix string
@@ -93,7 +93,7 @@ resource fw 'Microsoft.Network/azureFirewalls@2021-03-01' = {
 
 resource fwPolicy 'Microsoft.Network/firewallPolicies@2020-11-01' = {
   name: 'afwp-${resourceName}'
-  location: 'westeurope'
+  location: location
   properties: {
     sku: {
       tier: 'Standard'
