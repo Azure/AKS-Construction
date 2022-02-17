@@ -262,7 +262,7 @@ kubectl create namespace ${prometheus_namespace}
 helm upgrade --install  ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace} ${addons.monitor === 'oss' && addons.enableMonitorIngress && addons.dns && addons.dnsZoneId ? `\\
   --set grafana.ingress.enabled=true \\
   --set grafana.ingress.annotations."cert-manager\\.io/cluster-issuer"=letsencrypt-prod \\
-  --set grafana.ingress.annotations."ingress\\.kubernetes\\.io/force-ssl-redirect"="true" \\
+  --set grafana.ingress.annotations."ingress\\.kubernetes\\.io/force-ssl-redirect"=\\"true\\" \\
   --set grafana.ingress.ingressClassName=${addons.ingress} \\
   --set grafana.ingress.hosts[0]=grafana.${addons.dnsZoneId.split('/')[8]} \\
   --set grafana.ingress.tls[0].hosts[0]=grafana.${addons.dnsZoneId.split('/')[8]},grafana.ingress.tls[0].secretName=aks-grafana
