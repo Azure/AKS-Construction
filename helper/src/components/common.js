@@ -18,7 +18,7 @@ export function getError(array, field) {
     return idx >= 0 ? array[idx].message : ''
 }
 
-export const adv_stackstyle = { root: { border: "1px solid", background: "#fcfcfc", margin: "10px 0", padding: "15px" } }
+export const adv_stackstyle = { root: { border: "1px solid", margin: "10px 0", padding: "15px" } }
 
 
 export function CodeBlock({deploycmd, testId}) {

@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ThemeProvider, Link, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text } from '@fluentui/react';
+import { AzureThemeLight, AzureThemeDark } from '@fluentui/azure-themes';
+
 import Presents from './presets'
 
 import NetworkTab from './networkTab'
@@ -202,6 +204,30 @@ export default function PortalNav({ config }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    fetch('https://api.github.com/repos/Azure/Aks-Construction/releases').then(response => {
+      return response.json();
+    }).then((res) => {
+      console.log (`useEffect Get template versions`)
+      const releases = res.filter(rel => rel.assets.find(a => a.name === 'main.json') && rel.draft === false).map((rel, i) => { return {
+        key: rel.tag_name,
+        text: `${rel.tag_name}${i === 0 ? ' (latest)': ''}`,
+        url: rel.assets.find(a => a.name === 'main.json').browser_download_url
+      }}).concat(defaults.deploy.templateVersions)
+      console.log (releases)
+      setTabValues(currentTabValues => { return {
+          ...currentTabValues,
+          deploy: {
+            ...currentTabValues.deploy,
+            ...(process.env.REACT_APP_TEMPLATERELEASE && {selectedTemplate: process.env.REACT_APP_TEMPLATERELEASE }),
+            templateVersions: releases
+          }
+        }
+      })
+
+    }).catch((err) => console.error('Problem fetching my IP', err))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function _handleLinkClick(item) {
     setPivotkey(item.props.itemKey)
@@ -285,11 +311,13 @@ export default function PortalNav({ config }) {
     );
   }
 
-  return (
-    <main id="mainContent" className="wrapper">
-      <ThemeProvider>
-        <Header entScale={entScale} setEntScale={setEntScale} featureFlag={featureFlag} />
+  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const {semanticColors, palette } =  dark ? AzureThemeDark : AzureThemeLight
 
+  return (
+    <ThemeProvider theme={{semanticColors, palette}}>
+      <main id="mainContent" className="wrapper">
+        <Header entScale={entScale} setEntScale={setEntScale} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
@@ -316,8 +344,9 @@ export default function PortalNav({ config }) {
           </Pivot>
 
         </Stack>
-      </ThemeProvider>
-    </main >
+
+      </main >
+    </ThemeProvider>
   )
 }
 

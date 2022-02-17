@@ -5,9 +5,6 @@
     "resourceName": {
       "value": "az-k8s-7zw4"
     },
-    "kubernetesVersion": {
-      "value": "1.20.9"
-    },
     "agentVMSize": {
       "value": "Standard_DS3_v2"
     }
