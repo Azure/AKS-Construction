@@ -11,105 +11,39 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
             <Stack.Item align="start">
-                <Label >Cluster Monitoring requirements</Label>
-                <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monitor for Containers option, or the open source CNCF Prometheus/Grafana solution</MessageBar>
+                <Label required={true}>
+                    Do you require a secure private container registry to store my application images
+                </Label>
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
-                    selectedKey={addons.monitor}
+                    selectedKey={addons.registry}
                     options={[
-                        { key: 'none', text: 'None' },
-                        { key: 'aci', text: 'Azure Monitor for Containers (logs and metrics)' },
-                        { key: 'oss', text: 'Prometheus / Grafana Helm Chart (metrics only)' }
-
+                        { key: 'none', text: 'No, my application images will be on DockerHub or another registry' },
+                        { key: 'Basic', text: 'Yes, setup Azure Container Registry "Basic" tier & authorise aks to pull images' },
+                        { key: 'Standard', text: 'Yes, setup Azure Container Registry "Standard" tier (minimum recommended for production)' },
+                        { key: 'Premium', text: 'Yes, setup Azure Container Registry "Premium" tier (required for Private Link)' }
                     ]}
-                    onChange={(ev, { key }) => updateFn("monitor", key)}
+                    onChange={(ev, { key }) => updateFn("registry", key)}
                 />
-            </Stack.Item>
-
-            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") && addons.dns && addons.certMan &&
-                <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
-                    <MessageBar messageBarType={MessageBarType.warning}>This will expose your your grafana dashboards to the internet, please login and change the default credentials asap (admin/prom-operator)</MessageBar>
-                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableMonitorIngress} onChange={(ev, v) => updateFn("enableMonitorIngress", v)} label={`Enable Public Ingress for Grafana (https://grafana.${addons.dnsZoneId && addons.dnsZoneId.split('/')[8]})`} />
-                </Stack.Item>
-
-            }
-
-            { addons.monitor === "aci" &&
-                <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
-                    <Dropdown
-                        label="Log and Metrics Data Retention (Days)"
-                        onChange={(ev, { key }) => updateFn("retentionInDays", key)} selectedKey={addons.retentionInDays}
-                        options={[
-                            { key: 30, text: '30 Days' },
-                            { key: 60, text: '60 Days' },
-                            { key: 90, text: '90 Days' },
-                            { key: 120, text: '120 Days' },
-                            { key: 180, text: '180 Days' },
-                            { key: 270, text: '270 Days' },
-                            { key: 365, text: '365 Days' }
-                        ]}
-                    />
-
-                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
-
-                </Stack.Item>
-            }
-
-            <Separator className="notopmargin" />
-
-            <Stack.Item align="start">
-
-                <Label >Azure Policy, to manage and report on the compliance state of your Kubernetes clusters</Label>
-                <MessageBar>Azure Policy extends Gatekeeper v3, an admission controller webhook for Open Policy Agent (OPA), to apply at-scale enforcements and safeguards on your clusters in a centralized, consistent manner.
-                </MessageBar>
-                <ChoiceGroup
-                    styles={{ root: { marginLeft: '50px' } }}
-                    selectedKey={addons.azurepolicy}
-                    options={[
-                        { key: 'none', text: 'No restrictions, users can deploy any kubernetes workloads' },
-                        { key: 'audit', text: 'AUDIT compliance with the set of cluster pod security baseline standards for Linux-based workloads' },
-                        { key: 'deny', text: 'BLOCK and non-compliant Linux-based workloads with the set of cluster pod security baseline standards' }
-                    ]}
-                    onChange={(ev, { key }) => updateFn("azurepolicy", key)}
-                />
-                {addons.azurepolicy !== 'none' &&
-                    <MessageBar messageBarType={MessageBarType.success} styles={{ root: { marginTop: '20px', marginLeft: '100px', width: '700px' } }}>
-                        The template will automatically assign and <b>{addons.azurepolicy}</b> the following <Link target="_target" href="https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json">Policies</Link>:
-                        <ul>
-                            <li>Do not allow privileged containers in Kubernetes cluster</li>
-                            <li>Kubernetes cluster pods should only use approved host network and port range</li>
-                            <li>Kubernetes cluster containers should not share host process ID or host IPC namespace</li>
-                            <li>Kubernetes cluster containers should only use allowed capabilities</li>
-                            <li>Kubernetes cluster pod hostPath volumes should only use allowed host paths</li>
-                        </ul>
-                    </MessageBar>
+                {hasError(invalidArray, 'registry') &&
+                    <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'registry')}</MessageBar>
                 }
-            </Stack.Item>
-            <Separator className="notopmargin" />
-            <Stack.Item align="start">
-                <Label >Cluster East-West traffic restrictions (Network Policies)</Label>
-                <MessageBar>Control which components can communicate with each other. The principle of least privilege should be applied to how traffic can flow between pods in an Azure Kubernetes Service (AKS) cluster</MessageBar>
-                <ChoiceGroup
-                    styles={{ root: { marginLeft: '50px' } }}
-                    selectedKey={addons.networkPolicy}
-                    options={[
-                        { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { "data-testid":'addons-netpolicy-calico', key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { "data-testid":'addons-netpolicy-azure', key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
 
-                    ]}
-                    onChange={(ev, { key }) => updateFn("networkPolicy", key)}
-                />
             </Stack.Item>
 
-            <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.networkPolicy === "none" ? "none" : "block") } }} >
-                <Stack tokens={{ childrenGap: 15 }}>
-                    <MessageBar messageBarType={MessageBarType.warning}>A Default Deny Network Policy provides an enhanced security posture. Pods without policy are not allowed traffic. Please use caution, with apps that you know have policy defined.</MessageBar>
-                    <Checkbox inputProps={{ "data-testid": "addons-netpolicy-denydefault-Checkbox"}} disabled={addons.networkPolicy === 'none'} checked={addons.denydefaultNetworkPolicy} onChange={(ev, v) => updateFn("denydefaultNetworkPolicy", v)} label="Create a default deny policy in the default namespace" />
+
+
+            <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
+                <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label={<Text>Create ACR Private Agent Pool (private link only) (preview limited regions <a target="_new" href="https://docs.microsoft.com/azure/container-registry/tasks-agent-pools">docs</a>)</Text>} />
+                <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
+                    <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>
+                    <TextField disabled={true} label="O/S" defaultValue="Linux"/>
+                    <TextField disabled={true} label="Agent Count" defaultValue="1"/>
                 </Stack>
             </Stack.Item>
 
             <Separator className="notopmargin" />
+
             <Stack.Item align="start">
                 <Label required={true}>
                     Securely Expose your applications via Layer 7 HTTP(S) proxies (Ingress Controller)
@@ -138,10 +72,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     }
                     {addons.ingress !== "none" && false &&
                         <MessageBar messageBarType={MessageBarType.warning}>You requested a high security cluster. The DNS and Certificate options are disabled as they require additional egress application firewall rules for image download and webhook requirements. You can apply these rules and install the helm chart after provisioning</MessageBar>
-                    }
-
-                    {(addons.ingress === "nginx" || addons.ingress === "contour") &&
-                        <Checkbox checked={addons.ingressEveryNode} onChange={(ev, v) => updateFn("ingressEveryNode", v)} label={<Text>Run proxy on every node (deploy as Daemonset)</Text>} />
                     }
 
                     {addons.ingress === "appgw" && (
@@ -245,38 +175,112 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             }
                         </>
                     }
+
+                    {(addons.ingress === "nginx" || addons.ingress === "contour") &&
+                        <Checkbox checked={addons.ingressEveryNode} onChange={(ev, v) => updateFn("ingressEveryNode", v)} label={<Text>Run proxy on every node (deploy as Daemonset)</Text>} />
+                    }
+
                 </Stack>
             </Stack.Item>
 
             <Separator className="notopmargin" />
 
             <Stack.Item align="start">
-                <Label required={true}>
-                    Do you require a secure private container registry to store my application images
-                </Label>
+                <Label >Cluster Monitoring requirements</Label>
+                <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monitor for Containers option, or the open source CNCF Prometheus/Grafana solution</MessageBar>
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
-                    selectedKey={addons.registry}
+                    selectedKey={addons.monitor}
                     options={[
-                        { key: 'none', text: 'No, my application images will be on DockerHub or another registry' },
-                        { key: 'Basic', text: 'Yes, setup Azure Container Registry "Basic" tier & authorise aks to pull images' },
-                        { key: 'Standard', text: 'Yes, setup Azure Container Registry "Standard" tier (minimum recommended for production)' },
-                        { key: 'Premium', text: 'Yes, setup Azure Container Registry "Premium" tier (required for Private Link)' }
-                    ]}
-                    onChange={(ev, { key }) => updateFn("registry", key)}
-                />
-                {hasError(invalidArray, 'registry') &&
-                    <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'registry')}</MessageBar>
-                }
+                        { key: 'none', text: 'None' },
+                        { key: 'aci', text: 'Azure Monitor for Containers (logs and metrics)' },
+                        { key: 'oss', text: 'Prometheus / Grafana Helm Chart (metrics only)' }
 
+                    ]}
+                    onChange={(ev, { key }) => updateFn("monitor", key)}
+                />
             </Stack.Item>
 
-            <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
-                <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label={<Text>Create ACR Private Agent Pool (private link only) (preview limited regions <a target="_new" href="https://docs.microsoft.com/azure/container-registry/tasks-agent-pools">docs</a>)</Text>} />
-                <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
-                    <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>
-                    <TextField disabled={true} label="O/S" defaultValue="Linux"/>
-                    <TextField disabled={true} label="Agent Count" defaultValue="1"/>
+            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") && addons.dns && addons.certMan &&
+                <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
+                    <MessageBar messageBarType={MessageBarType.warning}>This will expose your your grafana dashboards to the internet, please login and change the default credentials asap (admin/prom-operator)</MessageBar>
+                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableMonitorIngress} onChange={(ev, v) => updateFn("enableMonitorIngress", v)} label={`Enable Public Ingress for Grafana (https://grafana.${addons.dnsZoneId && addons.dnsZoneId.split('/')[8]})`} />
+                </Stack.Item>
+
+            }
+
+            { addons.monitor === "aci" &&
+                <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
+                    <Dropdown
+                        label="Log and Metrics Data Retention (Days)"
+                        onChange={(ev, { key }) => updateFn("retentionInDays", key)} selectedKey={addons.retentionInDays}
+                        options={[
+                            { key: 30, text: '30 Days' },
+                            { key: 60, text: '60 Days' },
+                            { key: 90, text: '90 Days' },
+                            { key: 120, text: '120 Days' },
+                            { key: 180, text: '180 Days' },
+                            { key: 270, text: '270 Days' },
+                            { key: 365, text: '365 Days' }
+                        ]}
+                    />
+
+                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
+
+                </Stack.Item>
+            }
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+
+                <Label >Azure Policy, to manage and report on the compliance state of your Kubernetes clusters</Label>
+                <MessageBar>Azure Policy extends Gatekeeper v3, an admission controller webhook for Open Policy Agent (OPA), to apply at-scale enforcements and safeguards on your clusters in a centralized, consistent manner.
+                </MessageBar>
+                <ChoiceGroup
+                    styles={{ root: { marginLeft: '50px' } }}
+                    selectedKey={addons.azurepolicy}
+                    options={[
+                        { key: 'none', text: 'No restrictions, users can deploy any kubernetes workloads' },
+                        { key: 'audit', text: 'AUDIT compliance with the set of cluster pod security baseline standards for Linux-based workloads' },
+                        { key: 'deny', text: 'BLOCK and non-compliant Linux-based workloads with the set of cluster pod security baseline standards' }
+                    ]}
+                    onChange={(ev, { key }) => updateFn("azurepolicy", key)}
+                />
+                {addons.azurepolicy !== 'none' &&
+                    <MessageBar messageBarType={MessageBarType.success} styles={{ root: { marginTop: '20px', marginLeft: '100px', width: '700px' } }}>
+                        The template will automatically assign and <b>{addons.azurepolicy}</b> the following <Link target="_target" href="https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json">Policies</Link>:
+                        <ul>
+                            <li>Do not allow privileged containers in Kubernetes cluster</li>
+                            <li>Kubernetes cluster pods should only use approved host network and port range</li>
+                            <li>Kubernetes cluster containers should not share host process ID or host IPC namespace</li>
+                            <li>Kubernetes cluster containers should only use allowed capabilities</li>
+                            <li>Kubernetes cluster pod hostPath volumes should only use allowed host paths</li>
+                        </ul>
+                    </MessageBar>
+                }
+            </Stack.Item>
+            <Separator className="notopmargin" />
+            <Stack.Item align="start">
+                <Label >Cluster East-West traffic restrictions (Network Policies)</Label>
+                <MessageBar>Control which components can communicate with each other. The principle of least privilege should be applied to how traffic can flow between pods in an Azure Kubernetes Service (AKS) cluster</MessageBar>
+                <ChoiceGroup
+                    styles={{ root: { marginLeft: '50px' } }}
+                    selectedKey={addons.networkPolicy}
+                    options={[
+                        { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
+                        { "data-testid":'addons-netpolicy-calico', key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
+                        { "data-testid":'addons-netpolicy-azure', key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
+
+                    ]}
+                    onChange={(ev, { key }) => updateFn("networkPolicy", key)}
+                />
+            </Stack.Item>
+
+            <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.networkPolicy === "none" ? "none" : "block") } }} >
+                <Stack tokens={{ childrenGap: 15 }}>
+                    <MessageBar messageBarType={MessageBarType.warning}>A Default Deny Network Policy provides an enhanced security posture. Pods without policy are not allowed traffic. Please use caution, with apps that you know have policy defined.</MessageBar>
+                    <Checkbox inputProps={{ "data-testid": "addons-netpolicy-denydefault-Checkbox"}} disabled={addons.networkPolicy === 'none'} checked={addons.denydefaultNetworkPolicy} onChange={(ev, v) => updateFn("denydefaultNetworkPolicy", v)} label="Create a default deny policy in the default namespace" />
                 </Stack>
             </Stack.Item>
 

@@ -70,6 +70,7 @@
             "podid": false,
             "podscale": false,
             "monitor": "none",
+            "enableMonitorIngress": false,
             "retentionInDays": 30,
             "createAksMetricAlerts": true,
             "csisecret": "none",
