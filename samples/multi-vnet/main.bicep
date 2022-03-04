@@ -70,7 +70,7 @@ module extrasubnet 'extrasubnet.bicep' = {
   name: 'extrasubnet'
   params: {
     vnetName: gridVnet.outputs.vnetName
-    runnerSubnetAddressPrefix: '10.10.4.0/24'
+    subnetAddressPrefix: '10.10.4.0/24'
     subnetName: 'sn-runners'
   }
 }
