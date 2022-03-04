@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1272.37030",
-      "templateHash": "6199505892268662929"
+      "templateHash": "17543690070351921750"
     }
   },
   "parameters": {
@@ -555,6 +555,10 @@
         "description": "A custom system pool spec"
       }
     },
+    "AksClusterName": {
+      "type": "string",
+      "defaultValue": "[format('aks-{0}', parameters('resourceName'))]"
+    },
     "adminprincipleid": {
       "type": "string",
       "defaultValue": "",
@@ -791,14 +795,14 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('akvName'))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'AppGw', variables('keyVaultSecretsUserRole')))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'AppGw', variables('keyVaultSecretsUserRole')))]",
       "properties": {
         "roleDefinitionId": "[variables('keyVaultSecretsUserRole')]",
         "principalType": "ServicePrincipal",
         "principalId": "[if(variables('deployAppGw'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))).principalId, '')]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))]",
         "[resourceId('Microsoft.KeyVault/vaults', variables('akvName'))]"
       ]
@@ -808,14 +812,14 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('akvName'))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'CSIDriver', variables('keyVaultSecretsUserRole')))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'CSIDriver', variables('keyVaultSecretsUserRole')))]",
       "properties": {
         "roleDefinitionId": "[variables('keyVaultSecretsUserRole')]",
         "principalType": "ServicePrincipal",
-        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.azureKeyvaultSecretsProvider.identity.objectId]"
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))).addonProfiles.azureKeyvaultSecretsProvider.identity.objectId]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]",
         "[resourceId('Microsoft.KeyVault/vaults', variables('akvName'))]"
       ]
     },
@@ -824,14 +828,14 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('akvName'))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'usersecret', variables('keyVaultSecretsOfficerRole')))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'usersecret', variables('keyVaultSecretsOfficerRole')))]",
       "properties": {
         "roleDefinitionId": "[variables('keyVaultSecretsOfficerRole')]",
         "principalType": "User",
         "principalId": "[parameters('kvOfficerRolePrincipalId')]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]",
         "[resourceId('Microsoft.KeyVault/vaults', variables('akvName'))]"
       ]
     },
@@ -840,14 +844,14 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('akvName'))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'usercert', variables('keyVaultCertsOfficerRole')))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'usercert', variables('keyVaultCertsOfficerRole')))]",
       "properties": {
         "roleDefinitionId": "[variables('keyVaultCertsOfficerRole')]",
         "principalType": "User",
         "principalId": "[parameters('kvOfficerRolePrincipalId')]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]",
         "[resourceId('Microsoft.KeyVault/vaults', variables('akvName'))]"
       ]
     },
@@ -931,15 +935,15 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', variables('acrName'))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Acr', variables('AcrPullRole')))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'Acr', variables('AcrPullRole')))]",
       "properties": {
         "roleDefinitionId": "[variables('AcrPullRole')]",
         "principalType": "ServicePrincipal",
-        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).identityProfile.kubeletidentity.objectId]"
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))).identityProfile.kubeletidentity.objectId]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]"
       ]
     },
     {
@@ -947,7 +951,7 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', variables('acrName'))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Acr', variables('AcrPushRole')))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'Acr', variables('AcrPushRole')))]",
       "properties": {
         "roleDefinitionId": "[variables('AcrPushRole')]",
         "principalType": "User",
@@ -955,7 +959,7 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]"
       ]
     },
     {
@@ -1004,14 +1008,14 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.Network/applicationGateways/{0}', variables('appgwName'))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Agic', variables('contributor')))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'Agic', variables('contributor')))]",
       "properties": {
         "roleDefinitionId": "[variables('contributor')]",
         "principalType": "ServicePrincipal",
-        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.ingressApplicationGateway.identity.objectId]"
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))).addonProfiles.ingressApplicationGateway.identity.objectId]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]",
         "[resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))]"
       ]
     },
@@ -1019,14 +1023,14 @@
       "condition": "[and(variables('DEPLOY_APPGW_ADDON'), variables('deployAppGw'))]",
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Agic', variables('reader')))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'Agic', variables('reader')))]",
       "properties": {
         "roleDefinitionId": "[variables('reader')]",
         "principalType": "ServicePrincipal",
-        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.ingressApplicationGateway.identity.objectId]"
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))).addonProfiles.ingressApplicationGateway.identity.objectId]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]"
       ]
     },
     {
@@ -1034,14 +1038,14 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
       "scope": "[format('Microsoft.ManagedIdentity/userAssignedIdentities/{0}', format('id-appgw-{0}', parameters('resourceName')))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'Agic', variables('managedIdentityOperator')))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'Agic', variables('managedIdentityOperator')))]",
       "properties": {
         "roleDefinitionId": "[variables('managedIdentityOperator')]",
         "principalType": "ServicePrincipal",
-        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.ingressApplicationGateway.identity.objectId]"
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))).addonProfiles.ingressApplicationGateway.identity.objectId]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))]"
       ]
     },
@@ -1076,9 +1080,9 @@
     {
       "type": "Microsoft.ContainerService/managedClusters",
       "apiVersion": "2021-10-01",
-      "name": "[format('aks-{0}', parameters('resourceName'))]",
+      "name": "[parameters('AksClusterName')]",
       "location": "[parameters('location')]",
-      "properties": "[if(and(parameters('DefenderForContainers'), parameters('omsagent')), union(createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), 'none', ''), 'enablePrivateClusterPublicFQDN', parameters('enablePrivateCluster'))), 'agentPoolProfiles', if(parameters('JustUseSystemPool'), array(union(createObject('name', 'npsystem', 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), variables('userPoolVmProfile'))), concat(array(union(createObject('name', 'npsystem', 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), if(and(equals(parameters('SystemPoolType'), 'Custom'), not(equals(parameters('SystemPoolCustomPreset'), createObject()))), parameters('SystemPoolCustomPreset'), variables('systemPoolPresets')[parameters('SystemPoolType')]))), array(union(createObject('name', 'npuser01', 'mode', 'User', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'osType', 'Linux', 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%')), variables('userPoolVmProfile'))))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'podCidr', parameters('podCidr'), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'dockerBridgeCidr', parameters('dockerBridgeCidr')), 'disableLocalAccounts', and(parameters('AksDisableLocalAccounts'), parameters('enable_aad')), 'autoUpgradeProfile', if(not(empty(parameters('upgradeChannel'))), createObject('upgradeChannel', parameters('upgradeChannel')), createObject()), 'addonProfiles', if(not(empty(if(and(variables('DEPLOY_APPGW_ADDON'), parameters('ingressApplicationGateway')), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-11-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), if(and(variables('DEPLOY_APPGW_ADDON'), parameters('ingressApplicationGateway')), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-11-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), variables('aks_addons'))), variables('azureDefenderSecurityProfile')), createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), 'none', ''), 'enablePrivateClusterPublicFQDN', parameters('enablePrivateCluster'))), 'agentPoolProfiles', if(parameters('JustUseSystemPool'), array(union(createObject('name', 'npsystem', 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), variables('userPoolVmProfile'))), concat(array(union(createObject('name', 'npsystem', 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), if(and(equals(parameters('SystemPoolType'), 'Custom'), not(equals(parameters('SystemPoolCustomPreset'), createObject()))), parameters('SystemPoolCustomPreset'), variables('systemPoolPresets')[parameters('SystemPoolType')]))), array(union(createObject('name', 'npuser01', 'mode', 'User', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'osType', 'Linux', 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%')), variables('userPoolVmProfile'))))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'podCidr', parameters('podCidr'), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'dockerBridgeCidr', parameters('dockerBridgeCidr')), 'disableLocalAccounts', and(parameters('AksDisableLocalAccounts'), parameters('enable_aad')), 'autoUpgradeProfile', if(not(empty(parameters('upgradeChannel'))), createObject('upgradeChannel', parameters('upgradeChannel')), createObject()), 'addonProfiles', if(not(empty(if(and(variables('DEPLOY_APPGW_ADDON'), parameters('ingressApplicationGateway')), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-11-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), if(and(variables('DEPLOY_APPGW_ADDON'), parameters('ingressApplicationGateway')), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-11-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), variables('aks_addons'))))]",
+      "properties": "[if(and(parameters('DefenderForContainers'), parameters('omsagent')), union(createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), 'none', ''), 'enablePrivateClusterPublicFQDN', parameters('enablePrivateCluster'))), 'agentPoolProfiles', if(parameters('JustUseSystemPool'), array(union(createObject('name', 'npsystem', 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), variables('userPoolVmProfile'))), concat(array(union(createObject('name', 'npsystem', 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), if(and(equals(parameters('SystemPoolType'), 'Custom'), not(equals(parameters('SystemPoolCustomPreset'), createObject()))), parameters('SystemPoolCustomPreset'), variables('systemPoolPresets')[parameters('SystemPoolType')]))), array(union(createObject('name', 'npuser01', 'mode', 'User', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'osType', 'Linux', 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%')), variables('userPoolVmProfile'))))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'podCidr', parameters('podCidr'), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'dockerBridgeCidr', parameters('dockerBridgeCidr')), 'disableLocalAccounts', and(parameters('AksDisableLocalAccounts'), parameters('enable_aad')), 'autoUpgradeProfile', if(not(empty(parameters('upgradeChannel'))), createObject('upgradeChannel', parameters('upgradeChannel')), createObject()), 'addonProfiles', if(not(empty(if(and(variables('DEPLOY_APPGW_ADDON'), parameters('ingressApplicationGateway')), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-11-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), if(and(variables('DEPLOY_APPGW_ADDON'), parameters('ingressApplicationGateway')), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-11-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), variables('aks_addons')), 'autoScalerProfile', createObject('balance-similar-node-groups', 'true', 'expander', 'random', 'max-empty-bulk-delete', '10', 'max-graceful-termination-sec', '600', 'max-node-provision-time', '15m', 'max-total-unready-percentage', '45', 'new-pod-scale-up-delay', '0s', 'ok-total-unready-count', '3', 'scale-down-delay-after-add', '10m', 'scale-down-delay-after-delete', '20s', 'scale-down-delay-after-failure', '3m', 'scale-down-unneeded-time', '10m', 'scale-down-unready-time', '20m', 'scale-down-utilization-threshold', '0.5', 'scan-interval', '10s', 'skip-nodes-with-local-storage', 'true', 'skip-nodes-with-system-pods', 'true')), variables('azureDefenderSecurityProfile')), createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), 'none', ''), 'enablePrivateClusterPublicFQDN', parameters('enablePrivateCluster'))), 'agentPoolProfiles', if(parameters('JustUseSystemPool'), array(union(createObject('name', 'npsystem', 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), variables('userPoolVmProfile'))), concat(array(union(createObject('name', 'npsystem', 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), if(and(equals(parameters('SystemPoolType'), 'Custom'), not(equals(parameters('SystemPoolCustomPreset'), createObject()))), parameters('SystemPoolCustomPreset'), variables('systemPoolPresets')[parameters('SystemPoolType')]))), array(union(createObject('name', 'npuser01', 'mode', 'User', 'osDiskType', parameters('osDiskType'), 'osDiskSizeGB', parameters('osDiskSizeGB'), 'osType', 'Linux', 'maxPods', parameters('maxPods'), 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), json('null')), 'upgradeSettings', createObject('maxSurge', '33%')), variables('userPoolVmProfile'))))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'podCidr', parameters('podCidr'), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'dockerBridgeCidr', parameters('dockerBridgeCidr')), 'disableLocalAccounts', and(parameters('AksDisableLocalAccounts'), parameters('enable_aad')), 'autoUpgradeProfile', if(not(empty(parameters('upgradeChannel'))), createObject('upgradeChannel', parameters('upgradeChannel')), createObject()), 'addonProfiles', if(not(empty(if(and(variables('DEPLOY_APPGW_ADDON'), parameters('ingressApplicationGateway')), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-11-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')))), if(and(variables('DEPLOY_APPGW_ADDON'), parameters('ingressApplicationGateway')), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', if(not(empty(parameters('byoAGWSubnetId'))), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('existingAGWVnetRG')), 'Microsoft.Network/virtualNetworks/subnets', variables('existingAGWVnetName'), variables('existingAGWSubnetName')), '2020-11-01').addressPrefix, parameters('vnetAppGatewaySubnetAddressPrefix'))))))), variables('aks_addons')), variables('aks_addons')), 'autoScalerProfile', createObject('balance-similar-node-groups', 'true', 'expander', 'random', 'max-empty-bulk-delete', '10', 'max-graceful-termination-sec', '600', 'max-node-provision-time', '15m', 'max-total-unready-percentage', '45', 'new-pod-scale-up-delay', '0s', 'ok-total-unready-count', '3', 'scale-down-delay-after-add', '10m', 'scale-down-delay-after-delete', '20s', 'scale-down-delay-after-failure', '3m', 'scale-down-unneeded-time', '10m', 'scale-down-unready-time', '20m', 'scale-down-utilization-threshold', '0.5', 'scan-interval', '10s', 'skip-nodes-with-local-storage', 'true', 'skip-nodes-with-system-pods', 'true')))]",
       "identity": "[if(variables('aks_byo_identity'), variables('aks_identity'), createObject('type', 'SystemAssigned'))]",
       "sku": {
         "name": "Basic",
@@ -1115,22 +1119,22 @@
       "condition": "[and(parameters('enableAzureRBAC'), not(empty(parameters('adminprincipleid'))))]",
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
-      "scope": "[format('Microsoft.ContainerService/managedClusters/{0}', format('aks-{0}', parameters('resourceName')))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'aksadmin', variables('buildInAKSRBACClusterAdmin')))]",
+      "scope": "[format('Microsoft.ContainerService/managedClusters/{0}', parameters('AksClusterName'))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'aksadmin', variables('buildInAKSRBACClusterAdmin')))]",
       "properties": {
         "roleDefinitionId": "[variables('buildInAKSRBACClusterAdmin')]",
         "principalType": "User",
         "principalId": "[parameters('adminprincipleid')]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]"
       ]
     },
     {
       "condition": "[and(variables('createLaw'), parameters('omsagent'))]",
       "type": "Microsoft.Insights/diagnosticSettings",
       "apiVersion": "2021-05-01-preview",
-      "scope": "[format('Microsoft.ContainerService/managedClusters/{0}', format('aks-{0}', parameters('resourceName')))]",
+      "scope": "[format('Microsoft.ContainerService/managedClusters/{0}', parameters('AksClusterName'))]",
       "name": "aksDiags",
       "properties": {
         "copy": [
@@ -1152,7 +1156,7 @@
         ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]",
         "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
       ]
     },
@@ -1170,15 +1174,15 @@
       "condition": "[parameters('omsagent')]",
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2021-04-01-preview",
-      "scope": "[format('Microsoft.ContainerService/managedClusters/{0}', format('aks-{0}', parameters('resourceName')))]",
-      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'omsagent', variables('MonitoringMetricsPublisherRole')))]",
+      "scope": "[format('Microsoft.ContainerService/managedClusters/{0}', parameters('AksClusterName'))]",
+      "name": "[format('{0}', guid(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName')), 'omsagent', variables('MonitoringMetricsPublisherRole')))]",
       "properties": {
         "roleDefinitionId": "[variables('MonitoringMetricsPublisherRole')]",
-        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).addonProfiles.omsagent.identity.objectId]",
+        "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))).addonProfiles.omsagent.identity.objectId]",
         "principalType": "ServicePrincipal"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]"
       ]
     },
     {
@@ -1336,7 +1340,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.1272.37030",
-              "templateHash": "11605533850478758490"
+              "templateHash": "5581217828878942288"
             }
           },
           "parameters": {
@@ -1347,8 +1351,27 @@
               "type": "string",
               "defaultValue": "[resourceGroup().location]"
             },
+            "aksPrincipleId": {
+              "type": "string",
+              "defaultValue": ""
+            },
             "vnetAddressPrefix": {
               "type": "string"
+            },
+            "vnetAksSubnetAddressPrefix": {
+              "type": "string"
+            },
+            "workspaceDiagsId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "networkSecurityGroups": {
+              "type": "bool",
+              "defaultValue": true
+            },
+            "azureFirewalls": {
+              "type": "bool",
+              "defaultValue": false
             },
             "vnetFirewallSubnetAddressPrefix": {
               "type": "string",
@@ -1362,17 +1385,7 @@
               "type": "bool",
               "defaultValue": false
             },
-            "azureFirewalls": {
-              "type": "bool",
-              "defaultValue": false
-            },
-            "vnetAksSubnetAddressPrefix": {
-              "type": "string"
-            },
             "vnetAppGatewaySubnetAddressPrefix": {
-              "type": "string"
-            },
-            "aksPrincipleId": {
               "type": "string",
               "defaultValue": ""
             },
@@ -1410,15 +1423,10 @@
             },
             "availabilityZones": {
               "type": "array",
-              "defaultValue": []
-            },
-            "workspaceDiagsId": {
-              "type": "string",
-              "defaultValue": ""
-            },
-            "networkSecurityGroups": {
-              "type": "bool",
-              "defaultValue": true
+              "defaultValue": [],
+              "metadata": {
+                "description": "Used by the Bastion Public IP"
+              }
             },
             "bastionHostName": {
               "type": "string",
@@ -1677,6 +1685,7 @@
               ]
             },
             {
+              "condition": "[parameters('bastion')]",
               "type": "Microsoft.Network/publicIPAddresses",
               "apiVersion": "2021-03-01",
               "name": "[variables('publicIpAddressName')]",
@@ -1957,6 +1966,10 @@
               "type": "string",
               "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
             },
+            "vnetName": {
+              "type": "string",
+              "value": "[variables('vnetName')]"
+            },
             "aksSubnetId": {
               "type": "string",
               "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('aks_subnet_name'))]"
@@ -2009,7 +2022,7 @@
             "value": "[if(variables('isPrivate'), if(not(empty(parameters('byoAKSSubnetId'))), split(parameters('byoAKSSubnetId'), '/subnets')[0], if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', 'network')).outputs.vnetId.value, '')), '')]"
           },
           "principalId": {
-            "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))).identityProfile.kubeletidentity.objectId]"
+            "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))).identityProfile.kubeletidentity.objectId]"
           }
         },
         "template": {
@@ -2084,7 +2097,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]",
         "[resourceId('Microsoft.Resources/deployments', 'network')]"
       ]
     },
@@ -2406,7 +2419,7 @@
         "mode": "Incremental",
         "parameters": {
           "clusterName": {
-            "value": "[format('aks-{0}', parameters('resourceName'))]"
+            "value": "[parameters('AksClusterName')]"
           },
           "logAnalyticsWorkspaceName": {
             "value": "[variables('aks_law_name')]"
@@ -3236,7 +3249,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('AksClusterName'))]",
         "[resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))]"
       ]
     }
@@ -3272,7 +3285,7 @@
     },
     "aksClusterName": {
       "type": "string",
-      "value": "[format('aks-{0}', parameters('resourceName'))]"
+      "value": "[parameters('AksClusterName')]"
     },
     "LogAnalyticsName": {
       "type": "string",
