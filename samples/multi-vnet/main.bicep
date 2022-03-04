@@ -1,7 +1,7 @@
 targetScope='subscription'
 
 param location string = deployment().location
-param resourceName string = 'stest7'
+param resourceName string = 'stest'
 
 //Naming
 var gridResourceName = 'grid-${resourceName}'
