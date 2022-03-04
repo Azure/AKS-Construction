@@ -1002,11 +1002,12 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
     enabled: true
   }
 } : {
+  // AKS RP will deploy the AppGateway for us (not creating custom or BYO VNET)
   ingressApplicationGateway: {
     enabled: true
     config: {
       applicationGatewayName: appgwName
-      subnetCIDR: appGatewaySubnetAddressPrefix
+      subnetCIDR: '10.2.0.0/16'
     }
   }
 }) : aks_addons
