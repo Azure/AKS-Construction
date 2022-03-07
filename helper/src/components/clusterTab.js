@@ -83,7 +83,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             <Slider label={`Initial ${cluster.autoscale ? "(& Autoscaler Min nodes)" : "nodes"}`} min={cluster.SystemPoolType==='none' || cluster.autoscale === false  ? 1 : 0} max={10} step={1} defaultValue={cluster.agentCount} showValue={true}
                                 onChange={(v) => updateFn("agentCount", v)} />
                             {cluster.autoscale && (
-                                <Slider label="Autoscaler Max nodes" min={cluster.agentCount} max={100} step={1} defaultValue={cluster.maxCount} showValue={true}
+                                <Slider label="Autoscaler Max nodes" min={cluster.agentCount + 1} max={100} step={1} defaultValue={cluster.maxCount} showValue={true}
                                     onChange={(v) => updateFn("maxCount", v)}
                                     snapToStep />
                             )}
