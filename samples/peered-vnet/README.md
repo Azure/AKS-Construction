@@ -1,4 +1,4 @@
-# Multi-Vnet Sample
+# Peered-Vnet Sample
 
 This sample showcases a using the AKS Construction bicep code for a much broader project deployment which involves multiple AKS clusters in different virtual networks.
 
