@@ -76,14 +76,12 @@ module extrasubnet 'extrasubnet.bicep' = {
 }
 
 //Deploy AKS clusters
-var gridAksResourceName='aks-${gridResourceName}'
 module gridAks '../../bicep/main.bicep' = {
   name: 'seleniumGridCluster'
   scope: gridRg
   params: {
     location : location
     resourceName: gridResourceName
-    AksClusterName: gridAksResourceName
     agentVMSize: 'Standard_B2ms'
     osDiskType: 'Managed'
     enable_aad: true
@@ -142,4 +140,3 @@ module aksNodePools '../../bicep/aksagentpool.bicep'  = [for pool in extraAksNod
     osDiskType: 'Managed'
   }
 }]
-

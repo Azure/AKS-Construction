@@ -1052,7 +1052,7 @@ var aksProperties = {
     upgradeChannel: upgradeChannel
   } : {}
   addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
-  autoScalerProfile: {
+  autoScalerProfile: autoScale ? {
       'balance-similar-node-groups': 'true'
       'expander': 'random'
       'max-empty-bulk-delete': '10'
@@ -1070,7 +1070,7 @@ var aksProperties = {
       'scan-interval': '10s'
       'skip-nodes-with-local-storage': 'true'
       'skip-nodes-with-system-pods': 'true'
-  }
+  } : {}
 }
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
