@@ -1083,9 +1083,8 @@ var azureDefenderSecurityProfile = {
   }
 }
 
-param AksClusterName string = 'aks-${resourceName}'
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
-  name: AksClusterName
+  name: 'aks-${resourceName}'
   location: location
   properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
   identity: aks_byo_identity ? aks_identity : {
