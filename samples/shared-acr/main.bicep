@@ -1,8 +1,4 @@
-//------Application General Parameters------
-@description('The individual name of your application')
-@minLength(3)
-@maxLength(6)
-param nameseed string = 'app'
+param nameseed string = 'acrsample'
 param location string =  resourceGroup().location
 
 param acrName string
@@ -31,5 +27,7 @@ module aksconst '../../bicep/main.bicep' = {
     registries_sku: ''
     omsagent: true
     retentionInDays: 30
+    agentCount: 1
+    JustUseSystemPool: true
   }
 }
