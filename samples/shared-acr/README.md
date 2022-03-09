@@ -1,10 +1,10 @@
 # Shared ACR Sample
 
-This sample showcases a using the AKS Construction bicep code to utilise an existing Azure Container Registry that would likely be shared by many AKS Clusters.
+This sample shows how to use an existing Azure Container Registry with a new AKS Construction deployment.
 
 Specifically it shows;
 
-1. Scoped RBAC deployment of the ACR role assignment
+1. Scoped RBAC assignment of the ACR pull role
 
 ## Deploying the sample
 
