@@ -6,7 +6,7 @@ param acrRg string
 
 //--------ACR RBAC Assignment for new AKS cluster--------
 module acrRbac 'acr-rbac.bicep' = {
-  name: 'acr-rbac'
+  name: 'acr-rbac-for-aks-${nameseed}'
   scope: resourceGroup(acrRg)
   params: {
     acrName: acrName
