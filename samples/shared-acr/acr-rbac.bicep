@@ -1,5 +1,6 @@
 param acrName string
 param aksName string
+param aksResourceGroup string
 
 //Create a reference to the existing ACR
 resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' existing = {
@@ -9,6 +10,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' existin
 //Create a reference to the existing AKS
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
   name: aksName
+  scope: resourceGroup(aksResourceGroup)
 }
 
 //Create the RBAC

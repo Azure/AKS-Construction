@@ -11,6 +11,7 @@ module acrRbac 'acr-rbac.bicep' = {
   params: {
     acrName: acrName
     aksName: aksconst.outputs.aksClusterName
+    aksResourceGroup: resourceGroup().name
   }
 }
 
