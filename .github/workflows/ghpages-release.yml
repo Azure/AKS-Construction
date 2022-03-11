@@ -1,0 +1,72 @@
+name: Release GitHub Pages site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/ghpages.yml"
+      - "helper/**"
+
+  workflow_dispatch:
+
+env:
+  templateRelease: 0.5.2-preview
+
+jobs:
+  CreateArtifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Bicep
+        shell: pwsh
+        run: |
+          az bicep install
+
+      - name: Bicep build
+        shell: pwsh
+        run: |
+          #write-output $pwd
+          $compiledir=Join-Path -Path $pwd -ChildPath "bicep/compiled"
+
+          write-output $compiledir
+          If(!(test-path $compiledir))
+          {
+                New-Item -ItemType Directory -Force -Path $compiledir
+          }
+
+          /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
+
+      - name: Build node app with bicep release
+        run: |
+          cd helper
+          npm install
+          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
+
+      - name: Create Bicep release artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: CompiledBicep
+          path: bicep/compiled/main.json
+
+      - name: Create GitHub pages release artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: WizardApp
+          path: helper/build
+
+  DeployWebApp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: my-artifact
+          path: wizardapp
+
+      - name: Deploy to GitHub Pages
+        uses: crazy-max/ghaction-github-pages@v2
+        with:
+          target_branch: gh-pages-test
+          build_dir: wizardapp
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
