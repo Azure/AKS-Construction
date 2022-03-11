@@ -53,6 +53,21 @@ jobs:
           path: old
           ref: ${{ github.event.pull_request.base.sha }}
 
+      - name: Bicep build (old)
+        shell: pwsh
+        run: |
+          #write-output $pwd
+          $compiledir=Join-Path -Path $pwd -ChildPath "old/bicep/compiled"
+
+          write-output $compiledir
+          If(!(test-path $compiledir))
+          {
+                New-Item -ItemType Directory -Force -Path $compiledir
+          }
+
+          /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
+
+
       - name: Check for Parameter changes in main.json
         if: github.event_name != 'push'
         env:
