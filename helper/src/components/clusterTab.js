@@ -92,7 +92,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <Stack.Item>
                         <Label>Scale Values</Label>
                         <Stack tokens={{ childrenGap: 0 }} styles={{ root: { width: 450 } }}>
-                            <Slider buttonProps={{ "data-testid": "cluster-agentCount-slider"}} label={`Initial ${cluster.autoscale ? "(& Autoscaler Min nodes)" : "nodes"}`} min={cluster.SystemPoolType==='none' || !cluster.autoscale  ? 1 : 0} max={cluster.autoscale ? cluster.maxCount -1 : 100} step={1} defaultValue={cluster.agentCount} showValue={true}
+                            <Slider buttonProps={{ "data-testid": "cluster-agentCount-slider"}} label={`Initial ${cluster.autoscale ? "(& Autoscaler Min nodes)" : "nodes"}`} min={cluster.SystemPoolType==='none' || !cluster.autoscale  ? 1 : 0} max={cluster.autoscale ? cluster.maxCount -1 : 99} step={1} defaultValue={cluster.agentCount} showValue={true}
                                 onChange={(v) => updateFn("agentCount", v)} />
                             {cluster.autoscale && (
                                 <Slider buttonProps={{ "data-testid": "cluster-maxCount-slider"}}  label="Autoscaler Max nodes" min={cluster.agentCount + 1} max={100} step={1} defaultValue={cluster.maxCount} showValue={true}
