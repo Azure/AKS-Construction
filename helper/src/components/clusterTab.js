@@ -56,7 +56,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                 { "data-testid":'cluster-systempool-Cost-Optimised', key: 'Cost-Optimised', text: 'Cost-Optimised: use low-cost Burstable VMs, with 1-3 node autoscale' },
                                 { "data-testid":'cluster-systempool-Standard', key: 'Standard', text: 'Standard: use standard 4-core VMs, with 2-3 node autoscale' }
                             ]}
-                            onChange={(ev, { key }) => updateFn("SystemPoolType", key)}
+                            onChange={(ev, { key }) => {
+                                updateFn("SystemPoolType", key)
+                                if (cluster.agentCount===0 && key==='none') {
+                                    updateFn("agentCount", "1")
+                                }
+                            }}
                         />
                     </Stack.Item>
                 </Stack>
@@ -64,13 +69,21 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Stack horizontal tokens={{ childrenGap: 150 }}>
                     <Stack.Item>
                         <Label >Scale Type</Label>
-                        <ChoiceGroup selectedKey={cluster.autoscale} onChange={(ev, { key }) => updateFn("autoscale", key)}
+                        <ChoiceGroup selectedKey={cluster.autoscale} onChange={(ev, { key }) => {
+                            updateFn("autoscale", key)
+                            alert(cluster.agentCount);
+                            if (cluster.agentCount===0 && !key) {
+                                updateFn("agentCount", "1")
+                            }
+                        }}
                             options={[
                                 {
+                                    "data-testid":'cluster-manual-scale',
                                     key: false,
                                     iconProps: { iconName: 'FollowUser' },
                                     text: 'Manual scale'
                                 }, {
+                                    "data-testid":'cluster-auto-scale',
                                     key: true,
                                     iconProps: { iconName: 'ScaleVolume' },
                                     text: 'Autoscale'
@@ -78,12 +91,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             ]} />
                     </Stack.Item>
                     <Stack.Item>
-                        <Label >Scale Values</Label>
+                        <Label>Scale Values</Label>
                         <Stack tokens={{ childrenGap: 0 }} styles={{ root: { width: 450 } }}>
-                            <Slider label={`Initial ${cluster.autoscale ? "(& Autoscaler Min nodes)" : "nodes"}`} min={cluster.SystemPoolType==='none' || cluster.autoscale === false  ? 1 : 0} max={10} step={1} defaultValue={cluster.agentCount} showValue={true}
+                            <Slider buttonProps={{ "data-testid": "cluster-agentCount-slider"}} label={`Initial ${cluster.autoscale ? "(& Autoscaler Min nodes)" : "nodes"}`} min={cluster.SystemPoolType==='none' || !cluster.autoscale  ? 1 : 0} max={10} step={1} defaultValue={cluster.agentCount} showValue={true}
                                 onChange={(v) => updateFn("agentCount", v)} />
                             {cluster.autoscale && (
-                                <Slider label="Autoscaler Max nodes" min={cluster.agentCount + 1} max={100} step={1} defaultValue={cluster.maxCount} showValue={true}
+                                <Slider buttonProps={{ "data-testid": "cluster-maxCount-slider"}}  label="Autoscaler Max nodes" min={cluster.agentCount + 1} max={100} step={1} defaultValue={cluster.maxCount} showValue={true}
                                     onChange={(v) => updateFn("maxCount", v)}
                                     snapToStep />
                             )}
