@@ -1,33 +1,41 @@
 param resourceName string
 param location string = resourceGroup().location
-param vnetAddressPrefix string
 
-param vnetFirewallSubnetAddressPrefix string = ''
-
-param ingressApplicationGateway bool = false
-param ingressApplicationGatewayPublic bool = false
-param azureFirewalls bool = false
-
-param vnetAksSubnetAddressPrefix string
-param vnetAppGatewaySubnetAddressPrefix string
 param aksPrincipleId string = ''
 
+param vnetAddressPrefix string
+param vnetAksSubnetAddressPrefix string
+
+//Nsg
+param workspaceDiagsId string = ''
+param networkSecurityGroups bool = true
+
+//Firewall
+param azureFirewalls bool = false
+param vnetFirewallSubnetAddressPrefix string = ''
+
+//Ingress
+param ingressApplicationGateway bool = false
+param ingressApplicationGatewayPublic bool = false
+param vnetAppGatewaySubnetAddressPrefix string =''
+
+//Private Link
 param privateLinks bool = false
 param privateLinkSubnetAddressPrefix string = ''
 param privateLinkAcrId string = ''
 param privateLinkAkvId string = ''
 
+//ACR
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 
+//Bastion
 param bastion bool =false
 param bastionSubnetAddressPrefix string = ''
 
+@description('Used by the Bastion Public IP')
 param availabilityZones array = []
 
-param workspaceDiagsId string = ''
-
-param networkSecurityGroups bool = true
 
 var bastion_subnet_name = 'AzureBastionSubnet'
 var bastion_subnet = {
@@ -145,6 +153,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   }
 }
 output vnetId string = vnet.id
+output vnetName string = vnet.name
 output aksSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, aks_subnet_name)
 output fwSubnetId string = azureFirewalls ? '${vnet.id}/subnets/${fw_subnet_name}' : ''
 output acrPoolSubnetId string = acrPrivatePool ? '${vnet.id}/subnets/${acrpool_subnet_name}' : ''
@@ -281,7 +290,7 @@ resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
 param bastionHostName string = 'bas-${resourceName}'
 var publicIpAddressName = 'pip-${bastionHostName}'
 
-resource bastionPip 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
+resource bastionPip 'Microsoft.Network/publicIPAddresses@2021-03-01' = if(bastion) {
   name: publicIpAddressName
   location: location
   sku: {
