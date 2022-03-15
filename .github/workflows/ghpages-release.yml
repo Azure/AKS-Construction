@@ -43,7 +43,7 @@ jobs:
 
       - name: Check that the GitHub release doesn't already exist
         run: |
-          GHJSON=$(gh release view ${{env.templateRelease}} --json name)
+          GHJSON=$(gh release view ${{env.templateRelease}} --json name) || GHJSON=""
 
           if [ -z "$GHJSON" ]
           then
