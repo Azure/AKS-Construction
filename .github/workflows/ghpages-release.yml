@@ -52,6 +52,8 @@ jobs:
                 echo "Release already exists - aborting"
                 exit 1
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Bicep
         shell: pwsh
