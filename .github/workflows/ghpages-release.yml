@@ -39,6 +39,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Check that the GitHub release doesn't already exist
+        run: |
+          echo "TODO: Abort if release tag already exists"
+
       - name: Install Bicep
         shell: pwsh
         run: az bicep install
@@ -69,12 +73,20 @@ jobs:
 
   DeployWebApp:
     runs-on: ubuntu-latest
+    if: ${{ always() }}
     needs: [BuildWebApp , CreateRelease]
     steps:
       - uses: actions/download-artifact@v3
         with:
           name: WizardApp
           path: wizardapp
+
+      #Although we don't need this artifact, if it's missing then we can abort this job
+      - uses: actions/download-artifact@v3
+        if: ${{ github.event.inputs.createRelease == 'true' }}
+        with:
+          name: CompiledBicep
+          path: compilebicep
 
       - name: Deploy to GitHub Pages
         uses: crazy-max/ghaction-github-pages@v2
