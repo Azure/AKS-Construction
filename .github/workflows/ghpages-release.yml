@@ -107,7 +107,7 @@ jobs:
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: gh-pages-canary
-          commit_message: Deploy to Canary Github pages
+          commit_message: Pages Release. Canary ${{env.templateRelease}}
           build_dir: wizardapp
           keep_history: true
         env:
@@ -137,6 +137,7 @@ jobs:
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: gh-pages
+          commit_message: Pages Release. Prod ${{env.templateRelease}}
           build_dir: wizardapp
           keep_history: true
         env:
