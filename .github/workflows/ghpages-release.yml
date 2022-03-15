@@ -35,7 +35,7 @@ jobs:
 
   CreateRelease:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.createRelease }}
+    if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
       - uses: actions/checkout@v2
 
