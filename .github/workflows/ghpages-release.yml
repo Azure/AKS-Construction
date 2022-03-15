@@ -8,7 +8,7 @@ on:
         type: string
         required: true
       createRelease:
-        description: 'Build the bicep and create a NEW GitHub release'
+        description: 'Create a NEW release with that tag'
         type: boolean
         required: false
 
@@ -81,7 +81,9 @@ jobs:
 
       - name: Create GitHub release
         run: |
-          echo "TODO: Use GitHub CLI to create release"
+          GHJSON=$(gh release create ${{env.templateRelease}} 'bicep/compiled/main.json' -p --generate-notes )
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   DeployWebAppToCanary:
     runs-on: ubuntu-latest
