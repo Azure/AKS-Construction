@@ -18,6 +18,7 @@ env:
 jobs:
   BuildWebApp:
     runs-on: ubuntu-latest
+    name: Build Web App
     steps:
       - uses: actions/checkout@v2
 
@@ -35,6 +36,7 @@ jobs:
 
   CreateRelease:
     runs-on: ubuntu-latest
+    name: Create GitHub Release (bicep)
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
       - uses: actions/checkout@v2
@@ -71,8 +73,9 @@ jobs:
         run: |
           echo "TODO: Use GitHub CLI to create release"
 
-  DeployWebApp:
+  DeployWebAppToCanary:
     runs-on: ubuntu-latest
+    name: Deploy Web App to Canary Pages
     if: ${{ always() }}
     needs: [BuildWebApp , CreateRelease]
     steps:
@@ -88,10 +91,40 @@ jobs:
           name: CompiledBicep
           path: compilebicep
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages Canary
         uses: crazy-max/ghaction-github-pages@v2
         with:
-          target_branch: gh-pages-test
+          target_branch: gh-pages-canary
+          commit_message: Deploy to Canary Github pages
+          build_dir: wizardapp
+          keep_history: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  DeployWebAppToProd:
+    runs-on: ubuntu-latest
+    name: Deploy Web App to Prod Pages
+    if: ${{ always() }}
+    environment: UI-Deploy-Manual-Approval
+    needs: [BuildWebApp , CreateRelease, DeployWebAppToCanary]
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: WizardApp
+          path: wizardapp
+
+      #Although we don't need this artifact, if it's missing then we can abort this job
+      - uses: actions/download-artifact@v3
+        if: ${{ github.event.inputs.createRelease == 'true' }}
+        with:
+          name: CompiledBicep
+          path: compilebicep
+
+      - name: Deploy to GitHub Pages Prod
+        uses: crazy-max/ghaction-github-pages@v2
+        with:
+          target_branch: gh-pages-fake-prod
           build_dir: wizardapp
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
