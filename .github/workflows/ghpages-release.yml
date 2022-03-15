@@ -22,6 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - uses: actions/download-artifact@v3
+        with:
+          name: testdoesthisthrowerror
+          path: testdoesthisthrowerror
+
       - name: Build node app with bicep release
         run: |
           cd helper
