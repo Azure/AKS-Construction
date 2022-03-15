@@ -18,7 +18,6 @@ on:
         required: false
 
 env:
-  templateRelease: 0.5.2-preview
   AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
   RG: "Automation-Actions-AksPublishCI"
 
@@ -43,7 +42,7 @@ jobs:
         run: |
           cd helper
           npm install
-          REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}" npm run build
+          npm run build
           npm run start&
 
       - name: Playwright - Install w/ OS dependencies

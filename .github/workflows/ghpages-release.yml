@@ -1,16 +1,15 @@
 name: Release GitHub Pages site
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/ghpages.yml"
-      - "helper/**"
-
   workflow_dispatch:
+    inputs:
+      templateRelease:
+        description: 'What release tag to point the Wizard to'
+        type: string
+        required: true
 
 env:
-  templateRelease: 0.5.2-preview
+  templateRelease: ${{ github.event.inputs.templateRelease }}
 
 jobs:
   CreateArtifacts:
@@ -20,8 +19,7 @@ jobs:
 
       - name: Install Bicep
         shell: pwsh
-        run: |
-          az bicep install
+        run: az bicep install
 
       - name: Bicep build
         shell: pwsh
@@ -54,6 +52,10 @@ jobs:
         with:
           name: WizardApp
           path: helper/build
+
+      - name: Create GitHub release
+        run: |
+          echo "TODO: Use GitHub CLI to create release"
 
   DeployWebApp:
     runs-on: ubuntu-latest
