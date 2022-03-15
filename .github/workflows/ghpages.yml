@@ -150,7 +150,7 @@ jobs:
             sh $azcmdpath
 
       - name: Full deploy test AZ Commands
-        if: ${{ !github.event.pull_request.head.repo.fork && () github.event.inputs.doAzCmdDeployment == 'true' || contains( github.event.pull_request.labels.*.name, 'test-deploy-wizard') ) }}
+        if: ${{ !github.event.pull_request.head.repo.fork && ( github.event.inputs.doAzCmdDeployment == 'true' || contains( github.event.pull_request.labels.*.name, 'test-deploy-wizard')) }}
         uses: Azure/cli@1.0.6
         env:
           azcmdpath: "helper/azcmd-managed-private.sh"
