@@ -117,7 +117,7 @@ jobs:
                 New-Item -ItemType Directory -Force -Path $compiledir
           }
 
-          /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
+          /home/runner/.azure/bin/bicep build ./bicep/main.bicep --outdir $compiledir
 
       - name: Azure Login
         if: ${{ !github.event.pull_request.head.repo.fork }}
