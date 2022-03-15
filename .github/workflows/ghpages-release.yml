@@ -92,7 +92,7 @@ jobs:
   DeployWebAppToCanary:
     runs-on: ubuntu-latest
     name: Deploy Web App to Canary Pages
-    if: ${{ always() && github.ref == 'refs/heads/main' }}
+    if: ${{ always() }}
     needs: [BuildWebApp , CreateRelease]
     steps:
       - uses: actions/download-artifact@v3
