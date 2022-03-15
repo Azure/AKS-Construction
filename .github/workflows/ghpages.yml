@@ -100,24 +100,24 @@ jobs:
           name: AzCmds
           path: helper/azcmd-*.sh
 
-      - name: Install Bicep
-        shell: pwsh
-        run: |
-          az bicep install
+      # - name: Install Bicep
+      #   shell: pwsh
+      #   run: |
+      #     az bicep install
 
-      - name: Bicep build
-        shell: pwsh
-        run: |
-          #write-output $pwd
-          $compiledir=Join-Path -Path $pwd -ChildPath "bicep/compiled"
+      # - name: Bicep build
+      #   shell: pwsh
+      #   run: |
+      #     #write-output $pwd
+      #     $compiledir=Join-Path -Path $pwd -ChildPath "bicep/compiled"
 
-          write-output $compiledir
-          If(!(test-path $compiledir))
-          {
-                New-Item -ItemType Directory -Force -Path $compiledir
-          }
+      #     write-output $compiledir
+      #     If(!(test-path $compiledir))
+      #     {
+      #           New-Item -ItemType Directory -Force -Path $compiledir
+      #     }
 
-          /home/runner/.azure/bin/bicep build ./bicep/main.bicep --outdir $compiledir
+      #     /home/runner/.azure/bin/bicep build ./bicep/main.bicep --outdir $compiledir
 
       - name: Azure Login
         if: ${{ !github.event.pull_request.head.repo.fork }}
