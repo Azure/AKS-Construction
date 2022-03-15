@@ -4,16 +4,38 @@ on:
   workflow_dispatch:
     inputs:
       templateRelease:
-        description: 'What release tag to point the Wizard to'
+        description: 'What (existing or NEW) release tag to point the Wizard to'
         type: string
         required: true
+      createRelease:
+        description: 'Build the bicep and create a NEW GitHub release'
+        type: boolean
+        required: false
 
 env:
   templateRelease: ${{ github.event.inputs.templateRelease }}
 
 jobs:
-  CreateArtifacts:
+  BuildWebApp:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build node app with bicep release
+        run: |
+          cd helper
+          npm install
+          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
+
+      - name: Create GitHub pages release artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: WizardApp
+          path: helper/build
+
+  CreateRelease:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.createRelease }}
     steps:
       - uses: actions/checkout@v2
 
@@ -35,23 +57,11 @@ jobs:
 
           /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
 
-      - name: Build node app with bicep release
-        run: |
-          cd helper
-          npm install
-          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
-
       - name: Create Bicep release artifact
         uses: actions/upload-artifact@v2
         with:
           name: CompiledBicep
           path: bicep/compiled/main.json
-
-      - name: Create GitHub pages release artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: WizardApp
-          path: helper/build
 
       - name: Create GitHub release
         run: |
@@ -59,10 +69,11 @@ jobs:
 
   DeployWebApp:
     runs-on: ubuntu-latest
+    needs: [BuildWebApp , CreateRelease]
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: my-artifact
+          name: WizardApp
           path: wizardapp
 
       - name: Deploy to GitHub Pages
