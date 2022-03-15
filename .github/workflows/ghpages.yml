@@ -139,16 +139,14 @@ jobs:
             #Change the Create to a Validate statement
             sed -i 's/az deployment group create/az deployment group validate/' $azcmdpath
 
-            #Debug
-            cat $azcmdpath
-
             #Remove lines that refer to signed-in-user which don't work with a SP.
-            sed '/az ad signed-in-user show/d' $azcmdpath
+            sed -i '/az ad signed-in-user show/d' $azcmdpath
 
             #Debug
             cat $azcmdpath
 
             #Run the script
+            echo "Running the validation script"
             sh $azcmdpath
 
       - name: Full deploy test AZ Commands
