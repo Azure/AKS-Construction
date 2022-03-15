@@ -124,7 +124,8 @@ jobs:
       - name: Deploy to GitHub Pages Prod
         uses: crazy-max/ghaction-github-pages@v2
         with:
-          target_branch: gh-pages-fake-prod
+          target_branch: gh-pages
           build_dir: wizardapp
+          keep_history: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
