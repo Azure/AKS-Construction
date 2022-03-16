@@ -38,23 +38,25 @@ param availabilityZones array = []
 
 
 var bastion_subnet_name = 'AzureBastionSubnet'
-var bastion_subnet = {
+var bastion_baseSubnet = {
   name: bastion_subnet_name
   properties: {
     addressPrefix: bastionSubnetAddressPrefix
   }
 }
+var bastion_subnet = bastion && networkSecurityGroups ? union(bastion_baseSubnet, nsgBastion.outputs.nsgSubnetObj) : bastion_baseSubnet
 
 var acrpool_subnet_name = 'acrpool-sn'
-var acrpool_subnet = {
+var acrpool_baseSubnet = {
   name: acrpool_subnet_name
   properties: {
     addressPrefix: acrAgentPoolSubnetAddressPrefix
   }
 }
+var acrpool_subnet = privateLinks && networkSecurityGroups ? union(acrpool_baseSubnet, nsgAcrPool.outputs.nsgSubnetObj) : acrpool_baseSubnet
 
 var private_link_subnet_name = 'privatelinks-sn'
-var private_link_subnet = {
+var private_link_baseSubnet = {
   name: private_link_subnet_name
   properties: {
     addressPrefix: privateLinkSubnetAddressPrefix
@@ -62,6 +64,8 @@ var private_link_subnet = {
     privateLinkServiceNetworkPolicies: 'Enabled'
   }
 }
+var private_link_subnet = privateLinks && networkSecurityGroups ? union(private_link_baseSubnet, nsgPrivateLinks.outputs.nsgSubnetObj) : private_link_baseSubnet
+
 
 var appgw_subnet_name = 'appgw-sn'
 var appgw_baseSubnet = {
@@ -70,7 +74,6 @@ var appgw_baseSubnet = {
     addressPrefix: vnetAppGatewaySubnetAddressPrefix
   }
 }
-
 var appgw_subnet = ingressApplicationGateway && networkSecurityGroups ? union(appgw_baseSubnet, nsgAppGw.outputs.nsgSubnetObj) : appgw_baseSubnet
 
 var fw_subnet_name = 'AzureFirewallSubnet' // Required by FW
@@ -108,7 +111,7 @@ resource vnet_udr 'Microsoft.Network/routeTables@2021-02-01' = if (azureFirewall
 }
 
 var aks_subnet_name = 'aks-sn'
-var aks_subnet =  {
+var aks_baseSubnet =  {
   name: aks_subnet_name
   properties: union({
       addressPrefix: vnetAksSubnetAddressPrefix
@@ -121,6 +124,7 @@ var aks_subnet =  {
       }
     }: {})
 }
+var aks_subnet = networkSecurityGroups ? union(aks_baseSubnet, nsgAks.outputs.nsgSubnetObj) : aks_baseSubnet
 
 var subnets_1 = azureFirewalls ? concat(array(aks_subnet), array(fw_subnet)) : array(aks_subnet)
 var subnets_2 = privateLinks ? concat(array(subnets_1), array(private_link_subnet)) : array(subnets_1)
@@ -314,39 +318,57 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2020-05-01' = if(bastion) {
   }
 }
 
-module nsgAppGw 'nsgAppGw.bicep' = if(ingressApplicationGateway && networkSecurityGroups) {
+module nsgAppGw 'nsg.bicep' = if(ingressApplicationGateway && networkSecurityGroups) {
   name: 'nsgAppGw'
   params: {
     location: location
-    resourceName: resourceName
+    resourceName: appgw_subnet_name
     workspaceDiagsId: workspaceDiagsId
-    allowInternetHttpIn: ingressApplicationGatewayPublic
+    ruleInAllowInternetHttp: ingressApplicationGatewayPublic
+    ruleInAllowInternetHttps: ingressApplicationGatewayPublic
+    ruleInAllowGwManagement: true
+    ruleInAllowAzureLoadBalancer: true
+    ruleInDenyInternet: true
   }
 }
 
-module nsgBastion 'nsgGeneric.bicep' = if(bastion && networkSecurityGroups) {
+module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
   name: 'nsgBastion'
   params: {
     location: location
-    resourceName: 'bastion'
+    resourceName: bastion_subnet_name
     workspaceDiagsId: workspaceDiagsId
+    ruleInAllowBastionHostComms: true
+    ruleInAllowInternetHttps: true
+    ruleInAllowGwManagement: true
+    ruleInAllowAzureLoadBalancer: true
+    ruleOutAllowBastionComms: true
   }
 }
 
-module nsgPrivateLinks 'nsgGeneric.bicep' = if(privateLinks && networkSecurityGroups) {
+module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   name: 'nsgPrivateLinks'
   params: {
     location: location
-    resourceName: 'privatelinks'
+    resourceName: private_link_subnet_name
     workspaceDiagsId: workspaceDiagsId
   }
 }
 
-module nsgAks 'nsgGeneric.bicep' = if(networkSecurityGroups) {
+module nsgAcrPool 'nsg.bicep' = if(acrPrivatePool && networkSecurityGroups) {
+  name: 'nsgAcrPool'
+  params: {
+    location: location
+    resourceName: acrpool_subnet_name
+    workspaceDiagsId: workspaceDiagsId
+  }
+}
+
+module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
   name: 'nsgAks'
   params: {
     location: location
-    resourceName: 'aks'
+    resourceName: aks_subnet_name
     workspaceDiagsId: workspaceDiagsId
   }
 }
