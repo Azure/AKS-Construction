@@ -8,7 +8,7 @@ on:
         type: string
         required: true
       createRelease:
-        description: 'Build the bicep and create a NEW GitHub release'
+        description: 'Create a NEW release with that tag'
         type: boolean
         required: false
 
@@ -18,8 +18,13 @@ env:
 jobs:
   BuildWebApp:
     runs-on: ubuntu-latest
+    name: Build Web App
     steps:
       - uses: actions/checkout@v2
+
+      - name: Job Parameter Checking
+        run: |
+          echo "GitHub Ref: ${{ github.ref }}"
 
       - name: Build node app with bicep release
         run: |
@@ -35,9 +40,24 @@ jobs:
 
   CreateRelease:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.createRelease }}
+    name: Create GitHub Release (bicep)
+    if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
       - uses: actions/checkout@v2
+
+      - name: Check that the GitHub release doesn't already exist
+        run: |
+          GHJSON=$(gh release view ${{env.templateRelease}} --json name) || GHJSON=""
+
+          if [ -z "$GHJSON" ]
+          then
+                echo "Release not found - great"
+          else
+                echo "Release already exists - aborting"
+                exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Bicep
         shell: pwsh
@@ -65,10 +85,14 @@ jobs:
 
       - name: Create GitHub release
         run: |
-          echo "TODO: Use GitHub CLI to create release"
+          GHJSON=$(gh release create ${{env.templateRelease}} 'bicep/compiled/main.json' -p --generate-notes )
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  DeployWebApp:
+  DeployWebAppToCanary:
     runs-on: ubuntu-latest
+    name: Deploy Web App to Canary Pages
+    if: ${{ always() }}
     needs: [BuildWebApp , CreateRelease]
     steps:
       - uses: actions/download-artifact@v3
@@ -76,10 +100,49 @@ jobs:
           name: WizardApp
           path: wizardapp
 
-      - name: Deploy to GitHub Pages
+      #Although we don't need this artifact, if it's missing then we can abort this job
+      - uses: actions/download-artifact@v3
+        if: ${{ github.event.inputs.createRelease == 'true' }}
+        with:
+          name: CompiledBicep
+          path: compilebicep
+
+      - name: Deploy to GitHub Pages Canary
         uses: crazy-max/ghaction-github-pages@v2
         with:
-          target_branch: gh-pages-test
+          target_branch: gh-pages-canary
+          commit_message: Pages Release. Canary ${{env.templateRelease}}
           build_dir: wizardapp
+          keep_history: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  DeployWebAppToProd:
+    runs-on: ubuntu-latest
+    name: Deploy Web App to Prod Pages
+    if: ${{ always() && github.ref == 'refs/heads/main'}}
+    environment: UI-Deploy-Manual-Approval
+    needs: [BuildWebApp , CreateRelease, DeployWebAppToCanary]
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: WizardApp
+          path: wizardapp
+
+      #Although we don't need this artifact, if it's missing then we can abort this job
+      - uses: actions/download-artifact@v3
+        if: ${{ github.event.inputs.createRelease == 'true' }}
+        with:
+          name: CompiledBicep
+          path: compilebicep
+
+      - name: Deploy to GitHub Pages Prod
+        uses: crazy-max/ghaction-github-pages@v2
+        with:
+          target_branch: gh-pages
+          commit_message: Pages Release. Prod ${{env.templateRelease}}
+          build_dir: wizardapp
+          keep_history: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
