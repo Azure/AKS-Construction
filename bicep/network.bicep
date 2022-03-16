@@ -322,13 +322,14 @@ module nsgAppGw 'nsg.bicep' = if(ingressApplicationGateway && networkSecurityGro
   name: 'nsgAppGw'
   params: {
     location: location
-    resourceName: appgw_subnet_name
+    resourceName: '${appgw_subnet_name}-${resourceName}'
     workspaceDiagsId: workspaceDiagsId
     ruleInAllowInternetHttp: ingressApplicationGatewayPublic
     ruleInAllowInternetHttps: ingressApplicationGatewayPublic
     ruleInAllowGwManagement: true
     ruleInAllowAzureLoadBalancer: true
     ruleInDenyInternet: true
+    ruleInGwManagementPort: '65200-65535'
   }
 }
 
@@ -336,13 +337,14 @@ module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
   name: 'nsgBastion'
   params: {
     location: location
-    resourceName: bastion_subnet_name
+    resourceName: '${bastion_subnet_name}-${resourceName}'
     workspaceDiagsId: workspaceDiagsId
     ruleInAllowBastionHostComms: true
     ruleInAllowInternetHttps: true
     ruleInAllowGwManagement: true
     ruleInAllowAzureLoadBalancer: true
     ruleOutAllowBastionComms: true
+    ruleInGwManagementPort: 443
   }
 }
 
@@ -350,7 +352,7 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   name: 'nsgPrivateLinks'
   params: {
     location: location
-    resourceName: private_link_subnet_name
+    resourceName: '${private_link_subnet_name}-${resourceName}'
     workspaceDiagsId: workspaceDiagsId
   }
 }
@@ -359,7 +361,7 @@ module nsgAcrPool 'nsg.bicep' = if(acrPrivatePool && networkSecurityGroups) {
   name: 'nsgAcrPool'
   params: {
     location: location
-    resourceName: acrpool_subnet_name
+    resourceName: '${acrpool_subnet_name}-${resourceName}'
     workspaceDiagsId: workspaceDiagsId
   }
 }
@@ -368,7 +370,7 @@ module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
   name: 'nsgAks'
   params: {
     location: location
-    resourceName: aks_subnet_name
+    resourceName: '${aks_subnet_name}-${resourceName}'
     workspaceDiagsId: workspaceDiagsId
   }
 }

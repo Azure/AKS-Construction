@@ -11,13 +11,14 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
 output nsgId string = nsg.id
 
 param ruleInAllowGwManagement bool = false
+param ruleInGwManagementPort string = '443,65200-65535'
 resource ruleAppGwManagement 'Microsoft.Network/networkSecurityGroups/securityRules@2020-11-01' = if(ruleInAllowGwManagement) {
   parent: nsg
   name: 'Allow_AppGatewayManagement'
   properties: {
     protocol: '*'
     sourcePortRange: '*'
-    destinationPortRange: '65200-65535'
+    destinationPortRange: ruleInGwManagementPort
     sourceAddressPrefix: 'GatewayManager'
     destinationAddressPrefix: '*'
     access: 'Allow'
