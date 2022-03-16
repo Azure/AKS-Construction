@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "/AKS-Construction/",
   "scripts": {
-    "start": "REACT_APP_AZ_TEMPLATE_ARG=\"--template-file ./bicep/main.bicep\" react-scripts start",
+    "start": "react-scripts start",
     "build": "CI=false react-scripts build",
     "test": "playwright test .playwrighttests/helper-fragile-test-fullsecure.spec.js",
     "eject": "react-scripts eject"
@@ -25,12 +25,13 @@
     ]
   },
   "devDependencies": {
+    "@fluentui/azure-themes": "^8.1.126",
     "@fluentui/react": "^8.36.3",
     "@microsoft/applicationinsights-web": "^2.7.0",
     "@playwright/test": "^1.15.2",
     "playwright-expect": "^0.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "^4.0.3"
+    "react-scripts": "5.0.0"
   }
 }

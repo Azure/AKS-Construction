@@ -147,6 +147,8 @@ module network './network.bicep' = if (custom_vnet) {
     ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
   }
 }
+output CustomVnetId string = custom_vnet ? network.outputs.vnetId : ''
+output CustomVnetPrivateLinkSubnetId string = custom_vnet ? network.outputs.privateLinkSubnetId : ''
 
 var appGatewaySubnetAddressPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : vnetAppGatewaySubnetAddressPrefix
 var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
@@ -757,7 +759,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.21.7'
+param kubernetesVersion string = '1.21.9'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -1000,11 +1002,12 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
     enabled: true
   }
 } : {
+  // AKS RP will deploy the AppGateway for us (not creating custom or BYO VNET)
   ingressApplicationGateway: {
     enabled: true
     config: {
       applicationGatewayName: appgwName
-      subnetCIDR: appGatewaySubnetAddressPrefix
+      subnetCIDR: '10.2.0.0/16'
     }
   }
 }) : aks_addons
@@ -1049,6 +1052,25 @@ var aksProperties = {
     upgradeChannel: upgradeChannel
   } : {}
   addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
+  autoScalerProfile: autoScale ? {
+      'balance-similar-node-groups': 'true'
+      'expander': 'random'
+      'max-empty-bulk-delete': '10'
+      'max-graceful-termination-sec': '600'
+      'max-node-provision-time': '15m'
+      'max-total-unready-percentage': '45'
+      'new-pod-scale-up-delay': '0s'
+      'ok-total-unready-count': '3'
+      'scale-down-delay-after-add': '10m'
+      'scale-down-delay-after-delete': '20s'
+      'scale-down-delay-after-failure': '3m'
+      'scale-down-unneeded-time': '10m'
+      'scale-down-unready-time': '20m'
+      'scale-down-utilization-threshold': '0.5'
+      'scan-interval': '10s'
+      'skip-nodes-with-local-storage': 'true'
+      'skip-nodes-with-system-pods': 'true'
+  } : {}
 }
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
@@ -1187,6 +1209,7 @@ module aksmetricalerts './aksmetricalerts.bicep' = if (createLaw) {
     evalFrequency: AlertFrequency.evalFrequency
     windowSize: AlertFrequency.windowSize
     alertSeverity: 'Informational'
+    logAnalyticsWorkspaceLocation: location
   }
 }
 

@@ -5,9 +5,6 @@
     "resourceName": {
       "value": "az-k8s-eos6"
     },
-    "kubernetesVersion": {
-      "value": "1.20.9"
-    },
     "agentCount": {
       "value": 1
     },

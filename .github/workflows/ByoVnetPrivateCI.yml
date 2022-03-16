@@ -26,7 +26,15 @@ on:
         default: 'true'
         type: boolean
         required: false
-
+      environment:
+        description: 'Which environment to deploy to'
+        required: false
+        default: "azurecirgs"
+        type: choice
+        options:
+          - "azurecirgs"
+          - "csu"
+          - ""
   push:
     paths:
       - 'bicep/*'
@@ -42,17 +50,18 @@ on:
     - cron: '0 23 * * 2'
 
 env:
-  RG: 'Automation-Actions-AksDeployCI'
+  RG: 'AksBicepAcc-Ci-PrivateCluster'
   ParamFilePath: ".github/workflows_dep/AksDeploy-Private.parameters.json"
   RESNAME: 'Priv'
   DEPNAME: 'DepPriv${{ github.run_number }}'
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
 
-concurrency: ci-${{ github.ref }}
+concurrency: ci-${{ github.event.inputs.environment }}-${{ github.ref }}
 
 jobs:
   Well_Architected:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
     steps:
       - uses: actions/checkout@v2
@@ -72,6 +81,7 @@ jobs:
 
   Validation:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     if: ${{ !github.event.pull_request.head.repo.fork }}
 
     steps:
@@ -101,7 +111,7 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -111,7 +121,7 @@ jobs:
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         if: github.event.inputs.doDebugSteps == 'true'
         id: activedeps
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.6
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -132,26 +142,26 @@ jobs:
             fi
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.6
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}
+            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME
 
       - name: What If
         if: github.event.inputs.doDebugSteps == 'true'
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.6
         continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}
+            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME
 
   Deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     needs: [Validation]
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
-    environment: azurecirgs
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop' || contains( github.event.pull_request.labels.*.name, 'test-deploy-privateconfig')
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
       LANAME : ${{ steps.deployAks.outputs.LANAME}}
@@ -181,7 +191,7 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -190,30 +200,30 @@ jobs:
 
       - name: Deploy Infrastructure
         id:  deployAks
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.6
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }}  --name $DEPNAME --verbose
+            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --name $DEPNAME --verbose
 
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
 
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
-            echo "::set-output name=AKSNAME::$AKSNAME" #outputting for conditon
+            echo "::set-output name=AKSNAME::$AKSNAME"
 
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
-            echo "::set-output name=AGNAME::$AGNAME" #outputting for conditon
+            echo "::set-output name=AGNAME::$AGNAME"
 
             LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
-            echo "::set-output name=LANAME::$LANAME" #outputting for conditon
+            echo "::set-output name=LANAME::$LANAME"
 
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
-            echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
+            echo "::set-output name=LAWGUID::$LAWGUID"
 
       - name: Enable AGIC Addon
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.6
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -255,34 +265,43 @@ jobs:
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
 
-  ReusableWF:
+  SetupWF:
     runs-on: ubuntu-latest
     outputs:
       RG: ${{ env.RG }}
+      ENVIRONMENT: ${{ steps.CalcEnv.outputs.ENVIRONMENT }}
       #Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
     steps:
-      - name: Dummy step
-        run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
-      - name: Explain more
-        run: echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
+      - name: Reusable workflow
+        run: |
+          echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+          echo "So we need this job to be able to access the value in env.RG"
+          echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
+      - name: Environment Parse
+        id: CalcEnv
+        run: |
+          echo "${{ github.event.inputs.environment }}"
+          GHENV="${{ github.event.inputs.environment }}"
+          echo "::set-output name=ENVIRONMENT::$GHENV"
 
   SmokeTest_KnownGoodApp:
-    needs: [ReusableWF, Deploy]
-    #This points to a specific branch, because of a limitation around targetting @${{ github.sha }} isn't supported yet. https://github.community/t/ref-head-in-reusable-workflows/203690/6
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.3
+    needs: [SetupWF, Deploy]
+    uses: ./.github/workflows/AppDeploy_AzureVote.yml
     with:
-      RG: ${{ needs.ReusableWF.outputs.RG }}
+      Environment: ${{ needs.SetupWF.outputs.ENVIRONMENT }}
+      RG: ${{ needs.SetupWF.outputs.RG }}
       AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: azure-vote-public
-      INGRESSTYPE: "AGIC-Public-Ingress" #"PublicLoadBalancer" (If you're using AzFw, then you gotta be using AGIC or doing the NAT dance on the Fw)
+      INGRESSTYPE: "AGIC-Public-Ingress"
       UNINSTALLAFTERVERIFY: false
-      CURLRETRIES: 10
+      FORCEHELMCLEANINSTALL: true
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   InfraTests:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     needs: [Deploy]
     steps:
       - name: Job parameter check
@@ -301,12 +320,22 @@ jobs:
           az extension add -n log-analytics -y
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: false
+
+      - name: Verify logged in user
+        uses: Azure/cli@v1.0.6
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+            accountinfo=$(az account show)
+            echo $accountinfo
+            username=$(echo $accountinfo | jq -r ".user.name")
+            echo "Username: $username"
 
       - name: Log Analytics log table verification
         shell: pwsh
@@ -327,11 +356,23 @@ jobs:
           $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
 
+      - name: Check Run Command
+        uses: Azure/cli@v1.0.6
+        env:
+          AKSNAME: '${{ needs.Deploy.outputs.AKSNAME}}'
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+            command="kubectl get nodes"
+            echo "Sending command $command to AKS"
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+            echo $cmdOut
+
   Infra_Destroy:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     needs: [Validation, Deploy, InfraTests, SmokeTest_KnownGoodApp, Well_Architected]
     if: github.event_name == 'schedule'
-    environment: azurecirgs
     steps:
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
@@ -342,7 +383,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true

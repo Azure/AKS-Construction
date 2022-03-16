@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
-import * as serviceWorker from './serviceWorker';
+import { mergeStyles } from '@fluentui/react';
 
 // Application Insights - https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-js
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
@@ -17,12 +17,19 @@ if (process.env.REACT_APP_APPINSIGHTS_KEY) {
 
 export const ConfigContext = React.createContext()
 
-ReactDOM.render(
-  <ConfigContext.Provider value={configData}>
-    <App />
-  </ConfigContext.Provider>, document.getElementById('root'));
+// Inject some global styles
+mergeStyles({
+  ':global(body,html,#root)': {
+    margin: 0,
+    padding: 0,
+    height: '100vh',
+  },
+});
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+ReactDOM.render(
+  <React.StrictMode>
+      <ConfigContext.Provider value={configData}>
+        <App />
+      </ConfigContext.Provider>
+    </React.StrictMode>, document.getElementById('root'));
+
