@@ -344,7 +344,7 @@ module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
     ruleInAllowGwManagement: true
     ruleInAllowAzureLoadBalancer: true
     ruleOutAllowBastionComms: true
-    ruleInGwManagementPort: 443
+    ruleInGwManagementPort: '443'
   }
 }
 
