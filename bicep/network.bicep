@@ -63,15 +63,7 @@ var appgw_baseSubnet = {
   }
 }
 
-var appGw_nsg = {
-  properties: {
-    networkSecurityGroup: {
-      id: nsgAppGw.outputs.nsgId
-    }
-  }
-}
-
-var appgw_subnet = ingressApplicationGateway && networkSecurityGroups ? union(appgw_baseSubnet,appGw_nsg) : appgw_baseSubnet
+var appgw_subnet = ingressApplicationGateway && networkSecurityGroups ? union(appgw_baseSubnet, nsgAppGw.outputs.nsgSubnetObj) : appgw_baseSubnet
 
 var fw_subnet_name = 'AzureFirewallSubnet' // Required by FW
 var fw_subnet = {
@@ -319,5 +311,32 @@ module nsgAppGw 'nsgAppGw.bicep' = if(ingressApplicationGateway && networkSecuri
     resourceName: resourceName
     workspaceDiagsId: workspaceDiagsId
     allowInternetHttpIn: ingressApplicationGatewayPublic
+  }
+}
+
+module nsgBastion 'nsgGeneric.bicep' = if(bastion && networkSecurityGroups) {
+  name: 'nsgBastion'
+  params: {
+    location: location
+    resourceName: 'bastion'
+    workspaceDiagsId: workspaceDiagsId
+  }
+}
+
+module nsgPrivateLinks 'nsgGeneric.bicep' = if(privateLinks && networkSecurityGroups) {
+  name: 'nsgPrivateLinks'
+  params: {
+    location: location
+    resourceName: 'privatelinks'
+    workspaceDiagsId: workspaceDiagsId
+  }
+}
+
+module nsgAks 'nsgGeneric.bicep' = if(networkSecurityGroups) {
+  name: 'nsgAks'
+  params: {
+    location: location
+    resourceName: 'aks'
+    workspaceDiagsId: workspaceDiagsId
   }
 }
