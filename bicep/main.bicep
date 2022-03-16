@@ -834,6 +834,9 @@ param authorizedIPRanges array = []
 @description('Enable private cluster')
 param enablePrivateCluster bool = false
 
+@description('Enable public Fqdn for private cluster')
+param enablePrivateClusterPublicFqdn bool = false
+
 @description('The zones to use for a node pool')
 param availabilityZones array = []
 
@@ -1020,6 +1023,8 @@ var aks_identity = {
   }
 }
 
+var privateDNSZone = enablePrivateCluster ? (enablePrivateClusterPublicFqdn ? 'none' : 'system') : ''
+
 var aksProperties = {
   kubernetesVersion: kubernetesVersion
   enableRBAC: true
@@ -1033,8 +1038,8 @@ var aksProperties = {
     authorizedIPRanges: authorizedIPRanges
   } : {
     enablePrivateCluster: enablePrivateCluster
-    privateDNSZone: enablePrivateCluster ? 'none' : ''
-    enablePrivateClusterPublicFQDN: enablePrivateCluster
+    privateDNSZone: privateDNSZone
+    enablePrivateClusterPublicFQDN: enablePrivateClusterPublicFqdn
   }
   agentPoolProfiles: agentPoolProfiles
   networkProfile: {
