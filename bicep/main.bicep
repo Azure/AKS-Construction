@@ -150,6 +150,7 @@ module network './network.bicep' = if (custom_vnet) {
 output CustomVnetId string = custom_vnet ? network.outputs.vnetId : ''
 output CustomVnetPrivateLinkSubnetId string = custom_vnet ? network.outputs.privateLinkSubnetId : ''
 
+var appGatewaySubnetAddressPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : vnetAppGatewaySubnetAddressPrefix
 var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
 var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
 
@@ -833,9 +834,6 @@ param authorizedIPRanges array = []
 @description('Enable private cluster')
 param enablePrivateCluster bool = false
 
-@description('Enable public Fqdn for private cluster')
-param enablePrivateClusterPublicFqdn bool = false
-
 @description('The zones to use for a node pool')
 param availabilityZones array = []
 
@@ -1022,8 +1020,6 @@ var aks_identity = {
   }
 }
 
-var privateDNSZone = enablePrivateCluster ? (enablePrivateClusterPublicFqdn ? 'none' : 'system') : ''
-
 var aksProperties = {
   kubernetesVersion: kubernetesVersion
   enableRBAC: true
@@ -1037,8 +1033,8 @@ var aksProperties = {
     authorizedIPRanges: authorizedIPRanges
   } : {
     enablePrivateCluster: enablePrivateCluster
-    privateDNSZone: privateDNSZone
-    enablePrivateClusterPublicFQDN: enablePrivateClusterPublicFqdn
+    privateDNSZone: enablePrivateCluster ? 'none' : ''
+    enablePrivateClusterPublicFQDN: enablePrivateCluster
   }
   agentPoolProfiles: agentPoolProfiles
   networkProfile: {
