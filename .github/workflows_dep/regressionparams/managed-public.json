@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceName": {
+      "value": "manpub"
+    },
+    "agentVMSize": {
+      "value": "Standard_DS3_v2"
+    },
+    "agentCountMax": {
+      "value": 3
+    },
+    "custom_vnet": {
+      "value": true
+    },
+    "enable_aad": {
+      "value": true
+    },
+    "aksDisableLocalAccounts": {
+      "value": true
+    },
+    "enableAzureRBAC": {
+      "value": true
+    },
+    "registries_sku": {
+      "value": "Premium"
+    },
+    "omsagent": {
+      "value": true
+    },
+    "retentionInDays": {
+      "value": 30
+    },
+    "networkPolicy": {
+      "value": "azure"
+    },
+    "azurepolicy": {
+      "value": "audit"
+    },
+    "ingressApplicationGateway": {
+      "value": true
+    },
+    "appGWcount": {
+      "value": 0
+    },
+    "appGWsku": {
+      "value": "Standard_v2"
+    },
+    "appGWmaxCount": {
+      "value": 2
+    },
+    "appgwKVIntegration": {
+      "value": true
+    },
+    "createKV": {
+      "value": true
+    },
+    "azureKeyvaultSecretsProvider": {
+      "value": true
+    },
+    "upgradeChannel": {
+      "value": "stable"
+    },
+    "CreateNetworkSecurityGroups": {
+      "value": true
+    }
+  }
+}
