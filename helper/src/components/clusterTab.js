@@ -25,6 +25,37 @@ export const VMs = [
 export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { cluster } = tabValues
     const defenderFeatureFlag = featureFlag.includes('defender')
+
+
+    function sliderUpdateFn(updates) {
+
+        updateFn ((p) => {
+            let newp = {...p, ...updates}
+
+            const
+                AGENT_COUNT_MIN = newp.SystemPoolType==='none' || !newp.autoscale  ? 1 : 0,
+                AGENT_COUNT_MAX = newp.autoscale ? 99 : 100,
+                MAXCOUNT_MIN = newp.autoscale ? Math.min(newp.agentCount + 1, AGENT_COUNT_MAX) : 0
+
+            console.log (`agentCount=${newp.agentCount} MIN=${AGENT_COUNT_MIN} MAX=${AGENT_COUNT_MAX}`)
+            console.log (`maxCount=${newp.maxCount} MIN=${MAXCOUNT_MIN}`)
+
+            if (newp.maxCount < MAXCOUNT_MIN) {
+                newp = {...newp, maxCount: MAXCOUNT_MIN}
+            }
+            // check agentcount
+            if (newp.agentCount < AGENT_COUNT_MIN) {
+                newp = {...newp, agentCount: AGENT_COUNT_MIN }
+            } else if (newp.agentCount > AGENT_COUNT_MAX) {
+                newp = {...newp, agentCount: AGENT_COUNT_MAX }
+            }
+
+            return newp
+        })
+    }
+
+
+
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -56,12 +87,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                 { "data-testid":'cluster-systempool-Cost-Optimised', key: 'Cost-Optimised', text: 'Cost-Optimised: use low-cost Burstable VMs, with 1-3 node autoscale' },
                                 { "data-testid":'cluster-systempool-Standard', key: 'Standard', text: 'Standard: use standard 4-core VMs, with 2-3 node autoscale' }
                             ]}
-                            onChange={(ev, { key }) => {
-                                updateFn("SystemPoolType", key)
-                                if (cluster.agentCount===0 && key==='none') {
-                                    updateFn("agentCount", "1")
-                                }
-                            }}
+                            onChange={(ev, { key }) => { sliderUpdateFn({SystemPoolType: key}) }}
                         />
                     </Stack.Item>
                 </Stack>
@@ -69,12 +95,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Stack horizontal tokens={{ childrenGap: 150 }}>
                     <Stack.Item>
                         <Label >Scale Type</Label>
-                        <ChoiceGroup selectedKey={cluster.autoscale} onChange={(ev, { key }) => {
-                            updateFn("autoscale", key)
-                            if (cluster.agentCount===0 && !key) {
-                                updateFn("agentCount", "1")
-                            }
-                        }}
+                        <ChoiceGroup selectedKey={cluster.autoscale} onChange={(ev, { key }) => {  sliderUpdateFn({autoscale: key}) }}
                             options={[
                                 {
                                     "data-testid":'cluster-manual-scale',
@@ -92,13 +113,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <Stack.Item>
                         <Label>Scale Values</Label>
                         <Stack tokens={{ childrenGap: 0 }} styles={{ root: { width: 450 } }}>
-                            <Slider buttonProps={{ "data-testid": "cluster-agentCount-slider"}} label={`Initial ${cluster.autoscale ? "(& Autoscaler Min nodes)" : "nodes"}`} min={cluster.SystemPoolType==='none' || !cluster.autoscale  ? 1 : 0} max={cluster.autoscale ? cluster.maxCount -1 : 99} step={1} defaultValue={cluster.agentCount} showValue={true}
-                                onChange={(v) => updateFn("agentCount", v)} />
-                            {cluster.autoscale && (
-                                <Slider buttonProps={{ "data-testid": "cluster-maxCount-slider"}}  label="Autoscaler Max nodes" min={cluster.agentCount + 1} max={100} step={1} defaultValue={cluster.maxCount} showValue={true}
-                                    onChange={(v) => updateFn("maxCount", v)}
-                                    snapToStep />
-                            )}
+                            <Slider ranged={cluster.autoscale} buttonProps={{ "data-testid": "cluster-agentCount-slider"}} lowerValue={cluster.agentCount} label="Node count range" min={0}  max={100} step={1} value={cluster.autoscale? cluster.maxCount : cluster.agentCount} showValue={true} onChange={(val, range) => sliderUpdateFn(cluster.autoscale ? {agentCount: range[0], maxCount: range[1]} : {agentCount: val})} />
                         </Stack>
                     </Stack.Item>
                 </Stack>

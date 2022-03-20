@@ -234,13 +234,18 @@ export default function PortalNav({ config }) {
   }
 
   function mergeState(tab, field, value) {
-    urlParams.set(`${tab}.${field}`, value)
+    if (typeof field === "string") urlParams.set(`${tab}.${field}`, value)
     //window.history.replaceState(null, null, "?"+urlParams.toString())
     setTabValues((p) => {
       return {
-        ...p, [tab]: {
-          ...p[tab],
-          [field]: value
+        ...p,
+        [tab]: {
+          ...(typeof field === "function" ? {
+            ...field(p[tab])
+          } : {
+            ...p[tab],
+             [field]: value
+          })
         }
       }
     })
