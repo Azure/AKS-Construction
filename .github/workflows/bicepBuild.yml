@@ -3,13 +3,9 @@
 name: BicepBuild
 
 on:
-  push: #On Push, we update the compiled.json with a GIT commit, to make sure it's always sync with the bicep.
-    paths:
-      - 'bicep/*'
-    branches-ignore: main
-
-  pull_request: #On PR, we're just doing validation that it compiled to support the build policy. No commits.
-    branches: main
+  pull_request: #On PR, we're just doing validation that it compiled to support the build policy
+    branches:
+      - main
     paths:
       - 'bicep/*'
 
@@ -18,8 +14,6 @@ on:
 jobs:
   Validation:
     runs-on: ubuntu-latest
-    outputs:
-      isGitDiff: ${{ steps.isGitDiff.outputs.GITDIFF}}
 
     steps:
       - uses: actions/checkout@v2
@@ -52,39 +46,27 @@ jobs:
 
           /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
 
-      - name: Git diff
-        shell: pwsh
-        id: isGitDiff
-        run: |
-          $diff=git diff --shortstat
-
-          if ($null -eq $diff) {
-            write-output "No difference in compiled bicep to commit"
-            echo "::set-output name=GITDIFF::false" #outputting for condition
-          }
-          else {
-            write-output "There are differences in compiled bicep to commit"
-            echo $diff
-
-            echo "::set-output name=GITDIFF::true" #outputting for condition
-          }
-
-      - name: Debug - GitDiff
-        run: |
-          echo "gitdiff is ${{ steps.isGitDiff.outputs.GITDIFF}}"
-
-      - name: GIT Push Json file
-        if: steps.isGitDiff.outputs.GITDIFF=='true' && github.event_name == 'push'
-        uses: actions-x/commit@a8dd87de97778a220a28bb56bd761aa935582ce0
-        with:
-          message: Adding auto compiled bicep json
-
       - uses: actions/checkout@v2
         if: github.event_name != 'push'
         name: Git Checkout target
         with:
           path: old
           ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Bicep build (old)
+        shell: pwsh
+        run: |
+          #write-output $pwd
+          $compiledir=Join-Path -Path $pwd -ChildPath "old/bicep/compiled"
+
+          write-output $compiledir
+          If(!(test-path $compiledir))
+          {
+                New-Item -ItemType Directory -Force -Path $compiledir
+          }
+
+          /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
+
 
       - name: Check for Parameter changes in main.json
         if: github.event_name != 'push'
