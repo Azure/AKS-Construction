@@ -43,7 +43,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             if (newp.maxCount < MAXCOUNT_MIN) {
                 newp = {...newp, maxCount: MAXCOUNT_MIN}
             }
-            // check agentcount
+            // check agentCount
             if (newp.agentCount < AGENT_COUNT_MIN) {
                 newp = {...newp, agentCount: AGENT_COUNT_MIN }
             } else if (newp.agentCount > AGENT_COUNT_MAX) {
