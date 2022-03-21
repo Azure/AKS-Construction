@@ -35,7 +35,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             const
                 AGENT_COUNT_MIN = newp.SystemPoolType==='none' || !newp.autoscale  ? 1 : 0,
                 AGENT_COUNT_MAX = newp.autoscale ? 99 : 100,
-                MAXCOUNT_MIN = newp.autoscale ? Math.min(newp.agentCount + 1, AGENT_COUNT_MAX) : 0
+                MAXCOUNT_MIN = newp.autoscale ? newp.agentCount + 1 : 0
 
             console.log (`agentCount=${newp.agentCount} MIN=${AGENT_COUNT_MIN} MAX=${AGENT_COUNT_MAX}`)
             console.log (`maxCount=${newp.maxCount} MIN=${MAXCOUNT_MIN}`)
