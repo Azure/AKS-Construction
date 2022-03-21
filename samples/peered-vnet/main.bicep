@@ -123,8 +123,11 @@ module appAks '../../bicep/main.bicep' = {
 var extraAksNodePools = [
   'chromepool'
   'firefoxpool'
+  'edgepool'
 ]
 
+param nodeTaintEffect string = 'NoSchedule'
+var nodeTaintKey = 'selbrowser'
 @batchSize(1) //Need to set this to avoid this concurrent update issue - 'Conflict. Status: Failed. Error: ResourceDeploymentFailure. The resource operation completed with terminal provisioning state 'Failed'
 module aksNodePools '../../bicep/aksagentpool.bicep'  = [for pool in extraAksNodePools:  {
   name: pool
@@ -139,7 +142,7 @@ module aksNodePools '../../bicep/aksagentpool.bicep'  = [for pool in extraAksNod
     maxPods: 10
     osDiskType: 'Managed'
     nodeTaints: [
-      'selbrowser=${pool}:PreferNoSchedule'
+      '${nodeTaintKey}=${pool}:${nodeTaintEffect}'
     ]
   }
 }]
