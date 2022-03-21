@@ -24,6 +24,10 @@ var autoScale = agentCountMax > agentCount
 @description('The maximum number of pods per node.')
 param maxPods int = 30
 
+@description('Any taints that should be applied to the node pool')
+param nodeTaints array = []
+
+@description('The subnet the node pool will use')
 param subnetId string
 
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
@@ -50,5 +54,6 @@ resource nodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10
     upgradeSettings: {
       maxSurge: '33%'
     }
+    nodeTaints: nodeTaints
   }
 }
