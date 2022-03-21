@@ -134,9 +134,12 @@ module aksNodePools '../../bicep/aksagentpool.bicep'  = [for pool in extraAksNod
     PoolName: pool
     subnetId: gridVnet.outputs.aksSubnetId
     agentCount: 0
-    agentCountMax: 3
+    agentCountMax: 10
     agentVMSize: 'Standard_B2s'
     maxPods: 10
     osDiskType: 'Managed'
+    nodeTaints: [
+      'selbrowser=${pool}:PreferNoSchedule'
+    ]
   }
 }]
