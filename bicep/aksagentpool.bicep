@@ -27,6 +27,9 @@ param maxPods int = 30
 @description('Any taints that should be applied to the node pool')
 param nodeTaints array = []
 
+@description('Any labels that should be applied to the node pool')
+param nodeLabels object = {}
+
 @description('The subnet the node pool will use')
 param subnetId string
 
@@ -55,5 +58,6 @@ resource nodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10
       maxSurge: '33%'
     }
     nodeTaints: nodeTaints
+    nodeLabels: nodeLabels
   }
 }
