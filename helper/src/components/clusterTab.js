@@ -111,8 +111,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             ]} />
                     </Stack.Item>
                     <Stack.Item>
-                        <Slider styles={{ root: { width: 450 } }} ranged={cluster.autoscale}  lowerValue={cluster.agentCount}
-                        label={`Node count range ${cluster.autoscale ? 'range' : ''}`} min={0}  max={100} step={1} value={cluster.autoscale? cluster.maxCount : cluster.agentCount} showValue={true} onChange={(val, range) => sliderUpdateFn(cluster.autoscale ? {agentCount: range[0], maxCount: range[1]} : {agentCount: val})} />
+                        <Slider buttonProps={{ "data-testid": "cluster-agentCount-slider"}} styles={{ root: { width: 450 } }} ranged={cluster.autoscale}  lowerValue={cluster.agentCount}
+                        label={`Node count range ${cluster.autoscale ? 'range' : ''}`} min={0}  max={100} step={1}
+                        value={cluster.autoscale? cluster.maxCount : cluster.agentCount} showValue={true}
+                        onChange={(val, range) => sliderUpdateFn(cluster.autoscale ? {agentCount: range[0], maxCount: range[1]} : {agentCount: val})} />
                     </Stack.Item>
                 </Stack>
 

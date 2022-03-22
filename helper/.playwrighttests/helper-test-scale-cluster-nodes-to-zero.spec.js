@@ -5,6 +5,8 @@ const { matchers } = require('playwright-expect');
 expect.extend(matchers);
 
 const chk = '+ label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark' //dom hack to get to the checkbox
+const sliderFirstBubbleSelector='[data-testid="cluster-agentCount-slider"] .ms-Slider-line .ms-Slider-thumb:first-child';
+const sliderSelector='[data-testid="cluster-agentCount-slider"]';
 
 test('scale-can-be-set-to-zero-by-default', async ({ page }) => {
 
@@ -20,9 +22,9 @@ test('scale-can-be-set-to-zero-by-default', async ({ page }) => {
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(2)');
 
   //Scale to zero
-  await page.waitForSelector('[data-testid="cluster-agentCount-slider"]')
-  const agentCountSlider = await page.$('[data-testid="cluster-agentCount-slider"]')
-  await page.click('[data-testid="cluster-agentCount-slider"]');
+  await page.waitForSelector(sliderFirstBubbleSelector);
+  const agentCountSlider = await page.$(sliderFirstBubbleSelector);
+  await page.click(sliderFirstBubbleSelector);
   await page.mouse.down();
   await page.mouse.move(-100,0);
   await page.mouse.up();
@@ -31,7 +33,7 @@ test('scale-can-be-set-to-zero-by-default', async ({ page }) => {
   //const agentCountSlideParent = await agentCountSlider.$('xpath=..')
   //console.log(await agentCountSlideParent.innerHTML());
 
-  const agentCountSliderLocator = page.locator('[data-testid="cluster-agentCount-slider"]');
+  const agentCountSliderLocator = page.locator(sliderFirstBubbleSelector);
   await expect(agentCountSliderLocator).toHaveAttribute("aria-valuenow", "0");
 
   //Go back to the deploy tab.
@@ -55,14 +57,14 @@ test('manual-scale-prevents-autoscale-from-zero', async ({ page }) => {
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(2)');
 
   //Scale to zero
-  await page.waitForSelector('[data-testid="cluster-agentCount-slider"]')
-  const agentCountSlider = await page.$('[data-testid="cluster-agentCount-slider"]')
-  await page.click('[data-testid="cluster-agentCount-slider"]');
+  await page.waitForSelector(sliderFirstBubbleSelector)
+  const agentCountSlider = await page.$(sliderFirstBubbleSelector)
+  await page.click(sliderFirstBubbleSelector);
   await page.mouse.down();
   await page.mouse.move(-100,0);
   await page.mouse.up();
 
-  const agentCountSliderLocator = page.locator('[data-testid="cluster-agentCount-slider"]');
+  const agentCountSliderLocator = page.locator(sliderFirstBubbleSelector);
   await expect(agentCountSliderLocator).toHaveAttribute("aria-valuenow", "0");
 
   //Turn off AutoScale
@@ -74,8 +76,10 @@ test('manual-scale-prevents-autoscale-from-zero', async ({ page }) => {
   await page.click(manualScaleSelector);
   await expect(manualScale).toBeChecked();
 
-  //MinScale should have jumped back to 1
-  await expect(agentCountSliderLocator).toHaveAttribute("aria-valuenow", "1");
+  //MinScale should have jumped back to 1, and the slider will have become a simple slider
+  await page.waitForSelector(sliderSelector);
+  const agentCountSliderLocator2 = page.locator(sliderSelector);
+  await expect(agentCountSliderLocator2).toHaveAttribute("aria-valuenow", "1");
 
   //Go back to the deploy tab.
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(1)')
@@ -99,14 +103,14 @@ test('no-user-pool-prevents-autoscale-from-zero', async ({ page }) => {
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(2)');
 
   //Scale to zero
-  await page.waitForSelector('[data-testid="cluster-agentCount-slider"]')
-  const agentCountSlider = await page.$('[data-testid="cluster-agentCount-slider"]')
-  await page.click('[data-testid="cluster-agentCount-slider"]');
+  await page.waitForSelector(sliderFirstBubbleSelector)
+  const agentCountSlider = await page.$(sliderFirstBubbleSelector)
+  await page.click(sliderFirstBubbleSelector);
   await page.mouse.down();
   await page.mouse.move(-100,0);
   await page.mouse.up();
 
-  const agentCountSliderLocator = page.locator('[data-testid="cluster-agentCount-slider"]');
+  const agentCountSliderLocator = page.locator(sliderFirstBubbleSelector);
   await expect(agentCountSliderLocator).toHaveAttribute("aria-valuenow", "0");
 
   //No separate system pool
@@ -118,8 +122,11 @@ test('no-user-pool-prevents-autoscale-from-zero', async ({ page }) => {
   await page.click(sysPoolSelector);
   await expect(noSysPool).toBeChecked();
 
-  //MinScale should have jumped back to 1
-  await expect(agentCountSliderLocator).toHaveAttribute("aria-valuenow", "1");
+  //MinScale should have jumped back to 1, and the slider will have become a simple slider
+  await page.waitForSelector(sliderSelector);
+  const agentCountSliderLocator3 = page.locator(sliderSelector);
+  await expect(agentCountSliderLocator3).toHaveAttribute("aria-valuenow", "1");
+
 
   //Go back to the deploy tab.
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(1)')
