@@ -123,10 +123,10 @@ test('no-user-pool-prevents-autoscale-from-zero', async ({ page }) => {
   await expect(noSysPool).toBeChecked();
 
   //MinScale should have jumped back to 1, and the slider will have become a simple slider
-  await page.waitForSelector(sliderSelector);
-  const agentCountSliderLocator3 = page.locator(sliderSelector);
+  await page.waitForSelector(sliderFirstBubbleSelector);
+  const agentCountSliderLocator3 = page.locator(sliderFirstBubbleSelector);
+  console.log(await agentCountSliderLocator3.innerHTML());
   await expect(agentCountSliderLocator3).toHaveAttribute("aria-valuenow", "1");
-
 
   //Go back to the deploy tab.
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(1)')
