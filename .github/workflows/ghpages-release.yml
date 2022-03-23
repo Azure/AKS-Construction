@@ -41,6 +41,7 @@ jobs:
   CreateRelease:
     runs-on: ubuntu-latest
     name: Create GitHub Release (bicep)
+    needs: [CreateBicepArtifacts]
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
       - uses: actions/checkout@v2
@@ -59,29 +60,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Bicep
-        shell: pwsh
-        run: az bicep install
-
-      - name: Bicep build
-        shell: pwsh
-        run: |
-          #write-output $pwd
-          $compiledir=Join-Path -Path $pwd -ChildPath "bicep/compiled"
-
-          write-output $compiledir
-          If(!(test-path $compiledir))
-          {
-                New-Item -ItemType Directory -Force -Path $compiledir
-          }
-
-          /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
-
-      - name: Create Bicep release artifact
-        uses: actions/upload-artifact@v2
+      - name: Download Bicep release artifacts
+        uses: actions/download-artifact@v3
         with:
           name: CompiledBicep
-          path: bicep/compiled/main.json
+          path: compilebicep
 
       - name: Create GitHub release
         run: |
@@ -155,7 +138,6 @@ jobs:
           keep_history: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
   DeployWebAppToProd:
     runs-on: ubuntu-latest
