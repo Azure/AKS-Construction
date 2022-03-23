@@ -28,7 +28,7 @@
             "AksPaidSkuForSLA": false,
             "apisecurity": "none",
             "privateDNSZone": "none",
-            "autoscale": false,
+            "autoscale": true,
             "upgradeChannel": "none",
             "SystemPoolType": "Cost-Optimised",
             "agentCount": 3,

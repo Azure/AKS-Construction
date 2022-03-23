@@ -25,7 +25,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
-    ...(cluster.autoscale && cluster.maxCount !== defaults.cluster.maxCount && { agentCountMax: cluster.maxCount }),
+    ...((cluster.autoscale !== defaults.cluster.autoscale || cluster.maxCount !== defaults.cluster.maxCount) && { agentCountMax: cluster.autoscale ? cluster.maxCount : 0 }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
          custom_vnet: true,
