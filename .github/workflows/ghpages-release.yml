@@ -41,7 +41,6 @@ jobs:
   CreateRelease:
     runs-on: ubuntu-latest
     name: Create GitHub Release (bicep)
-    needs: [CreateBicepArtifacts]
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
       - uses: actions/checkout@v2
@@ -60,43 +59,53 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
  
-      - name: Create directory for bicep artifacts
-        run: mkdir bicepArtifacts
-        
-      - name: Download Bicep release artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: bicepArtifacts
+      - name: Install Bicep
+        shell: pwsh
+        run: az bicep install
 
-      - name: Display structure of downloaded files
-        run: ls -R
-        working-directory: bicepArtifacts
+      - name: Bicep build
+        shell: pwsh
+        run: |
+          #write-output $pwd
+          $compiledir=Join-Path -Path $pwd -ChildPath "bicep/compiled"
+          write-output $compiledir
+          If(!(test-path $compiledir))
+          {
+                New-Item -ItemType Directory -Force -Path $compiledir
+          }
+          /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
+          
+      - name: Create Bicep release artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: CompiledBicep
+          path: bicep/compiled/main.json
 
       - name: Create GitHub release
         run: |
-          GHJSON=$(gh release create ${{env.templateRelease}} 'bicepArtifacts/main.json' -p --generate-notes )
+          GHJSON=$(gh release create ${{env.templateRelease}} 'bicep/compiled/main.json' -p --generate-notes )
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
-  CreateBicepArtifacts:
+  CreateExtraBicepArtifacts:
     runs-on: ubuntu-latest
+    needs: [CreateRelease]
     strategy:
       matrix:
-        bicep: ['bicep/main.bicep' , 'samples/peered-vnet/main.bicep']
+        bicep: ['samples/peered-vnet/main.bicep']
         
     name: Create bicep artifacts
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
       - uses: actions/checkout@v2
 
-      - name: Infer name of artifact
+      - name: Set better name of artifact
         id: artifactName
         shell: pwsh
         run : |
           $filepath = ${{ matrix.bicep }}
           switch ( split-path $filepath )
           {
-              'bicep' { $ARTIFACTNAME = 'main.json'    }
               'samples\peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet-main.json'    }
               default {  $ARTIFACTNAME = $filepath.replace("/","-") }
           }
@@ -109,19 +118,19 @@ jobs:
       - name: Bicep build
         shell: pwsh
         run: |
-          /home/runner/.azure/bin/bicep build bicep/main.bicep --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
-
-      - name: Create Bicep release artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: CompiledBicep-${{ steps.artifactName.outputs.ARTIFACTNAME}}
-          path: "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+          /home/runner/.azure/bin/bicep build $filepath --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+          
+      - name: Upload Extra Artifacts to GitHub release
+        run: |
+          gh release upload ${{env.templateRelease}}"./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   DeployWebAppToCanary:
     runs-on: ubuntu-latest
     name: Deploy Web App to Canary Pages
     if: ${{ always() }}
-    needs: [BuildWebApp , CreateRelease, CreateBicepArtifacts]
+    needs: [BuildWebApp , CreateRelease, CreateExtraBicepArtifacts]
     steps:
       - uses: actions/download-artifact@v3
         with:
