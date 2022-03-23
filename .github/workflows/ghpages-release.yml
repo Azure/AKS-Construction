@@ -59,16 +59,22 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+ 
+      - name: Create directory for bicep artifacts
+        run: mkdir bicepArtifacts
+        
       - name: Download Bicep release artifacts
         uses: actions/download-artifact@v3
         with:
-          name: CompiledBicep
-          path: compilebicep
+          path: bicepArtifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: bicepArtifacts
 
       - name: Create GitHub release
         run: |
-          GHJSON=$(gh release create ${{env.templateRelease}} 'bicep/compiled/main.json' -p --generate-notes )
+          GHJSON=$(gh release create ${{env.templateRelease}} 'bicepArtifacts/main.json' -p --generate-notes )
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
