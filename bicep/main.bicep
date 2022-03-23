@@ -881,6 +881,26 @@ param SystemPoolType string = 'Cost-Optimised'
 @description('A custom system pool spec')
 param SystemPoolCustomPreset object = {}
 
+param AutoscaleProfile object = {
+  'balance-similar-node-groups': 'true'
+  'expander': 'random'
+  'max-empty-bulk-delete': '10'
+  'max-graceful-termination-sec': '600'
+  'max-node-provision-time': '15m'
+  'max-total-unready-percentage': '45'
+  'new-pod-scale-up-delay': '0s'
+  'ok-total-unready-count': '3'
+  'scale-down-delay-after-add': '10m'
+  'scale-down-delay-after-delete': '20s'
+  'scale-down-delay-after-failure': '3m'
+  'scale-down-unneeded-time': '10m'
+  'scale-down-unready-time': '20m'
+  'scale-down-utilization-threshold': '0.5'
+  'scan-interval': '10s'
+  'skip-nodes-with-local-storage': 'true'
+  'skip-nodes-with-system-pods': 'true'
+}
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   'Cost-Optimised' : {
@@ -1052,25 +1072,7 @@ var aksProperties = {
     upgradeChannel: upgradeChannel
   } : {}
   addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
-  autoScalerProfile: autoScale ? {
-      'balance-similar-node-groups': 'true'
-      'expander': 'random'
-      'max-empty-bulk-delete': '10'
-      'max-graceful-termination-sec': '600'
-      'max-node-provision-time': '15m'
-      'max-total-unready-percentage': '45'
-      'new-pod-scale-up-delay': '0s'
-      'ok-total-unready-count': '3'
-      'scale-down-delay-after-add': '10m'
-      'scale-down-delay-after-delete': '20s'
-      'scale-down-delay-after-failure': '3m'
-      'scale-down-unneeded-time': '10m'
-      'scale-down-unready-time': '20m'
-      'scale-down-utilization-threshold': '0.5'
-      'scan-interval': '10s'
-      'skip-nodes-with-local-storage': 'true'
-      'skip-nodes-with-system-pods': 'true'
-  } : {}
+  autoScalerProfile: autoScale ? AutoscaleProfile : {}
 }
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
