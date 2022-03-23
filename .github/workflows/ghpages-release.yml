@@ -88,12 +88,51 @@ jobs:
           GHJSON=$(gh release create ${{env.templateRelease}} 'bicep/compiled/main.json' -p --generate-notes )
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  CreateBicepArtifacts:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        bicep: ['bicep/main.bicep' , 'samples/peered-vnet/main.bicep']
+        
+    name: Create bicep artifacts
+    if: ${{ github.event.inputs.createRelease == 'true' }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Infer name of artifact
+        id: artifactName
+        shell: pwsh
+        run : |
+          $filepath = ${{ matrix.bicep }}
+          switch ( split-path $filepath )
+          {
+              'bicep' { $ARTIFACTNAME = 'main.json'    }
+              'samples\peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet-main.json'    }
+              default {  $ARTIFACTNAME = $filepath.replace("/","-") }
+          }
+          echo "::set-output name=ARTIFACTNAME::$ARTIFACTNAME"
+
+      - name: Install Bicep
+        shell: pwsh
+        run: az bicep install
+
+      - name: Bicep build
+        shell: pwsh
+        run: |
+          /home/runner/.azure/bin/bicep build bicep/main.bicep --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+
+      - name: Create Bicep release artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: CompiledBicep-${{ steps.artifactName.outputs.ARTIFACTNAME}}
+          path: "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
 
   DeployWebAppToCanary:
     runs-on: ubuntu-latest
     name: Deploy Web App to Canary Pages
     if: ${{ always() }}
-    needs: [BuildWebApp , CreateRelease]
+    needs: [BuildWebApp , CreateRelease, CreateBicepArtifacts]
     steps:
       - uses: actions/download-artifact@v3
         with:
