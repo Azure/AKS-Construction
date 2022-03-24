@@ -81,6 +81,8 @@
             "networkPlugin": "azure",
             "afw": false,
             "bastion": false,
+            "nsg": false,
+            "nsgFlowLogs": false,
             "vnetprivateend": false,
             "vnet_opt": "default",
             "byoAKSSubnetId": "",

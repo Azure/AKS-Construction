@@ -53,6 +53,8 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                 <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.vnetprivateend} onChange={(ev, v) => updateFn("vnetprivateend", v)} label="Enable Private Link" />
             </Stack.Item>
 
+            <Separator className="notopmargin" />
+
             <Stack.Item>
                 <Label>Use Azure Bastion to facilitate RDP/SSH public internet inbound access into your virtual network</Label>
                 <Checkbox inputProps={{ "data-testid": "network-bastion-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.bastion} onChange={(ev, v) => updateFn("bastion", v)} label="Enable Azure Bastion" />
@@ -172,7 +174,12 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                 </Stack>
             </Stack.Item>
 
+            <Separator className="notopmargin" />
 
+            <Stack.Item>
+                <Label>Use Azure Bastion to facilitate RDP/SSH public internet inbound access into your virtual network</Label>
+                <Checkbox inputProps={{ "data-testid": "network-bastion-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.bastion} onChange={(ev, v) => updateFn("bastion", v)} label="Enable Azure Bastion" />
+            </Stack.Item>
 
             {net.vnet_opt === 'custom' ?
                 <CustomVNET addons={addons} net={net} updateFn={updateFn} />
@@ -269,6 +276,16 @@ function CustomVNET({ net, addons, updateFn }) {
 
                 <PodServiceNetwork net={net} updateFn={updateFn} />
             </Stack>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item>
+                <Label>Limit Ingress/Egress subnets with Network Security Groups (NGS's)</Label>
+                <Checkbox inputProps={{ "data-testid": "network-nsg-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.nsg} onChange={(ev, v) => updateFn("nsg", v)} label="Create NSG's for each subnet" />
+
+                <Label>Capture NSG Flow Logs with Network Watcher</Label>
+                <Checkbox inputProps={{ "data-testid": "network-nsgFlowLogs-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={!net.nsg} checked={net.nsFlowLog} onChange={(ev, v) => updateFn("nsFlowLog", v)} label="Enable NSG Flow Logs" />
+            </Stack.Item>
         </Stack>
     )
 }
