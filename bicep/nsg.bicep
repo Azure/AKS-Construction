@@ -232,6 +232,20 @@ resource nsgDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = i
   }
 }
 
+//If multiple NSG's are trying to add flow logs at the same, this will result in CONFLICT: AnotherOperationInProgress
+//Therefore advised to create FlowLogs outside of NSG creation, to better coordinate the creation - or sequence the NSG creation with DependsOn
+param FlowLogStorageAccountId string = ''
+module nsgFlow 'networkwatcherflowlog.bicep' = if(!empty(FlowLogStorageAccountId)) {
+  name: 'flow-${nsgName}'
+  scope: resourceGroup('NetworkWatcherRG')
+  params: {
+    location:location
+    name: 'flowNsg-${nsgName}'
+    nsgId: nsg.id
+    storageId: FlowLogStorageAccountId
+  }
+}
+
 output nsgSubnetObj object = {
   properties: {
     networkSecurityGroup: {

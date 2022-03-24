@@ -118,8 +118,11 @@ param acrPrivatePool bool = false
 @description('Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)')
 param bastion bool = false
 
-@description('Deploy NSGs to your vnet. (works with Custom Networking only, not BYO)')
+@description('Deploy NSGs to your vnet subnets. (works with Custom Networking only, not BYO)')
 param CreateNetworkSecurityGroups bool = false
+
+@description('Configure Flow Logs for Network Security Groups in the NetworkWatcherRG resource group')
+param CreateNetworkSecurityGroupFlowLogs bool = false
 
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
@@ -144,6 +147,7 @@ module network './network.bicep' = if (custom_vnet) {
     availabilityZones: availabilityZones
     workspaceDiagsId: createLaw ? aks_law.id : ''
     networkSecurityGroups: CreateNetworkSecurityGroups
+    CreateNsgFlowLogs: CreateNetworkSecurityGroups && CreateNetworkSecurityGroupFlowLogs
     ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
   }
 }

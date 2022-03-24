@@ -318,6 +318,45 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2020-05-01' = if(bastion) {
   }
 }
 
+param CreateNsgFlowLogs bool = false
+var flowLogStorageRawName = toLower('stflow${resourceName}${uniqueString(resourceGroup().id, resourceName)}')
+var flowLogStorageName = length(flowLogStorageRawName) > 24 ? substring(flowLogStorageRawName, 0, 24) : flowLogStorageRawName
+resource flowLogStor 'Microsoft.Storage/storageAccounts@2021-08-01' = if(CreateNsgFlowLogs && networkSecurityGroups) {
+  name: flowLogStorageName
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  location: location
+  properties: {
+    minimumTlsVersion: 'TLS1_2'
+  }
+}
+
+//NSG's
+module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
+  name: 'nsgAks'
+  params: {
+    location: location
+    resourceName: '${aks_subnet_name}-${resourceName}'
+    workspaceDiagsId: workspaceDiagsId
+    FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
+  }
+}
+
+module nsgAcrPool 'nsg.bicep' = if(acrPrivatePool && networkSecurityGroups) {
+  name: 'nsgAcrPool'
+  params: {
+    location: location
+    resourceName: '${acrpool_subnet_name}-${resourceName}'
+    workspaceDiagsId: workspaceDiagsId
+    FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
+  }
+  dependsOn: [
+    nsgAks
+  ]
+}
+
 module nsgAppGw 'nsg.bicep' = if(ingressApplicationGateway && networkSecurityGroups) {
   name: 'nsgAppGw'
   params: {
@@ -330,7 +369,11 @@ module nsgAppGw 'nsg.bicep' = if(ingressApplicationGateway && networkSecurityGro
     ruleInAllowAzureLoadBalancer: true
     ruleInDenyInternet: true
     ruleInGwManagementPort: '65200-65535'
+    FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
   }
+  dependsOn: [
+    nsgAcrPool
+  ]
 }
 
 module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
@@ -345,7 +388,11 @@ module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
     ruleInAllowAzureLoadBalancer: true
     ruleOutAllowBastionComms: true
     ruleInGwManagementPort: '443'
+    FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
   }
+  dependsOn: [
+    nsgAppGw
+  ]
 }
 
 module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
@@ -354,23 +401,12 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
     location: location
     resourceName: '${private_link_subnet_name}-${resourceName}'
     workspaceDiagsId: workspaceDiagsId
+    FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
   }
+  dependsOn: [
+    nsgBastion
+  ]
 }
 
-module nsgAcrPool 'nsg.bicep' = if(acrPrivatePool && networkSecurityGroups) {
-  name: 'nsgAcrPool'
-  params: {
-    location: location
-    resourceName: '${acrpool_subnet_name}-${resourceName}'
-    workspaceDiagsId: workspaceDiagsId
-  }
-}
 
-module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
-  name: 'nsgAks'
-  params: {
-    location: location
-    resourceName: '${aks_subnet_name}-${resourceName}'
-    workspaceDiagsId: workspaceDiagsId
-  }
-}
+
