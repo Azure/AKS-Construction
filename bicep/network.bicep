@@ -286,6 +286,12 @@ resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
 param bastionHostName string = 'bas-${resourceName}'
 var publicIpAddressName = 'pip-${bastionHostName}'
 
+@allowed([
+  'Standard'
+  'Basic'
+])
+param bastionSku string = 'Standard'
+
 resource bastionPip 'Microsoft.Network/publicIPAddresses@2021-03-01' = if(bastion) {
   name: publicIpAddressName
   location: location
@@ -298,10 +304,14 @@ resource bastionPip 'Microsoft.Network/publicIPAddresses@2021-03-01' = if(bastio
   }
 }
 
-resource bastionHost 'Microsoft.Network/bastionHosts@2020-05-01' = if(bastion) {
+resource bastionHost 'Microsoft.Network/bastionHosts@2021-05-01' = if(bastion) {
   name: bastionHostName
   location: location
+  sku: {
+    name: bastionSku
+  }
   properties: {
+    enableTunneling: true
     ipConfigurations: [
       {
         name: 'IpConf'
