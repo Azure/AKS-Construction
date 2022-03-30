@@ -8,23 +8,34 @@ on:
     inputs:
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
-        default: 'false'
+        default: false
         type: boolean
         required: false
       doDebugSteps:
         description: 'Run informational steps'
-        default: 'true'
+        default: true
         type: boolean
         required: false
       doVerifySteps:
         description: 'Run optional verify steps'
-        default: 'true'
+        default: true
         type: boolean
         required: false
       defaultdeny:
         description: 'Default Deny NetworkPolicy?'
-        default: 'true'
+        default: true
         type: boolean
+        required: false
+      region:
+        description: 'Resource Deployment Region'
+        default: 'SwedenCentral'
+        options:
+          - "WestEurope"
+          - "NortEurope"
+          - "EastUs"
+          - "SwedenCentral"
+          - "UKWest"
+        type: string
         required: false
       environment:
         description: 'Which environment to deploy to'
@@ -146,7 +157,7 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME
+            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME location=${{ github.event.inputs.region }}
 
       - name: What If
         if: github.event.inputs.doDebugSteps == 'true'
@@ -155,7 +166,7 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME
+            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME location=${{ github.event.inputs.region }}
 
   Deploy:
     runs-on: ubuntu-latest
@@ -204,7 +215,7 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --name $DEPNAME --verbose
+            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME location=${{ github.event.inputs.region }} --name $DEPNAME --verbose
 
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
