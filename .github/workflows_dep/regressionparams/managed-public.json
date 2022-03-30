@@ -9,7 +9,7 @@
       "value": "Standard_DS3_v2"
     },
     "agentCountMax": {
-      "value": 3
+      "value": 1
     },
     "custom_vnet": {
       "value": true

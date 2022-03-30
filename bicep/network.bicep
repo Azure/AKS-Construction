@@ -350,6 +350,8 @@ module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
     location: location
     resourceName: '${aks_subnet_name}-${resourceName}'
     workspaceDiagsId: workspaceDiagsId
+    ruleInAllowInternetHttp: true
+    ruleInAllowInternetHttps: true
     FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
   }
 }
