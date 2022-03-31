@@ -134,17 +134,23 @@ jobs:
         run: |
             if [ -z "${{ github.event.inputs.region }}" ]
             then
-              echo "Region parameter not available through GitHub events, setting default"
+              echo "Region parameter not available through GitHub event data, setting default"
               REGION="SwedenCentral"
-              echo $REGION
-              echo "::set-output name=REGION::$REGION"
+            else
+              echo "Region parameter found in GitHub event (${{ github.event.inputs.region }})"
+              REGION="${{ github.event.inputs.region }}"
             fi
+            echo $REGION
+            echo "::set-output name=REGION::$REGION"
 
             if [ -z "${{ github.event.inputs.ResourceGroup }}" ]
             then
-              echo "ResourceGroup parameter not available through GitHub events, setting to default"
+              echo "ResourceGroup parameter not available through GitHub event data, setting to default"
               echo $RG
               echo "::set-output name=RESOURCEGROUP::$RG"
+            else
+              echo "Resource Group parameter found in GitHub event (${{ github.event.inputs.ResourceGroup }})"
+              echo "::set-output name=RESOURCEGROUP::${{ github.event.inputs.ResourceGroup }}"
             fi
 
       - name: Azure Login
