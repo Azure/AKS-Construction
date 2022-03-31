@@ -6,6 +6,15 @@ name: InfraCI - Private cluster
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Which environment to deploy to'
+        required: false
+        default: "azurecirgs"
+        type: choice
+        options:
+          - "azurecirgs"
+          - "csu"
+          - ""
       ResourceGroup:
         description: 'Which Resource Group to deploy to'
         default: 'AksBicepAcc-Ci-PrivateCluster'
@@ -42,15 +51,7 @@ on:
           - "UKWest"
         type: string
         required: false
-      environment:
-        description: 'Which environment to deploy to'
-        required: false
-        default: "azurecirgs"
-        type: choice
-        options:
-          - "azurecirgs"
-          - "csu"
-          - ""
+
   push:
     paths:
       - 'bicep/*'
@@ -209,6 +210,9 @@ jobs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
       LANAME : ${{ steps.deployAks.outputs.LANAME}}
       LAWGUID : ${{ steps.deployAks.outputs.LAWGUID}}
+    env:
+      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
+      REGION: ${{ needs.Validation.outputs.REGION }}
     steps:
       - uses: actions/checkout@v2
 
@@ -218,6 +222,7 @@ jobs:
           echo "RG is: ${{ needs.Validation.outputs.RESOURCEGROUP }}"
           echo "(env)RG is: $RG"
           echo "Region is: ${{ needs.Validation.outputs.REGION }}"
+          echo "(env)Region is $REGION"
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -249,7 +254,7 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME location=${{ steps.params.outputs.REGION}} --name $DEPNAME --verbose
+            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME location=$REGION --name $DEPNAME --verbose
 
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
