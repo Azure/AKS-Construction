@@ -20,6 +20,17 @@ on:
         default: 'AksBicepAcc-Ci-PrivateCluster'
         type: string
         required: false
+      region:
+        description: 'Resource Deployment Region'
+        default: 'SwedenCentral'
+        options:
+          - "WestEurope"
+          - "NortEurope"
+          - "EastUs"
+          - "SwedenCentral"
+          - "UKWest"
+        type: string
+        required: false
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
         default: false
@@ -40,17 +51,6 @@ on:
         default: true
         type: boolean
         required: false
-      region:
-        description: 'Resource Deployment Region'
-        default: 'SwedenCentral'
-        options:
-          - "WestEurope"
-          - "NortEurope"
-          - "EastUs"
-          - "SwedenCentral"
-          - "UKWest"
-        type: string
-        required: false
 
   push:
     paths:
@@ -67,7 +67,6 @@ on:
     - cron: '0 23 * * 2'
 
 env:
-  RG: 'AksBicepAcc-Ci-PrivateCluster'
   ParamFilePath: ".github/workflows_dep/AksDeploy-Private.parameters.json"
   RESNAME: 'PrivSw'
   DEPNAME: 'DepPriv${{ github.run_number }}'
@@ -100,6 +99,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     if: ${{ !github.event.pull_request.head.repo.fork }}
+    env:
+      RG: 'AksBicepAcc-Ci-PrivateCluster'
     outputs:
       RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
       REGION: ${{ steps.params.outputs.REGION}}
@@ -317,6 +318,9 @@ jobs:
 
   SetupWF:
     runs-on: ubuntu-latest
+    needs: [Validation]
+    env:
+      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     outputs:
       RG: ${{ env.RG }}
       ENVIRONMENT: ${{ steps.CalcEnv.outputs.ENVIRONMENT }}
@@ -352,7 +356,9 @@ jobs:
   InfraTests:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [Deploy]
+    needs: [Deploy, Validation]
+    env:
+      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     steps:
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
@@ -422,6 +428,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     needs: [Validation, Deploy, InfraTests, SmokeTest_KnownGoodApp, Well_Architected]
+    env:
+      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     if: github.event_name == 'schedule'
     steps:
       - name: Job parameter check
