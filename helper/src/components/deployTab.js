@@ -318,6 +318,8 @@ ${postscript_cluster.replaceAll('"', '\\"')}
               { key: "UKSouth", text: "UK South" },
               { key: "UKSouth2", text: "UK South2" },
               { key: "UKWest", text: "UK West" },
+              { key: 'middleeast', text: 'Middle East', itemType: DropdownMenuItemType.Header },
+              { key: "UAENorth", text: "UAE North" },
               { key: 'america', text: 'North America', itemType: DropdownMenuItemType.Header },
               { key: "CentralUS", text: "Central US" },
               { key: "EastUS", text: "East US" },
