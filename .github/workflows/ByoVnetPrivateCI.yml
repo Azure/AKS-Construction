@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     if: ${{ !github.event.pull_request.head.repo.fork }}
-    env:
+    env: #Default values if GitHub event obj is empty (eg. Initiated by PR)
       RG: 'AksBicepAcc-Ci-PrivateCluster'
     outputs:
       RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
