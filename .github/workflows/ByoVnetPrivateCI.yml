@@ -6,6 +6,11 @@ name: InfraCI - Private cluster
 on:
   workflow_dispatch:
     inputs:
+      ResourceGroup:
+        description: 'Which Resource Group to deploy to'
+        default: 'AksBicepAcc-Ci-PrivateCluster'
+        type: string
+        required: false
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
         default: false
@@ -94,6 +99,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     if: ${{ !github.event.pull_request.head.repo.fork }}
+    outputs:
+      RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
+      REGION: ${{ steps.params.outputs.REGION}}
 
     steps:
       - uses: actions/checkout@v2
@@ -120,6 +128,22 @@ jobs:
             $paramFileContent=Get-Content $paramFilePath
             Write-Output $paramFileContent
           }
+
+      - name: Parameter Value Augmentation
+        id: params
+        run: |
+            if [ -z "${{ github.event.inputs.region }}" ]
+            then
+              echo "Region parameter not available through GitHub events, setting default"
+              $REGION="SwedenCentral"
+              echo "::set-output name=REGION::$REGION"
+            fi
+
+            if [ -z "${{ github.event.inputs.ResourceGroup }}" ]
+            then
+              echo "ResourceGroup parameter not available through GitHub events, setting to default"
+              echo "::set-output name=RESOURCEGROUP::$RG"
+            fi
 
       - name: Azure Login
         uses: Azure/login@v1.4.3
@@ -183,7 +207,9 @@ jobs:
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
         run: |
-          echo "RG is: $RG"
+          echo "RG is: ${{ needs.Validation.outputs.RESOURCEGROUP }}"
+          echo "(env)RG is: $RG"
+          echo "Region is: ${{ needs.Validation.outputs.REGION }}"
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
