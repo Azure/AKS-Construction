@@ -537,6 +537,7 @@ jobs:
     needs: [Deploy, ReusableWF]
     uses: ./.github/workflows/AppDeploy_AzureVote.yml
     with:
+      Environment: ''
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #$RG
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}

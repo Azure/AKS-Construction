@@ -88,8 +88,6 @@ jobs:
           modules: 'PSRule.Rules.Azure'
           inputType: repository
           inputPath: "${{ env.ParamFilePath }}"
-          baseline: 'Azure.GA_2021_09'
-          prerelease: true
 
   Validation:
     runs-on: ubuntu-latest
