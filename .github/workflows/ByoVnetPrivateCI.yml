@@ -64,7 +64,6 @@ on:
 
 env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-Private.parameters.json"
-  RESNAME: 'PrivSw'
   DEPNAME: 'DepPriv${{ github.run_number }}'
   AZCLIVERSION: 2.34.1 #2.30.0 #Pinning to a specific AZ CLI version
 
@@ -95,9 +94,11 @@ jobs:
     if: ${{ !github.event.pull_request.head.repo.fork }}
     env: #Default values if GitHub event obj is empty (eg. Initiated by PR)
       RG: 'AksBicepAcc-Ci-PrivateCluster'
+      RESNAME: 'PrivSw'
     outputs:
       RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
       REGION: ${{ steps.params.outputs.REGION}}
+      RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
 
     steps:
       - uses: actions/checkout@v2
@@ -149,6 +150,10 @@ jobs:
               echo "::set-output name=RESOURCEGROUP::${{ github.event.inputs.ResourceGroup }}"
             fi
 
+            NEWRESNAME="$RESNAME${REGION:0:3}"
+            echo "Setting new Resource Name $NEWRESNAME"
+            echo "::set-output name=NEWRESNAME::$NEWRESNAME"
+
       - name: Azure Login
         uses: Azure/login@v1.4.3
         with:
@@ -185,7 +190,7 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME location=${{ steps.params.outputs.REGION}}
+            az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=${{ steps.params.outputs.NEWRESNAME}} location=${{ steps.params.outputs.REGION}}
 
       - name: What If
         if: github.event.inputs.doDebugSteps == 'true'
@@ -194,7 +199,7 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME location=${{ steps.params.outputs.REGION}}
+            az deployment group what-if -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=${{ steps.params.outputs.NEWRESNAME}} location=${{ steps.params.outputs.REGION}}
 
   Deploy:
     runs-on: ubuntu-latest
@@ -208,6 +213,7 @@ jobs:
     env:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
       REGION: ${{ needs.Validation.outputs.REGION }}
+      RESNAME: ${{ needs.Validation.outputs.RESNAME }}
     steps:
       - uses: actions/checkout@v2
 
