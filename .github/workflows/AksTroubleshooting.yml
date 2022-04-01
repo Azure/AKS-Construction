@@ -106,7 +106,7 @@ jobs:
 
   CaptureAgicLogs:
     runs-on: ubuntu-latest
-    if: ${{ always() && github.event.inputs.AGNAME != '' }}
+    if: always() && ${{ github.event.inputs.AGNAME != '' }}
     steps:
       - name: Azure Login
         uses: Azure/login@v1
