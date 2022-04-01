@@ -657,7 +657,7 @@ jobs:
   Infra_Destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, SmokeTest_SimpleApp, Well_Architected, CaptureAgicLogs]
+    needs: [Validation, Deploy, Troubleshoot, DeployVerify, SmokeTest_SimpleApp, Well_Architected]
     steps:
       - name: Azure Login
         uses: Azure/login@v1

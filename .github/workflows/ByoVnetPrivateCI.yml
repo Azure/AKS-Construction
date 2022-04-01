@@ -366,7 +366,7 @@ jobs:
   Infra_Destroy:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [Validation, Deploy, InfraTests, SmokeTest_KnownGoodApp, Well_Architected]
+    needs: [Validation, Deploy, Troubleshoot, SmokeTest_KnownGoodApp, Well_Architected]
     env:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     if: github.event_name == 'schedule'
