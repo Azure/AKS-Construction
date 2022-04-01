@@ -190,6 +190,8 @@ jobs:
 
       - name: Check Run Command
         uses: Azure/cli@v1.0.6
+        env:
+          AZCLIVERSION: latest #2.30.0
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
