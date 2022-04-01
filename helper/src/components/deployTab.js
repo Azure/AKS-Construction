@@ -484,12 +484,12 @@ ${postscript_cluster.replaceAll('"', '\\"')}
             </Stack.Item>
           </Stack>
 
-          <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'}/>
-          <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'}/>
-          <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'}/>
-          <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'}/>
-          <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'}/>
-          </PivotItem>
+          <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'} lang="terraform" filename="providers.tf" />
+          <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'} lang="terraform" filename="main.tf" />
+          <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'} lang="terraform" filename="variables.tf" />
+          <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'} lang="terraform" filename="outputs.tf" />
+          <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="bash"/>
+        </PivotItem>
 
         <PivotItem headerText="Post Configuration">
           {addons.gitops === 'none' ? [
