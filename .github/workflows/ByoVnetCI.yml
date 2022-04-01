@@ -643,7 +643,7 @@ jobs:
 
   Troubleshoot:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr, SmokeTest_JavaApp-appgw]
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AksTroubleshooting.yml
+    uses: ./.github/workflows/AppDeploy_AksTroubleshooting.yml
     if: always()
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
