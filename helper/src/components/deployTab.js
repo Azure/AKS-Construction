@@ -90,6 +90,18 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     return ` \\\n\t${k}=${targetVal}`
   }).join('')
 
+  const params2tf = p => Object.keys(p).map(k => {
+    const val = p[k]
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+    return `    ${k} = var.${k}\n`
+  }).join('')
+
+  const params2tfvar = p => Object.keys(p).map(k => {
+    const val = p[k]
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+    return ` \nvariable ${k} {\n  default="${targetVal}"\n}`
+  }).join('')
+
   const params2file = p => Object.keys(p).filter(p => p !== 'adminprincipleid' && p !== 'acrPushRolePrincipalId' && p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
@@ -104,7 +116,27 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
     `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` + params2CLI(finalParams)
-  const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
+    const deployTfcmd =
+    `wget ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}\n\n` +
+    `terraform plan\nterraform init\nterraform apply`
+    const deployTfMain =
+    `#main.tf\n` +
+    `resource "azurerm_resource_group" "rg" {\n` +
+    `  name = "${deploy.rg}"\n`+
+    `  location = "${deploy.location}"\n` +
+    `}\n\n` +
+    `resource "azurerm_template_deployment" "aksc_deploy" {\n` +
+    `  name = "AKS-C Wrapped Bicep Release ${deploy.selectedTemplate}"\n` +
+    `  resource_group_name = azurerm_resource_group.rg.name\n` +
+    `  deployment_mode = "Incremental"\n` +
+    `  template_body = file("main.json")\n` +
+    `  parameters = {\n` +
+    `    location = azurerm_resource_group.rg.location\n`+ params2tf(finalParams) +
+    `  }\n` +
+    `}`
+    const deployTfVar = `#var.tf\n` + params2tfvar(finalParams)
+
+    const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
 
   /*  WIP - Want the UI to call a common post-install script, instead of outputting the individual commands!
@@ -405,6 +437,36 @@ ${postscript_cluster.replaceAll('"', '\\"')}
 
 
         </PivotItem>
+
+        <PivotItem headerText="Provision Environment (Terraform)"  >
+
+          <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
+            <Stack.Item>
+              <Label >Commands to deploy your fully operational environment</Label>
+              <Text>
+                Requires Terraform, or, execute in the
+                <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+              </Text>
+            </Stack.Item>
+
+            <Stack.Item  align="end">
+              <Stack horizontal tokens={{childrenGap: 5}}>
+              <Label>Template Version</Label>
+              <Dropdown
+                    disabled={process.env.REACT_APP_TEMPLATERELEASE}
+                    selectedKey={deploy.selectedTemplate}
+                    onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
+                    options={deploy.templateVersions}
+                    styles={{ dropdown: { width: 200 } }}
+                  />
+              </Stack>
+            </Stack.Item>
+          </Stack>
+
+          <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'}/>
+          <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'}/>
+          <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'}/>
+          </PivotItem>
 
         <PivotItem headerText="Post Configuration">
           {addons.gitops === 'none' ? [
