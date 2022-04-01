@@ -88,10 +88,7 @@ jobs:
       - name: Log Analytics log table verification
         shell: pwsh
         run: |
-          Write-Output "Check for Logs in the Log Analytics Workspace"
-          $LANAME='${{ needs.Deploy.outputs.LANAME}}'
-          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
-          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          Write-Output "Check for Logs in the Log Analytics ($LANAME) Workspace ($LAWGUID)"
 
           $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
           Write-Output $KubeNode
@@ -117,9 +114,7 @@ jobs:
           allow-no-subscriptions: false
 
       - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
         env:
@@ -172,9 +167,7 @@ jobs:
           allow-no-subscriptions: false
 
       - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
         env:
@@ -196,8 +189,6 @@ jobs:
 
       - name: Check Run Command
         uses: Azure/cli@v1.0.6
-        env:
-          AKSNAME: '${{ needs.Deploy.outputs.AKSNAME}}'
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
