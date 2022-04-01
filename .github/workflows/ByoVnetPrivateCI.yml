@@ -94,7 +94,7 @@ jobs:
     if: ${{ !github.event.pull_request.head.repo.fork }}
     env: #Default values if GitHub event obj is empty (eg. Initiated by PR)
       RG: 'AksBicepAcc-Ci-PrivateCluster'
-      RESNAME: 'PrivSw'
+      RESNAME: 'Prv'
     outputs:
       RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
       REGION: ${{ steps.params.outputs.REGION}}
