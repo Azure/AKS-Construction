@@ -25,7 +25,7 @@ on:
           - "EastUs"
           - "SwedenCentral"
           - "UKWest"
-        type: string
+        type: choice
         required: false
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
