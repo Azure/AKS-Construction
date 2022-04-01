@@ -43,11 +43,6 @@ on:
         required: true
 
 jobs:
-  App_Create:
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.Environment }}
-    concurrency: "Ag-${{ inputs.AGNAME}}" #AppGateway doesn't like concurrent updates
-
   VerifyMonitoring:
     runs-on: ubuntu-latest
     environment: ${{ inputs.Environment }}
