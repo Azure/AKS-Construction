@@ -93,7 +93,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const params2tf = p => Object.keys(p).map(k => {
     const val = p[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-    return `    ${k} = var.${k}\n`
+    return `    ${k} = {value=var.${k}}\n`
   }).join('')
 
   const params2tfvar = p => Object.keys(p).map(k => {
@@ -116,13 +116,28 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
     `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` + params2CLI(finalParams)
-    const deployTfcmd = `terraform plan\nterraform init\nterraform apply`
+    const deployTfcmd = `terraform init\nterraform plan -out main.tfplan\nterraform apply "main.tfplan"`
+    const deployTfProviders =
+    `#providers.tf\n` +
+    `terraform {\n` +
+    `  required_version = ">=0.12"\n` +
+    `  required_providers {\n` +
+    `    azurerm = {\n` +
+    `      source = "hashicorp/azurerm"\n` +
+    `      version = "~>3.0"\n` +
+    `    }\n` +
+    `  }\n` +
+    `}\n\n` +
+    `provider "azurerm" {\n` +
+    `  features {}\n` +
+    `}`
     const deployTfMain =
     `#main.tf\n` +
     `data "http" "aksc_release" {\n` +
     `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}"\n`+
     `  request_headers = {\n` +
     `    Accept = "application/json"\n` +
+    `    User-Agent = "request module"\n` +
     `  }\n` +
     `}\n\n` +
     `data "azurerm_client_config" "azcontext" {}\n\n` +
@@ -130,14 +145,14 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  name = "${deploy.rg}"\n`+
     `  location = "${deploy.location}"\n` +
     `}\n\n` +
-    `resource "azurerm_template_deployment" "aksc_deploy" {\n` +
-    `  name = "AKS-C Wrapped Bicep Release ${deploy.selectedTemplate}"\n` +
+    `resource "azurerm_resource_group_template_deployment" "aksc_deploy" {\n` +
+    `  name = "AKS-C"\n` +
     `  resource_group_name = azurerm_resource_group.rg.name\n` +
     `  deployment_mode = "Incremental"\n` +
-    `  template_body = data.body\n` +
-    `  parameters = {\n` +
-    `    location = azurerm_resource_group.rg.location\n`+ params2tf(finalParams) +
-    `  }\n` +
+    `  template_content = data.http.aksc_release.body\n` +
+    `  parameters_content = jsonencode({\n` +
+    params2tf(finalParams) +
+    `  })\n` +
     `}`
     const deployTfVar = `#variables.tf\n` + params2tfvar(finalParams)
     const deployTfOutput = `#outputs.tf\n\nTODO`
@@ -469,10 +484,11 @@ ${postscript_cluster.replaceAll('"', '\\"')}
             </Stack.Item>
           </Stack>
 
-          <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'}/>
+          <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'}/>
           <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'}/>
           <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'}/>
           <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'}/>
+          <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'}/>
           </PivotItem>
 
         <PivotItem headerText="Post Configuration">
