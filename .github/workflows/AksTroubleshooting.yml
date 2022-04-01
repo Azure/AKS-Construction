@@ -52,7 +52,7 @@ jobs:
           echo "RG is ${{ inputs.RG }}"
           echo "RG is $RG"
           echo "AKS name is ${{ inputs.AKSNAME }}"
-          echo "AKS name is ${{ github.event.inputs }}"
+          echo "AKS name is $AKSNAME"
           echo "AGW name is ${{ inputs.AGNAME }}"
           echo "LA name is ${{ inputs.LANAME }}"
           echo "LA workspace guid is ${{ inputs.LAWGUID }}"
@@ -60,7 +60,7 @@ jobs:
   VerifyMonitoring:
     runs-on: ubuntu-latest
     environment: ${{ inputs.Environment }}
-    if: always() && github.event.inputs.LANAME != '' && github.event.inputs.LAWGUID != ''
+    if: always() && ${{ github.event.inputs.LANAME }} != '' && ${{ github.event.inputs.LAWGUID }} != ''
     env:
       AKSNAME: "${{ inputs.AKSNAME}}"
       RG: "${{ inputs.RG }}"
@@ -154,7 +154,7 @@ jobs:
 
   CaptureAKSLogs:
     runs-on: ubuntu-latest
-    if: ${{ always() && github.event.inputs.AKSNAME != '' }}
+    if: ${{ always() && env.AKSNAME != '' }}
     steps:
       - name: Param check
         run: |
