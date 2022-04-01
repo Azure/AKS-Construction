@@ -1,0 +1,197 @@
+# Demonstrates various troubleshooting steps to check the AKS deployment
+# Handy when there's strange errors to chase
+
+name: AKS Troubleshooting Deployment
+
+on:
+  workflow_call:
+    inputs:
+      Environment:
+        required: true
+        type: string
+        description: 'GitHub Environment'
+      RG:
+        required: true
+        type: string
+        description: 'Resource Group Name'
+      AKSNAME:
+        required: true
+        type: string
+        description: AKS Resource Name'
+      AGNAME:
+        default: ""
+        required: true
+        type: string
+        description: 'Application Gateway Resource Name'
+      LANAME:
+        default: ""
+        required: true
+        type: string
+        description: 'Log Analytics Resource Name'
+      LAWGUID:
+        default: ""
+        required: true
+        type: string
+        description: 'Log Analytics Workspace GUID'
+      doDebugSteps:
+        default: true
+        required: false
+        type: boolean
+
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+
+jobs:
+  App_Create:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.Environment }}
+    concurrency: "Ag-${{ inputs.AGNAME}}" #AppGateway doesn't like concurrent updates
+
+  VerifyMonitoring:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.Environment }}
+    if: always() && github.event.inputs.LANAME != '' && github.event.inputs.LAWGUID != ''
+    env:
+      AKSNAME: "${{ inputs.AKSNAME}}"
+      RG: "${{ inputs.RG }}"
+    steps:
+      - name: Param check
+        if: github.event.inputs.doDebugSteps == 'true'
+        run: |
+          echo "Environment is ${{ inputs.Environment }}"
+          echo "RG is ${{ inputs.RG }}"
+          echo "AKS name is ${{ inputs.AKSNAME }}"
+
+          echo "Param file path is: ${{ env.ParamFilePath }}"
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
+          echo "LA name is ${{ needs.Deploy.outputs.LANAME }}"
+          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID }}"
+
+      - name: Allow Monitoring extension
+        shell: pwsh
+        run: |
+          az extension add -n log-analytics -y
+
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds:  ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+
+      - name: Log Analytics log table verification
+        shell: pwsh
+        run: |
+          Write-Output "Check for Logs in the Log Analytics Workspace"
+          $LANAME='${{ needs.Deploy.outputs.LANAME}}'
+          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
+          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+
+          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
+          Write-Output $KubeNode
+          Write-Output $KubeNode[0].Count
+
+          if ($KubeNode[0].Count -eq 0) {
+            throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
+          }
+
+          $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
+          Write-Output $containers
+
+  CaptureAgicLogs:
+    runs-on: ubuntu-latest
+    if: ${{ always() && github.event.inputs.AGNAME != '' }}
+    steps:
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+
+      - name: Kubelogin
+        env:
+          kubeloginversion: 'v0.0.11'
+        run: |
+          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
+          unzip kubelogin-linux-amd64.zip
+          sudo mv bin/linux_amd64/kubelogin /usr/bin
+          kubelogin convert-kubeconfig -l azurecli
+
+      - name: Describe AGIC Pod
+        env:
+          NAMESP: "kube-system"
+        run: |
+          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+          kubectl describe po -n $NAMESP $APPGWPODNAME
+
+      - name: Grab Invalid AGIC pod logs
+        env:
+          NAMESP: "kube-system"
+        run: |
+          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+          kubectl logs -n $NAMESP $APPGWPODNAME | grep Invalid
+
+      - name: Grab full AGIC pod logs
+        env:
+          NAMESP: "kube-system"
+        run: |
+          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+          kubectl logs -n $NAMESP $APPGWPODNAME
+
+  CaptureAKSLogs:
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+          allow-no-subscriptions: false
+
+      - name: AKS Connect
+        run: |
+          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
+          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+
+      - name: Kubelogin
+        env:
+          kubeloginversion: 'v0.0.11'
+        run: |
+          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
+          unzip kubelogin-linux-amd64.zip
+          sudo mv bin/linux_amd64/kubelogin /usr/bin
+          kubelogin convert-kubeconfig -l azurecli
+
+      - name: Kubectl get event Warnings
+        if: github.event.inputs.doDebugSteps == 'true'
+        run: |
+          kubectl get events --sort-by='.metadata.creationTimestamp' -A | grep Warning
+
+      - name: Check Events for default namespace
+        env:
+          NAMESP: "default"
+        run: kubectl get events -n $NAMESP
+
+      - name: Check Run Command
+        uses: Azure/cli@v1.0.6
+        env:
+          AKSNAME: '${{ needs.Deploy.outputs.AKSNAME}}'
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+            command="kubectl get nodes"
+            echo "Sending command $command to AKS"
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+            echo $cmdOut

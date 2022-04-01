@@ -8,13 +8,9 @@ on:
     inputs:
       environment:
         description: 'Which environment to deploy to'
-        required: false
+        required: true
         default: "azurecirgs"
-        type: choice
-        options:
-          - "azurecirgs"
-          - "csu"
-          - ""
+        type: environment
       ResourceGroup:
         description: 'Which Resource Group to deploy to'
         default: 'AksBicepAcc-Ci-PrivateCluster'
@@ -353,76 +349,19 @@ jobs:
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
-  InfraTests:
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    needs: [Deploy, Validation]
-    env:
-      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
-    steps:
-      - name: Job parameter check
-        if: github.event.inputs.doVerifySteps == 'true'
-        run: |
-          echo "RG is: $RG"
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-          echo "LA name is ${{ needs.Deploy.outputs.LANAME}}"
-          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID}}"
-
-      - name: Add Monitoring extension
-        shell: pwsh
-        run: |
-          az extension add -n log-analytics -y
-
-      - name: Azure Login
-        uses: Azure/login@v1.4.3
-        with:
-          creds:  ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-
-      - name: Verify logged in user
-        uses: Azure/cli@v1.0.6
-        with:
-          azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |
-            accountinfo=$(az account show)
-            echo $accountinfo
-            username=$(echo $accountinfo | jq -r ".user.name")
-            echo "Username: $username"
-
-      - name: Log Analytics log table verification
-        shell: pwsh
-        run: |
-          Write-Output "Check for Logs in the Log Analytics Workspace"
-          $LANAME='${{ needs.Deploy.outputs.LANAME}}'
-          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
-          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-
-          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
-          Write-Output $KubeNode
-          Write-Output $KubeNode[0].Count
-
-          if ($KubeNode[0].Count -eq 0) {
-            throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
-          }
-
-          $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
-          Write-Output $containers
-
-      - name: Check Run Command
-        uses: Azure/cli@v1.0.6
-        env:
-          AKSNAME: '${{ needs.Deploy.outputs.AKSNAME}}'
-        with:
-          azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |
-            command="kubectl get nodes"
-            echo "Sending command $command to AKS"
-            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
-            echo $cmdOut
+  Troubleshoot:
+    needs: [Deploy, SmokeTest_KnownGoodApp]
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AksTroubleshooting.yml
+    if: always()
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
+      LANAME: ${{ needs.Deploy.outputs.LANAME}}
+      LAWGUID: ${{ needs.Deploy.outputs.LAWGUID}}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Infra_Destroy:
     runs-on: ubuntu-latest
