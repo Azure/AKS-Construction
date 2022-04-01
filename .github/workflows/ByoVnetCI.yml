@@ -646,6 +646,7 @@ jobs:
     uses: ./.github/workflows/AksTroubleshooting.yml
     if: always()
     with:
+      Environment: ''
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
