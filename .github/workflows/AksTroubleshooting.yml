@@ -39,6 +39,24 @@ on:
         required: true
 
 jobs:
+  Debug:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.Environment }}
+    env:
+      AKSNAME: "${{ inputs.AKSNAME}}"
+      RG: "${{ inputs.RG }}"
+    steps:
+      - name: Param check
+        run: |
+          echo "Environment is ${{ inputs.Environment }}"
+          echo "RG is ${{ inputs.RG }}"
+          echo "RG is $RG"
+          echo "AKS name is ${{ inputs.AKSNAME }}"
+          echo "AKS name is ${{ github.event.inputs }}"
+          echo "AGW name is ${{ inputs.AGNAME }}"
+          echo "LA name is ${{ inputs.LANAME }}"
+          echo "LA workspace guid is ${{ inputs.LAWGUID }}"
+
   VerifyMonitoring:
     runs-on: ubuntu-latest
     environment: ${{ inputs.Environment }}
