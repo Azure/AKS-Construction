@@ -136,7 +136,7 @@ jobs:
 
   CaptureAKSLogs:
     runs-on: ubuntu-latest
-    if: always()
+    if: ${{ always() && github.event.inputs.AKSNAME != '' }}
     steps:
       - name: Param check
         run: |
