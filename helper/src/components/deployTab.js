@@ -116,11 +116,16 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
     `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` + params2CLI(finalParams)
-    const deployTfcmd =
-    `wget ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}\n\n` +
-    `terraform plan\nterraform init\nterraform apply`
+    const deployTfcmd = `terraform plan\nterraform init\nterraform apply`
     const deployTfMain =
     `#main.tf\n` +
+    `data "http" "aksc_release" {\n` +
+    `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}"\n`+
+    `  request_headers = {\n` +
+    `    Accept = "application/json"\n` +
+    `  }\n` +
+    `}\n\n` +
+    `data "azurerm_client_config" "azcontext" {}\n\n` +
     `resource "azurerm_resource_group" "rg" {\n` +
     `  name = "${deploy.rg}"\n`+
     `  location = "${deploy.location}"\n` +
@@ -129,12 +134,13 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  name = "AKS-C Wrapped Bicep Release ${deploy.selectedTemplate}"\n` +
     `  resource_group_name = azurerm_resource_group.rg.name\n` +
     `  deployment_mode = "Incremental"\n` +
-    `  template_body = file("main.json")\n` +
+    `  template_body = data.body\n` +
     `  parameters = {\n` +
     `    location = azurerm_resource_group.rg.location\n`+ params2tf(finalParams) +
     `  }\n` +
     `}`
-    const deployTfVar = `#var.tf\n` + params2tfvar(finalParams)
+    const deployTfVar = `#variables.tf\n` + params2tfvar(finalParams)
+    const deployTfOutput = `#outputs.tf\n\nTODO`
 
     const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
@@ -466,6 +472,7 @@ ${postscript_cluster.replaceAll('"', '\\"')}
           <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'}/>
           <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'}/>
           <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'}/>
+          <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'}/>
           </PivotItem>
 
         <PivotItem headerText="Post Configuration">
