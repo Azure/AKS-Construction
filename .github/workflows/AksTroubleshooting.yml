@@ -62,16 +62,16 @@ jobs:
     environment: ${{ inputs.Environment }}
     if: always() && inputs.LANAME != '' && inputs.LAWGUID  != ''
     env:
-      AKSNAME: "${{ inputs.AKSNAME}}"
-      RG: "${{ inputs.RG }}"
+      LANAME: "${{ inputs.LANAME}}"
+      LAWGUID: "${{ inputs.LAWGUID}}"
     steps:
       - name: Param check
         run: |
           echo "Environment is ${{ inputs.Environment }}"
-          echo "RG is ${{ inputs.RG }}"
-          echo "AKS name is ${{ inputs.AKSNAME }}"
-          echo "LA name is ${{ inputs.LANAME }}"
-          echo "LA workspace guid is ${{ inputs.LAWGUID }}"
+          echo "RG is $RG"
+          echo "AKS name is $AKSNAME"
+          echo "LA name is $LANAME"
+          echo "LA workspace guid is $LAWGUID"
 
       - name: Allow Monitoring extension
         shell: pwsh
@@ -180,8 +180,7 @@ jobs:
           kubelogin convert-kubeconfig -l azurecli
 
       - name: Kubectl get event Warnings
-        run: |
-          kubectl get events --sort-by='.metadata.creationTimestamp' -A | grep Warning
+        run: kubectl get events --sort-by='.metadata.creationTimestamp' -A | grep Warning
 
       - name: Check Events for default namespace
         env:
