@@ -7,7 +7,8 @@ param vnetAddressPrefix string
 param vnetAksSubnetAddressPrefix string
 
 //Nsg
-param workspaceDiagsId string = ''
+param workspaceName string = ''
+param workspaceResourceGroupName string = ''
 param networkSecurityGroups bool = true
 
 //Firewall
@@ -328,6 +329,11 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2021-05-01' = if(bastion) {
   }
 }
 
+resource log 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {
+  name: workspaceName
+  scope: resourceGroup(workspaceResourceGroupName)
+}
+
 param CreateNsgFlowLogs bool = false
 var flowLogStorageRawName = toLower('stflow${resourceName}${uniqueString(resourceGroup().id, resourceName)}')
 var flowLogStorageName = length(flowLogStorageRawName) > 24 ? substring(flowLogStorageRawName, 0, 24) : flowLogStorageRawName
@@ -349,7 +355,9 @@ module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
   params: {
     location: location
     resourceName: '${aks_subnet_name}-${resourceName}'
-    workspaceDiagsId: workspaceDiagsId
+    workspaceId: log.properties.customerId
+    workspaceRegion: log.location
+    workspaceResourceId: log.id
     ruleInAllowInternetHttp: true
     ruleInAllowInternetHttps: true
     FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
@@ -361,7 +369,9 @@ module nsgAcrPool 'nsg.bicep' = if(acrPrivatePool && networkSecurityGroups) {
   params: {
     location: location
     resourceName: '${acrpool_subnet_name}-${resourceName}'
-    workspaceDiagsId: workspaceDiagsId
+    workspaceId: log.properties.customerId
+    workspaceRegion: log.location
+    workspaceResourceId: log.id
     FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
   }
   dependsOn: [
@@ -374,7 +384,9 @@ module nsgAppGw 'nsg.bicep' = if(ingressApplicationGateway && networkSecurityGro
   params: {
     location: location
     resourceName: '${appgw_subnet_name}-${resourceName}'
-    workspaceDiagsId: workspaceDiagsId
+    workspaceId: log.properties.customerId
+    workspaceRegion: log.location
+    workspaceResourceId: log.id
     ruleInAllowInternetHttp: ingressApplicationGatewayPublic
     ruleInAllowInternetHttps: ingressApplicationGatewayPublic
     ruleInAllowGwManagement: true
@@ -393,7 +405,9 @@ module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
   params: {
     location: location
     resourceName: '${bastion_subnet_name}-${resourceName}'
-    workspaceDiagsId: workspaceDiagsId
+    workspaceId: log.properties.customerId
+    workspaceRegion: log.location
+    workspaceResourceId: log.id
     ruleInAllowBastionHostComms: true
     ruleInAllowInternetHttps: true
     ruleInAllowGwManagement: true
@@ -412,7 +426,9 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   params: {
     location: location
     resourceName: '${private_link_subnet_name}-${resourceName}'
-    workspaceDiagsId: workspaceDiagsId
+    workspaceId: log.properties.customerId
+    workspaceRegion: log.location
+    workspaceResourceId: log.id
     FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
   }
   dependsOn: [

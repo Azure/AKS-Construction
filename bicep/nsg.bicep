@@ -1,6 +1,8 @@
 param resourceName string
 param location string = resourceGroup().location
-param workspaceDiagsId string = ''
+param workspaceId string = ''
+param workspaceResourceId string = ''
+param workspaceRegion string = resourceGroup().location
 
 var nsgName = 'nsg-${resourceName}'
 
@@ -220,11 +222,11 @@ param NsgDiagnosticCategories array = [
   'NetworkSecurityGroupRuleCounter'
 ]
 
-resource nsgDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(workspaceDiagsId)) {
+resource nsgDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(workspaceResourceId)) {
   name: 'diags-${nsgName}'
   scope: nsg
   properties: {
-    workspaceId: workspaceDiagsId
+    workspaceId: workspaceResourceId
     logs: [for diagCategory in NsgDiagnosticCategories: {
       category: diagCategory
       enabled: true
@@ -243,6 +245,10 @@ module nsgFlow 'networkwatcherflowlog.bicep' = if(!empty(FlowLogStorageAccountId
     name: 'flowNsg-${nsgName}'
     nsgId: nsg.id
     storageId: FlowLogStorageAccountId
+    trafficAnalytics: !empty(workspaceResourceId)
+    workspaceId: workspaceId
+    workspaceResourceId: workspaceResourceId
+    workspaceRegion: workspaceRegion
   }
 }
 
