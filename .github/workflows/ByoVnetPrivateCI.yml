@@ -208,6 +208,7 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop' || contains( github.event.pull_request.labels.*.name, 'test-deploy-privateconfig')
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
+      AGMAME: ${{ steps.deployAks.outputs.AGNAME}}
       LANAME : ${{ steps.deployAks.outputs.LANAME}}
       LAWGUID : ${{ steps.deployAks.outputs.LAWGUID}}
     env:

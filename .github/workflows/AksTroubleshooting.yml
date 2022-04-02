@@ -60,7 +60,7 @@ jobs:
   VerifyMonitoring:
     runs-on: ubuntu-latest
     environment: ${{ inputs.Environment }}
-    if: always() && github.event.inputs.LANAME != '' && github.event.inputs.LAWGUID  != ''
+    if: always() && inputs.LANAME != '' && inputs.LAWGUID  != ''
     env:
       AKSNAME: "${{ inputs.AKSNAME}}"
       RG: "${{ inputs.RG }}"
@@ -104,7 +104,7 @@ jobs:
 
   CaptureAgicLogs:
     runs-on: ubuntu-latest
-    if: always() && github.event.inputs.AGNAME != ''
+    if: always() && inputs.AGNAME != ''
     steps:
       - name: Azure Login
         uses: Azure/login@v1
