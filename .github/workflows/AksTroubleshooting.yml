@@ -43,11 +43,11 @@ env:
   RG: "${{ inputs.RG }}"
 
 jobs:
-  Debug:
+  Log:
     runs-on: ubuntu-latest
     environment: ${{ inputs.Environment }}
     steps:
-      - name: Param check
+      - name: Parameter log
         run: |
           echo "Environment is ${{ inputs.Environment }}"
           echo "RG is $RG"
@@ -132,20 +132,22 @@ jobs:
           APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
           kubectl describe po -n $NAMESP $APPGWPODNAME
 
+      - name: Grab full AGIC pod logs
+        continue-on-error: true
+        env:
+          NAMESP: "kube-system"
+        run: |
+          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+          kubectl logs -n $NAMESP $APPGWPODNAME
+
       - name: Grab Invalid AGIC pod logs
+        continue-on-error: true
         env:
           NAMESP: "kube-system"
         run: |
           APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
           echo "Getting logs for AGIC pod: $APPGWPODNAME"
           kubectl logs -n $NAMESP $APPGWPODNAME | grep Invalid
-
-      - name: Grab full AGIC pod logs
-        env:
-          NAMESP: "kube-system"
-        run: |
-          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-          kubectl logs -n $NAMESP $APPGWPODNAME
 
   CaptureAKSLogs:
     runs-on: ubuntu-latest
