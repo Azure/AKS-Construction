@@ -50,6 +50,7 @@ jobs:
       - name: Parameter log
         run: |
           echo "Environment is ${{ inputs.Environment }}"
+          echo "RG is ${{ inputs.RG }}"
           echo "RG is $RG"
           echo "AKS name is ${{ inputs.AKSNAME }}"
           echo "AKS name is $AKSNAME"

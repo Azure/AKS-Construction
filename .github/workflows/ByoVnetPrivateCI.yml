@@ -355,12 +355,12 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Troubleshoot:
-    needs: [Deploy, SmokeTest_KnownGoodApp]
+    needs: [Deploy, SmokeTest_KnownGoodApp, SetupWF]
     uses: ./.github/workflows/AksTroubleshooting.yml
     if: always()
     with:
       environment: ${{ github.event.inputs.environment }}
-      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      RG: ${{ needs.SetupWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       LANAME: ${{ needs.Deploy.outputs.LANAME}}
