@@ -75,8 +75,7 @@ jobs:
 
       - name: Allow Monitoring extension
         shell: pwsh
-        run: |
-          az extension add -n log-analytics -y
+        run: az extension add -n log-analytics -y
 
       - name: Azure Login
         uses: Azure/login@v1
@@ -89,9 +88,9 @@ jobs:
       - name: Log Analytics log table verification
         shell: pwsh
         run: |
-          Write-Output "Check for Logs in the Log Analytics ($LANAME) Workspace ($LAWGUID)"
+          Write-Output "Check for Logs in the Log Analytics ($env:LANAME) Workspace ($env:LAWGUID)"
 
-          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
+          $KubeNode = az monitor log-analytics query -w $env:LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
           Write-Output $KubeNode
           Write-Output $KubeNode[0].Count
 
@@ -99,7 +98,7 @@ jobs:
             throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
           }
 
-          $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
+          $containers = az monitor log-analytics query -w $env:LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
           Write-Output $containers
 
   CaptureAgicLogs:
