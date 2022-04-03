@@ -192,6 +192,9 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
 
+      - name: AKS List available clusters
+        run: az aks list -o table
+
       - name: AKS Connect
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
