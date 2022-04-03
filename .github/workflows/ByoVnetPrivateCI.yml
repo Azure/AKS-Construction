@@ -373,6 +373,7 @@ jobs:
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       LANAME: ${{ needs.Deploy.outputs.LANAME}}
       LAWGUID: ${{ needs.Deploy.outputs.LAWGUID}}
+      USERUNCMD: true
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 

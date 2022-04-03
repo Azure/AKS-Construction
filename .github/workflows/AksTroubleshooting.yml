@@ -35,7 +35,7 @@ on:
         description: 'Log Analytics Workspace GUID'
       USERUNCMD:
         default: false
-        required: true
+        required: false
         type: boolean
         description: 'Run kubectl commands through RunCmd'
 
