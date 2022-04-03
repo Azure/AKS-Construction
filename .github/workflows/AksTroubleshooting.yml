@@ -33,6 +33,11 @@ on:
         required: true
         type: string
         description: 'Log Analytics Workspace GUID'
+      USERUNCMD:
+        default: false
+        required: true
+        type: boolean
+        description: 'Run kubectl commands through RunCmd'
 
     secrets:
       AZURE_CREDENTIALS:
@@ -194,28 +199,12 @@ jobs:
           environment: azurecloud
           allow-no-subscriptions: false
 
-      # - name: AKS List available clusters
-      #   uses: Azure/cli@v1.0.6
-      #   env:
-      #     AZCLIVERSION: latest #2.30.0
-      #   with:
-      #     azcliversion: ${{ env.AZCLIVERSION }}
-      #     inlineScript: |
-      #       az aks list -o table
-
-      # - name: AKS Connect
-      #   uses: Azure/cli@v1.0.6
-      #   env:
-      #     AZCLIVERSION: latest #2.30.0
-      #   with:
-      #     azcliversion: ${{ env.AZCLIVERSION }}
-      #     inlineScript: |
-      #       az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
-
       - name: AKS Connect
+        if: inputs.USERUNCMD == false
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
+        if: inputs.USERUNCMD == false
         env:
           kubeloginversion: 'v0.0.11'
         run: |
@@ -225,12 +214,35 @@ jobs:
           kubelogin convert-kubeconfig -l azurecli
 
       - name: Kubectl get event Warnings
-        run: kubectl get events --sort-by='.metadata.creationTimestamp' -A | grep Warning
+        env:
+          USERUNCMD: inputs.USERUNCMD
+        run: |
+          geteventcmd="kubectl get events --sort-by='.metadata.creationTimestamp' -A | grep Warning"
+
+          if [ "$USERUNCMD" != "true" ];
+          then
+            echo "Sending command $geteventcmd to $AKSNAME in $RG";
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${geteventcmd}");
+            echo $cmdOut;
+          else
+            $geteventcmd
+          fi
 
       - name: Check Events for default namespace
         env:
           NAMESP: "default"
-        run: kubectl get events -n $NAMESP
+          USERUNCMD: inputs.USERUNCMD
+        run: |
+          geteventcmd="kubectl get events -n $NAMESP"
+
+          if [ "$USERUNCMD" != "true" ];
+          then
+            echo "Sending command $geteventcmd to $AKSNAME in $RG";
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${geteventcmd}");
+            echo $cmdOut;
+          else
+            $geteventcmd
+          fi
 
       - name: Check Run Command
         uses: Azure/cli@v1.0.6
