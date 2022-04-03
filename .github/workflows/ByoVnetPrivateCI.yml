@@ -275,7 +275,7 @@ jobs:
             echo "::set-output name=LAWGUID::$LAWGUID"
 
       - name: Post Deploy Delay
-        id:  secrets.POSTDEPLOYDELAY != ''
+        id:  ${{ secrets.POSTDEPLOYDELAY }} != ''
         run: sleep ${{ secrets.POSTDEPLOYDELAY }}
 
       - name: Enable AGIC Addon
