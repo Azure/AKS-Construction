@@ -28,7 +28,7 @@ on:
         type: choice
         required: false
       postDeployDelay:
-        description: 'Pause for a x seconds post deployment'
+        description: 'Pause interval, post deployment'
         default: '30s'
         type: string
         required: false
@@ -280,8 +280,7 @@ jobs:
             echo "::set-output name=LAWGUID::$LAWGUID"
 
       - name: Post Deploy Delay
-        if:  ${{ secrets.POSTDEPLOYDELAY }} != ''
-        run: sleep ${{ secrets.POSTDEPLOYDELAY }}
+        run: sleep ${{ github.event.inputs.postDeployDelay }}
 
       - name: Enable AGIC Addon
         uses: Azure/cli@v1.0.6
