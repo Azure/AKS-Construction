@@ -21,7 +21,7 @@ on:
         default: 'SwedenCentral'
         options:
           - "WestEurope"
-          - "NortEurope"
+          - "NorthEurope"
           - "EastUs"
           - "SwedenCentral"
           - "UKWest"
