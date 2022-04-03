@@ -27,6 +27,11 @@ on:
           - "UKWest"
         type: choice
         required: false
+      postDeployDelay:
+        description: 'Pause for a x seconds post deployment'
+        default: '30s'
+        type: string
+        required: false
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
         default: false
@@ -275,7 +280,7 @@ jobs:
             echo "::set-output name=LAWGUID::$LAWGUID"
 
       - name: Post Deploy Delay
-        id:  ${{ secrets.POSTDEPLOYDELAY }} != ''
+        if:  ${{ secrets.POSTDEPLOYDELAY }} != ''
         run: sleep ${{ secrets.POSTDEPLOYDELAY }}
 
       - name: Enable AGIC Addon
