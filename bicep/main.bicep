@@ -121,7 +121,7 @@ param bastion bool = false
 @description('Deploy NSGs to your vnet subnets. (works with Custom Networking only, not BYO)')
 param CreateNetworkSecurityGroups bool = false
 
-@description('Configure Flow Logs for Network Security Groups in the NetworkWatcherRG resource group')
+@description('Configure Flow Logs for Network Security Groups in the NetworkWatcherRG resource group. Requires Contributor RBAC on NetworkWatcherRG and Reader on Subscription.')
 param CreateNetworkSecurityGroupFlowLogs bool = false
 
 module network './network.bicep' = if (custom_vnet) {
