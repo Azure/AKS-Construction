@@ -193,7 +193,20 @@ jobs:
           allow-no-subscriptions: false
 
       - name: AKS List available clusters
-        run: az aks list -o table
+        uses: Azure/cli@v1.0.6
+        env:
+          AZCLIVERSION: latest #2.30.0
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: az aks list -o table
+
+      - name: AKS List available clusters
+        uses: Azure/cli@v1.0.6
+        env:
+          AZCLIVERSION: latest #2.30.0
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: AKS Connect
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
