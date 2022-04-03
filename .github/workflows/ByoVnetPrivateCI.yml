@@ -274,6 +274,10 @@ jobs:
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
             echo "::set-output name=LAWGUID::$LAWGUID"
 
+      - name: Post Deploy Delay
+        id:  secrets.POSTDEPLOYDELAY != ''
+        run: sleep ${{ secrets.POSTDEPLOYDELAY }}
+
       - name: Enable AGIC Addon
         uses: Azure/cli@v1.0.6
         with:
