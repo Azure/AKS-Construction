@@ -37,7 +37,7 @@ configuration:
 
   # Bicep is experimental and currently disabled as testing occurs against compiled template
   # Enable automatic expansion of bicep source files
-  # AZURE_BICEP_FILE_EXPANSION: true
+  AZURE_BICEP_FILE_EXPANSION: true
 
   #ProjectSpecifc rules
   Azure_AKSNodeMinimumMaxPods: 30
