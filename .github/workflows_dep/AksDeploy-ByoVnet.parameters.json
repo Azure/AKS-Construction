@@ -77,6 +77,16 @@
         "upgradeChannel" : {
             "value" : "none"
         },
+        "AksDiagCategories": {
+            "value": [
+              "cluster-autoscaler",
+              "kube-apiserver",
+              "kube-controller-manager",
+              "kube-audit-admin",
+              "kube-scheduler",
+              "guard"
+            ]
+        },
         "KeyVaultSoftDelete" : {
             "value" : false
         },

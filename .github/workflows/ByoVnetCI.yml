@@ -69,7 +69,7 @@ jobs:
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
-      - name: PSRule - Analyze Azure parameter file
+      - name: PSRule for Azure - Well Architected
         uses: Microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
@@ -78,12 +78,13 @@ jobs:
 
       # In addition to the Well Architected analysis, we can also leverage the CAF rules
       # Run analysis against PSRule for Cloud Adoption Framework
-      - name: Test Azure Infrastructure as Code
+      - name: PSRule for CAF
         uses: microsoft/ps-rule@v2.0.0
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.CAF'
           inputPath: "${{ env.ParamFilePath }}"
-          
+
   #Pre deployment validation of the parameters + bicep code
   Validation:
     runs-on: ubuntu-latest
