@@ -75,8 +75,14 @@ jobs:
         with:
           modules: 'PSRule.Rules.Azure'
           inputPath: "${{ env.ParamFilePath }}"
-          prerelease: true
 
+      # In addition to the Well Architected analysis, we can also leverage the CAF rules
+      # Run analysis against PSRule for Cloud Adoption Framework
+      - name: Test Azure Infrastructure as Code
+        uses: microsoft/ps-rule@v2.0.0
+        with:
+          modules: 'PSRule.Rules.CAF'
+          
   #Pre deployment validation of the parameters + bicep code
   Validation:
     runs-on: ubuntu-latest
