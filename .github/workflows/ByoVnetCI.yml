@@ -738,6 +738,7 @@ jobs:
           kubectl describe po -n $NAMESP $APPGWPODNAME
 
       - name: Grab Invalid AGIC pod logs
+        continue-on-error: true
         env:
           NAMESP: "kube-system"
         run: |
@@ -745,6 +746,7 @@ jobs:
           kubectl logs -n $NAMESP $APPGWPODNAME | grep Invalid
 
       - name: Grab full AGIC pod logs
+        continue-on-error: true
         env:
           NAMESP: "kube-system"
         run: |

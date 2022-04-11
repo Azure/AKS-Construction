@@ -86,5 +86,5 @@ suppression:
   - agw-Byo
 
   Azure.AKS.AutoUpgrade: #Auto-upgrade can be a pain for short lived test clusters
-  - aksByo
+  - aks-Byo
 
