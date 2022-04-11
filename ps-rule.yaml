@@ -50,13 +50,16 @@ rule:
   - Azure.KeyVault.SoftDelete
   - Azure.KeyVault.PurgeProtect
   - Azure.AppGw.UseHTTPS #In this project AGIC is in charge of managing the AppGW.
+  - Azure.ACR.ContentTrust
 
 # Ignore the following rules for specific deployments
 # -aks-AksStan = Low spec'd AKS deployment that won't meet many WAF rules
+# - aks-Byo = moderately spec'd AKS deplyoment that wont meet every rule
 suppression:
   Azure.AKS.AuthorizedIPs:
   # Exclude the following AKS clusters
   - aks-AksStan
+  - aks-Byo
 
   Azure.AKS.MinNodeCount:
   - aks-AksStan
@@ -73,3 +76,15 @@ suppression:
   Azure.AKS.AvailabilityZone:
   - aks-AksStan
 
+  Azure.AppGw.UseWAF:
+  - aks-Byo
+  
+  Azure.AppGw.Prevention:
+  - aks-Byo
+  
+  Azure.AppGw.WAFEnabled:
+  - aks-Byo
+  
+  Azure.AKS.AutoUpgrade: #Auto-upgrade can be a pain for short lived test clusters
+  - aksByo
+  
