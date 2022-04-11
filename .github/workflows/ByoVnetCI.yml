@@ -82,6 +82,7 @@ jobs:
         uses: microsoft/ps-rule@v2.0.0
         with:
           modules: 'PSRule.Rules.CAF'
+          inputPath: "${{ env.ParamFilePath }}"
           
   #Pre deployment validation of the parameters + bicep code
   Validation:
