@@ -5,6 +5,7 @@
 # Please see the documentation for all configuration options:
 # https://microsoft.github.io/PSRule/
 # https://azure.github.io/PSRule.Rules.Azure/setup/configuring-options/
+# https://github.com/microsoft/PSRule.Rules.CAF
 
 input:
   pathIgnore:
@@ -20,9 +21,11 @@ input:
 include:
   path: []
   module:
-  # Allow local testing in Visual Studio Code
-  # https://azure.github.io/PSRule.Rules.Azure/validating-locally/
   - 'PSRule.Rules.Azure'
+  - 'PSRule.Rules.CAF'
+
+requires:
+  PSRule.Rules.CAF: '>=0.3.0'
 
 output:
   culture:
