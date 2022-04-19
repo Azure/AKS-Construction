@@ -50,6 +50,7 @@
             "openServiceMeshAddon": false,
             "denydefaultNetworkPolicy": false,
             "azurepolicy": "none",
+            "azurePolicyInitiative": "Baseline",
             "ingress": "none",
             "ingressEveryNode": false,
             "appgw_privateIp": false,
