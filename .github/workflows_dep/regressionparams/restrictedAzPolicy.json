@@ -9,7 +9,7 @@
       "value": "audit"
     },
     "azurePolicyInitiative": {
-      "value": "Restrictive"
+      "value": "Restricted"
     }
   }
 }
