@@ -242,24 +242,24 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     selectedKey={addons.azurepolicy}
                     options={[
                         { key: 'none', text: 'No restrictions, users can deploy any kubernetes workloads' },
-                        { key: 'audit', text: 'AUDIT compliance with the set of cluster pod security baseline standards for Linux-based workloads' },
-                        { key: 'deny', text: 'BLOCK and non-compliant Linux-based workloads with the set of cluster pod security baseline standards' }
+                        { key: 'audit', text: 'AUDIT non-compliant Linux-based workloads with the set of cluster pod security baseline standards' },
+                        { key: 'deny', text: 'BLOCK non-compliant Linux-based workloads with the set of cluster pod security baseline standards' }
                     ]}
                     onChange={(ev, { key }) => updateFn("azurepolicy", key)}
                 />
                 {addons.azurepolicy !== 'none' &&
-                <>
+                <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
                     <Dropdown
                         label="Pod Security Policy"
                         onChange={(ev, { key }) => updateFn("azurePolicyInitiative", key)} selectedKey={addons.azurePolicyInitiative}
-                        styles={{ root: { marginLeft: '50px' } }}
+                        styles={{ root: {  marginTop: '20px', marginLeft: '100px', width: '700px' } }}
                         options={[
                             { key: 'Baseline', text: 'Baseline pod security standards' },
                             { key: 'Restricted', text: 'Restricted pod security standards' }
                         ]}
                     />
                     <MessageBar messageBarType={MessageBarType.success} styles={{ root: { marginTop: '20px', marginLeft: '100px', width: '700px' } }}>
-                        The baseline will automatically assign and <b>{addons.azurepolicy}</b> the following <Link target="_target" href="https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json">Policies</Link>:
+                        The baseline policy will automatically assign and <b>{addons.azurepolicy}</b> the following <Link target="_target" href="https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json">Policies</Link>:
                         <ul>
                             <li>Do not allow privileged containers in Kubernetes cluster</li>
                             <li>Kubernetes cluster pods should only use approved host network and port range</li>
@@ -277,7 +277,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
                         To review these policies and browse other policies that can be applied at other scopes, see the <Link target="_target" href="https://docs.microsoft.com/azure/aks/policy-reference">Policy Docs</Link>
                     </MessageBar>
-                </>
+                </Stack.Item>
                 }
             </Stack.Item>
             <Separator className="notopmargin" />
