@@ -822,8 +822,19 @@ param networkPlugin string = 'azure'
 @description('The network policy to use.')
 param networkPolicy string = ''
 
+@allowed([
+  ''
+  'audit'
+  'deny'
+])
 @description('Enable the Azure Policy addon')
 param azurepolicy string = ''
+
+@allowed([
+  'Baseline'
+  'Restricted'
+])
+param azurePolicyInitiative string = 'Baseline'
 
 @description('Enable the git ops addon')
 param gitops string = ''
@@ -1099,16 +1110,23 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
 }
 output aksClusterName string = aks.name
 
-var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
+var policySetBaseline = '/providers/Microsoft.Authorization/policySetDefinitions/a8640138-9b0a-4a28-b8cb-1666c838647d'
+var policySetRestrictive = '/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00'
+
 resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
-  name: '${resourceName}-baseline'
+  name: '${resourceName}-${azurePolicyInitiative}'
   location: location
   properties: {
-    //scope: resourceGroup().id
-    policyDefinitionId: policySetPodSecBaseline
+    policyDefinitionId: azurePolicyInitiative == 'Baseline' ? policySetBaseline : policySetRestrictive
     parameters: {
-      // Gives error: "The request content was invalid and could not be deserialized"
-      //excludedNamespaces: '[  "kube-system",  "gatekeeper-system",  "azure-arc"]'
+      excludedNamespaces: {
+        value: [
+            'kube-system'
+            'gatekeeper-system'
+            'azure-arc'
+            'cluster-baseline-setting'
+        ]
+      }
       effect: {
         value: azurepolicy
       }
@@ -1116,8 +1134,8 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
     metadata: {
       assignedBy: 'Aks Construction'
     }
-    displayName: 'Aks Baseline Security Policy'
-    description: 'As per: https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json'
+    displayName: 'Kubernetes cluster pod security ${azurePolicyInitiative} standards for Linux-based workloads'
+    description: 'As per: https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/'
   }
 }
 
