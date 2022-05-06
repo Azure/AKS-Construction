@@ -27,8 +27,24 @@ jobs:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
 
+  Troubleshoot:
+    needs: [ReusableWF]
+    uses: ./.github/workflows/AksTroubleshooting.yml
+    if: always()
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      AKSNAME: 'aks-PrvUKW'
+      AGNAME: 'appgw-PrvUKW'
+      LANAME: 'log-PrvUKW'
+      LAWGUID: '3c28e99b-e4cd-4e6a-99e6-ace8aa44b754'
+      USERUNCMD: true
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
   Post-Deploy:
     needs: [ReusableWF]
+    if: false
     uses: azure/aks-construction/.github/workflows/PostDeploy.yml@0.4.3
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }}
