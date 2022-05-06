@@ -17,7 +17,7 @@ env:
   RG: "Automation-Actions-AksDeployCI"
 
 jobs:
-  ReusableWF:
+  SetupWF:
     runs-on: ubuntu-latest
     outputs:
       RG: ${{ env.RG }}
@@ -27,13 +27,28 @@ jobs:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
 
+  SmokeTest_KnownGoodApp:
+    needs: [SetupWF]
+    uses: ./.github/workflows/AppDeploy_AzureVote.yml
+    with:
+      Environment: ${{ github.event.inputs.environment }}
+      RG: ${{ needs.SetupWF.outputs.RG }}
+      AKSNAME: 'aks-PrvUKW'
+      AGNAME: 'appgw-PrvUKW'
+      APPNAME: azure-vote-public
+      INGRESSTYPE: "AGIC-Public-Ingress"
+      UNINSTALLAFTERVERIFY: false
+      FORCEHELMCLEANINSTALL: true
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
   Troubleshoot:
-    needs: [ReusableWF]
+    needs: [SmokeTest_KnownGoodApp , SetupWF]
     uses: ./.github/workflows/AksTroubleshooting.yml
     if: always()
     with:
       environment: ${{ github.event.inputs.environment }}
-      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      RG: ${{ needs.SetupWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: 'aks-PrvUKW'
       AGNAME: 'appgw-PrvUKW'
       LANAME: 'log-PrvUKW'
