@@ -827,8 +827,19 @@ param networkPlugin string = 'azure'
 @description('The network policy to use.')
 param networkPolicy string = ''
 
+@allowed([
+  ''
+  'audit'
+  'deny'
+])
 @description('Enable the Azure Policy addon')
 param azurepolicy string = ''
+
+@allowed([
+  'Baseline'
+  'Restricted'
+])
+param azurePolicyInitiative string = 'Baseline'
 
 @description('Enable the git ops addon')
 param gitops string = ''
@@ -1107,11 +1118,6 @@ output aksClusterName string = aks.name
 var policySetBaseline = '/providers/Microsoft.Authorization/policySetDefinitions/a8640138-9b0a-4a28-b8cb-1666c838647d'
 var policySetRestrictive = '/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00'
 
-@allowed([
-  'Baseline'
-  'Restrictive'
-])
-param azurePolicyInitiative string = 'Baseline'
 resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
   name: '${resourceName}-${azurePolicyInitiative}'
   location: location

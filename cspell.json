@@ -92,6 +92,7 @@
         "postdeploy",
         "pwsh",
         "routable",
+        "seccomp",
         "serviceparams",
         "smanifests",
         "snuck",
