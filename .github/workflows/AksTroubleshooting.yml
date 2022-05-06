@@ -149,7 +149,7 @@ jobs:
       - name: Kubelogin
         if: inputs.USERUNCMD == false
         env:
-          kubeloginversion: 'v0.0.11'
+          kubeloginversion: 'v0.0.13'
         run: |
           wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
           unzip kubelogin-linux-amd64.zip
@@ -232,7 +232,7 @@ jobs:
       - name: Kubelogin
         if: inputs.USERUNCMD == false
         env:
-          kubeloginversion: 'v0.0.11'
+          kubeloginversion: 'v0.0.13'
         run: |
           wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
           unzip kubelogin-linux-amd64.zip
