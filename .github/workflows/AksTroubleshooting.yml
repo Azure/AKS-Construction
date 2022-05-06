@@ -143,9 +143,11 @@ jobs:
           allow-no-subscriptions: false
 
       - name: AKS Connect
+        if: inputs.USERUNCMD == false
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
+        if: inputs.USERUNCMD == false
         env:
           kubeloginversion: 'v0.0.11'
         run: |
@@ -153,6 +155,30 @@ jobs:
           unzip kubelogin-linux-amd64.zip
           sudo mv bin/linux_amd64/kubelogin /usr/bin
           kubelogin convert-kubeconfig -l azurecli
+
+        #APPGWPOD="kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name'"
+        #echo $APPGWPOD
+        #TODO: Can we get pods by label -l ?
+      - name: Get Agic pod name
+        env:
+          NAMESP: "kube-system"
+        run: |
+          NAMESPACEPODS="kubectl get pods -n $NAMESP -o json"
+          echo $NAMESPACEPODS
+
+          if [ "$USERUNCMD" != "true" ];
+          then
+            echo "Sending command $NAMESPACEPODS to $AKSNAME in $RG";
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${NAMESPACEPODS}");
+            echo $cmdOut;
+            PODS=$($cmdOut | jq -r '.logs')
+          else
+            PODS=$NAMESPACEPODS
+          fi
+
+          APPGWPOD= $(echo $PODS | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+
+          echo "::set-output name=APPGWPOD::$APPGWPOD"
 
       - name: Describe AGIC Pod
         env:
@@ -213,6 +239,19 @@ jobs:
           sudo mv bin/linux_amd64/kubelogin /usr/bin
           kubelogin convert-kubeconfig -l azurecli
 
+      - name: Check Run Command
+        if: inputs.USERUNCMD == true
+        uses: Azure/cli@v1.0.6
+        env:
+          AZCLIVERSION: latest #2.30.0
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+            command="kubectl get nodes"
+            echo "Sending command $command to AKS"
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
+            echo $cmdOut
+
       - name: Kubectl get event Warnings
         env:
           USERUNCMD: inputs.USERUNCMD
@@ -221,6 +260,8 @@ jobs:
 
           if [ "$USERUNCMD" != "true" ];
           then
+            echo "Grep command not in RunCmd Container. Setting unfiltered command."
+            geteventcmd="kubectl get events --sort-by='.metadata.creationTimestamp' -A"
             echo "Sending command $geteventcmd to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${geteventcmd}");
             echo $cmdOut;
@@ -243,15 +284,3 @@ jobs:
           else
             $geteventcmd
           fi
-
-      - name: Check Run Command
-        uses: Azure/cli@v1.0.6
-        env:
-          AZCLIVERSION: latest #2.30.0
-        with:
-          azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |
-            command="kubectl get nodes"
-            echo "Sending command $command to AKS"
-            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}")
-            echo $cmdOut

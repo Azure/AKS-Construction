@@ -18,12 +18,11 @@ on:
         required: false
       region:
         description: 'Resource Deployment Region'
-        default: 'SwedenCentral'
+        default: 'UKWest'
         options:
           - "WestEurope"
           - "NorthEurope"
           - "EastUs"
-          - "SwedenCentral"
           - "UKWest"
         type: choice
         required: false

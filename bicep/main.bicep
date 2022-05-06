@@ -249,7 +249,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
 var keyVaultSecretsUserRole = resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
 resource kvAppGwSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && appgwKVIntegration) {
   scope: kv
-  name: '${guid(aks.id, 'AppGw', keyVaultSecretsUserRole)}'
+  name: guid(aks.id, 'AppGw', keyVaultSecretsUserRole)
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole
     principalType: 'ServicePrincipal'
@@ -259,7 +259,7 @@ resource kvAppGwSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04
 
 resource kvCSIdriverSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && azureKeyvaultSecretsProvider) {
   scope: kv
-  name: '${guid(aks.id, 'CSIDriver', keyVaultSecretsUserRole)}'
+  name: guid(aks.id, 'CSIDriver', keyVaultSecretsUserRole)
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole
     principalType: 'ServicePrincipal'
@@ -272,7 +272,7 @@ param kvOfficerRolePrincipalId string = ''
 var keyVaultSecretsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
 resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
   scope: kv
-  name: '${guid(aks.id, 'usersecret', keyVaultSecretsOfficerRole)}'
+  name: guid(aks.id, 'usersecret', keyVaultSecretsOfficerRole)
   properties: {
     roleDefinitionId: keyVaultSecretsOfficerRole
     principalType: 'User'
@@ -284,7 +284,7 @@ resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-0
 var keyVaultCertsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'a4417e6f-fecd-4de8-b567-7b0420556985')
 resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
   scope: kv
-  name: '${guid(aks.id, 'usercert', keyVaultCertsOfficerRole)}'
+  name: guid(aks.id, 'usercert', keyVaultCertsOfficerRole)
   properties: {
     roleDefinitionId: keyVaultCertsOfficerRole
     principalType: 'User'
@@ -385,6 +385,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
 output containerRegistryId string = !empty(registries_sku) ? acr.id : ''
 
+
 resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && !empty(registries_sku)) {
   name: 'acrDiags'
   scope: acr
@@ -425,7 +426,7 @@ var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).object
 
 resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
-  name: '${guid(aks.id, 'Acr' , AcrPullRole)}'
+  name: guid(aks.id, 'Acr' , AcrPullRole)
   properties: {
     roleDefinitionId: AcrPullRole
     principalType: 'ServicePrincipal'
@@ -440,7 +441,7 @@ param acrPushRolePrincipalId string = ''
 
 resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku) && !empty(acrPushRolePrincipalId)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
-  name: '${guid(aks.id, 'Acr' , AcrPushRole)}'
+  name: guid(aks.id, 'Acr' , AcrPushRole)
   properties: {
     roleDefinitionId: AcrPushRole
     principalType: 'User'
@@ -548,7 +549,7 @@ resource appgwpip 'Microsoft.Network/publicIPAddresses@2021-02-01' = if (deployA
 var frontendPublicIpConfig = {
   properties: {
     publicIPAddress: {
-      id: '${appgwpip.id}'
+      id: appgwpip.id
     }
   }
   name: 'appGatewayFrontendIP'
@@ -691,7 +692,7 @@ var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988a
 // AGIC's identity requires "Contributor" permission over Application Gateway.
 resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: appgw
-  name: '${guid(aks.id, 'Agic', contributor)}'
+  name: guid(aks.id, 'Agic', contributor)
   properties: {
     roleDefinitionId: contributor
     principalType: 'ServicePrincipal'
@@ -703,7 +704,7 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-pr
 var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
 resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: resourceGroup()
-  name: '${guid(aks.id, 'Agic', reader)}'
+  name: guid(aks.id, 'Agic', reader)
   properties: {
     roleDefinitionId: reader
     principalType: 'ServicePrincipal'
@@ -715,7 +716,7 @@ resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-p
 var managedIdentityOperator = resourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830')
 resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON &&  deployAppGw) {
   scope: appGwIdentity
-  name: '${guid(aks.id, 'Agic', managedIdentityOperator)}'
+  name: guid(aks.id, 'Agic', managedIdentityOperator)
   properties: {
     roleDefinitionId: managedIdentityOperator
     principalType: 'ServicePrincipal'
@@ -1103,16 +1104,28 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
 }
 output aksClusterName string = aks.name
 
-var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
+var policySetBaseline = '/providers/Microsoft.Authorization/policySetDefinitions/a8640138-9b0a-4a28-b8cb-1666c838647d'
+var policySetRestrictive = '/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00'
+
+@allowed([
+  'Baseline'
+  'Restrictive'
+])
+param azurePolicyInitiative string = 'Baseline'
 resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
-  name: '${resourceName}-baseline'
+  name: '${resourceName}-${azurePolicyInitiative}'
   location: location
   properties: {
-    //scope: resourceGroup().id
-    policyDefinitionId: policySetPodSecBaseline
+    policyDefinitionId: azurePolicyInitiative == 'Baseline' ? policySetBaseline : policySetRestrictive
     parameters: {
-      // Gives error: "The request content was invalid and could not be deserialized"
-      //excludedNamespaces: '[  "kube-system",  "gatekeeper-system",  "azure-arc"]'
+      excludedNamespaces: {
+        value: [
+            'kube-system'
+            'gatekeeper-system'
+            'azure-arc'
+            'cluster-baseline-setting'
+        ]
+      }
       effect: {
         value: azurepolicy
       }
@@ -1120,8 +1133,8 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
     metadata: {
       assignedBy: 'Aks Construction'
     }
-    displayName: 'Aks Baseline Security Policy'
-    description: 'As per: https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json'
+    displayName: 'Kubernetes cluster pod security ${azurePolicyInitiative} standards for Linux-based workloads'
+    description: 'As per: https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/'
   }
 }
 
@@ -1131,7 +1144,7 @@ param adminprincipleid string = ''
 var buildInAKSRBACClusterAdmin = resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
 resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (enableAzureRBAC && !empty(adminprincipleid)) {
   scope: aks // Use when specifying a scope that is different than the deployment scope
-  name: '${guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)}'
+  name: guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)
   properties: {
     roleDefinitionId: buildInAKSRBACClusterAdmin
     principalType: 'User'
@@ -1240,7 +1253,7 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (cre
 var MonitoringMetricsPublisherRole = resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
 resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (omsagent) {
   scope: aks
-  name: '${guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)}'
+  name: guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)
   properties: {
     roleDefinitionId: MonitoringMetricsPublisherRole
     principalId: aks.properties.addonProfiles.omsagent.identity.objectId

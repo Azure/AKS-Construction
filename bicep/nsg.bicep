@@ -24,7 +24,7 @@ resource ruleAppGwManagement 'Microsoft.Network/networkSecurityGroups/securityRu
     sourceAddressPrefix: 'GatewayManager'
     destinationAddressPrefix: '*'
     access: 'Allow'
-    priority: 100
+    priority: 110
     direction: 'Inbound'
   }
 }
@@ -40,7 +40,7 @@ resource ruleAzureLoadBalancer 'Microsoft.Network/networkSecurityGroups/security
     sourceAddressPrefix: 'AzureLoadBalancer'
     destinationAddressPrefix: '*'
     access: 'Allow'
-    priority: 110
+    priority: 120
     direction: 'Inbound'
     sourcePortRanges: []
     destinationPortRanges: []
@@ -211,6 +211,27 @@ resource ruleBastionEgressSessionInfo 'Microsoft.Network/networkSecurityGroups/s
     sourcePortRanges: []
     destinationPortRanges: [
       '80'
+    ]
+    sourceAddressPrefixes: []
+    destinationAddressPrefixes: []
+  }
+}
+
+param ruleInDenySsh bool = false
+resource ruleSshIngressDeny 'Microsoft.Network/networkSecurityGroups/securityRules@2020-11-01' = if(ruleInDenySsh) {
+  parent: nsg
+  name: 'DenySshInbound'
+  properties: {
+    protocol: '*'
+    sourcePortRange: '*'
+    sourceAddressPrefix: '*'
+    destinationAddressPrefix: '*'
+    access: 'Deny'
+    priority: 100
+    direction: 'Inbound'
+    sourcePortRanges: []
+    destinationPortRanges: [
+      '22'
     ]
     sourceAddressPrefixes: []
     destinationAddressPrefixes: []
