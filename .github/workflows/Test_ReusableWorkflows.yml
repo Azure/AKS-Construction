@@ -14,7 +14,7 @@ on:
 concurrency: ci-${{ github.ref }}
 
 env:
-  RG: "Automation-Actions-AksDeployCI"
+  RG: "AksBicepAcc-Ci-PrivateCluster" #"Automation-Actions-AksDeployCI"
 
 jobs:
   SetupWF:
