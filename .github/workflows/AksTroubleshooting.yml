@@ -169,7 +169,6 @@ jobs:
           then
             echo "Sending command $NAMESPACEPODS to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${NAMESPACEPODS}");
-            echo $cmdOut
             echo $cmdOut > debug-agic-cmdout.json
             PODS=$(echo $cmdOut | jq -r '.logs')
             echo $PODS > debug-getagicpod-logs.json
@@ -193,7 +192,6 @@ jobs:
           then
             echo "Sending command $DESCRIBEPODCMD to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${DESCRIBEPODCMD}");
-            echo $cmdOut
             echo $cmdOut > debug-describe-agic.json
           else
             $DESCRIBEPODCMD > debug-describe-agic.json
@@ -211,13 +209,15 @@ jobs:
           then
             echo "Sending command $PODLOGSCMD to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${PODLOGSCMD}");
-            echo $cmdOut
             echo $cmdOut > debug-agic-podlogs.json
             PODLOGS=$(echo $cmdOut | jq -r '.logs')
+            echo $PODLOGS
             echo $PODLOGS > debug-agic-podlogs.txt
           else
             $PODLOGSCMD > debug-agic-podlogs.txt
           fi
+
+          cat debug-agic-podlogs.txt
 
       - name: Grab Invalid AGIC pod logs
         run: cat debug-agic-podlogs.txt | grep invalid
@@ -226,8 +226,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: DebugFiles
-          path: debug*.json
+          name: AGIC
+          path: debug*.*
 
   CaptureAKSLogs:
     runs-on: ubuntu-latest
