@@ -54,10 +54,10 @@ jobs:
     steps:
       - name: Parameter log
         run: |
+          echo "Capturing environment parameters"
+          echo "--------------------------------"
           echo "Environment is ${{ inputs.Environment }}"
-          echo "RG is ${{ inputs.RG }}"
           echo "RG is $RG"
-          echo "AKS name is ${{ inputs.AKSNAME }}"
           echo "AKS name is $AKSNAME"
           echo "AGW name is ${{ inputs.AGNAME }}"
           echo "LA name is ${{ inputs.LANAME }}"
@@ -156,9 +156,6 @@ jobs:
           sudo mv bin/linux_amd64/kubelogin /usr/bin
           kubelogin convert-kubeconfig -l azurecli
 
-        #APPGWPOD="kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name'"
-        #echo $APPGWPOD
-        #TODO: Can we get pods by label -l ?
       - name: Get Agic pod name
         id: agicpodname
         env:
@@ -199,7 +196,7 @@ jobs:
             echo $cmdOut
             echo $cmdOut > debug-describe-agic.json
           else
-            $NAMESPACEPODS > debug-describe-agic.json
+            $DESCRIBEPODCMD > debug-describe-agic.json
           fi
 
       - name: Grab full AGIC pod logs
@@ -212,12 +209,12 @@ jobs:
 
           if [ "$USERUNCMD" != "true" ];
           then
-            echo "Sending command $DESCRIBEPODCMD to $AKSNAME in $RG";
-            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${DESCRIBEPODCMD}");
+            echo "Sending command $PODLOGSCMD to $AKSNAME in $RG";
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${PODLOGSCMD}");
             echo $cmdOut
             echo $cmdOut > debug-agic-podlogs.txt
           else
-            echo $cmdOut > debug-agic-podlogs.txt
+            $PODLOGSCMD > debug-agic-podlogs.txt
           fi
 
       - name: Grab Invalid AGIC pod logs
