@@ -116,7 +116,6 @@ jobs:
 
           $DenyLogs = az monitor log-analytics query -w $env:LAWGUID --analytics-query $query -o json | ConvertFrom-Json
           Write-Output $DenyLogs
-          Write-Output $DenyLogs[0].Count
 
       - name: Flow Logs IP Details Check
         shell: pwsh
