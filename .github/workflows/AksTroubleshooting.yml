@@ -110,7 +110,7 @@ jobs:
 
       - name: Flow Logs Deny checks
         shell: pwsh
-        continue-on-error: true
+        continue-on-error: true #The query will fail if NSG flow logs are not being captured
         run: |
           Write-Output "Check for Logs in the Log Analytics ($env:LANAME) Workspace ($env:LAWGUID)"
 
@@ -122,6 +122,7 @@ jobs:
 
       - name: Flow Logs IP Details Check
         shell: pwsh
+        continue-on-error: true #The query will fail if NSG flow logs are not being captured
         run: |
           Write-Output "Check for Logs in the Log Analytics ($env:LANAME) Workspace ($env:LAWGUID)"
 
