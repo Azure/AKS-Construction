@@ -127,7 +127,6 @@ jobs:
 
           $Logs = az monitor log-analytics query -w $env:LAWGUID --analytics-query $query -o json | ConvertFrom-Json
           Write-Output $Logs
-          Write-Output $Logs[0].Count
 
   CaptureAgicLogs:
     runs-on: ubuntu-latest
