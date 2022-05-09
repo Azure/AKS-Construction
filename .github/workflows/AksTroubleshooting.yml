@@ -206,18 +206,29 @@ jobs:
         continue-on-error: true
         env:
           NAMESP: "kube-system"
+          APPGWPODNAME: ${{ steps.agicpodname.outputs.APPGWPOD}}
         run: |
-          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-          kubectl logs -n $NAMESP $APPGWPODNAME
+          PODLOGSCMD="kubectl logs -n $NAMESP $APPGWPODNAME"
+
+          if [ "$USERUNCMD" != "true" ];
+          then
+            echo "Sending command $DESCRIBEPODCMD to $AKSNAME in $RG";
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${DESCRIBEPODCMD}");
+            echo $cmdOut
+            echo $cmdOut > debug-agic-podlogs.txt
+          else
+            echo $cmdOut > debug-agic-podlogs.txt
+          fi
 
       - name: Grab Invalid AGIC pod logs
-        continue-on-error: true
-        env:
-          NAMESP: "kube-system"
-        run: |
-          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-          echo "Getting logs for AGIC pod: $APPGWPODNAME"
-          kubectl logs -n $NAMESP $APPGWPODNAME | grep Invalid
+        run: cat debug-agic-podlogs.txt | grep invalid
+
+      - name: Store any generated debug json files as artifacts
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: DebugFiles
+          path: debug*.json
 
   CaptureAKSLogs:
     runs-on: ubuntu-latest
@@ -299,10 +310,3 @@ jobs:
           else
             $geteventcmd
           fi
-
-      - name: Store any generated debug files as artifacts
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: DebugFiles
-          path: debug*.json
