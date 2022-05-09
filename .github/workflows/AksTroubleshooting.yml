@@ -168,7 +168,7 @@ jobs:
           NAMESPACEPODS="kubectl get pods -n $NAMESP -l $AGICLABEL -o json"
           echo $NAMESPACEPODS
 
-          if [ "$USERUNCMD" != "true" ];
+          if [ "$USERUNCMD" == "true" ];
           then
             echo "Sending command $NAMESPACEPODS to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${NAMESPACEPODS}");
@@ -176,7 +176,7 @@ jobs:
             PODS=$(echo $cmdOut | jq -r '.logs')
             echo $PODS > debug-getagicpod-logs.json
           else
-            PODS=$NAMESPACEPODS
+            PODS=$($NAMESPACEPODS)
           fi
 
           APPGWPOD=$(echo $PODS | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
@@ -192,7 +192,7 @@ jobs:
         run: |
           DESCRIBEPODCMD="kubectl describe po -n $NAMESP $APPGWPODNAME"
 
-          if [ "$USERUNCMD" != "true" ];
+          if [ "$USERUNCMD" == "true" ];
           then
             echo "Sending command $DESCRIBEPODCMD to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${DESCRIBEPODCMD}");
@@ -213,7 +213,7 @@ jobs:
         run: |
           PODLOGSCMD="kubectl logs -n $NAMESP $APPGWPODNAME"
 
-          if [ "$USERUNCMD" != "true" ];
+          if [ "$USERUNCMD" == "true" ];
           then
             echo "Sending command $PODLOGSCMD to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${PODLOGSCMD}");
