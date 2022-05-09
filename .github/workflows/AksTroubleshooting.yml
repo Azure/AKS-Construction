@@ -211,22 +211,18 @@ jobs:
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${PODLOGSCMD}");
             echo $cmdOut > debug-agic-podlogs.json
             PODLOGS=$(echo $cmdOut | jq -r '.logs')
-            echo $PODLOGS
             echo $PODLOGS > debug-agic-podlogs.txt
           else
             $PODLOGSCMD > debug-agic-podlogs.txt
           fi
 
-          cat debug-agic-podlogs.txt
-
-      - name: Grab Invalid AGIC pod logs
-        run: cat debug-agic-podlogs.txt | grep invalid
+          cat debug-agic-podlogs.txt | grep invalid > debug-agic-podlogs-invalid.txt
 
       - name: Store any generated debug json files as artifacts
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: AGIC
+          name: Troubleshooting-AGIC
           path: debug*.*
 
   CaptureAKSLogs:
