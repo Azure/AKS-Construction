@@ -109,6 +109,7 @@ jobs:
 
       - name: Flow Logs Deny checks
         shell: pwsh
+        continue-on-error: true
         run: |
           Write-Output "Check for Logs in the Log Analytics ($env:LANAME) Workspace ($env:LAWGUID)"
 
