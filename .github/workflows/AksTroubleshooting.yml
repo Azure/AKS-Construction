@@ -196,6 +196,9 @@ jobs:
             $DESCRIBEPODCMD > debug-describe-agic.json
           fi
 
+          echo "Grabbing AGIC image version"
+          cat debug-describe-agic.json | grep Image:
+
       - name: Grab full AGIC pod logs
         continue-on-error: true
         env:
