@@ -115,6 +115,7 @@ jobs:
           Write-Output "Check for Logs in the Log Analytics ($env:LANAME) Workspace ($env:LAWGUID)"
 
           $query="AzureNetworkAnalytics_CL |where DeniedInFlows_d > 0 or  DeniedOutFlows_d > 0 |project FlowStartTime_t, NSGRule_s, SourceSystem, FlowType_s, DestIP_s, DestPort_d, Subnet_s"
+          Write-Output "Sending Query $query"
 
           $DenyLogs = az monitor log-analytics query -w $env:LAWGUID --analytics-query $query -o json | ConvertFrom-Json
           Write-Output $DenyLogs
@@ -125,6 +126,7 @@ jobs:
           Write-Output "Check for Logs in the Log Analytics ($env:LANAME) Workspace ($env:LAWGUID)"
 
           $query="AzureNetworkAnalyticsIPDetails_CL"
+          Write-Output "Sending Query $query"
 
           $Logs = az monitor log-analytics query -w $env:LAWGUID --analytics-query $query -o json | ConvertFrom-Json
           Write-Output $Logs
