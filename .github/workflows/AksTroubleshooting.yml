@@ -57,6 +57,7 @@ jobs:
           echo "Capturing environment parameters"
           echo "--------------------------------"
           echo "Environment is ${{ inputs.Environment }}"
+          echo "Use Run Cmd is ${{ inputs.USERUNCMD }}"
           echo "RG is $RG"
           echo "AKS name is $AKSNAME"
           echo "AGW name is ${{ inputs.AGNAME }}"
@@ -160,6 +161,7 @@ jobs:
         env:
           NAMESP: "kube-system"
           AGICLABEL: "app=ingress-appgw"
+          USERUNCMD: ${{ inputs.USERUNCMD }}
         run: |
           NAMESPACEPODS="kubectl get pods -n $NAMESP -l $AGICLABEL -o json"
           echo $NAMESPACEPODS
@@ -184,6 +186,7 @@ jobs:
         env:
           NAMESP: "kube-system"
           APPGWPODNAME: ${{ steps.agicpodname.outputs.APPGWPOD}}
+          USERUNCMD: ${{ inputs.USERUNCMD }}
         run: |
           DESCRIBEPODCMD="kubectl describe po -n $NAMESP $APPGWPODNAME"
 
@@ -204,6 +207,7 @@ jobs:
         env:
           NAMESP: "kube-system"
           APPGWPODNAME: ${{ steps.agicpodname.outputs.APPGWPOD}}
+          USERUNCMD: ${{ inputs.USERUNCMD }}
         run: |
           PODLOGSCMD="kubectl logs -n $NAMESP $APPGWPODNAME"
 
