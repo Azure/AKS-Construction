@@ -360,6 +360,7 @@ module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
     workspaceResourceId: log.id
     ruleInAllowInternetHttp: true
     ruleInAllowInternetHttps: true
+    ruleInDenySsh: true
     FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
   }
 }
