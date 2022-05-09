@@ -170,13 +170,15 @@ jobs:
           then
             echo "Sending command $NAMESPACEPODS to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${NAMESPACEPODS}");
+            cmdOut > debug-getagicpod-cmdout.json
             echo $cmdOut;
             PODS=$($cmdOut | jq -r '.logs')
+            PODS > debug-getagicpod-logs.json
           else
             PODS=$NAMESPACEPODS
           fi
 
-          APPGWPOD= $(echo $PODS | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
+          APPGWPOD=$(echo $PODS | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
 
           echo "::set-output name=APPGWPOD::$APPGWPOD"
 
@@ -284,3 +286,10 @@ jobs:
           else
             $geteventcmd
           fi
+
+      - name: Store any generated debug files as artifacts
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: DebugFiles
+          path: debug*.json
