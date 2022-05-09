@@ -7,7 +7,7 @@ on:
     inputs:
       doSmokeTestUninstall:
         description: 'Uninstall smoke test apps after tests'
-        default: 'true'
+        default: true
         type: boolean
         required: false
 

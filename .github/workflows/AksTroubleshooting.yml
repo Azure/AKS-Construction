@@ -170,10 +170,9 @@ jobs:
           then
             echo "Sending command $NAMESPACEPODS to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${NAMESPACEPODS}");
-            cmdOut > debug-getagicpod-cmdout.json
-            echo $cmdOut;
+            echo $cmdOut > debug-getagicpod-cmdout.json
             PODS=$($cmdOut | jq -r '.logs')
-            PODS > debug-getagicpod-logs.json
+            echo $PODS > debug-getagicpod-logs.json
           else
             PODS=$NAMESPACEPODS
           fi
