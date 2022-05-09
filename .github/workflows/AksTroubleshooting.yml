@@ -212,7 +212,9 @@ jobs:
             echo "Sending command $PODLOGSCMD to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${PODLOGSCMD}");
             echo $cmdOut
-            echo $cmdOut > debug-agic-podlogs.txt
+            echo $cmdOut > debug-agic-podlogs.json
+            PODLOGS=$(echo $cmdOut | jq -r '.logs')
+            echo $PODLOGS > debug-agic-podlogs.txt
           else
             $PODLOGSCMD > debug-agic-podlogs.txt
           fi
