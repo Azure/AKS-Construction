@@ -162,16 +162,18 @@ jobs:
       - name: Get Agic pod name
         env:
           NAMESP: "kube-system"
+          AGICLABEL: "app=ingress-appgw"
         run: |
-          NAMESPACEPODS="kubectl get pods -n $NAMESP -o json"
+          NAMESPACEPODS="kubectl get pods -n $NAMESP -l $AGICLABEL -o json"
           echo $NAMESPACEPODS
 
           if [ "$USERUNCMD" != "true" ];
           then
             echo "Sending command $NAMESPACEPODS to $AKSNAME in $RG";
             cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${NAMESPACEPODS}");
-            echo $cmdOut > debug-getagicpod-cmdout.json
-            PODS=$($cmdOut | jq -r '.logs')
+            echo $cmdOut
+            echo $cmdOut > debug-agic-cmdout.json
+            PODS=$(echo $cmdOut | jq -r '.logs')
             echo $PODS > debug-getagicpod-logs.json
           else
             PODS=$NAMESPACEPODS
