@@ -160,6 +160,7 @@ jobs:
         #echo $APPGWPOD
         #TODO: Can we get pods by label -l ?
       - name: Get Agic pod name
+        id: agicpodname
         env:
           NAMESP: "kube-system"
           AGICLABEL: "app=ingress-appgw"
@@ -181,14 +182,25 @@ jobs:
 
           APPGWPOD=$(echo $PODS | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
 
+          echo "Found AGIC pod name: $APPGWPOD"
           echo "::set-output name=APPGWPOD::$APPGWPOD"
 
       - name: Describe AGIC Pod
         env:
           NAMESP: "kube-system"
+          APPGWPODNAME: ${{ steps.agicpodname.outputs.APPGWPOD}}
         run: |
-          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-          kubectl describe po -n $NAMESP $APPGWPODNAME
+          DESCRIBEPODCMD="kubectl describe po -n $NAMESP $APPGWPODNAME"
+
+          if [ "$USERUNCMD" != "true" ];
+          then
+            echo "Sending command $DESCRIBEPODCMD to $AKSNAME in $RG";
+            cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${DESCRIBEPODCMD}");
+            echo $cmdOut
+            echo $cmdOut > debug-describe-agic.json
+          else
+            $NAMESPACEPODS > debug-describe-agic.json
+          fi
 
       - name: Grab full AGIC pod logs
         continue-on-error: true
