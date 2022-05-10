@@ -2,6 +2,7 @@ targetScope='subscription'
 
 param location string = deployment().location
 param resourceName string = 'stest'
+param adminPrincipleId string = ''
 
 //Naming
 var gridResourceName = 'grid-${resourceName}'
@@ -112,6 +113,7 @@ module gridAks '../../bicep/main.bicep' = {
     azurepolicy: 'audit'
     agentCount:1
     agentCountMax:3
+    adminprincipleid: adminPrincipleId
     JustUseSystemPool: false
     SystemPoolType: 'Cost-Optimised'
     byoAKSSubnetId: gridVnet.outputs.aksSubnetId
@@ -136,6 +138,7 @@ module appAks '../../bicep/main.bicep' = {
     azurepolicy: 'audit'
     agentCount:1
     agentCountMax:2
+    adminprincipleid: adminPrincipleId
     JustUseSystemPool: true
     byoAKSSubnetId: appVnet.outputs.aksSubnetId
   }
@@ -148,7 +151,6 @@ var extraAksNodePools = [
   'edgepool'
 ]
 
-param nodeTaintEffect string = 'NoSchedule'
 var nodeTaintKey = 'selbrowser'
 @batchSize(1) //Need to set this to avoid this concurrent update issue - 'Conflict. Status: Failed. Error: ResourceDeploymentFailure. The resource operation completed with terminal provisioning state 'Failed'
 module aksNodePools '../../bicep/aksagentpool.bicep'  = [for pool in extraAksNodePools:  {

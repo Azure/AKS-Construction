@@ -31,6 +31,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
          custom_vnet: true,
          ...serviceparams,
          ...aksvnetparams,
+         ...(net.nsg !== defaults.net.nsg && {CreateNetworkSecurityGroups: net.nsg}),
+         ...(net.nsg && net.nsgFlowLogs !== defaults.net.nsgFlowLogs && {CreateNetworkSecurityGroupFlowLogs: net.nsgFlowLogs}),
          ...(net.bastion !== defaults.net.bastion && {bastion: net.bastion}),
          ...(net.bastion && defaults.net.bastionSubnetAddressPrefix !== net.bastionSubnetAddressPrefix && {bastionSubnetAddressPrefix: net.bastionSubnetAddressPrefix})
        }),
