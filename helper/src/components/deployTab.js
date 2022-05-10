@@ -4,9 +4,11 @@ import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdow
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
 
-export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
+export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag }) {
+  const terraformFeatureFlag = featureFlag.includes('tf')
 
   const { net, addons, cluster, deploy } = tabValues
+
   const allok = !(invalidTabs && invalidTabs.length > 0)
   const apiips_array = deploy.apiips.split(',').filter(x => x.trim())
   const aksvnetparams = {
@@ -421,9 +423,9 @@ ${postscript_cluster.replaceAll('"', '\\"')}
       }
 
 
-      <Pivot >
+      <Pivot defaultSelectedKey={terraformFeatureFlag ? "deployTf" : "deployArmCli" } >
 
-        <PivotItem headerText="Provision Environment (CLI)"  >
+        <PivotItem headerText="Provision Environment (CLI)" itemKey="deployArmCli" itemIcon="PasteAsCode" >
 
           <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
             <Stack.Item>
@@ -454,44 +456,41 @@ ${postscript_cluster.replaceAll('"', '\\"')}
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
           }
-
-
-
         </PivotItem>
 
-        <PivotItem headerText="Provision Environment (Terraform)"  >
+        {terraformFeatureFlag && (
+          <PivotItem headerText="Provision Environment (Terraform)" itemKey="deployTf" itemIcon="FileCode">
+            <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
+              <Stack.Item>
+                <Label >Commands to deploy your fully operational environment</Label>
+                <Text>
+                  Requires Terraform, or, execute in the
+                  <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+                </Text>
+              </Stack.Item>
 
-          <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
-            <Stack.Item>
-              <Label >Commands to deploy your fully operational environment</Label>
-              <Text>
-                Requires Terraform, or, execute in the
-                <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
-              </Text>
-            </Stack.Item>
+              <Stack.Item  align="end">
+                <Stack horizontal tokens={{childrenGap: 5}}>
+                <Label>Template Version</Label>
+                <Dropdown
+                      disabled={process.env.REACT_APP_TEMPLATERELEASE}
+                      selectedKey={deploy.selectedTemplate}
+                      onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
+                      options={deploy.templateVersions}
+                      styles={{ dropdown: { width: 200 } }}
+                    />
+                </Stack>
+              </Stack.Item>
+            </Stack>
 
-            <Stack.Item  align="end">
-              <Stack horizontal tokens={{childrenGap: 5}}>
-              <Label>Template Version</Label>
-              <Dropdown
-                    disabled={process.env.REACT_APP_TEMPLATERELEASE}
-                    selectedKey={deploy.selectedTemplate}
-                    onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
-                    options={deploy.templateVersions}
-                    styles={{ dropdown: { width: 200 } }}
-                  />
-              </Stack>
-            </Stack.Item>
-          </Stack>
-
-          <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'} lang="terraform" filename="providers.tf" />
-          <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'} lang="terraform" filename="main.tf" />
-          <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'} lang="terraform" filename="variables.tf" />
-          <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'} lang="terraform" filename="outputs.tf" />
-          <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="bash"/>
-        </PivotItem>
-
-        <PivotItem headerText="Post Configuration">
+            <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'} lang="terraform" filename="providers.tf" />
+            <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'} lang="terraform" filename="main.tf" />
+            <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'} lang="terraform" filename="variables.tf" />
+            <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'} lang="terraform" filename="outputs.tf" />
+            <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="bash"/>
+          </PivotItem>
+        )}
+        <PivotItem headerText="Post Configuration" itemIcon="ConfigurationSolid">
           {addons.gitops === 'none' ? [
 
               <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
@@ -520,7 +519,7 @@ ${postscript_cluster.replaceAll('"', '\\"')}
           }
         </PivotItem>
 
-        <PivotItem headerText="Template Parameters File (for CI/CD)">
+        <PivotItem headerText="Template Parameters File (for CI/CD)" itemIcon="FileSymlink">
 
           <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
           </TextField>
