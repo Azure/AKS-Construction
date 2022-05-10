@@ -270,15 +270,19 @@ function CustomVNET({ net, addons, updateFn }) {
                 <PodServiceNetwork net={net} updateFn={updateFn} />
             </Stack>
 
-            <Separator className="notopmargin" />
+            <Separator styles={{ root: { marginTop: '20px !important' } }}/>
 
-            <Stack.Item>
-                <Label>Limit Ingress/Egress subnets with Network Security Groups (NGS's)</Label>
-                <Checkbox inputProps={{ "data-testid": "network-nsg-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.nsg} onChange={(ev, v) => updateFn("nsg", v)} label="Create NSG's for each subnet" />
+            <Stack>
+                <Stack.Item>
+                    <Label>Limit Ingress/Egress subnets with Network Security Groups (NGS's)</Label>
+                    <Checkbox inputProps={{ "data-testid": "network-nsg-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.nsg} onChange={(ev, v) => updateFn("nsg", v)} label="Create NSG's for each subnet" />
+                </Stack.Item>
 
-                <Label>Capture NSG Flow Logs with Network Watcher</Label>
-                <Checkbox inputProps={{ "data-testid": "network-nsgFlowLogs-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={!net.nsg} checked={net.nsgFlowLogs} onChange={(ev, v) => updateFn("nsgFlowLogs", v)} label="Configure NSG Flow Logs" />
-            </Stack.Item>
+                <Stack.Item style={{ marginTop: "20px"}}>
+                    <Label>Capture NSG Flow Logs with Network Watcher</Label>
+                    <Checkbox inputProps={{ "data-testid": "network-nsgFlowLogs-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={!net.nsg} checked={net.nsgFlowLogs} onChange={(ev, v) => updateFn("nsgFlowLogs", v)} label="Configure NSG Flow Logs" />
+                </Stack.Item>
+            </Stack>
         </Stack>
     )
 }
