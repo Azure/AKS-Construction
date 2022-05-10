@@ -41,7 +41,7 @@
                 "level": "warning"
             },
             "simplify-interpolation": {
-                "level": "warning"
+                "level": "error"
             },
             "use-stable-vm-image": {
                 "level": "warning"

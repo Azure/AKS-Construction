@@ -82,6 +82,12 @@
           },
           "upgradeChannel": {
             "value": "stable"
+          },
+          "CreateNetworkSecurityGroups": {
+            "value": true
+          },
+          "CreateNetworkSecurityGroupFlowLogs": {
+            "value": true
           }
     }
 }

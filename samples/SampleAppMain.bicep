@@ -84,7 +84,7 @@ output name string = sql.name
 
 //---------Kubernetes Construction---------
 //ref: https://github.com/Azure/AKS-Construction
-param k8sVersion string = '1.21.1'
+param k8sVersion string = '1.22.6'
 
 module aksconst '../bicep/main.bicep' = {
   name: 'aksconstruction'
