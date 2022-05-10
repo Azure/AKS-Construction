@@ -531,7 +531,7 @@ jobs:
 
   Post-Deploy:
     needs: [Deploy, ReusableWF]
-    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@0.4.3
+    uses: ./.github/workflows/PostDeploy.yml
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
