@@ -90,7 +90,7 @@
             "byoAGWSubnetId": "",
             "vnetAddressPrefix": "10.240.0.0/16",
             "vnetAksSubnetAddressPrefix": "10.240.0.0/22",
-            "vnetAppGatewaySubnetAddressPrefix": "10.240.4.0/26",
+            "vnetAppGatewaySubnetAddressPrefix": "10.240.5.0/24",
             "acrAgentPoolSubnetAddressPrefix": "10.240.4.64/26",
             "bastionSubnetAddressPrefix": "10.240.4.128/26",
             "privateLinkSubnetAddressPrefix": "10.240.4.192/26",
