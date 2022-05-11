@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ThemeProvider, Link, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text } from '@fluentui/react';
+import { ThemeProvider, Link, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text, ChoiceGroup } from '@fluentui/react';
 import { AzureThemeLight, AzureThemeDark } from '@fluentui/azure-themes';
 
 import Presents from './presets'
@@ -31,7 +31,7 @@ function useAITracking(componentName, key) {
 
 }
 
-function Header({ entScale, setEntScale, featureFlag }) {
+function Header({presets, setPresets, featureFlag }) {
   return (
     <Stack horizontal tokens={{ childrenGap: 10 }}>
       <img src="aks.svg" alt="Kubernetes Service" style={{ width: "6%", height: "auto" }}></img>
@@ -39,7 +39,7 @@ function Header({ entScale, setEntScale, featureFlag }) {
         <Text variant="xLarge">AKS Deploy helper</Text>
         <Text >Provide the requirements of your AKS deployment to generate the assets to create a full operational environment, incorporating best-practices guidance. For documentation, and CI/CD samples - please refer to our <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
-      <Stack.Item tokens={{ padding: 10 }}>
+      {/* <Stack.Item tokens={{ padding: 10 }}>
         <Toggle
           label={
             <Text nowrap>
@@ -55,6 +55,20 @@ function Header({ entScale, setEntScale, featureFlag }) {
           disabled={false}
           onChange={(ev, val) => setEntScale(val)}
         />
+      </Stack.Item> */}
+      <Stack.Item tokens={{ padding: 10 }}>
+        Preset Approach
+        <ChoiceGroup //defaultSelectedKey="defaultOps"
+          options={Object.keys(presets).map(p => {return {key: p, text: p.title, icon: p.icon}})}
+          //   options={[
+          //     { key: 'defaultOps', text: 'Principal driven',  iconProps: { iconName: 'FangBody' } },
+          //     { key: 'entScaleOps', text: 'Enterprise Scale', iconProps: { iconName: 'TabletSelected' } },
+          //     { key: 'baselineRI', text: 'AKS Baseline', iconProps: { iconName: 'FlowChart' } },
+          //     { key: 'isv', text: 'ISV Optimised', iconProps: { iconName: 'PlannerLogo' } }
+          // ]}
+          onChange={(ev, { key }) => setPresets(key)}
+        >
+        </ChoiceGroup>
       </Stack.Item>
     </Stack>
   )
@@ -71,7 +85,7 @@ export default function PortalNav({ config }) {
 
   console.log (`PortalNav: ${JSON.stringify(Object.keys(config))}`)
 
-  const { tabLabels, defaults, entScaleOps, defaultOps } = config
+  const { tabLabels, defaults, presets } = config
   const [pivotkey, setPivotkey] = useState(Object.keys(tabLabels)[0])
 
   useAITracking("PortalNav", tabLabels[pivotkey])
@@ -81,15 +95,15 @@ export default function PortalNav({ config }) {
 
   const featureFlag = urlParams.getAll('feature')
 
-  const [entScale, setEntScale] = useState(() => urlParams.has('entScale'))
+//  const [entScale, setEntScale] = useState(() => urlParams.has('entScale'))
+  const [preset, setPreset] = useState(() => urlParams.get('preset') || 'defaultOps')
 
-
-  const sections = entScale ? entScaleOps : defaultOps
+  const sections = presets[preset].sections // entScale ? entScaleOps : defaultOps
   const [selected, setSelected] = useState(() => { return {
         values: sections.reduce((a, s) => {
             return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
           }, {}),
-        entScale
+        preset //entScale
       }
     })
 
@@ -155,7 +169,8 @@ export default function PortalNav({ config }) {
   }
 
   function updateSelected(sectionKey, cardKey) {
-
+    console.log("Update Selected Fired " + sectionKey + " - " + cardKey)
+    /*
     setUrlParams((currentUrlParams) => {
 
       if (selected.entScale !== entScale) {
@@ -176,10 +191,11 @@ export default function PortalNav({ config }) {
       currentUrlParams.set(sectionKey,cardKey)
       return currentUrlParams
     })
+    */
 
 
     console.log (`updateSelected: sectionKey=${sectionKey} cardKey=${cardKey}`)
-    setSelected({entScale, values: { ...(selected.entScale === entScale && selected.values), [sectionKey]: cardKey }})
+    setSelected({preset, values: { ...(selected.entScale === entScale && selected.values), [sectionKey]: cardKey }})
     setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, sectionKey, cardKey))
 
     //window.history.replaceState(null, null, "?"+urlParams.toString())
@@ -214,7 +230,7 @@ export default function PortalNav({ config }) {
         text: `${rel.tag_name}${i === 0 ? ' (latest)': ''}`,
         url: rel.assets.find(a => a.name === 'main.json').browser_download_url
       }}).concat(defaults.deploy.templateVersions)
-      console.log (releases)
+      //console.log (releases)
       setTabValues(currentTabValues => { return {
           ...currentTabValues,
           deploy: {
@@ -231,6 +247,22 @@ export default function PortalNav({ config }) {
 
   function _handleLinkClick(item) {
     setPivotkey(item.props.itemKey)
+  }
+
+  function presetChanged(key) {
+    console.log(key);
+    console.log(config)
+
+    setUrlParams((currentUrlParams) => {
+      currentUrlParams.set('preset', key)
+      return currentUrlParams
+    })
+
+    console.log (`updateSelected: sectionKey=${key} cardKey=${key}`)
+    //setSelected({entScale, values: { ...(selected.entScale === entScale && selected.values), [sectionKey]: cardKey }})
+    //setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, key, key))
+
+    setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, key, 'standard'))
   }
 
   function mergeState(tab, field, value) {
@@ -322,7 +354,7 @@ export default function PortalNav({ config }) {
   return (
     <ThemeProvider theme={{semanticColors, palette}}>
       <main id="mainContent" className="wrapper">
-        <Header entScale={entScale} setEntScale={setEntScale} featureFlag={featureFlag} />
+        <Header presets={presets} setPresets={presetChanged} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 

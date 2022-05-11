@@ -1,0 +1,242 @@
+{
+    "baselineRI": {
+        "title": "AKS Baselines",
+        "icon": "",
+        "sections": [
+            {
+                "key": "baselineRI",
+                "sectionTitle": "AKS Baseline Cluster Stamps",
+                "sectionWarning": "Before you continue, Ensure you have deployed the Enterprise Scale reference implementation",
+                "cards": [
+                    {
+                        "key": "standard",
+                        "default": true,
+                        "title": "standard",
+                        "description": {
+                            "title": "standard",
+                            "bulets": [
+                                {
+                                    "description": "Cluster auto-scaler (2-4 nodes)",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
+                                },
+                                {
+                                    "description": "Azure Monitor for Containers",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview"
+                                },
+                                {
+                                    "description": "Azure Container Registry (public)"
+                                },
+                                {
+                                    "description": "AAD Integration",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                                },
+                                {
+                                    "description": "Audit Pod security baseline standards",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
+                                }
+                            ]
+                        },
+                        "imageSrc": "./Entscale-sandbox.png",
+                        "author": {
+                            "name": "Gordon Byers",
+                            "initials": "GB",
+                            "status": "Updated March, 2021"
+                        },
+                        "values": {
+                            "cluster": {
+                                "enable_aad": true,
+                                "AksDisableLocalAccounts": false,
+                                "apisecurity": "none",
+                                "autoscale": true,
+                                "agentCount": 2,
+                                "maxCount": 4,
+                                "upgradeChannel": "none",
+                                "DefenderForContainers": true
+                            },
+                            "addons": {
+                                "networkPolicy": "none",
+                                "registry": "Basic",
+                                "azurepolicy": "audit",
+                                "ingress": "none",
+                                "appgwKVIntegration": false,
+                                "monitor": "aci",
+                                "csisecret": "none"
+                            },
+                            "net": {
+                                "vnetprivateend": false,
+                                "vnet_opt": "default",
+                                "afw": false
+                            }
+                        }
+                    },
+                    {
+                        "key": "regulated",
+                        "default": true,
+                        "title": "Regulated",
+                        "description": {
+                            "title": "Suited for regulated workloads",
+                            "titleWarning": {
+                                "description": "Requires existing Subnet, preconfigured with firewall egress",
+                                "MessageBarType": 5
+                            },
+                            "bulets": [
+                                {
+                                    "description": "Cluster auto-scaler",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
+                                },
+                                {
+                                    "description": "Azure Monitor for Containers",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview"
+                                },
+                                {
+                                    "description": "Azure Container Registry (with Private Link)"
+                                },
+                                {
+                                    "description": "Azure AppGateway Ingress",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/application-gateway/ingress-controller-overview"
+                                },
+                                {
+                                    "description": "AAD Integration",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                                },
+                                {
+                                    "description": "Audit Pod security baseline standards",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
+                                },
+                                {
+                                    "description": "East-West traffic control",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/use-network-policies"
+                                },
+                                {
+                                    "description": "Private Cluster",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/private-clusters"
+                                },
+                                {
+                                    "description": "Restrict dependencies with Private Link",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/private-link/private-link-overview"
+                                },
+                                {
+                                    "description": "Store Kubernetes Secrets in Azure KeyVault,",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+                                }
+                            ]
+                        },
+                        "imageSrc": "./Entscale-corp.png",
+                        "author": {
+                            "name": "Gordon Byers",
+                            "initials": "GB",
+                            "status": "Updated March, 2021"
+                        },
+                        "values": {
+                            "cluster": {
+                                "enable_aad": true,
+                                "AksDisableLocalAccounts": true,
+                                "apisecurity": "private",
+                                "autoscale": true,
+                                "upgradeChannel": "none",
+                                "DefenderForContainers": true
+                            },
+                            "addons": {
+                                "networkPolicy": "azure",
+                                "registry": "Premium",
+                                "azurepolicy": "audit",
+                                "ingress": "appgw",
+                                "monitor": "aci",
+                                "csisecret": "akvNew",
+                                "appgwKVIntegration": true
+                            },
+                            "net": {
+                                "vnetprivateend": true,
+                                "vnet_opt": "byo",
+                                "afw": false
+                            }
+                        }
+                    },
+                    {
+                        "key": "pcidss",
+                        "default": true,
+                        "title": "PCIDSS",
+                        "description": {
+                            "title": "For Payment Card Industry Data Security Standard (PCI-DSS 3.2.1)",
+                            "bulets": [
+                                {
+                                    "description": "Cluster auto-scaler",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
+                                },
+                                {
+                                    "description": "Azure Monitor for Containers",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview"
+                                },
+                                {
+                                    "description": "Azure Container Registry (with Private Link)"
+                                },
+                                {
+                                    "description": "Azure AppGateway Ingress",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/application-gateway/ingress-controller-overview"
+                                },
+                                {
+                                    "description": "AAD Integration",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                                },
+                                {
+                                    "description": "Audit Pod security baseline standards",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
+                                },
+                                {
+                                    "description": "East-West traffic control",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/use-network-policies"
+                                },
+                                {
+                                    "description": "Private Cluster",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/private-clusters"
+                                },
+                                {
+                                    "description": "Restrict dependencies with Private Link",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/private-link/private-link-overview"
+                                },
+                                {
+                                    "description": "Restrict egress with Azure firewall (provisioned & configured separately)",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#restrict-egress-traffic-using-azure-firewall"
+                                },
+                                {
+                                    "description": "Store Kubernetes Secrets in Azure KeyVault,",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+                                }
+                            ]
+                        },
+                        "imageSrc": "./Entscale-online.png",
+                        "author": {
+                            "name": "Gordon Byers",
+                            "initials": "GB",
+                            "status": "Updated March, 2021"
+                        },
+                        "values": {
+                            "cluster": {
+                                "enable_aad": true,
+                                "AksDisableLocalAccounts": true,
+                                "apisecurity": "private",
+                                "autoscale": true,
+                                "upgradeChannel": "none",
+                                "DefenderForContainers": true
+                            },
+                            "addons": {
+                                "networkPolicy": "azure",
+                                "registry": "Premium",
+                                "azurepolicy": "audit",
+                                "ingress": "appgw",
+                                "monitor": "aci",
+                                "csisecret": "akvNew",
+                                "appgwKVIntegration": true
+                            },
+                            "net": {
+                                "vnetprivateend": true,
+                                "vnet_opt": "custom",
+                                "afw": true
+                            }
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

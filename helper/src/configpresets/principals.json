@@ -1,0 +1,386 @@
+{
+    "defaultOps": {
+        "title": "",
+        "icon": "",
+        "sections": [
+            {
+                "key": "ops",
+                "sectionTitle": "Operations Principles",
+                "cards": [
+                    {
+                        "key": "none",
+                        "title": "Simplest bare-bones cluster",
+                        "description": {
+                            "title": "Just Kubernetes please, I will make decisions later",
+                            "bulets": []
+                        },
+                        "icon": "Manufacturing",
+                        "values": {
+                            "cluster": {
+                                "SystemPoolType": "none",
+                                "autoscale": false,
+                                "upgradeChannel": "none",
+                                "DefenderForContainers": false
+                            },
+                            "addons": {
+                                "registry": "none",
+                                "ingress": "none",
+                                "monitor": "none"
+                            }
+                        }
+                    },
+                    {
+                        "key": "oss",
+                        "title": "I prefer control & community open source solutions",
+                        "description": {
+                            "title": "Use proven, open source projects for my Kubernetes operational environment, and self-manage my clusters upgrades and scaling",
+                            "bulets": [
+                                {
+                                    "description": "Manual Upgrades"
+                                },
+                                {
+                                    "description": "Manual Scaling"
+                                },
+                                {
+                                    "description": "Contour Ingress",
+                                    "linksrc": "https://projectcontour.io/"
+                                },
+                                {
+                                    "description": "Prometheus/Grafana Monitoring",
+                                    "linksrc": "https://coreos.com/operators/prometheus/docs/latest/user-guides/getting-started.html"
+                                },
+                                {
+                                    "description": "DockerHub container registry"
+                                }
+                            ]
+                        },
+                        "icon": "DeveloperTools",
+                        "values": {
+                            "cluster": {
+                                "SystemPoolType": "Cost-Optimised",
+                                "autoscale": false,
+                                "upgradeChannel": "none"
+                            },
+                            "addons": {
+                                "registry": "none",
+                                "ingress": "contour",
+                                "monitor": "oss"
+                            }
+                        }
+                    },
+                    {
+                        "key": "managed",
+                        "default": true,
+                        "title": "I want a managed environment",
+                        "description": {
+                            "title": "I'd like my cluster to be auto-managed by Azure for upgrades and scaling, and use Azure provided managed addons to create an full environment with the minimum of operational requirements",
+                            "bulets": [
+                                {
+                                    "description": "Cluster auto-scaler",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
+                                },
+                                {
+                                    "description": "Cluster auto-upgrades",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster#set-auto-upgrade-channel"
+                                },
+                                {
+                                    "description": "Azure Monitor for Containers",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview"
+                                },
+                                {
+                                    "description": "Azure Container Registry"
+                                },
+                                {
+                                    "description": "Azure AppGateway Ingress",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/application-gateway/ingress-controller-overview"
+                                }
+                            ]
+                        },
+                        "icon": "Touch",
+                        "values": {
+                            "cluster": {
+                                "SystemPoolType": "Cost-Optimised",
+                                "autoscale": true,
+                                "upgradeChannel": "stable"
+                            },
+                            "addons": {
+                                "registry": [
+                                    {
+                                        "page": "net",
+                                        "field": "vnetprivateend",
+                                        "value": true,
+                                        "set": "Premium"
+                                    },
+                                    {
+                                        "set": "Basic"
+                                    }
+                                ],
+                                "ingress": "appgw",
+                                "appgwKVIntegration": [
+                                    {
+                                        "page": "addons",
+                                        "field": "csisecret",
+                                        "value": "akvNew",
+                                        "set": true
+                                    },
+                                    {
+                                        "set": false
+                                    }
+                                ],
+                                "monitor": "aci"
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "key": "secure",
+                "sectionTitle": "Security Principles",
+                "cards": [
+                    {
+                        "key": "low",
+                        "title": "Simple cluster with no additional access limitations",
+                        "description": {
+                            "title": "Simplest option for experimenting with kubernetes, or clusters with no sensitive data",
+                            "bulets": []
+                        },
+                        "icon": "Unlock",
+                        "values": {
+                            "deploy": {
+                                "kvIPAllowlist": false
+                            },
+                            "cluster": {
+                                "enable_aad": false,
+                                "AksDisableLocalAccounts": false,
+                                "apisecurity": "none",
+                                "DefenderForContainers": false
+                            },
+                            "addons": {
+                                "networkPolicy": "none",
+                                "registry": [
+                                    {
+                                        "page": "addons",
+                                        "field": "registry",
+                                        "value": "Standard",
+                                        "set": "Basic"
+                                    },
+                                    {
+                                        "page": "addons",
+                                        "field": "registry",
+                                        "value": "Premium",
+                                        "set": "Basic"
+                                    },
+                                    {
+                                        "set": "none"
+                                    }
+                                ],
+                                "azurepolicy": "none",
+                                "appgwKVIntegration": false,
+                                "csisecret": "none"
+                            },
+                            "net": {
+                                "vnet_opt": "default",
+                                "vnetprivateend": false,
+                                "afw": false,
+                                "bastion": false
+                            }
+                        }
+                    },
+                    {
+                        "key": "normal",
+                        "default": true,
+                        "title": "Cluster with additional security controls",
+                        "description": {
+                            "title": "Good option for implementing recommended minimum security controls for regular environments",
+                            "bulets": [
+                                {
+                                    "description": "AAD Integration",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                                },
+                                {
+                                    "description": "AUDIT Pod security baseline standards",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
+                                },
+                                {
+                                    "description": "East-West traffic control",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/use-network-policies"
+                                },
+                                {
+                                    "description": "Authorized IP address ranges",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges"
+                                },
+                                {
+                                    "featureFlag": "defender",
+                                    "description": "Microsoft Defender for Containers (preview)",
+                                    "linksrc": "https://azure.microsoft.com/en-in/updates/public-preview-microsoft-defender-for-containers-adds-new-capabilities-for-kubernetes/"
+                                }
+                            ]
+                        },
+                        "icon": "Lock12",
+                        "values": {
+                            "deploy": {
+                                "kvIPAllowlist": false
+                            },
+                            "cluster": {
+                                "enable_aad": true,
+                                "AksDisableLocalAccounts": true,
+                                "apisecurity": "whitelist",
+                                "DefenderForContainers": true
+                            },
+                            "addons": {
+                                "networkPolicy": "azure",
+                                "registry": [
+                                    {
+                                        "page": "addons",
+                                        "field": "registry",
+                                        "value": "Basic",
+                                        "set": "Premium"
+                                    },
+                                    {
+                                        "page": "addons",
+                                        "field": "registry",
+                                        "value": "Standard",
+                                        "set": "Premium"
+                                    },
+                                    {
+                                        "page": "addons",
+                                        "field": "registry",
+                                        "value": "Premium",
+                                        "set": "Premium"
+                                    },
+                                    {
+                                        "set": "none"
+                                    }
+                                ],
+                                "acrPrivatePool": false,
+                                "azurepolicy": "audit",
+                                "appgwKVIntegration": [
+                                    {
+                                        "page": "addons",
+                                        "field": "ingress",
+                                        "value": "appgw",
+                                        "set": true
+                                    },
+                                    {
+                                        "set": false
+                                    }
+                                ],
+                                "csisecret": "akvNew"
+                            },
+                            "net": {
+                                "vnet_opt": "custom",
+                                "vnetprivateend": false,
+                                "afw": false,
+                                "bastion": false
+                            }
+                        }
+                    },
+                    {
+                        "key": "private",
+                        "title": "Private cluster with isolating networking controls",
+                        "description": {
+                            "title": "Best option for high-secure, regulated environments or sensitive data requirements.",
+                            "titleWarning": {
+                                "description": "WARNING: most complex environment option to operate",
+                                "MessageBarType": 5
+                            },
+                            "bulets": [
+                                {
+                                    "description": "AAD Integration",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                                },
+                                {
+                                    "description": "ENFORCE Pod security baseline standards",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
+                                },
+                                {
+                                    "description": "East-West traffic control",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/use-network-policies"
+                                },
+                                {
+                                    "description": "Private Cluster",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/private-clusters"
+                                },
+                                {
+                                    "description": "Restrict dependencies with Private Link",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/private-link/private-link-overview"
+                                },
+                                {
+                                    "description": "Restrict egress with Azure Firewall",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#restrict-egress-traffic-using-azure-firewall"
+                                },
+                                {
+                                    "description": "Store Kubernetes Secrets in Azure KeyVault",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+                                },
+                                {
+                                    "featureFlag": "defender",
+                                    "description": "Microsoft Defender for Containers (preview)",
+                                    "linksrc": "https://azure.microsoft.com/en-in/updates/public-preview-microsoft-defender-for-containers-adds-new-capabilities-for-kubernetes/"
+                                }
+                            ]
+                        },
+                        "icon": "ProtectionCenterLogo32",
+                        "values": {
+                            "deploy": {
+                                "kvIPAllowlist": true
+                            },
+                            "cluster": {
+                                "enable_aad": true,
+                                "AksDisableLocalAccounts": true,
+                                "apisecurity": "private",
+                                "DefenderForContainers": true
+                            },
+                            "addons": {
+                                "networkPolicy": "azure",
+                                "registry": [
+                                    {
+                                        "page": "addons",
+                                        "field": "registry",
+                                        "value": "Basic",
+                                        "set": "Premium"
+                                    },
+                                    {
+                                        "page": "addons",
+                                        "field": "registry",
+                                        "value": "Standard",
+                                        "set": "Premium"
+                                    },
+                                    {
+                                        "page": "addons",
+                                        "field": "registry",
+                                        "value": "Premium",
+                                        "set": "Premium"
+                                    },
+                                    {
+                                        "set": "none"
+                                    }
+                                ],
+                                "acrPrivatePool": true,
+                                "appgwKVIntegration": [
+                                    {
+                                        "page": "addons",
+                                        "field": "ingress",
+                                        "value": "appgw",
+                                        "set": true
+                                    },
+                                    {
+                                        "set": false
+                                    }
+                                ],
+                                "azurepolicy": "deny",
+                                "csisecret": "akvNew"
+                            },
+                            "net": {
+                                "vnet_opt": "custom",
+                                "vnetprivateend": true,
+                                "afw": true,
+                                "bastion": true
+                            }
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
