@@ -14,9 +14,10 @@ export default function ({ sections, selectedValues, updateSelected, featureFlag
     const bodyBackground = useTheme().semanticColors.bodyBackground;
 
     return sections.map(s => [
-
-
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
+
+        <Text >{s.sectionDescription}</Text>,
+
         <div key={`warn${s.key}`}>
             {s.sectionWarning &&
                 <MessageBar key={`messg${s.key}`} styles={{ root: { marginBottom: "15px", fontSize: "15px" } }} messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>

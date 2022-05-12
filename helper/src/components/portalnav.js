@@ -32,40 +32,26 @@ function useAITracking(componentName, key) {
 }
 
 function Header({presets, setPresets, selectedPreset, featureFlag }) {
-  //console.log (`Header: ${JSON.stringify(presets)}`)
   return (
     <Stack horizontal tokens={{ childrenGap: 10 }}>
       <img src="aks.svg" alt="Kubernetes Service" style={{ width: "6%", height: "auto" }}></img>
-      <Stack tokens={{ padding: 10 }}>
+      <Stack tokens={{ padding: 10, maxWidth:700 }} className="intro">
         <Text variant="xLarge">AKS Deploy helper</Text>
-        <Text >Provide the requirements of your AKS deployment to generate the assets to create a full operational environment, incorporating best-practices guidance. For documentation, and CI/CD samples - please refer to our <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
+        <Text variant="large">Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance.</Text>
+        <Separator className="notopmargin" />
+        <Text variant="large">Start by selecting the Preset Lens that reflects your architecture approach. Then select the most applicable preset to expedite your configuration experience.</Text>
+        <Separator className="notopmargin" />
+        <Text variant="medium">For documentation and CI/CD samples - please refer to our <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
-      {/* <Stack.Item tokens={{ padding: 10 }}>
-        <Toggle
-          label={
-            <Text nowrap>
-              Enterprise Scale{' '}
-              <TooltipHost content="use if you are following Enterprise Scale">
-                <Icon iconName="Info" aria-label="Info tooltip" />
-              </TooltipHost>
-            </Text>
-          }
-          onText="Yes"
-          offText="No"
-          checked={entScale}
-          disabled={false}
-          onChange={(ev, val) => setEntScale(val)}
-        />
-      </Stack.Item> */}
-      <Stack.Item tokens={{ padding: 10 }}>
-        Preset Lense
+      <Stack grow={1} tokens={{ padding: 10 }} >
+        Preset Lens
         <ChoiceGroup
           defaultSelectedKey={selectedPreset}
-          options={Object.keys(presets).map(p => {return {key: p, text: presets[p].title, iconProps: { iconName: presets[p].icon }}})}
+          options={Object.keys(presets).map(p => {return {key: p, text: presets[p].title, disabled: presets[p].disabled, iconProps: { iconName: presets[p].icon }}})}
           onChange={(ev, { key }) => setPresets(key)}
         >
         </ChoiceGroup>
-      </Stack.Item>
+      </Stack>
     </Stack>
   )
 }
@@ -257,8 +243,6 @@ export default function PortalNav({ config }) {
       currentUrlParams.set('preset', preset)
       return currentUrlParams
     })
-
-
 
     setSelected({preset, values: presets[preset].sections.reduce((a, s) => {
         return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
