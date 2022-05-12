@@ -87,7 +87,7 @@ param vnetAksSubnetAddressPrefix string = '10.240.0.0/22'
 @minLength(9)
 @maxLength(18)
 @description('The address range for the App Gateway in your custom vnet')
-param vnetAppGatewaySubnetAddressPrefix string = '10.240.4.0/26'
+param vnetAppGatewaySubnetAddressPrefix string = '10.240.5.0/24'
 
 @minLength(9)
 @maxLength(18)
