@@ -6,7 +6,7 @@
             {
                 "key": "entscale",
                 "sectionTitle": "Enterprise Scale Management Group",
-                "sectionDescription" : "The enterprise-scale architecture provides prescriptive guidance, coupled with best practices for your Azure control plane. It follows design principles across the critical design areas for an organization's Azure environment.<br /> These AKS Landing Zone presets are designed to fit with the Enterprise Scale pattern.",
+                "sectionDescription" : "The Enterprise-Scale (Azure Landing Zone) architecture provides prescriptive guidance, coupled with best practices for your Azure control plane. It follows design principles across the critical design areas for an organization's Azure environment.<br /> These AKS Landing Zone presets are designed to fit with the different Enterprise Scale Mangement Group pattern. Refer to the documentation for more information about this <a href=\"https://docs.microsoft.com/azure/cloud-adoption-framework/ready/enterprise-scale\">Architectural Approach</a>.",
                 "sectionWarning": "Before you continue, Ensure you have deployed the Enterprise Scale reference implementation",
                 "cards": [
                     {

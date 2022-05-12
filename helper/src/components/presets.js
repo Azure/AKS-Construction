@@ -16,14 +16,14 @@ export default function ({ sections, selectedValues, updateSelected, featureFlag
     return sections.map(s => [
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
 
-        <Text >{s.sectionDescription}</Text>,
+        <Text variant="mediumPlus" styles={{ root: { marginBottom: "15px" } }} >{s.sectionDescription}</Text>,
 
         <div key={`warn${s.key}`}>
             {s.sectionWarning &&
                 <MessageBar key={`messg${s.key}`} styles={{ root: { marginBottom: "15px", fontSize: "15px" } }} messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
             }
         </div>,
-        <Stack key={`stack${s.key}`} horizontal tokens={{ childrenGap: 15 }}>
+        <Stack key={`stack${s.key}`} horizontal horizontalAlign='center' tokens={{ childrenGap: 15 }}>
             {s.cards.map((c, i) =>
                 <DocumentCard  key={c.key}   onClick={() => updateSelected(s.key, c.key)} tokens={{ childrenMargin: 12 }}>
 

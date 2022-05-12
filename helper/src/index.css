@@ -71,4 +71,8 @@ code {
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
 }
 
-
+#aksLogo {
+    width: 60p;
+    height: 60px;
+    margin-top: 20px
+}
