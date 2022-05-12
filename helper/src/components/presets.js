@@ -66,9 +66,9 @@ export default function ({ sections, selectedValues, updateSelected, featureFlag
                         </Text>
                     </div>
 
-                    {c.author &&
+                    {/* {c.author &&
                         <DocumentCardActivity activity={c.author.status} people={[{ name: c.author.name, initials: c.author.initials }]} />
-                    }
+                    } */}
                 </DocumentCard>
             )}
         </Stack>
