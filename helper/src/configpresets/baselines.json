@@ -1,7 +1,7 @@
 {
     "baselineRI": {
         "title": "AKS Baselines",
-        "icon": "",
+        "icon": "FlowChart",
         "sections": [
             {
                 "key": "baselineRI",

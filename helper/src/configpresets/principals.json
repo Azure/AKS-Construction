@@ -1,7 +1,7 @@
 {
     "defaultOps": {
-        "title": "",
-        "icon": "",
+        "title": "Requirements Driven",
+        "icon": "FangBody",
         "sections": [
             {
                 "key": "ops",

@@ -1,7 +1,7 @@
 {
     "entScaleOps": {
         "title": "Enterprise Scale",
-        "icon": "",
+        "icon": "TabletSelected",
         "sections": [
             {
                 "key": "entscale",

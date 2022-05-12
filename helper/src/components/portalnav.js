@@ -31,7 +31,8 @@ function useAITracking(componentName, key) {
 
 }
 
-function Header({presets, setPresets, featureFlag }) {
+function Header({presets, setPresets, selectedPreset, featureFlag }) {
+  //console.log (`Header: ${JSON.stringify(presets)}`)
   return (
     <Stack horizontal tokens={{ childrenGap: 10 }}>
       <img src="aks.svg" alt="Kubernetes Service" style={{ width: "6%", height: "auto" }}></img>
@@ -57,15 +58,10 @@ function Header({presets, setPresets, featureFlag }) {
         />
       </Stack.Item> */}
       <Stack.Item tokens={{ padding: 10 }}>
-        Preset Approach
-        <ChoiceGroup //defaultSelectedKey="defaultOps"
-          options={Object.keys(presets).map(p => {return {key: p, text: p.title, icon: p.icon}})}
-          //   options={[
-          //     { key: 'defaultOps', text: 'Principal driven',  iconProps: { iconName: 'FangBody' } },
-          //     { key: 'entScaleOps', text: 'Enterprise Scale', iconProps: { iconName: 'TabletSelected' } },
-          //     { key: 'baselineRI', text: 'AKS Baseline', iconProps: { iconName: 'FlowChart' } },
-          //     { key: 'isv', text: 'ISV Optimised', iconProps: { iconName: 'PlannerLogo' } }
-          // ]}
+        Preset Lense
+        <ChoiceGroup
+          defaultSelectedKey={selectedPreset}
+          options={Object.keys(presets).map(p => {return {key: p, text: presets[p].title, iconProps: { iconName: presets[p].icon }}})}
           onChange={(ev, { key }) => setPresets(key)}
         >
         </ChoiceGroup>
@@ -94,19 +90,21 @@ export default function PortalNav({ config }) {
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
 
   const featureFlag = urlParams.getAll('feature')
+  const defaultPreset = urlParams.get('preset') || 'defaultOps'
 
-//  const [entScale, setEntScale] = useState(() => urlParams.has('entScale'))
-  const [preset, setPreset] = useState(() => urlParams.get('preset') || 'defaultOps')
-
-  const sections = presets[preset].sections // entScale ? entScaleOps : defaultOps
+  // The selected cards within the sections for the chosen preset, for example { "ops": "normal", "secure": "high" }
   const [selected, setSelected] = useState(() => { return {
-        values: sections.reduce((a, s) => {
-            return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
-          }, {}),
-        preset //entScale
-      }
-    })
+    preset: defaultPreset,
+    values: presets[defaultPreset].sections.reduce((a, s) => {
+        return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
+      }, {})
+    }
+  })
 
+  // The sections array within the selected preset, for example [{"key": "ops"...}, {"key": "secure"...}]
+  const { sections } = presets[selected.preset]
+
+  // The tabValues, for example { "deploy": { "clusterName": "az234"}}
   const [tabValues, setTabValues] = useState(() => {
     const clusterName = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
 
@@ -144,6 +142,7 @@ export default function PortalNav({ config }) {
 
 
   function updateTabValues (currenttabValues, sections, sectionKey, cardKey) {
+    console.log (`updateTabValues`)
     const card_values = sections.find(s => s.key === sectionKey).cards.find(c => c.key === cardKey).values
     console.log (`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
     return Object.keys(card_values).reduce((acc, curr) => {
@@ -170,9 +169,10 @@ export default function PortalNav({ config }) {
 
   function updateSelected(sectionKey, cardKey) {
     console.log("Update Selected Fired " + sectionKey + " - " + cardKey)
-    /*
+
     setUrlParams((currentUrlParams) => {
 
+      /*
       if (selected.entScale !== entScale) {
         console.log (`User changed entScale switch, and selected a new card, need to unselect old cards`)
         defaultOps.forEach(element => {
@@ -188,14 +188,15 @@ export default function PortalNav({ config }) {
       } else {
         currentUrlParams.delete('entScale')
       }
+      */
       currentUrlParams.set(sectionKey,cardKey)
       return currentUrlParams
     })
-    */
+
 
 
     console.log (`updateSelected: sectionKey=${sectionKey} cardKey=${cardKey}`)
-    setSelected({preset, values: { ...(selected.entScale === entScale && selected.values), [sectionKey]: cardKey }})
+    setSelected({preset: selected.preset, values: { ...selected.values, [sectionKey]: cardKey }})
     setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, sectionKey, cardKey))
 
     //window.history.replaceState(null, null, "?"+urlParams.toString())
@@ -249,20 +250,27 @@ export default function PortalNav({ config }) {
     setPivotkey(item.props.itemKey)
   }
 
-  function presetChanged(key) {
-    console.log(key);
-    console.log(config)
+  function presetChanged(preset) {
+    console.log(preset)
 
     setUrlParams((currentUrlParams) => {
-      currentUrlParams.set('preset', key)
+      currentUrlParams.set('preset', preset)
       return currentUrlParams
     })
 
-    console.log (`updateSelected: sectionKey=${key} cardKey=${key}`)
-    //setSelected({entScale, values: { ...(selected.entScale === entScale && selected.values), [sectionKey]: cardKey }})
-    //setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, key, key))
 
-    setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, key, 'standard'))
+
+    setSelected({preset, values: presets[preset].sections.reduce((a, s) => {
+        return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
+      }, {})})
+
+    // Apply selected presets to tab values
+    const tabApplySections = Object.keys(selected.values).reduce((acc,curr) =>
+      updateTabValues (acc, sections, curr, selected.values[curr]),
+      defaults
+    )
+
+    //setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, key, 'standard'))
   }
 
   function mergeState(tab, field, value) {
@@ -354,7 +362,7 @@ export default function PortalNav({ config }) {
   return (
     <ThemeProvider theme={{semanticColors, palette}}>
       <main id="mainContent" className="wrapper">
-        <Header presets={presets} setPresets={presetChanged} featureFlag={featureFlag} />
+        <Header presets={presets} selectedPreset={selected.preset} setPresets={presetChanged} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
