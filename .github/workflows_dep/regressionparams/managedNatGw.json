@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceName": {
+      "value": "az-k8s-natgw"
+    },
+    "agentVMSize": {
+      "value": "Standard_DS3_v2"
+    },
+    "aksOutboundTrafficType" : {
+      "value": "managedNATGateway"
+    },
+    "aksManagedNatGwIpCount" : {
+      "value": 3
+    },
+    "natGwIdleTimeout" : {
+      "value": 5
+    }
+  }
+}

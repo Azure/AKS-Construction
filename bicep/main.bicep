@@ -917,6 +917,21 @@ param AutoscaleProfile object = {
   'skip-nodes-with-system-pods': 'true'
 }
 
+@allowed([
+  'loadBalancer'
+  'managedNATGateway'
+])
+@description('Outbound traffic type for the egress traffic of your cluster')
+param aksOutboundTrafficType string = 'loadBalancer'
+
+@description('The effective outbound IP resources of the cluster NAT gateway')
+param aksManagedNatGwIpCount int = 2
+
+@minValue(4)
+@maxValue(120)
+@description('Outbound flow idle timeout in minutes for NatGw')
+param natGwIdleTimeout int = 30
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   'Cost-Optimised' : {
@@ -1082,6 +1097,13 @@ var aksProperties = {
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
+    outboundType: aksOutboundTrafficType
+    natGatewayProfile: {
+      managedOutboundIPProfile: {
+        count: aksManagedNatGwIpCount
+      }
+      idleTimeoutInMinutes: natGwIdleTimeout
+    }
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
   autoUpgradeProfile: !empty(upgradeChannel) ? {
@@ -1101,7 +1123,7 @@ var azureDefenderSecurityProfile = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
