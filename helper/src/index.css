@@ -76,3 +76,13 @@ code {
     height: 60px;
     margin-top: 20px
 }
+
+.htmlText {
+    font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: 16px;
+    font-weight: 400;
+    color: rgb(243, 242, 241);
+    display: inline;
+    margin-bottom: 15px;
+}

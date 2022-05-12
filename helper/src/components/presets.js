@@ -16,7 +16,8 @@ export default function ({ sections, selectedValues, updateSelected, featureFlag
     return sections.map(s => [
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
 
-        <Text variant="mediumPlus" styles={{ root: { marginBottom: "15px" } }} >{s.sectionDescription}</Text>,
+        //<Text variant="mediumPlus" styles={{ root: { marginBottom: "15px" } }} >{s.sectionDescription}</Text>,
+        <span class="htmlText" dangerouslySetInnerHTML={{ __html: s.sectionDescription }} />,
 
         <div key={`warn${s.key}`}>
             {s.sectionWarning &&
