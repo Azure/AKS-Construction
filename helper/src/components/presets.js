@@ -24,7 +24,7 @@ export default function ({ sections, selectedValues, updateSelected, featureFlag
                 <MessageBar key={`messg${s.key}`} styles={{ root: { marginBottom: "15px", fontSize: "15px" } }} messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
             }
         </div>,
-        <Stack key={`stack${s.key}`} horizontal horizontalAlign='center' tokens={{ childrenGap: 15 }}>
+        <Stack data-testid={`stack${s.key}`} key={`stack${s.key}`} horizontal horizontalAlign='center' tokens={{ childrenGap: 15 }}>
             {s.cards.map((c, i) =>
                 <DocumentCard  key={c.key}   onClick={() => updateSelected(s.key, c.key)} tokens={{ childrenMargin: 12 }}>
 
