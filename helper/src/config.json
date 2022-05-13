@@ -97,7 +97,10 @@
             "vnetFirewallSubnetAddressPrefix": "10.240.50.0/24",
             "podCidr": "10.240.100.0/24",
             "serviceCidr": "172.10.0.0/16",
-            "dnsServiceIP": "172.10.0.10"
+            "dnsServiceIP": "172.10.0.10",
+            "aksOutboundTrafficType": "loadBalancer",
+            "aksManagedNatGwIpCount": 2,
+            "natGwIdleTimeout" : 30
         },
         "app": {
             "javatls": false

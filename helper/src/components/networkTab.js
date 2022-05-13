@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Image, ImageFit, Link, Separator, TextField, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
+import { Image, ImageFit, Link, Separator, TextField, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, Dropdown, Slider } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 
 const columnProps = {
@@ -38,17 +38,6 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
             <Separator className="notopmargin" />
 
             <Stack.Item>
-                <Label>Deploy Azure firewall for your cluster egress (Custom VNet Only)</Label>
-                {hasError(invalidArray, 'afw') &&
-                    <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'afw')}</MessageBar>
-                }
-                <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }} disabled={false} errorMessage={getError(invalidArray, 'afw')} checked={net.afw} onChange={(ev, v) => updateFn("afw", v)} label="Implement Azure Firewall & UDR next hop" />
-
-            </Stack.Item>
-
-            <Separator className="notopmargin" />
-
-            <Stack.Item>
                 <Label>Uses a private IP address from your VNet to access your dependent Azure service, such as Azure KeyVault, Azure Container Registry etc</Label>
                 <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.vnetprivateend} onChange={(ev, v) => updateFn("vnetprivateend", v)} label="Enable Private Link" />
             </Stack.Item>
@@ -58,6 +47,53 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
             <Stack.Item>
                 <Label>Use Azure Bastion to facilitate RDP/SSH public internet inbound access into your virtual network</Label>
                 <Checkbox inputProps={{ "data-testid": "network-bastion-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.bastion} onChange={(ev, v) => updateFn("bastion", v)} label="Enable Azure Bastion" />
+            </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item >
+                <Label>AKS Traffic Egress</Label>
+                <Stack horizontal  tokens={{ childrenGap: 50 }}>
+                    <Stack.Item>
+                        <Dropdown
+                            label="Traffic Egress Type"
+                            data-testid="net-aksegresstype"
+                            onChange={(ev, { key }) => updateFn("aksOutboundTrafficType", key)}
+                            selectedKey={net.aksOutboundTrafficType}
+                            options={[
+                                { key: 'loadBalancer', text: 'Load Balancer' },
+                                { key: 'managedNATGateway', text: 'Managed NAT Gateway' }
+                            ]}
+                        />
+                    </Stack.Item>
+                    <Stack.Item>
+                        <Slider
+                            disabled={net.aksOutboundTrafficType!=='managedNATGateway'}
+                            buttonProps={{ "data-testid": "net-natgwip-slider"}}
+                            styles={{ root: { width: 450 } }}
+                            label={'Nat Gateway Ip Count'} min={1}  max={16} step={1}
+                            value={net.aksManagedNatGwIpCount} showValue={true}
+                            onChange={(val, range) => updateFn("aksManagedNatGwIpCount", val)}
+                        />
+
+                        <Slider
+                            disabled={net.aksOutboundTrafficType!=='managedNATGateway'}
+                            buttonProps={{ "data-testid": "net-natgwtimeout-slider"}}
+                            styles={{ root: { width: 450 } }}
+                            label={'Nat Gateway Idle Timeout (Minutes)'} min={5}  max={120} step={1}
+                            value={net.natGwIdleTimeout} showValue={true}
+                            onChange={(val, range) => updateFn("natGwIdleTimeout", val)}
+                        />
+                    </Stack.Item>
+                </Stack>
+
+                <Stack.Item>
+                    <Label>Deploy Azure firewall for your cluster egress (Custom VNet Only)</Label>
+                    {hasError(invalidArray, 'afw') &&
+                        <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'afw')}</MessageBar>
+                    }
+                    <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }} disabled={false} errorMessage={getError(invalidArray, 'afw')} checked={net.afw} onChange={(ev, v) => updateFn("afw", v)} label="Implement Azure Firewall & UDR next hop" />
+                </Stack.Item>
             </Stack.Item>
 
             <Separator className="notopmargin" />
