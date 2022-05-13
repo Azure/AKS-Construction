@@ -88,6 +88,9 @@
           },
           "CreateNetworkSecurityGroupFlowLogs": {
             "value": true
+          },
+          "aksOutboundTrafficType" : {
+              "value": "managedNATGateway"
           }
     }
 }

@@ -54,11 +54,12 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
             <Stack.Item >
                 <Label>AKS Traffic Egress</Label>
 
-                <Stack horizontal  tokens={{ childrenGap: 50 }}>
+                <Stack horizontal tokens={{ childrenGap: 50 }}>
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.warning}>Managed Nat Gateway for egress is currently a preview feature <a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
                         <Dropdown
                             label="Traffic Egress Type"
+                            disabled={net.vnet_opt === 'byo'}
                             data-testid="net-aksEgressType"
                             onChange={(ev, { key }) => updateFn("aksOutboundTrafficType", key)}
                             selectedKey={net.aksOutboundTrafficType}
@@ -94,7 +95,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                     {hasError(invalidArray, 'afw') &&
                         <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'afw')}</MessageBar>
                     }
-                    <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }} disabled={false} errorMessage={getError(invalidArray, 'afw')} checked={net.afw} onChange={(ev, v) => updateFn("afw", v)} label="Implement Azure Firewall & UDR next hop" />
+                    <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }} disabled={net.vnet_opt !== 'custom'} errorMessage={getError(invalidArray, 'afw')} checked={net.afw} onChange={(ev, v) => updateFn("afw", v)} label="Implement Azure Firewall & UDR next hop" />
                 </Stack.Item>
             </Stack.Item>
 

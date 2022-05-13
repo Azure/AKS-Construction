@@ -78,9 +78,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const preview_params = {
     ...(addons.gitops !== "none" && { gitops: addons.gitops }),
-    ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
-    ...(net.aksOutboundTrafficType === "managedNATGateway" && net.aksManagedNatGwIpCount !== defaults.net.aksManagedNatGwIpCount && {aksManagedNatGwIpCount: net.aksManagedNatGwIpCount}),
-    ...(net.aksOutboundTrafficType === "managedNATGateway" && net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout}),
+    ...(net.vnet_opt !== "byo" && {
+      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
+      ...(net.aksOutboundTrafficType === "managedNATGateway" && net.aksManagedNatGwIpCount !== defaults.net.aksManagedNatGwIpCount && {aksManagedNatGwIpCount: net.aksManagedNatGwIpCount}),
+      ...(net.aksOutboundTrafficType === "managedNATGateway" && net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
+    }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
       ...(addons.registry !== "none" && {
         ...(addons.acrPrivatePool !== defaults.addons.acrPrivatePool && {acrPrivatePool: addons.acrPrivatePool}),
