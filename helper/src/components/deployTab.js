@@ -92,9 +92,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     return ` \\\n\t${k}=${targetVal}`
   }).join('')
 
+
+  /*{value=var.acrPushRolePrincipalId}
+  data.azurerm_client_config.azcontext.signedInPrincipalId*/
   const params2tf = p => Object.keys(p).map(k => {
-    const val = p[k]
-    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+    //const val = p[k]
+    //const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
     return `    ${k} = {value=var.${k}}\n`
   }).join('')
 
