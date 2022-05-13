@@ -57,7 +57,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                     <Stack.Item>
                         <Dropdown
                             label="Traffic Egress Type"
-                            data-testid="net-aksegresstype"
+                            data-testid="net-aksEgressType"
                             onChange={(ev, { key }) => updateFn("aksOutboundTrafficType", key)}
                             selectedKey={net.aksOutboundTrafficType}
                             options={[
@@ -69,7 +69,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                     <Stack.Item>
                         <Slider
                             disabled={net.aksOutboundTrafficType!=='managedNATGateway'}
-                            buttonProps={{ "data-testid": "net-natgwip-slider"}}
+                            buttonProps={{ "data-testid": "net-natGwIp-slider"}}
                             styles={{ root: { width: 450 } }}
                             label={'Nat Gateway Ip Count'} min={1}  max={16} step={1}
                             value={net.aksManagedNatGwIpCount} showValue={true}
@@ -78,7 +78,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
 
                         <Slider
                             disabled={net.aksOutboundTrafficType!=='managedNATGateway'}
-                            buttonProps={{ "data-testid": "net-natgwtimeout-slider"}}
+                            buttonProps={{ "data-testid": "net-natGwTimeout-slider"}}
                             styles={{ root: { width: 450 } }}
                             label={'Nat Gateway Idle Timeout (Minutes)'} min={5}  max={120} step={1}
                             value={net.natGwIdleTimeout} showValue={true}

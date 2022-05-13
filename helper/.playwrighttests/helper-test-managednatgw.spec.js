@@ -12,7 +12,7 @@ test('managed-natgw-option-is-not-the-default', async ({ page }) => {
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(4)');
 
   //Check default value
-  const dropdown = await page.waitForSelector('[data-testid="net-aksegresstype"]')
+  const dropdown = await page.waitForSelector('[data-testid="net-aksEgressType"]')
   await expect(dropdown).toBeVisible()
   await expect(dropdown).toMatchText('Load Balancer')
 
