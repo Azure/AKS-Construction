@@ -11,8 +11,9 @@ test('disablelocalaccounts-not-present-by-on-simple-config', async ({ page }) =>
   await page.goto('http://localhost:3000/AKS-Construction');
 
   //Configure presets
-  await page.waitForSelector('[data-testid="portalnav-presets-secure-low-Checkbox"]')
-  await page.click('[data-testid="portalnav-presets-secure-low-Checkbox"]')
+  await page.click('[data-testid="stacksecure"] > .ms-DocumentCard:nth-child(1) > .ms-DocumentCardDetails > .ms-Checkbox > .ms-Checkbox-label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark');
+  // await page.waitForSelector('[data-testid="portalnav-presets-secure-low-Checkbox"]')
+  // await page.click('[data-testid="portalnav-presets-secure-low-Checkbox"]')
 
   //Check parameter is absent
   await page.waitForSelector('[data-testid="deploy-deploycmd"]')
