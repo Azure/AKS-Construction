@@ -11,7 +11,7 @@ test('ingress-options-test', async ({ page }) => {
   expect (await page.isChecked('[data-testid="addons-ingress-appgwKVIntegration-Checkbox"]')).toBeTruthy()
 
   // Now click Operations Principles=none
-  await page.click('[data-testid="portalnav-presets-ops-none-Checkbox"]')
+  await page.click('[data-testid="stackops"] > .ms-DocumentCard:nth-child(1) > .ms-DocumentCardDetails > .ms-Checkbox > .ms-Checkbox-label > .ms-Checkbox-checkbox > .ms-Checkbox-checkmark');
 
   // Expect the AppGateway option for KeyVault integration to disappear
   expect (await page.isVisible('[data-testid="addons-ingress-appgwKVIntegration-Checkbox"]')).toBeFalsy()
