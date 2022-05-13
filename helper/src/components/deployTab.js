@@ -40,7 +40,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
     ...(cluster.enable_aad && cluster.AksDisableLocalAccounts !== defaults.cluster.AksDisableLocalAccounts && { AksDisableLocalAccounts: cluster.AksDisableLocalAccounts }),
-    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
+    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminPrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
     ...(addons.registry !== "none" && {
         registries_sku: addons.registry,
         ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
@@ -93,21 +93,18 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }).join('')
 
 
-  /*{value=var.acrPushRolePrincipalId}
-  data.azurerm_client_config.azcontext.signedInPrincipalId*/
   const params2tf = p => Object.keys(p).map(k => {
-    //const val = p[k]
-    //const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-    return `    ${k} = {value=var.${k}}\n`
+    return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? 'data.azurerm_client_config.current.client_id' : `{value=var.${k}}`}\n`
   }).join('')
 
-  const params2tfvar = p => Object.keys(p).map(k => {
+  const params2tfvar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' && p !== 'acrPushRolePrincipalId' && p !== 'kvOfficerRolePrincipalId').map(k => {
     const val = p[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
     return ` \nvariable ${k} {\n  default="${targetVal}"\n}`
+
   }).join('')
 
-  const params2file = p => Object.keys(p).filter(p => p !== 'adminprincipleid' && p !== 'acrPushRolePrincipalId' && p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
+  const params2file = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' && p !== 'acrPushRolePrincipalId' && p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {}
@@ -145,7 +142,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `    User-Agent = "request module"\n` +
     `  }\n` +
     `}\n\n` +
-    `data "azurerm_client_config" "azcontext" {}\n\n` +
+    `data "azurerm_client_config" "current" {}\n\n` +
     `resource "azurerm_resource_group" "rg" {\n` +
     `  name = "${deploy.rg}"\n`+
     `  location = "${deploy.location}"\n` +

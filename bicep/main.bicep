@@ -1122,16 +1122,16 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
 }
 
 @description('The principal ID to assign the AKS admin role.')
-param adminprincipleid string = ''
+param adminPrincipalId string = ''
 // for AAD Integrated Cluster wusing 'enableAzureRBAC', add Cluster admin to the current user!
 var buildInAKSRBACClusterAdmin = resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
-resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (enableAzureRBAC && !empty(adminprincipleid)) {
+resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (enableAzureRBAC && !empty(adminPrincipalId)) {
   scope: aks // Use when specifying a scope that is different than the deployment scope
   name: '${guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)}'
   properties: {
     roleDefinitionId: buildInAKSRBACClusterAdmin
     principalType: 'User'
-    principalId: adminprincipleid
+    principalId: adminPrincipalId
   }
 }
 
