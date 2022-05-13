@@ -53,8 +53,10 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
 
             <Stack.Item >
                 <Label>AKS Traffic Egress</Label>
+
                 <Stack horizontal  tokens={{ childrenGap: 50 }}>
                     <Stack.Item>
+                        <MessageBar messageBarType={MessageBarType.warning}>Managed Nat Gateway for egress is currently a preview feature <a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
                         <Dropdown
                             label="Traffic Egress Type"
                             data-testid="net-aksEgressType"
@@ -62,7 +64,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                             selectedKey={net.aksOutboundTrafficType}
                             options={[
                                 { key: 'loadBalancer', text: 'Load Balancer' },
-                                { key: 'managedNATGateway', text: 'Managed NAT Gateway' }
+                                { key: 'managedNATGateway', text: 'Managed NAT Gateway (preview)' }
                             ]}
                         />
                     </Stack.Item>
