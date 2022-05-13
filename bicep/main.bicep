@@ -924,6 +924,8 @@ param AutoscaleProfile object = {
 @description('Outbound traffic type for the egress traffic of your cluster')
 param aksOutboundTrafficType string = 'loadBalancer'
 
+@minValue(1)
+@maxValue(16)
 @description('The effective outbound IP resources of the cluster NAT gateway')
 param aksManagedNatGwIpCount int = 2
 
