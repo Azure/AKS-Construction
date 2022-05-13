@@ -56,9 +56,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
     ...(addons.azurepolicy !== "none" && addons.azurePolicyInitiative !== defaults.addons.azurePolicyInitiative && { azurePolicyInitiative: addons.azurePolicyInitiative }),
     ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}),
-    ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
-    ...(net.aksOutboundTrafficType === "managedNATGateway" && net.aksManagedNatGwIpCount !== defaults.net.aksManagedNatGwIpCount && {aksManagedNatGwIpCount: net.aksManagedNatGwIpCount}),
-    ...(net.aksOutboundTrafficType === "managedNATGateway" && net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout}),
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
@@ -81,6 +78,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const preview_params = {
     ...(addons.gitops !== "none" && { gitops: addons.gitops }),
+    ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
+    ...(net.aksOutboundTrafficType === "managedNATGateway" && net.aksManagedNatGwIpCount !== defaults.net.aksManagedNatGwIpCount && {aksManagedNatGwIpCount: net.aksManagedNatGwIpCount}),
+    ...(net.aksOutboundTrafficType === "managedNATGateway" && net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout}),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
       ...(addons.registry !== "none" && {
         ...(addons.acrPrivatePool !== defaults.addons.acrPrivatePool && {acrPrivatePool: addons.acrPrivatePool}),
