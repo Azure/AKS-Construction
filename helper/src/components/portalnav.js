@@ -37,11 +37,8 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
       <img id="aksLogo" src="aks.svg" alt="Kubernetes Service" style={{  }}></img>
       <Stack tokens={{ padding: 10, maxWidth: 700 }} className="intro">
         <Text variant="xLarge">AKS Deploy helper</Text>
-        <Text variant="large">Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance.</Text>
-        <Separator className="notopmargin" />
-        <Text variant="large">Start by selecting the Preset Lens that reflects your architecture approach. Then select the most applicable preset to expedite your configuration experience.</Text>
-        <Separator className="notopmargin" />
-        <Text variant="medium">For documentation and CI/CD samples - please refer to our <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
+        <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance. Start by selecting the Preset Lens that reflects your architecture approach.</Text>
+        <Text variant="medium" >Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
       <Stack grow={1} tokens={{ padding: 10 }} >
         Preset Lens

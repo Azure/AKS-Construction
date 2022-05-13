@@ -1,7 +1,7 @@
 /* eslint-disable import/no-anonymous-default-export */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
-import { useTheme, MessageBar, DocumentCardActivity, DocumentCardImage, DocumentCardTitle, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType } from '@fluentui/react';
+import { useTheme, MessageBar, DefaultButton, DocumentCardImage, DocumentCardTitle, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType } from '@fluentui/react';
 
 const iconClass = mergeStyles({
     fontSize: 80,
@@ -16,8 +16,19 @@ export default function ({ sections, selectedValues, updateSelected, featureFlag
     return sections.map(s => [
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
 
-        //<Text variant="mediumPlus" styles={{ root: { marginBottom: "15px" } }} >{s.sectionDescription}</Text>,
-        <span class="htmlText" dangerouslySetInnerHTML={{ __html: s.sectionDescription }} />,
+        <Stack horizontal tokens={{ childrenGap: 10 }}>
+            <Text variant="mediumPlus" styles={{ root: { marginBottom: "15px" } }} >{s.sectionDescription}</Text>
+            { s.sectionMoreInfoLink != null &&
+            <DefaultButton
+              href={s.sectionMoreInfoLink}
+              target="_blank" title="More information"
+              iconProps={{iconName: 'Info'}}
+              styles={{ root: { height: 'auto', marginBottom: '12px' } }}>
+                More Info
+            </DefaultButton>
+            }
+        </Stack>,
+        //<span class="htmlText" dangerouslySetInnerHTML={{ __html: s.sectionDescription }} />,
 
         <div key={`warn${s.key}`}>
             {s.sectionWarning &&
