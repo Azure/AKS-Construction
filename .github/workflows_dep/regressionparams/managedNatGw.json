@@ -11,7 +11,7 @@
     "aksOutboundTrafficType" : {
       "value": "managedNATGateway"
     },
-    "aksManagedNatGwIpCount" : {
+    "natGwIpCount" : {
       "value": 3
     },
     "natGwIdleTimeout" : {

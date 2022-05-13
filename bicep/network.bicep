@@ -30,6 +30,11 @@ param privateLinkAkvId string = ''
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 
+//NatGatewayEgress
+param natGateway bool = false
+param natGatewayPublicIps int = 2
+param natGatewayIdleTimeoutMins int
+
 //Bastion
 param bastion bool =false
 param bastionSubnetAddressPrefix string = ''
@@ -119,6 +124,10 @@ var aks_baseSubnet =  {
     }, privateLinks ? {
       privateEndpointNetworkPolicies: 'Disabled'
       privateLinkServiceNetworkPolicies: 'Enabled'
+    } : {}, natGateway ? {
+      natGateway: {
+        id: natGw.id
+      }
     } : {}, azureFirewalls ? {
       routeTable: {
         id: vnet_udr.id //resourceId('Microsoft.Network/routeTables', routeFwTableName)
@@ -437,5 +446,34 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   ]
 }
 
+resource natGwIp 'Microsoft.Network/publicIPAddresses@2021-08-01' =  [for i in range(0, natGatewayPublicIps): if(natGateway) {
+  name: 'pip-${natGwName}-${i+1}'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  zones: !empty(availabilityZones) ? availabilityZones : []
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+}]
 
+var natGwName = 'ng${resourceName}'
+resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
+  name: natGwName
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  zones: !empty(availabilityZones) ? availabilityZones : []
+  properties: {
+    publicIpAddresses: [for i in range(0, natGatewayPublicIps): {
+      id: natGwIp[i].id
+    }]
+    idleTimeoutInMinutes: natGatewayIdleTimeoutMins
+  }
+  dependsOn: [
+    natGwIp
+  ]
+}
 

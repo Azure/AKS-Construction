@@ -150,6 +150,9 @@ module network './network.bicep' = if (custom_vnet) {
     networkSecurityGroups: CreateNetworkSecurityGroups
     CreateNsgFlowLogs: CreateNetworkSecurityGroups && CreateNetworkSecurityGroupFlowLogs
     ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
+    natGateway: createNatGateway
+    natGatewayIdleTimeoutMins: natGwIdleTimeout
+    natGatewayPublicIps: natGwIpCount
   }
 }
 output CustomVnetId string = custom_vnet ? network.outputs.vnetId : ''
@@ -920,14 +923,18 @@ param AutoscaleProfile object = {
 @allowed([
   'loadBalancer'
   'managedNATGateway'
+  'userAssignedNATGateway'
 ])
 @description('Outbound traffic type for the egress traffic of your cluster')
 param aksOutboundTrafficType string = 'loadBalancer'
 
+@description('Create a new Nat Gateway, applies to custom networking only')
+param createNatGateway bool = false
+
 @minValue(1)
 @maxValue(16)
 @description('The effective outbound IP resources of the cluster NAT gateway')
-param aksManagedNatGwIpCount int = 2
+param natGwIpCount int = 2
 
 @minValue(4)
 @maxValue(120)
@@ -1100,12 +1107,12 @@ var aksProperties = {
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
     outboundType: aksOutboundTrafficType
-    natGatewayProfile: {
+    natGatewayProfile: aksOutboundTrafficType == 'managedNATGateway' ? {
       managedOutboundIPProfile: {
-        count: aksManagedNatGwIpCount
+        count: natGwIpCount
       }
       idleTimeoutInMinutes: natGwIdleTimeout
-    }
+    } : {}
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
   autoUpgradeProfile: !empty(upgradeChannel) ? {

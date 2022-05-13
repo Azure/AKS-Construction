@@ -98,8 +98,9 @@
             "podCidr": "10.240.100.0/24",
             "serviceCidr": "172.10.0.0/16",
             "dnsServiceIP": "172.10.0.10",
+            "createNatGateway": false,
             "aksOutboundTrafficType": "loadBalancer",
-            "aksManagedNatGwIpCount": 2,
+            "natGwIpCount": 2,
             "natGwIdleTimeout" : 30
         },
         "app": {
