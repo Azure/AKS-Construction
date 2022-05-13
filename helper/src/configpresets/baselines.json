@@ -7,13 +7,15 @@
             {
                 "key": "baselineRI",
                 "sectionTitle": "AKS Baseline Cluster Stamps",
-                "sectionDescription" : "The <a href='https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks'>AKS Baseline</a> architectures are references for learning how to build AKS Clusters that include recommendations for networking, security, identity, management, and monitoring of the cluster based on an organization's business requirements.",
+                "sectionDescription" : "The AKS Baseline architectures are references for learning how to build AKS Clusters that include recommendations for networking, security, identity, management, and monitoring of the cluster based on an organization's business requirements. These presets closely replicate the cluster-stamp for each sample reference implementation, and should be leveraged after you've read the AKS baseline reference architecture documentation.",
+                "sectionMoreInfoLink" : "https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks",
                 "sectionWarning": "",
                 "cards": [
                     {
                         "key": "standard",
                         "default": true,
                         "title": "Standard",
+                        "linksrc" : "https://github.com/mspnp/aks-baseline",
                         "description": {
                             "title": "Standard Workload",
                             "bulets": [
@@ -38,12 +40,7 @@
                                 }
                             ]
                         },
-                        "imageSrc": "",
-                        "author": {
-                            "name": "Gordon Byers",
-                            "initials": "GB",
-                            "status": "Updated May, 2022"
-                        },
+                        "imageSrc": "https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/images/secure-baseline-architecture.svg",
                         "values": {
                             "cluster": {
                                 "enable_aad": true,
@@ -73,8 +70,9 @@
                     },
                     {
                         "key": "regulated",
-                        "default": true,
+                        "default": false,
                         "title": "Regulated",
+                        "linksrc" : "https://github.com/mspnp/aks-baseline-regulated",
                         "description": {
                             "title": "Suited for regulated workloads",
                             "titleWarning": {
@@ -123,12 +121,7 @@
                                 }
                             ]
                         },
-                        "imageSrc": "",
-                        "author": {
-                            "name": "Gordon Byers",
-                            "initials": "GB",
-                            "status": "Updated March, 2021"
-                        },
+                        "imageSrc": "https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks-pci/images/regulated-architecture.svg",
                         "values": {
                             "cluster": {
                                 "enable_aad": true,
