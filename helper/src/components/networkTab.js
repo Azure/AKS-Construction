@@ -56,10 +56,11 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
 
                 <Stack horizontal tokens={{ childrenGap: 50 }}>
                     <Stack.Item>
-                        <MessageBar messageBarType={MessageBarType.warning}>Managed Nat Gateway for egress is currently a preview feature <a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
+                        <MessageBar messageBarType={MessageBarType.warning}>Nat Gateway for AKS egress is currently a preview feature <a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
                         <ChoiceGroup
                             styles={{ root: { marginLeft: '50px' } }}
                             selectedKey={net.aksOutboundTrafficType}
+                            data-testid="net-aksEgressType"
                             options={[
                                 { key: 'loadBalancer', text: 'Load Balancer'  },
                                 { key: 'managedNATGateway', text: 'Managed NAT Gateway', disabled:net.vnet_opt !== 'default' },
@@ -69,11 +70,9 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                         />
                     </Stack.Item>
                     <Stack.Item>
-                        <Checkbox
+                        <Checkbox //simple "read-only" checkbox that derives its values from other settings
                             styles={{ root: { marginBottom: '10px' }}}
                             checked={net.vnet_opt === 'custom' && net.aksOutboundTrafficType === 'userAssignedNATGateway'}
-                            //errorMessage={getError(invalidArray, 'natgw')}
-                            //onChange={(ev, v) => updateFn("createNatGateway", v)}
                             label="Create NAT Gateway for AKS Subnet (Custom VNet Only)"
                         />
                         <Slider
