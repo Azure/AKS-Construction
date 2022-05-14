@@ -456,7 +456,7 @@ resource natGwIp 'Microsoft.Network/publicIPAddresses@2021-08-01' =  [for i in r
   }
 }]
 
-var natGwName = 'ng${resourceName}'
+var natGwName = 'ng-${resourceName}'
 resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
   name: natGwName
   location: location
