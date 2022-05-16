@@ -6,7 +6,22 @@ import { mergeStyles } from '@fluentui/react';
 
 // Application Insights - https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-js
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import configData from "./config.json";
+
+// Config
+// TODO: Can we iterate over every json file in the configpresets directory?
+import baseConfig from "./config.json";
+import principalConfig from "./configpresets/principals.json"
+import entScaleConfig from "./configpresets/entScale.json"
+import baselineConfig from "./configpresets/baselines.json"
+
+const configData = {
+  ...baseConfig,
+  presets: {
+    ...principalConfig,
+    ...entScaleConfig,
+    ...baselineConfig
+  }
+};
 
 export const appInsights = new ApplicationInsights({
   config: { instrumentationKey: process.env.REACT_APP_APPINSIGHTS_KEY }

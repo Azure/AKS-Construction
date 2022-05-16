@@ -1,7 +1,7 @@
 /* eslint-disable import/no-anonymous-default-export */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
-import { useTheme, MessageBar, DocumentCardActivity, DocumentCardImage, DocumentCardTitle, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType } from '@fluentui/react';
+import { useTheme, MessageBar, DefaultButton, DocumentCardImage, DocumentCardTitle, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType } from '@fluentui/react';
 
 const iconClass = mergeStyles({
     fontSize: 80,
@@ -14,15 +14,28 @@ export default function ({ sections, selectedValues, updateSelected, featureFlag
     const bodyBackground = useTheme().semanticColors.bodyBackground;
 
     return sections.map(s => [
-
-
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
+
+        <Stack horizontal tokens={{ childrenGap: 10 }}>
+            <Text variant="mediumPlus" styles={{ root: { marginBottom: "15px" } }} >{s.sectionDescription}</Text>
+            { s.sectionMoreInfoLink != null &&
+            <DefaultButton
+              href={s.sectionMoreInfoLink}
+              target="_blank" title="More information"
+              iconProps={{iconName: 'Info'}}
+              styles={{ root: { height: 'auto', marginBottom: '12px' } }}>
+                More Info
+            </DefaultButton>
+            }
+        </Stack>,
+        //<span class="htmlText" dangerouslySetInnerHTML={{ __html: s.sectionDescription }} />,
+
         <div key={`warn${s.key}`}>
             {s.sectionWarning &&
                 <MessageBar key={`messg${s.key}`} styles={{ root: { marginBottom: "15px", fontSize: "15px" } }} messageBarType={MessageBarType.severeWarning}>{s.sectionWarning}</MessageBar>
             }
         </div>,
-        <Stack key={`stack${s.key}`} horizontal tokens={{ childrenGap: 15 }}>
+        <Stack data-testid={`stack${s.key}`} key={`stack${s.key}`} horizontal horizontalAlign='center' tokens={{ childrenGap: 15 }}>
             {s.cards.map((c, i) =>
                 <DocumentCard  key={c.key}   onClick={() => updateSelected(s.key, c.key)} tokens={{ childrenMargin: 12 }}>
 
@@ -64,9 +77,9 @@ export default function ({ sections, selectedValues, updateSelected, featureFlag
                         </Text>
                     </div>
 
-                    {c.author &&
+                    {/* {c.author &&
                         <DocumentCardActivity activity={c.author.status} people={[{ name: c.author.name, initials: c.author.initials }]} />
-                    }
+                    } */}
                 </DocumentCard>
             )}
         </Stack>

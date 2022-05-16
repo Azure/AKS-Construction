@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceName": {
+      "value": "az-k8s-edged"
+    },
+    "agentVMSize": {
+      "value": "Standard_DS3_v2"
+    },
+    "kubernetesVersion": {
+      "value": "1.23.5"
+    },
+    "custom_vnet": {
+      "value": true
+    },
+    "enable_aad": {
+      "value": true
+    },
+    "enableAzureRBAC": {
+      "value": true
+    },
+    "omsagent": {
+      "value": true
+    },
+    "ingressApplicationGateway": {
+      "value": true
+    },
+    "appGWsku": {
+      "value": "Standard_v2"
+    }
+  }
+}

@@ -9,9 +9,6 @@
         "resourceName": {
             "value": "az-k8s-4wmn"
           },
-          "kubernetesVersion": {
-            "value": "1.21.2"
-          },
           "SystemPoolType": {
             "value": "Standard"
           },
