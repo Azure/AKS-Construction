@@ -57,14 +57,18 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                 <Stack horizontal tokens={{ childrenGap: 50 }}>
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.warning}>Nat Gateway for AKS egress is currently a preview feature <a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
+                        {hasError(invalidArray, 'aksOutboundTrafficType') &&
+                            <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'aksOutboundTrafficType')}</MessageBar>
+                        }
                         <ChoiceGroup
                             styles={{ root: { marginLeft: '50px' } }}
                             selectedKey={net.aksOutboundTrafficType}
+                            errorMessage={getError(invalidArray, 'aksOutboundTrafficType')}
                             data-testid="net-aksEgressType"
                             options={[
                                 { key: 'loadBalancer', text: 'Load Balancer'  },
-                                { key: 'managedNATGateway', text: 'Managed NAT Gateway', disabled:net.vnet_opt !== 'default' },
-                                { key: 'userAssignedNATGateway', text: 'Assigned NAT Gateway', disabled:net.vnet_opt === 'default'}
+                                { key: 'managedNATGateway', text: 'Managed NAT Gateway' },
+                                { key: 'userAssignedNATGateway', text: 'Assigned NAT Gateway'}
                             ]}
                             onChange={(ev, { key }) => updateFn("aksOutboundTrafficType", key)}
                         />
@@ -73,6 +77,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                         <Checkbox //simple "read-only" checkbox that derives its values from other settings
                             styles={{ root: { marginBottom: '10px' }}}
                             checked={net.vnet_opt === 'custom' && net.aksOutboundTrafficType === 'userAssignedNATGateway'}
+                            disabled={true}
                             label="Create NAT Gateway for AKS Subnet (Custom VNet Only)"
                         />
                         <Slider
@@ -94,22 +99,22 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                         />
                     </Stack.Item>
                 </Stack>
+            </Stack.Item>
 
-                <Separator className="notopmargin" />
+            <Separator className="notopmargin" />
 
-                <Stack.Item>
-                    <Label>Deploy Azure firewall for your cluster egress (Custom VNet Only)</Label>
-                    {hasError(invalidArray, 'afw') &&
-                        <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'afw')}</MessageBar>
-                    }
-                    <Checkbox
-                        styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
-                        disabled={net.vnet_opt !== 'custom'}
-                        errorMessage={getError(invalidArray, 'afw')}
-                        checked={net.afw}
-                        onChange={(ev, v) => updateFn("afw", v)}
-                        label="Implement Azure Firewall & UDR next hop" />
-                </Stack.Item>
+            <Stack.Item>
+                <Label>Deploy Azure firewall for your cluster egress (Custom VNet Only)</Label>
+                {hasError(invalidArray, 'afw') &&
+                    <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'afw')}</MessageBar>
+                }
+                <Checkbox
+                    styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
+                    disabled={net.vnet_opt !== 'custom'}
+                    errorMessage={getError(invalidArray, 'afw')}
+                    checked={net.afw}
+                    onChange={(ev, v) => updateFn("afw", v)}
+                    label="Implement Azure Firewall & UDR next hop" />
             </Stack.Item>
 
             <Separator className="notopmargin" />
