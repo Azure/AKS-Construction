@@ -483,8 +483,7 @@ ${postscript_cluster.replaceAll('"', '\\"')}
               <Stack.Item>
                 <Label >Commands to deploy your fully operational environment</Label>
                 <Text>
-                  Requires Terraform, or, execute in the
-                  <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+                  Requires Terraform, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
                 </Text>
               </Stack.Item>
 
