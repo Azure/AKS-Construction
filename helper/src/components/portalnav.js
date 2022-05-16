@@ -308,6 +308,9 @@ export default function PortalNav({ config }) {
       :
       <Text><b>WARNING</b>: This template can only deploy Azure Firewall in single VNET with Custom Networking"</Text>
   )
+  invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") || (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default"),
+    <Text>When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway</Text>
+)
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
     <Text>Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab</Text>)
   invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19,
