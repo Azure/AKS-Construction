@@ -100,7 +100,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? 'data.azurerm_client_config.current.client_id' : `{value=var.${k}}`}\n`
   }).join('')
 
-  const params2tfvar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
+  const params2TfVar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
         p !== 'acrPushRolePrincipalId' &&
         p !== 'kvOfficerRolePrincipalId').map(k => {
 
@@ -174,7 +174,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  })\n` +
     `}`
 
-    const deployTfVar = `#variables.tf\n` + params2tfvar(finalParams)
+    const deployTfVar = `#variables.tf\n` + params2TfVar(finalParams)
 
     const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n}`
 
