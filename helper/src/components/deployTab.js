@@ -97,14 +97,28 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? 'data.azurerm_client_config.current.client_id' : `{value=var.${k}}`}\n`
   }).join('')
 
-  const params2tfvar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' && p !== 'acrPushRolePrincipalId' && p !== 'kvOfficerRolePrincipalId').map(k => {
+  const params2tfvar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
+        p !== 'acrPushRolePrincipalId' &&
+        p !== 'kvOfficerRolePrincipalId').map(k => {
+
     const val = p[k]
-    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-    return ` \nvariable ${k} {\n  default="${targetVal}"\n}`
+
+    switch (typeof val) {
+      case "string":
+        return ` \nvariable ${k} {\n  default="${val}"\n}`
+      case "number": case "boolean":
+        return ` \nvariable ${k} {\n  default=${val}\n}`
+      default:
+        const arrayVal = Array.isArray(val) ? JSON.stringify(val) : val
+        console.log(k + ' ' + val + ' '  + typeof val);
+        return ` \nvariable ${k} {\n  default=${arrayVal}\n}`
+    }
 
   }).join('')
 
-  const params2file = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' && p !== 'acrPushRolePrincipalId' && p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
+  const params2file = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
+        p !== 'acrPushRolePrincipalId' &&
+        p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {}
@@ -118,9 +132,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
     `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` + params2CLI(finalParams)
-    const deployTfcmd = `terraform init\nterraform plan -out main.tfplan\nterraform apply "main.tfplan"`
+    const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform init\nterraform plan -out main.tfplan\nterraform apply "main.tfplan"\nterraform output`
     const deployTfProviders =
-    `#providers.tf\n` +
+    `#providers.tf\n\n` +
     `terraform {\n` +
     `  required_version = ">=0.12"\n` +
     `  required_providers {\n` +
@@ -134,7 +148,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  features {}\n` +
     `}`
     const deployTfMain =
-    `#main.tf\n` +
+    `#main.tf\n\n` +
     `data "http" "aksc_release" {\n` +
     `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}"\n`+
     `  request_headers = {\n` +
@@ -156,8 +170,10 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     params2tf(finalParams) +
     `  })\n` +
     `}`
+
     const deployTfVar = `#variables.tf\n` + params2tfvar(finalParams)
-    const deployTfOutput = `#outputs.tf\n\nTODO`
+
+    const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n}`
 
     const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
@@ -483,11 +499,12 @@ ${postscript_cluster.replaceAll('"', '\\"')}
               </Stack.Item>
             </Stack>
 
+            <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="bash"/>
             <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'} lang="terraform" filename="providers.tf" />
             <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'} lang="terraform" filename="main.tf" />
             <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'} lang="terraform" filename="variables.tf" />
             <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'} lang="terraform" filename="outputs.tf" />
-            <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="bash"/>
+
           </PivotItem>
         )}
         <PivotItem headerText="Post Configuration" itemIcon="ConfigurationSolid">
