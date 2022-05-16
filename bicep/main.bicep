@@ -150,6 +150,9 @@ module network './network.bicep' = if (custom_vnet) {
     networkSecurityGroups: CreateNetworkSecurityGroups
     CreateNsgFlowLogs: CreateNetworkSecurityGroups && CreateNetworkSecurityGroupFlowLogs
     ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
+    natGateway: createNatGateway
+    natGatewayIdleTimeoutMins: natGwIdleTimeout
+    natGatewayPublicIps: natGwIpCount
   }
 }
 output CustomVnetId string = custom_vnet ? network.outputs.vnetId : ''
@@ -917,6 +920,27 @@ param AutoscaleProfile object = {
   'skip-nodes-with-system-pods': 'true'
 }
 
+@allowed([
+  'loadBalancer'
+  'managedNATGateway'
+  'userAssignedNATGateway'
+])
+@description('Outbound traffic type for the egress traffic of your cluster')
+param aksOutboundTrafficType string = 'loadBalancer'
+
+@description('Create a new Nat Gateway, applies to custom networking only')
+param createNatGateway bool = false
+
+@minValue(1)
+@maxValue(16)
+@description('The effective outbound IP resources of the cluster NAT gateway')
+param natGwIpCount int = 2
+
+@minValue(4)
+@maxValue(120)
+@description('Outbound flow idle timeout in minutes for NatGw')
+param natGwIdleTimeout int = 30
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   'Cost-Optimised' : {
@@ -1082,6 +1106,13 @@ var aksProperties = {
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
+    outboundType: aksOutboundTrafficType
+    natGatewayProfile: aksOutboundTrafficType == 'managedNATGateway' ? {
+      managedOutboundIPProfile: {
+        count: natGwIpCount
+      }
+      idleTimeoutInMinutes: natGwIdleTimeout
+    } : {}
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
   autoUpgradeProfile: !empty(upgradeChannel) ? {
@@ -1101,7 +1132,7 @@ var azureDefenderSecurityProfile = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
