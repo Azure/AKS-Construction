@@ -218,7 +218,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        bicep: ['samples/peered-vnet/main.bicep']
+        bicep:
+        - 'samples/peered-vnet/main.bicep'
+        - 'samples/shared-acr/main.bicep'
 
     env:
       templateRelease: "0.8.0"
@@ -237,8 +239,8 @@ jobs:
 
           switch ( split-path $filepath )
           {
-              'samples/peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet-main.json'    }
-              default {  $ARTIFACTNAME = $filepath.replace("/","-") }
+              'samples/peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet.json'    }
+              default {  $ARTIFACTNAME = $filepath.replace("/","-").replace('-main.bicep','.bicep').replace('.bicep','.json') }
           }
           echo "::set-output name=ARTIFACTNAME::$ARTIFACTNAME"
 
@@ -251,6 +253,7 @@ jobs:
         run: |
           $filepath = "${{ matrix.bicep }}"
           /home/runner/.azure/bin/bicep build $filepath --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+          ls -Filter '*.json'
 
       - name: Upload Extra Artifacts to GitHub release
         shell: pwsh
