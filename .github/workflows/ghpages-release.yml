@@ -94,6 +94,7 @@ jobs:
       matrix:
         files:
         - 'postdeploy/scripts/postdeploy.sh'
+        - 'postdeploy/k8smanifests/networkpolicy-deny-all.yml'
 
     name: Add extra release file-artifacts
     if: ${{ github.event.inputs.createRelease == 'true' }}
