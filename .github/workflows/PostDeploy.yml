@@ -18,7 +18,7 @@ on:
         required: false
         type: string
       HELMEXTERNALDNSURI:
-        default: "postdeploy/helm/externaldns-0.2.0.tgz"
+        default: "postdeploy/helm/externaldns-0.3.0.tgz"
         required: false
         type: string
       CERTMANAGER:
@@ -26,7 +26,7 @@ on:
         default: true
         required: false
       CERTMANAGERVERSION:
-        default: "v1.5.3"
+        default: "v1.8.0"
         required: false
         type: string
       CERTMANAGEREMAIL:
@@ -65,7 +65,7 @@ jobs:
 
       - name: Kubelogin
         env:
-          kubeloginversion: 'v0.0.10'
+          kubeloginversion: 'v0.0.13'
         run: |
           wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
           unzip kubelogin-linux-amd64.zip

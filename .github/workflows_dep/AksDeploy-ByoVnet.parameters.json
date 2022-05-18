@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "metadata": {
-        "template": "bicep/compiled/main.json"
+        "template": "bicep/main.bicep"
     },
     "parameters": {
         "location" : {
@@ -77,6 +77,16 @@
         "upgradeChannel" : {
             "value" : "none"
         },
+        "AksDiagCategories": {
+            "value": [
+              "cluster-autoscaler",
+              "kube-apiserver",
+              "kube-controller-manager",
+              "kube-audit-admin",
+              "kube-scheduler",
+              "guard"
+            ]
+        },
         "KeyVaultSoftDelete" : {
             "value" : false
         },
@@ -85,6 +95,12 @@
         },
         "dnsZoneId" : {
             "value" : "/this/parameter/is/overridden/in/my/script/valuefromsecrets"
+        },
+        "aksOutboundTrafficType" : {
+            "value": "userAssignedNATGateway"
+        },
+        "createNatGateway" : {
+            "value": false
         }
     }
 }
