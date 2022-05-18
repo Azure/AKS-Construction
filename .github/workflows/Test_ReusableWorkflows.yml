@@ -215,7 +215,7 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Test-CreateExtraBicepArtifacts:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -246,16 +246,14 @@ jobs:
           echo "::set-output name=ARTIFACTNAME::$ARTIFACTNAME"
 
       - name: Install Bicep
-        shell: pwsh
         run: az bicep install
 
       - name: Bicep build
-        shell: pwsh
         run: |
-          $filepath = "${{ matrix.bicep }}"
+          filepath = "${{ matrix.bicep }}"
           echo "Building bicep file $filepath into ${{ steps.artifactName.outputs.ARTIFACTNAME}}"
 
-          /home/runner/.azure/bin/bicep build $filepath --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+          bicep build $filepath --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
 
       - name: Verify Compiled Arm Json
         run: |
@@ -263,15 +261,15 @@ jobs:
           cat ${{ steps.artifactName.outputs.ARTIFACTNAME}}
 
       - name: Upload Extra Artifacts to GitHub release
-        shell: pwsh
         run: |
           echo "Adding Artifact ${{ steps.artifactName.outputs.ARTIFACTNAME}} to Release ${{env.templateRelease}}"
-          gh release upload ${{env.templateRelease}} "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+#          gh release upload ${{env.templateRelease}} "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
 
   Test-AddExtraReleaseArtifacts:
+    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
