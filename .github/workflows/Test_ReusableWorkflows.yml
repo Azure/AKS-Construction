@@ -250,7 +250,7 @@ jobs:
 
       - name: Bicep build
         run: |
-          filepath = "${{ matrix.bicep }}"
+          filepath="${{ matrix.bicep }}"
           echo "Building bicep file $filepath into ${{ steps.artifactName.outputs.ARTIFACTNAME}}"
 
           bicep build $filepath --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
