@@ -58,7 +58,7 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
- 
+
       - name: Install Bicep
         shell: pwsh
         run: az bicep install
@@ -74,7 +74,7 @@ jobs:
                 New-Item -ItemType Directory -Force -Path $compiledir
           }
           /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
-          
+
       - name: Create Bicep release artifact
         uses: actions/upload-artifact@v2
         with:
@@ -86,14 +86,14 @@ jobs:
           GHJSON=$(gh release create ${{env.templateRelease}} 'bicep/compiled/main.json' -p --generate-notes )
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
   CreateExtraBicepArtifacts:
     runs-on: ubuntu-latest
     needs: [CreateRelease]
     strategy:
       matrix:
         bicep: ['samples/peered-vnet/main.bicep']
-        
+
     name: Create bicep artifacts
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
@@ -106,7 +106,7 @@ jobs:
           $filepath = ${{ matrix.bicep }}
           switch ( split-path $filepath )
           {
-              'samples\peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet-main.json'    }
+              'samples/peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet-main.json'    }
               default {  $ARTIFACTNAME = $filepath.replace("/","-") }
           }
           echo "::set-output name=ARTIFACTNAME::$ARTIFACTNAME"
@@ -118,9 +118,11 @@ jobs:
       - name: Bicep build
         shell: pwsh
         run: |
+          $filepath = ${{ matrix.bicep }}
           /home/runner/.azure/bin/bicep build $filepath --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
-          
+
       - name: Upload Extra Artifacts to GitHub release
+        shell: pwsh
         run: |
           gh release upload ${{env.templateRelease}}"./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
         env:
