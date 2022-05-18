@@ -92,9 +92,11 @@ jobs:
     needs: [CreateRelease]
     strategy:
       matrix:
-        bicep: ['samples/peered-vnet/main.bicep']
+        bicep:
+        - 'samples/peered-vnet/main.bicep'
+        #Add any extra bicep files for release to this yaml array
 
-    name: Create bicep artifacts
+    name: Create extra bicep artifacts
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
       - uses: actions/checkout@v2
@@ -103,12 +105,16 @@ jobs:
         id: artifactName
         shell: pwsh
         run : |
-          $filepath = ${{ matrix.bicep }}
+          $filepath = "${{ matrix.bicep }}"
+
+          echo "Processing artifact $filepath"
+
           switch ( split-path $filepath )
           {
-              'samples/peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet-main.json'    }
-              default {  $ARTIFACTNAME = $filepath.replace("/","-") }
+              #'samples/peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet.json'    }
+              default {  $ARTIFACTNAME = $filepath.replace("/","-").replace('-main.bicep','.bicep').replace('.bicep','.json') }
           }
+          echo $ARTIFACTNAME
           echo "::set-output name=ARTIFACTNAME::$ARTIFACTNAME"
 
       - name: Install Bicep
@@ -118,13 +124,21 @@ jobs:
       - name: Bicep build
         shell: pwsh
         run: |
-          $filepath = ${{ matrix.bicep }}
+          $filepath = "${{ matrix.bicep }}"
+          echo "Building bicep file $filepath into ${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+
           /home/runner/.azure/bin/bicep build $filepath --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+
+      - name: Verify Compiled Arm Json
+        run: |
+          echo "Verifying ${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+          cat ${{ steps.artifactName.outputs.ARTIFACTNAME}}
 
       - name: Upload Extra Artifacts to GitHub release
         shell: pwsh
         run: |
-          gh release upload ${{env.templateRelease}}"./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+          echo "Adding Artifact ${{ steps.artifactName.outputs.ARTIFACTNAME}} to Release ${{env.templateRelease}}"
+          gh release upload ${{env.templateRelease}} "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
