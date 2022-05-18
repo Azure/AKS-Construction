@@ -265,10 +265,10 @@ jobs:
         shell: pwsh
         run: |
           echo "Adding Artifact ${{ steps.artifactName.outputs.ARTIFACTNAME}} to Release ${{env.templateRelease}}"
-
+          gh release upload ${{env.templateRelease}} "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#gh release upload ${{env.templateRelease}} "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+#
 
   # deploy-java-app-certmgr:
   #   uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.3.1
