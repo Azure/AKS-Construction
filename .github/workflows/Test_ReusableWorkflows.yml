@@ -223,7 +223,7 @@ jobs:
     env:
       templateRelease: "0.8.0"
 
-    name: Create bicep artifacts
+    name: Create extra bicep artifacts
     steps:
       - uses: actions/checkout@v2
 
@@ -231,7 +231,7 @@ jobs:
         id: artifactName
         shell: pwsh
         run : |
-          $filepath = ${{ matrix.bicep }}
+          $filepath = "${{ matrix.bicep }}"
 
           echo "Processing artifact $filepath"
 
