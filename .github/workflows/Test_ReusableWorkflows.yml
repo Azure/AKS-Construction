@@ -252,8 +252,14 @@ jobs:
         shell: pwsh
         run: |
           $filepath = "${{ matrix.bicep }}"
+          echo "Building bicep file $filepath into ${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+
           /home/runner/.azure/bin/bicep build $filepath --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
-          ls -Filter '*.json'
+
+      - name: Verify Compiled Arm Json
+        run: |
+          echo "Verifying ${{ steps.artifactName.outputs.ARTIFACTNAME}}"
+          cat ${{ steps.artifactName.outputs.ARTIFACTNAME}}
 
       - name: Upload Extra Artifacts to GitHub release
         shell: pwsh
