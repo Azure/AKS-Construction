@@ -33,7 +33,7 @@ param acrAgentPoolSubnetAddressPrefix string = ''
 //NatGatewayEgress
 param natGateway bool = false
 param natGatewayPublicIps int = 2
-param natGatewayIdleTimeoutMins int
+param natGatewayIdleTimeoutMins int = 30
 
 //Bastion
 param bastion bool =false
