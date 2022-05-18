@@ -278,22 +278,20 @@ jobs:
         files:
         - 'postdeploy/scripts/postdeploy.sh'
 
-    name: Create extra bicep artifacts
+    name: Add extra release file-artifacts
     steps:
       - uses: actions/checkout@v2
 
       - name: Verify File
-        run: |
-          echo "Verifying ${{ steps.artifactName.outputs.ARTIFACTNAME}}"
-          cat ${{ matrix.files }}
+        run: cat ${{ matrix.files }}
 
       - name: Upload Extra Artifacts to GitHub release
         run: |
-          echo "Adding Artifact ${{ steps.artifactName.outputs.ARTIFACTNAME}} to Release ${{env.templateRelease}}"
-
+          echo "Adding Artifact ${{ matrix.files }} to Release ${{env.templateRelease}}"
+          gh release upload ${{env.templateRelease}} ${{ matrix.files }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#gh release upload ${{env.templateRelease}} ${{ matrix.files }}
+#
 #
 
   # deploy-java-app-certmgr:
