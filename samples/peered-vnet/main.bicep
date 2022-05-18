@@ -2,7 +2,7 @@ targetScope='subscription'
 
 param location string = deployment().location
 param resourceName string = 'stest'
-param adminPrincipleId string = ''
+param adminPrincipalId string = ''
 
 //Naming
 var gridResourceName = 'grid-${resourceName}'
@@ -113,7 +113,7 @@ module gridAks '../../bicep/main.bicep' = {
     azurepolicy: 'audit'
     agentCount:1
     agentCountMax:3
-    adminprincipleid: adminPrincipleId
+    adminPrincipalId: adminPrincipalId
     JustUseSystemPool: false
     SystemPoolType: 'Cost-Optimised'
     byoAKSSubnetId: gridVnet.outputs.aksSubnetId
@@ -138,7 +138,7 @@ module appAks '../../bicep/main.bicep' = {
     azurepolicy: 'audit'
     agentCount:1
     agentCountMax:2
-    adminprincipleid: adminPrincipleId
+    adminPrincipalId: adminPrincipalId
     JustUseSystemPool: true
     byoAKSSubnetId: appVnet.outputs.aksSubnetId
   }
