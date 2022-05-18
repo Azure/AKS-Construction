@@ -249,7 +249,7 @@ jobs:
       - name: Bicep build
         shell: pwsh
         run: |
-          $filepath = ${{ matrix.bicep }}
+          $filepath = "${{ matrix.bicep }}"
           /home/runner/.azure/bin/bicep build $filepath --outfile "./${{ steps.artifactName.outputs.ARTIFACTNAME}}"
 
       - name: Upload Extra Artifacts to GitHub release
