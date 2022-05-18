@@ -19,7 +19,7 @@ var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).object
 
 resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = {
   scope: acr // Use when specifying a scope that is different than the deployment scope
-  name: '${guid(aks.id, 'Acr' , AcrPullRole)}'
+  name: guid(aks.id, 'Acr' , AcrPullRole)
   properties: {
     roleDefinitionId: AcrPullRole
     principalType: 'ServicePrincipal'
