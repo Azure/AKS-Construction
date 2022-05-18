@@ -278,6 +278,9 @@ jobs:
         files:
         - 'postdeploy/scripts/postdeploy.sh'
 
+    env:
+      templateRelease: "0.8.0"
+
     name: Add extra release file-artifacts
     steps:
       - uses: actions/checkout@v2
