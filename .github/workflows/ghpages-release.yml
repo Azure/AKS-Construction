@@ -87,6 +87,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  AddExtraFileArtifacts:
+    runs-on: ubuntu-latest
+    needs: [CreateRelease]
+    strategy:
+      matrix:
+        files:
+        - 'postdeploy/scripts/postdeploy.sh'
+
+    name: Add extra release file-artifacts
+    if: ${{ github.event.inputs.createRelease == 'true' }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Verify File
+        run: cat ${{ matrix.files }}
+
+      - name: Upload Extra Artifacts to GitHub release
+        run: |
+          echo "Adding Artifact ${{ matrix.files }} to Release ${{env.templateRelease}}"
+          gh release upload ${{env.templateRelease}} ${{ matrix.files }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   CreateExtraBicepArtifacts:
     runs-on: ubuntu-latest
     needs: [CreateRelease]
