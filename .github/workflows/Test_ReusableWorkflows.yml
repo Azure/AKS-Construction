@@ -215,6 +215,7 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Test-CreateExtraBicepArtifacts:
+    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
