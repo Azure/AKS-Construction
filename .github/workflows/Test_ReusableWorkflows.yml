@@ -220,7 +220,6 @@ jobs:
       matrix:
         bicep:
         - 'samples/peered-vnet/main.bicep'
-        - 'samples/shared-acr/main.bicep'
 
     env:
       templateRelease: "0.8.0"
@@ -239,9 +238,10 @@ jobs:
 
           switch ( split-path $filepath )
           {
-              'samples/peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet.json'    }
+              #'samples/peered-vnet' { $ARTIFACTNAME = 'sample-peeredvnet.json'    }
               default {  $ARTIFACTNAME = $filepath.replace("/","-").replace('-main.bicep','.bicep').replace('.bicep','.json') }
           }
+          echo $ARTIFACTNAME
           echo "::set-output name=ARTIFACTNAME::$ARTIFACTNAME"
 
       - name: Install Bicep
