@@ -1,4 +1,4 @@
-name: Release GitHub Pages site
+name: Release bicep and helper
 
 on:
   workflow_dispatch:
