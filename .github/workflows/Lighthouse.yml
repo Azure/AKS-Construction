@@ -1,0 +1,64 @@
+name: Lighthouse Checks
+
+on: 
+  schedule:
+    # At 1:00pm on the 15th of each month
+    - cron: "0 13 15 * *"
+    
+  workflow_dispatch:
+  
+env:
+  websiteUrl: 'https://azure.github.io/AKS-Construction'
+  outputdir: ${{ github.workspace }}/lighthouseOut
+  
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    - name: Prep file system
+      run: mkdir ${{ env.outputdir }}
+
+    - name: Lighthouse Checks
+      uses: foo-software/lighthouse-check-action@v8.0.1
+      id: lighthouseCheck
+      with:
+        urls: ${{ env.websiteUrl }}
+        outputDirectory: ${{ env.outputdir }}
+        
+    - name: Upload Lighthouse report
+      uses: actions/upload-artifact@v3.0.0
+      with:
+        name: Lighthouse reports
+        path: ${{ env.outputdir }}
+            
+    - name: Parse Output and raise issues
+      shell: pwsh
+      env:
+        resultsJsonPath: ${{ env.outputdir }}/results.json
+        minAccessibilityScore: "90"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        $results = Get-Content $Env:resultsJsonPath | ConvertFrom-Json
+        Write-Output $results.scores
+        
+        if ($results.scores.accessibility -lt $Env:minAccessibilityScore) {
+          Write-Output "Creating Accessibility issue, scored less than threshold"
+          $workflowLink = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+          Write-Output $workflowLink
+          
+          gh issue create --title "Accessibility issues identified [bot]" --body "Lighthouse web checking shows that Accessibility scores less than the defined threshold. See more $workflowLink" --label "needs-triage :mag_right:,helper-ui :mage_woman:"
+        }
+
+#    - name: Enforce minimum Lighthouse Check results
+#      uses: foo-software/lighthouse-check-status-action@master
+#      with:
+#        lighthouseCheckResults: ${{ steps.lighthouseCheck.outputs.lighthouseCheckResults }}
+#        minAccessibilityScore: "85"
+#        minBestPracticesScore: "90"
+#        #minPerformanceScore: "50"
+#        minProgressiveWebAppScore: "50"
+#        minSeoScore: "50"
+
+        
