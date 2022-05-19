@@ -445,7 +445,7 @@ ${postscript_cluster.replaceAll('"', '\\"')}
 
       </Stack>
 
-      <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Deploy Cluster</b><Image src="./bicep.png" /> <p style={{ marginLeft: '10px' }}>powered by Bicep</p></div> </Separator>
+      <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Deploy Cluster</b><Image src="./bicep.png" alt="Built with bicep" /> <p style={{ marginLeft: '10px' }}>powered by Bicep</p></div> </Separator>
 
       {Object.keys(preview_params).length > 0 &&
         <MessageBar messageBarType={MessageBarType.warning}>
