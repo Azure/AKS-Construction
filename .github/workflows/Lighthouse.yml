@@ -1,0 +1,21 @@
+name: Lighthouse Checks
+
+on: 
+  schedule:
+    # At 1:00pm on the 15th of each month
+    - cron: "0 13 15 * *"
+
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Lighthouse
+      uses: foo-software/lighthouse-check-action@master
+      with:
+        urls: 'https://azure.github.io/AKS-Construction'
+    
+    #TODO, add GitHub issues based on output from the Lighthouse step
+    
