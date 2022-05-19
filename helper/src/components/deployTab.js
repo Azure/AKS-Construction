@@ -111,7 +111,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
 
   const params2tf = p => Object.keys(p).map(k => {
-    return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? 'data.azurerm_client_config.current.client_id' : `{value=var.${k}}`}\n`
+    return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? '{value=data.azurerm_client_config.current.client_id}' : `{value=var.${k}}`}\n`
   }).join('')
 
   const params2TfVar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
@@ -153,11 +153,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     const deployTfProviders =
     `#providers.tf\n\n` +
     `terraform {\n` +
-    `  required_version = ">=0.12"\n` +
+    `  required_version = ">=1.1.9"\n` +
     `  required_providers {\n` +
     `    azurerm = {\n` +
     `      source = "hashicorp/azurerm"\n` +
-    `      version = "~>3.0"\n` +
+    `      version = "~>3.6"\n` +
     `    }\n` +
     `  }\n` +
     `}\n\n` +
@@ -175,7 +175,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `}\n\n` +
     `data "azurerm_client_config" "current" {}\n\n` +
     `resource "azurerm_resource_group" "rg" {\n` +
-    `  name = "${deploy.rg}"\n`+
+    `  name = var.resourceGroupName\n`+
     `  location = "${deploy.location}"\n` +
     `}\n\n` +
     `resource "azurerm_resource_group_template_deployment" "aksc_deploy" {\n` +
@@ -188,9 +188,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  })\n` +
     `}`
 
-    const deployTfVar = `#variables.tf\n` + params2TfVar(finalParams)
+    const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  default="${deploy.rg}"\n}` + params2TfVar(finalParams)
 
-    const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n}`
+    const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}`
 
     const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
