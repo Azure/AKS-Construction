@@ -122,9 +122,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
     switch (typeof val) {
       case "string":
-        return ` \nvariable ${k} {\n  default="${val}"\n}`
-      case "number": case "boolean":
-        return ` \nvariable ${k} {\n  default=${val}\n}`
+        return ` \nvariable ${k} {\n  type=string\n  default="${val}"\n}`
+      case "number":
+        return ` \nvariable ${k} {\n  type=number\n  default=${val}\n}`
+      case "boolean":
+        return ` \nvariable ${k} {\n  type=bool\n  default=${val}\n}`
       default:
         const arrayVal = Array.isArray(val) ? JSON.stringify(val) : val
         console.log(k + ' ' + val + ' '  + typeof val);
@@ -149,7 +151,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
     `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` + params2CLI(finalParams)
-    const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform init\nterraform plan -out main.tfplan\nterraform apply "main.tfplan"\nterraform output`
+    const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
     const deployTfProviders =
     `#providers.tf\n\n` +
     `terraform {\n` +
@@ -176,7 +178,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `data "azurerm_client_config" "current" {}\n\n` +
     `resource "azurerm_resource_group" "rg" {\n` +
     `  name = var.resourceGroupName\n`+
-    `  location = "${deploy.location}"\n` +
+    `  location = var.location\n` +
     `}\n\n` +
     `resource "azurerm_resource_group_template_deployment" "aksc_deploy" {\n` +
     `  name = "AKS-C"\n` +
@@ -188,7 +190,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  })\n` +
     `}`
 
-    const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  default="${deploy.rg}"\n}` + params2TfVar(finalParams)
+    const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  type=string\n  default="${deploy.rg}"\n}\nvariable location {\n  type=string\n  default="${deploy.location}"\n}` + params2TfVar(finalParams)
 
     const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}`
 
