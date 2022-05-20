@@ -37,6 +37,9 @@
         },
         "registries_sku": {
             "value": "Standard"
+        },
+        "aksOutboundTrafficType" : {
+            "value": "managedNATGateway"
         }
     }
 }

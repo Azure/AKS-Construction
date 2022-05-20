@@ -55,7 +55,7 @@ env:
   AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
   RG: "Automation-Actions-AksDeployCI"
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
-  RESNAME: "Byo"
+  RESNAME: "Byov"
   DEPNAME: "Dep${{ github.run_number }}"
   KVACCESS: "IAM"
 
@@ -531,7 +531,7 @@ jobs:
 
   Post-Deploy:
     needs: [Deploy, ReusableWF]
-    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@0.4.3
+    uses: ./.github/workflows/PostDeploy.yml
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
@@ -559,8 +559,10 @@ jobs:
   SmokeTest_JavaApp-certmgr:
     needs: [Deploy, ReusableWF, Post-Deploy]
     #uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.1
     with:
+      #REPOREF:  "0.9.1-preview"
+      #HELMAPPURI: "helm/openjdk-demo-3.6.0.tgz"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: azdemo.co.uk
@@ -578,7 +580,7 @@ jobs:
   SmokeTest_JavaApp-appgw:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr]
     #uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.1
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}

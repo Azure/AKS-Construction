@@ -11,9 +11,6 @@
         "resourceName": {
             "value": "byo"
         },
-        "kubernetesVersion": {
-            "value": "1.21.9"
-        },
         "agentCount": {
             "value": 1
         },
@@ -98,6 +95,12 @@
         },
         "dnsZoneId" : {
             "value" : "/this/parameter/is/overridden/in/my/script/valuefromsecrets"
+        },
+        "aksOutboundTrafficType" : {
+            "value": "userAssignedNATGateway"
+        },
+        "createNatGateway" : {
+            "value": false
         }
     }
 }

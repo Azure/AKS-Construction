@@ -11,7 +11,7 @@ volumeAndSecretname: azure-config-file
 image:
   repository: k8s.gcr.io/external-dns/external-dns
   pullPolicy: IfNotPresent #Always
-  tag: "v0.8.0" #image tag should be set in Chart.yaml - but where it's a strange tag, just override here
+  tag: "" #image tag should be set in Chart.yaml - but where it's a strange tag, just override here
 
 service:
   type: ClusterIP

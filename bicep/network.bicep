@@ -30,6 +30,11 @@ param privateLinkAkvId string = ''
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 
+//NatGatewayEgress
+param natGateway bool = false
+param natGatewayPublicIps int = 2
+param natGatewayIdleTimeoutMins int = 30
+
 //Bastion
 param bastion bool =false
 param bastionSubnetAddressPrefix string = ''
@@ -119,6 +124,10 @@ var aks_baseSubnet =  {
     }, privateLinks ? {
       privateEndpointNetworkPolicies: 'Disabled'
       privateLinkServiceNetworkPolicies: 'Enabled'
+    } : {}, natGateway ? {
+      natGateway: {
+        id: natGw.id
+      }
     } : {}, azureFirewalls ? {
       routeTable: {
         id: vnet_udr.id //resourceId('Microsoft.Network/routeTables', routeFwTableName)
@@ -131,8 +140,6 @@ var subnets_1 = azureFirewalls ? concat(array(aks_subnet), array(fw_subnet)) : a
 var subnets_2 = privateLinks ? concat(array(subnets_1), array(private_link_subnet)) : array(subnets_1)
 var subnets_3 = acrPrivatePool ? concat(array(subnets_2), array(acrpool_subnet)) : array(subnets_2)
 var subnets_4 = bastion ? concat(array(subnets_3), array(bastion_subnet)) : array(subnets_3)
-
-// DONT create appgw subnet, the addon will create it for us
 
 var final_subnets = ingressApplicationGateway ? concat(array(subnets_4), array(appgw_subnet)) : array(subnets_4)
 
@@ -171,11 +178,11 @@ resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/role
 
 /*   --------------------------------------------------------------------------  Private Link for ACR      */
 var privateLinkAcrName = 'pl-acr-${resourceName}'
-resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAcrId)) {
+resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-08-01' = if (!empty(privateLinkAcrId)) {
   name: privateLinkAcrName
   location: location
   properties: {
-    //customNetworkInterfaceName: 'nic-${privateLinkAcrName}' needs AllowPrivateEndpointCustomNicName registered in subscription in order to rename
+    customNetworkInterfaceName: 'nic-${privateLinkAcrName}'
     privateLinkServiceConnections: [
       {
         name: 'Acr-Connection'
@@ -211,7 +218,7 @@ resource privateDnsAcrLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
   }
 }
 
-resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-03-01' = if (!empty(privateLinkAcrId))  {
+resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-08-01' = if (!empty(privateLinkAcrId))  {
   parent: privateLinkAcr
   name: 'default'
   properties: {
@@ -229,11 +236,11 @@ resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
 
 /*   --------------------------------------------------------------------------  Private Link for KeyVault      */
 var privateLinkAkvName = 'pl-akv-${resourceName}'
-resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-03-01' = if (!empty(privateLinkAkvId)) {
+resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-08-01' = if (!empty(privateLinkAkvId)) {
   name: privateLinkAkvName
   location: location
   properties: {
-    //customNetworkInterfaceName: 'nic-${privateLinkAkvName}' needs AllowPrivateEndpointCustomNicName registered in subscription in order to rename
+    customNetworkInterfaceName: 'nic-${privateLinkAkvName}'
     privateLinkServiceConnections: [
       {
         name: 'Akv-Connection'
@@ -269,7 +276,7 @@ resource privateDnsAkvLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
   }
 }
 
-resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-03-01' = if (!empty(privateLinkAkvId))  {
+resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-08-01' = if (!empty(privateLinkAkvId))  {
   parent: privateLinkAkv
   name: 'default'
   properties: {
@@ -437,5 +444,34 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   ]
 }
 
+resource natGwIp 'Microsoft.Network/publicIPAddresses@2021-08-01' =  [for i in range(0, natGatewayPublicIps): if(natGateway) {
+  name: 'pip-${natGwName}-${i+1}'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  zones: !empty(availabilityZones) ? availabilityZones : []
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+}]
 
+var natGwName = 'ng-${resourceName}'
+resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
+  name: natGwName
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  zones: !empty(availabilityZones) ? availabilityZones : []
+  properties: {
+    publicIpAddresses: [for i in range(0, natGatewayPublicIps): {
+      id: natGwIp[i].id
+    }]
+    idleTimeoutInMinutes: natGatewayIdleTimeoutMins
+  }
+  dependsOn: [
+    natGwIp
+  ]
+}
 

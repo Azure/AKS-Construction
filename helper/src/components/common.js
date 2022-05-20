@@ -21,7 +21,7 @@ export function getError(array, field) {
 export const adv_stackstyle = { root: { border: "1px solid", margin: "10px 0", padding: "15px" } }
 
 
-export function CodeBlock({deploycmd, testId}) {
+export function CodeBlock({deploycmd, testId, lang, filename}) {
     const [ copied, setCopied ] = useState(false)
 
     function copyIt() {
@@ -30,14 +30,27 @@ export function CodeBlock({deploycmd, testId}) {
         setTimeout(() => setCopied(false), 1000)
     }
 
+    function downloadIt(){
+        function dataUrl(data) {return "data:x-application/text," + escape(deploycmd);}
+        window.open(dataUrl());
+    }
+
     return [
         <div key="code-header" className="codeHeader" >
-            <span className="language">Bash</span>
+            <span className="language">{lang}</span>
+            <CommandBarButton
+              //disabled={filename.length()>0}
+              className="action position-relative"
+              iconProps={{ iconName: copied? 'Completed' : 'Save'}}
+              styles={{icon: {color: '#171717'}}}
+              text="Save"
+              primaryActionButtonProps={{download: filename}}
+              onClick={downloadIt}/>
             <CommandBarButton disabled={copied} className="action position-relative" iconProps={{ iconName: copied? 'Completed' : 'Copy'}} styles={{icon: {color: '#171717'}}} text="Copy" onClick={copyIt}/>
         </div>,
 
         <pre key="code-pre" className="has-inner-focus">
-            <code className="lang-bash"><span data-testid={testId || 'none'}>{deploycmd}</span></code>
+            <code className={"lang-" + lang}><span data-lang={lang} data-testid={testId || 'none'}>{deploycmd}</span></code>
         </pre>
     ]
 }
