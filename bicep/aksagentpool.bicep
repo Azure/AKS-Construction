@@ -33,6 +33,13 @@ param nodeLabels object = {}
 @description('The subnet the node pool will use')
 param subnetId string
 
+@description('OS Type for the node pool')
+@allowed([
+  'Linux'
+  'Windows'
+])
+param osType string = 'Linux'
+
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
   name: AksName
 }
@@ -50,7 +57,7 @@ resource nodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10
     availabilityZones: !empty(availabilityZones) ? availabilityZones : null
     osDiskType: osDiskType
     osDiskSizeGB: osDiskSizeGB
-    osType: 'Linux'
+    osType: osType
     maxPods: maxPods
     type: 'VirtualMachineScaleSets'
     vnetSubnetID: !empty(subnetId) ? subnetId : json('null')
