@@ -472,8 +472,8 @@ ${postscript_cluster.replaceAll('"', '\\"')}
 
             <Stack.Item  align="end">
               <Stack horizontal tokens={{childrenGap: 5}}>
-              <Label>Template Version</Label>
               <Dropdown
+                    label='Template Version'
                     disabled={process.env.REACT_APP_TEMPLATERELEASE !== undefined}
                     selectedKey={deploy.selectedTemplate}
                     onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
@@ -503,8 +503,8 @@ ${postscript_cluster.replaceAll('"', '\\"')}
 
               <Stack.Item  align="end">
                 <Stack horizontal tokens={{childrenGap: 5}}>
-                <Label>Template Version</Label>
                 <Dropdown
+                      label='Template Version'
                       disabled={process.env.REACT_APP_TEMPLATERELEASE !== undefined}
                       selectedKey={deploy.selectedTemplate}
                       onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
