@@ -25,27 +25,27 @@ on:
     inputs:
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
-        default: 'false'
+        default: false
         type: boolean
         required: false
       doDebugSteps:
         description: 'Run informational steps'
-        default: 'true'
+        default: true
         type: boolean
         required: false
       doVerifySteps:
         description: 'Run optional verify steps'
-        default: 'true'
+        default: true
         type: boolean
         required: false
       doSmokeTestUninstall:
         description: 'Uninstall smoke test apps after tests'
-        default: 'true'
+        default: true
         type: boolean
         required: false
       defaultdeny:
         description: 'Default Deny NetworkPolicy?'
-        default: 'false'
+        default: false
         type: boolean
         required: false
 
@@ -55,7 +55,7 @@ env:
   AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
   RG: "Automation-Actions-AksDeployCI"
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
-  RESNAME: "Byo"
+  RESNAME: "Byov"
   DEPNAME: "Dep${{ github.run_number }}"
   KVACCESS: "IAM"
 
@@ -69,13 +69,21 @@ jobs:
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
-      - name: PSRule - Analyze Azure parameter file
+      - name: PSRule for Azure - Well Architected
         uses: Microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.Azure'
           inputPath: "${{ env.ParamFilePath }}"
-          prerelease: true
+
+      # In addition to the Well Architected analysis, we can also leverage the CAF rules
+      # Run analysis against PSRule for Cloud Adoption Framework
+      - name: PSRule for CAF
+        uses: microsoft/ps-rule@v2.0.0
+        continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
+        with:
+          modules: 'PSRule.Rules.CAF'
+          inputPath: "${{ env.ParamFilePath }}"
 
   #Pre deployment validation of the parameters + bicep code
   Validation:
@@ -523,7 +531,7 @@ jobs:
 
   Post-Deploy:
     needs: [Deploy, ReusableWF]
-    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@0.4.3
+    uses: ./.github/workflows/PostDeploy.yml
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
@@ -535,8 +543,9 @@ jobs:
 
   SmokeTest_SimpleApp:
     needs: [Deploy, ReusableWF]
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.2-preview
+    uses: ./.github/workflows/AppDeploy_AzureVote.yml
     with:
+      Environment: ''
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #$RG
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
@@ -550,8 +559,10 @@ jobs:
   SmokeTest_JavaApp-certmgr:
     needs: [Deploy, ReusableWF, Post-Deploy]
     #uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.1
     with:
+      #REPOREF:  "0.9.1-preview"
+      #HELMAPPURI: "helm/openjdk-demo-3.6.0.tgz"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: azdemo.co.uk
@@ -569,7 +580,7 @@ jobs:
   SmokeTest_JavaApp-appgw:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr]
     #uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.1
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
@@ -641,117 +652,25 @@ jobs:
           }
           #grep KeyvaultSecretsProvider
 
-  InfraTests:
-    runs-on: ubuntu-latest
-    needs: [Deploy]
-    steps:
-      - name: Param check
-        if: github.event.inputs.doDebugSteps == 'true'
-        run: |
-          RG='${{ env.RG }}'
-          echo "RG is: $RG"
-
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-          echo "LA name is ${{ needs.Deploy.outputs.LANAME }}"
-          echo "LA workspace guid is ${{ needs.Deploy.outputs.LAWGUID }}"
-
-      - name: Allow Monitoring extension
-        shell: pwsh
-        run: |
-          az extension add -n log-analytics -y
-
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds:  ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-
-      - name: Log Analytics log table verification
-        shell: pwsh
-        run: |
-          Write-Output "Check for Logs in the Log Analytics Workspace"
-          $LANAME='${{ needs.Deploy.outputs.LANAME}}'
-          $LAWGUID='${{ needs.Deploy.outputs.LAWGUID}}'
-          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-
-          #$KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | summarize count() by Computer, bin(TimeGenerated, 1h)"
-          $KubeNode = az monitor log-analytics query -w $LAWGUID --analytics-query "KubeNodeInventory | count" -o json | ConvertFrom-Json
-          Write-Output $KubeNode
-          Write-Output $KubeNode[0].Count
-
-          if ($KubeNode[0].Count -eq 0) {
-            throw "Log Analytics Workspace table: KubeNodeInventory does not have any data. Check network traffic is not being supressed by firewall egress rules"
-          }
-
-          $containers = az monitor log-analytics query -w $LAWGUID --analytics-query "ContainerLog | join(KubePodInventory| where TimeGenerated > startofday(ago(1h))) on ContainerID |where TimeGenerated > startofday(ago(10m)) | project TimeGenerated ,Namespace , LogEntrySource , LogEntry | summarize count() by Namespace, LogEntrySource"
-          Write-Output $containers
-
-  CaptureAgicLogs:
-    runs-on: ubuntu-latest
-    needs: [Deploy, SmokeTest_JavaApp-certmgr, SmokeTest_JavaApp-appgw, SmokeTest_SimpleApp]
-    if: ${{ always() && needs.Deploy.outputs.AGNAME != '' }}
-    steps:
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-
-      - name: AKS Connect
-        run: |
-          AKSNAME='${{ needs.Deploy.outputs.AKSNAME}}'
-          az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
-
-      - name: Kubelogin
-        env:
-          kubeloginversion: 'v0.0.10'
-        run: |
-          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
-          unzip kubelogin-linux-amd64.zip
-          sudo mv bin/linux_amd64/kubelogin /usr/bin
-          kubelogin convert-kubeconfig -l azurecli
-
-      - name: Kubectl get event Warnings
-        if: github.event.inputs.doDebugSteps == 'true'
-        run: |
-          kubectl get events --sort-by='.metadata.creationTimestamp' -A | grep Warning
-
-      - name: Describe AGIC Pod
-        env:
-          NAMESP: "kube-system"
-        run: |
-          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-          kubectl describe po -n $NAMESP $APPGWPODNAME
-
-      - name: Grab Invalid AGIC pod logs
-        env:
-          NAMESP: "kube-system"
-        run: |
-          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-          kubectl logs -n $NAMESP $APPGWPODNAME | grep Invalid
-
-      - name: Grab full AGIC pod logs
-        env:
-          NAMESP: "kube-system"
-        run: |
-          APPGWPODNAME=$(kubectl get pods -n $NAMESP -o json | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
-          kubectl logs -n $NAMESP $APPGWPODNAME
-
-      - name: Check Events for default namespace
-        env:
-          NAMESP: "default"
-        run: kubectl get events -n $NAMESP
+  Troubleshoot:
+    needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr, SmokeTest_JavaApp-appgw]
+    uses: ./.github/workflows/AksTroubleshooting.yml
+    if: always()
+    with:
+      Environment: ''
+      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
+      LANAME: ${{ needs.Deploy.outputs.LANAME}}
+      LAWGUID: ${{ needs.Deploy.outputs.LAWGUID}}
+      USERUNCMD: false
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Infra_Destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
-    needs: [Validation, Deploy, InfraTests, DeployVerify, SmokeTest_SimpleApp, Well_Architected, CaptureAgicLogs]
+    needs: [Validation, Deploy, Troubleshoot, DeployVerify, SmokeTest_SimpleApp, Well_Architected]
     steps:
       - name: Azure Login
         uses: Azure/login@v1

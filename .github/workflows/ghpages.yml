@@ -1,14 +1,7 @@
-name: Publish Helper GitHub Page
+name: Validate GitHub Pages site
 
 on:
-  push:
-## Post-PR approval, Deploy Helper to production
-    branches: [main]
-    paths:
-      - ".github/workflows/ghpages.yml"
-      - "helper/**"
-
-## Pre-PR approval, Status checks that are required (needs to have job called 'Validation'), or PR will not merge
+  ## Pre-PR approval, Status checks that are required (needs to have job called 'Validation'), or PR will not merge
   pull_request:
     # Target branch (any source branch)
     branches: [main]
@@ -20,17 +13,15 @@ on:
     inputs:
       doAzCmdDeployment:
         description: 'Test AZ Cmd by deploying to an Azure subscription'
-        default: 'false'
+        default: false
         type: boolean
         required: false
 
 env:
-  templateRelease: 0.5.2-preview
-  AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
+  AZCLIVERSION: 2.34.1 #2.29.2 #2.26.0 #latest
   RG: "Automation-Actions-AksPublishCI"
 
 jobs:
-
   Validation:
     runs-on: ubuntu-latest
     steps:
@@ -51,7 +42,7 @@ jobs:
         run: |
           cd helper
           npm install
-          REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}" npm run build
+          npm run build
           npm run start&
 
       - name: Playwright - Install w/ OS dependencies
@@ -109,6 +100,27 @@ jobs:
           name: AzCmds
           path: helper/azcmd-*.sh
 
+      - name: Install Bicep
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        shell: pwsh
+        run: |
+          az bicep install
+
+      - name: Bicep build
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        shell: pwsh
+        run: |
+          #write-output $pwd
+          $compiledir=Join-Path -Path $pwd -ChildPath "bicep/compiled"
+
+          write-output $compiledir
+          If(!(test-path $compiledir))
+          {
+                New-Item -ItemType Directory -Force -Path $compiledir
+          }
+
+          /home/runner/.azure/bin/bicep build ./bicep/main.bicep --outdir $compiledir
+
       - name: Azure Login
         if: ${{ !github.event.pull_request.head.repo.fork }}
         uses: Azure/login@v1
@@ -116,12 +128,11 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
           environment: azurecloud
-          allow-no-subscriptions: false
 
       #TODO: If/When we capture more AZ CMD's, then we'll want to iterate over files beginning with "azcmd"
       - name: Verify AZ Commands
         if: ${{ !github.event.pull_request.head.repo.fork }}
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.6
         env:
           azcmdpath: "helper/azcmd-managed-private.sh"
         with:
@@ -130,15 +141,19 @@ jobs:
             #Change the Create to a Validate statement
             sed -i 's/az deployment group create/az deployment group validate/' $azcmdpath
 
+            #Remove lines that refer to signed-in-user which don't work with a SP.
+            sed -i '/az ad signed-in-user show/d' $azcmdpath
+
             #Debug
             cat $azcmdpath
 
             #Run the script
+            echo "Running the validation script"
             sh $azcmdpath
 
       - name: Full deploy test AZ Commands
-        if: ${{ !github.event.pull_request.head.repo.fork &&  github.event.inputs.doAzCmdDeployment == 'true' }}
-        uses: Azure/cli@1.0.4
+        if: ${{ !github.event.pull_request.head.repo.fork && ( github.event.inputs.doAzCmdDeployment == 'true' || contains( github.event.pull_request.labels.*.name, 'test-deploy-wizard')) }}
+        uses: Azure/cli@v1.0.6
         env:
           azcmdpath: "helper/azcmd-managed-private.sh"
         with:
@@ -169,24 +184,3 @@ jobs:
         with:
           name: Screengrabs
           path: helper/alwaysscreengrabs/*.png
-
-  Deploy:
-    runs-on: ubuntu-latest
-    needs: [Validation]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Build node app with bicep release
-        run: |
-          cd helper
-          npm install
-          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
-
-      - name: Deploy to GitHub Pages
-        uses: crazy-max/ghaction-github-pages@v2
-        with:
-          target_branch: gh-pages
-          build_dir: helper/build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

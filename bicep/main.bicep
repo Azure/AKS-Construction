@@ -87,7 +87,7 @@ param vnetAksSubnetAddressPrefix string = '10.240.0.0/22'
 @minLength(9)
 @maxLength(18)
 @description('The address range for the App Gateway in your custom vnet')
-param vnetAppGatewaySubnetAddressPrefix string = '10.240.4.0/26'
+param vnetAppGatewaySubnetAddressPrefix string = '10.240.5.0/24'
 
 @minLength(9)
 @maxLength(18)
@@ -118,8 +118,11 @@ param acrPrivatePool bool = false
 @description('Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)')
 param bastion bool = false
 
-@description('Deploy NSGs to your vnet. (works with Custom Networking only, not BYO)')
+@description('Deploy NSGs to your vnet subnets. (works with Custom Networking only, not BYO)')
 param CreateNetworkSecurityGroups bool = false
+
+@description('Configure Flow Logs for Network Security Groups in the NetworkWatcherRG resource group. Requires Contributor RBAC on NetworkWatcherRG and Reader on Subscription.')
+param CreateNetworkSecurityGroupFlowLogs bool = false
 
 module network './network.bicep' = if (custom_vnet) {
   name: 'network'
@@ -142,15 +145,19 @@ module network './network.bicep' = if (custom_vnet) {
     bastion: bastion
     bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
     availabilityZones: availabilityZones
-    workspaceDiagsId: createLaw ? aks_law.id : ''
+    workspaceName: aks_law.name
+    workspaceResourceGroupName: resourceGroup().name
     networkSecurityGroups: CreateNetworkSecurityGroups
+    CreateNsgFlowLogs: CreateNetworkSecurityGroups && CreateNetworkSecurityGroupFlowLogs
     ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
+    natGateway: createNatGateway
+    natGatewayIdleTimeoutMins: natGwIdleTimeout
+    natGatewayPublicIps: natGwIpCount
   }
 }
 output CustomVnetId string = custom_vnet ? network.outputs.vnetId : ''
 output CustomVnetPrivateLinkSubnetId string = custom_vnet ? network.outputs.privateLinkSubnetId : ''
 
-var appGatewaySubnetAddressPrefix = !empty(byoAGWSubnetId) ? existingAGWSubnet.properties.addressPrefix : vnetAppGatewaySubnetAddressPrefix
 var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
 var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
 
@@ -245,7 +252,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
 var keyVaultSecretsUserRole = resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
 resource kvAppGwSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && appgwKVIntegration) {
   scope: kv
-  name: '${guid(aks.id, 'AppGw', keyVaultSecretsUserRole)}'
+  name: guid(aks.id, 'AppGw', keyVaultSecretsUserRole)
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole
     principalType: 'ServicePrincipal'
@@ -255,7 +262,7 @@ resource kvAppGwSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04
 
 resource kvCSIdriverSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && azureKeyvaultSecretsProvider) {
   scope: kv
-  name: '${guid(aks.id, 'CSIDriver', keyVaultSecretsUserRole)}'
+  name: guid(aks.id, 'CSIDriver', keyVaultSecretsUserRole)
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole
     principalType: 'ServicePrincipal'
@@ -268,7 +275,7 @@ param kvOfficerRolePrincipalId string = ''
 var keyVaultSecretsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
 resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
   scope: kv
-  name: '${guid(aks.id, 'usersecret', keyVaultSecretsOfficerRole)}'
+  name: guid(aks.id, 'usersecret', keyVaultSecretsOfficerRole)
   properties: {
     roleDefinitionId: keyVaultSecretsOfficerRole
     principalType: 'User'
@@ -280,7 +287,7 @@ resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-0
 var keyVaultCertsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'a4417e6f-fecd-4de8-b567-7b0420556985')
 resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
   scope: kv
-  name: '${guid(aks.id, 'usercert', keyVaultCertsOfficerRole)}'
+  name: guid(aks.id, 'usercert', keyVaultCertsOfficerRole)
   properties: {
     roleDefinitionId: keyVaultCertsOfficerRole
     principalType: 'User'
@@ -381,6 +388,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
 output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
 output containerRegistryId string = !empty(registries_sku) ? acr.id : ''
 
+
 resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && !empty(registries_sku)) {
   name: 'acrDiags'
   scope: acr
@@ -421,7 +429,7 @@ var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).object
 
 resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
-  name: '${guid(aks.id, 'Acr' , AcrPullRole)}'
+  name: guid(aks.id, 'Acr' , AcrPullRole)
   properties: {
     roleDefinitionId: AcrPullRole
     principalType: 'ServicePrincipal'
@@ -436,7 +444,7 @@ param acrPushRolePrincipalId string = ''
 
 resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku) && !empty(acrPushRolePrincipalId)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
-  name: '${guid(aks.id, 'Acr' , AcrPushRole)}'
+  name: guid(aks.id, 'Acr' , AcrPushRole)
   properties: {
     roleDefinitionId: AcrPushRole
     principalType: 'User'
@@ -544,7 +552,7 @@ resource appgwpip 'Microsoft.Network/publicIPAddresses@2021-02-01' = if (deployA
 var frontendPublicIpConfig = {
   properties: {
     publicIPAddress: {
-      id: '${appgwpip.id}'
+      id: appgwpip.id
     }
   }
   name: 'appGatewayFrontendIP'
@@ -687,7 +695,7 @@ var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988a
 // AGIC's identity requires "Contributor" permission over Application Gateway.
 resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: appgw
-  name: '${guid(aks.id, 'Agic', contributor)}'
+  name: guid(aks.id, 'Agic', contributor)
   properties: {
     roleDefinitionId: contributor
     principalType: 'ServicePrincipal'
@@ -699,7 +707,7 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-pr
 var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
 resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: resourceGroup()
-  name: '${guid(aks.id, 'Agic', reader)}'
+  name: guid(aks.id, 'Agic', reader)
   properties: {
     roleDefinitionId: reader
     principalType: 'ServicePrincipal'
@@ -711,7 +719,7 @@ resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-p
 var managedIdentityOperator = resourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830')
 resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON &&  deployAppGw) {
   scope: appGwIdentity
-  name: '${guid(aks.id, 'Agic', managedIdentityOperator)}'
+  name: guid(aks.id, 'Agic', managedIdentityOperator)
   properties: {
     roleDefinitionId: managedIdentityOperator
     principalType: 'ServicePrincipal'
@@ -759,7 +767,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.21.9'
+param kubernetesVersion string = '1.22.6'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -822,8 +830,19 @@ param networkPlugin string = 'azure'
 @description('The network policy to use.')
 param networkPolicy string = ''
 
+@allowed([
+  ''
+  'audit'
+  'deny'
+])
 @description('Enable the Azure Policy addon')
 param azurepolicy string = ''
+
+@allowed([
+  'Baseline'
+  'Restricted'
+])
+param azurePolicyInitiative string = 'Baseline'
 
 @description('Enable the git ops addon')
 param gitops string = ''
@@ -880,6 +899,47 @@ param SystemPoolType string = 'Cost-Optimised'
 
 @description('A custom system pool spec')
 param SystemPoolCustomPreset object = {}
+
+param AutoscaleProfile object = {
+  'balance-similar-node-groups': 'true'
+  'expander': 'random'
+  'max-empty-bulk-delete': '10'
+  'max-graceful-termination-sec': '600'
+  'max-node-provision-time': '15m'
+  'max-total-unready-percentage': '45'
+  'new-pod-scale-up-delay': '0s'
+  'ok-total-unready-count': '3'
+  'scale-down-delay-after-add': '10m'
+  'scale-down-delay-after-delete': '20s'
+  'scale-down-delay-after-failure': '3m'
+  'scale-down-unneeded-time': '10m'
+  'scale-down-unready-time': '20m'
+  'scale-down-utilization-threshold': '0.5'
+  'scan-interval': '10s'
+  'skip-nodes-with-local-storage': 'true'
+  'skip-nodes-with-system-pods': 'true'
+}
+
+@allowed([
+  'loadBalancer'
+  'managedNATGateway'
+  'userAssignedNATGateway'
+])
+@description('Outbound traffic type for the egress traffic of your cluster')
+param aksOutboundTrafficType string = 'loadBalancer'
+
+@description('Create a new Nat Gateway, applies to custom networking only')
+param createNatGateway bool = false
+
+@minValue(1)
+@maxValue(16)
+@description('The effective outbound IP resources of the cluster NAT gateway')
+param natGwIpCount int = 2
+
+@minValue(4)
+@maxValue(120)
+@description('Outbound flow idle timeout in minutes for NatGw')
+param natGwIdleTimeout int = 30
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
@@ -1046,31 +1106,20 @@ var aksProperties = {
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
+    outboundType: aksOutboundTrafficType
+    natGatewayProfile: aksOutboundTrafficType == 'managedNATGateway' ? {
+      managedOutboundIPProfile: {
+        count: natGwIpCount
+      }
+      idleTimeoutInMinutes: natGwIdleTimeout
+    } : {}
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
   autoUpgradeProfile: !empty(upgradeChannel) ? {
     upgradeChannel: upgradeChannel
   } : {}
   addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
-  autoScalerProfile: autoScale ? {
-      'balance-similar-node-groups': 'true'
-      'expander': 'random'
-      'max-empty-bulk-delete': '10'
-      'max-graceful-termination-sec': '600'
-      'max-node-provision-time': '15m'
-      'max-total-unready-percentage': '45'
-      'new-pod-scale-up-delay': '0s'
-      'ok-total-unready-count': '3'
-      'scale-down-delay-after-add': '10m'
-      'scale-down-delay-after-delete': '20s'
-      'scale-down-delay-after-failure': '3m'
-      'scale-down-unneeded-time': '10m'
-      'scale-down-unready-time': '20m'
-      'scale-down-utilization-threshold': '0.5'
-      'scan-interval': '10s'
-      'skip-nodes-with-local-storage': 'true'
-      'skip-nodes-with-system-pods': 'true'
-  } : {}
+  autoScalerProfile: autoScale ? AutoscaleProfile : {}
 }
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
@@ -1083,7 +1132,7 @@ var azureDefenderSecurityProfile = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
@@ -1097,16 +1146,23 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' = {
 }
 output aksClusterName string = aks.name
 
-var policySetPodSecBaseline = resourceId('Microsoft.Authorization/policySetDefinitions', 'a8640138-9b0a-4a28-b8cb-1666c838647d')
+var policySetBaseline = '/providers/Microsoft.Authorization/policySetDefinitions/a8640138-9b0a-4a28-b8cb-1666c838647d'
+var policySetRestrictive = '/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00'
+
 resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
-  name: '${resourceName}-baseline'
+  name: '${resourceName}-${azurePolicyInitiative}'
   location: location
   properties: {
-    //scope: resourceGroup().id
-    policyDefinitionId: policySetPodSecBaseline
+    policyDefinitionId: azurePolicyInitiative == 'Baseline' ? policySetBaseline : policySetRestrictive
     parameters: {
-      // Gives error: "The request content was invalid and could not be deserialized"
-      //excludedNamespaces: '[  "kube-system",  "gatekeeper-system",  "azure-arc"]'
+      excludedNamespaces: {
+        value: [
+            'kube-system'
+            'gatekeeper-system'
+            'azure-arc'
+            'cluster-baseline-setting'
+        ]
+      }
       effect: {
         value: azurepolicy
       }
@@ -1114,22 +1170,22 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
     metadata: {
       assignedBy: 'Aks Construction'
     }
-    displayName: 'Aks Baseline Security Policy'
-    description: 'As per: https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/Kubernetes_PSPBaselineStandard.json'
+    displayName: 'Kubernetes cluster pod security ${azurePolicyInitiative} standards for Linux-based workloads'
+    description: 'As per: https://github.com/Azure/azure-policy/blob/master/built-in-policies/policySetDefinitions/Kubernetes/'
   }
 }
 
 @description('The principal ID to assign the AKS admin role.')
-param adminprincipleid string = ''
+param adminPrincipalId string = ''
 // for AAD Integrated Cluster wusing 'enableAzureRBAC', add Cluster admin to the current user!
 var buildInAKSRBACClusterAdmin = resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
-resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (enableAzureRBAC && !empty(adminprincipleid)) {
+resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (enableAzureRBAC && !empty(adminPrincipalId)) {
   scope: aks // Use when specifying a scope that is different than the deployment scope
-  name: '${guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)}'
+  name: guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)
   properties: {
     roleDefinitionId: buildInAKSRBACClusterAdmin
     principalType: 'User'
-    principalId: adminprincipleid
+    principalId: adminPrincipalId
   }
 }
 
@@ -1234,7 +1290,7 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (cre
 var MonitoringMetricsPublisherRole = resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
 resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (omsagent) {
   scope: aks
-  name: '${guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)}'
+  name: guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)
   properties: {
     roleDefinitionId: MonitoringMetricsPublisherRole
     principalId: aks.properties.addonProfiles.omsagent.identity.objectId

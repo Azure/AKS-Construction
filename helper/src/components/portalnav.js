@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ThemeProvider, Link, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text } from '@fluentui/react';
+import { ThemeProvider, Link, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text, ChoiceGroup } from '@fluentui/react';
 import { AzureThemeLight, AzureThemeDark } from '@fluentui/azure-themes';
 
 import Presents from './presets'
@@ -31,31 +31,24 @@ function useAITracking(componentName, key) {
 
 }
 
-function Header({ entScale, setEntScale, featureFlag }) {
+function Header({ presets, setPresets, selectedPreset, featureFlag }) {
   return (
     <Stack horizontal tokens={{ childrenGap: 10 }}>
-      <img src="aks.svg" alt="Kubernetes Service" style={{ width: "6%", height: "auto" }}></img>
-      <Stack tokens={{ padding: 10 }}>
+      <img id="aksLogo" src="aks.svg" alt="Kubernetes Service" style={{  }}></img>
+      <Stack tokens={{ padding: 10, maxWidth: 700 }} className="intro">
         <Text variant="xLarge">AKS Deploy helper</Text>
-        <Text >Provide the requirements of your AKS deployment to generate the assets to create a full operational environment, incorporating best-practices guidance. For documentation, and CI/CD samples - please refer to our <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
+        <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance. Start by selecting your Architectural Approach.</Text>
+        <Text variant="medium" >Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
-      <Stack.Item tokens={{ padding: 10 }}>
-        <Toggle
-          label={
-            <Text nowrap>
-              Enterprise Scale{' '}
-              <TooltipHost content="use if you are following Enterprise Scale">
-                <Icon iconName="Info" aria-label="Info tooltip" />
-              </TooltipHost>
-            </Text>
-          }
-          onText="Yes"
-          offText="No"
-          checked={entScale}
-          disabled={false}
-          onChange={(ev, val) => setEntScale(val)}
-        />
-      </Stack.Item>
+      <Stack grow={1} tokens={{ padding: 10 }} >
+        Architectural Approach
+        <ChoiceGroup
+          defaultSelectedKey={selectedPreset}
+          options={Object.keys(presets).map(p => { return { key: p, text: presets[p].title, disabled: presets[p].disabled, iconProps: { iconName: presets[p].icon } } })}
+          onChange={(ev, { key }) => setPresets(key)}
+        >
+        </ChoiceGroup>
+      </Stack>
     </Stack>
   )
 }
@@ -69,9 +62,9 @@ function Header({ entScale, setEntScale, featureFlag }) {
  */
 export default function PortalNav({ config }) {
 
-  console.log (`PortalNav: ${JSON.stringify(Object.keys(config))}`)
+  console.log(`PortalNav: ${JSON.stringify(Object.keys(config))}`)
 
-  const { tabLabels, defaults, entScaleOps, defaultOps } = config
+  const { tabLabels, defaults, presets } = config
   const [pivotkey, setPivotkey] = useState(Object.keys(tabLabels)[0])
 
   useAITracking("PortalNav", tabLabels[pivotkey])
@@ -80,26 +73,29 @@ export default function PortalNav({ config }) {
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
 
   const featureFlag = urlParams.getAll('feature')
+  const defaultPreset = urlParams.get('preset') || 'defaultOps'
 
-  const [entScale, setEntScale] = useState(() => urlParams.has('entScale'))
+  // The selected cards within the sections for the chosen preset, for example { "ops": "normal", "secure": "high" }
+  const [selected, setSelected] = useState(() => {
+    return {
+      preset: defaultPreset,
+      values: presets[defaultPreset].sections.reduce((a, s) => {
+        return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
+      }, {})
+    }
+  })
 
+  // The sections array within the selected preset, for example [{"key": "ops"...}, {"key": "secure"...}]
+  const { sections } = presets[selected.preset]
 
-  const sections = entScale ? entScaleOps : defaultOps
-  const [selected, setSelected] = useState(() => { return {
-        values: sections.reduce((a, s) => {
-            return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
-          }, {}),
-        entScale
-      }
-    })
-
+  // The tabValues, for example { "deploy": { "clusterName": "az234"}}
   const [tabValues, setTabValues] = useState(() => {
     const clusterName = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
 
     // Apply selected presets to tab values
-    const tabApplySections = Object.keys(selected.values).reduce((acc,curr) =>
-      updateTabValues (acc, sections, curr, selected.values[curr])
-    , defaults)
+    const tabApplySections = Object.keys(selected.values).reduce((acc, curr) =>
+      updateTabValues(acc, sections, curr, selected.values[curr])
+      , defaults)
 
     // Apply dynamic presets to tab values
     const dynamicApplySections = {
@@ -112,26 +108,28 @@ export default function PortalNav({ config }) {
     }
     // Apply url params to tab values
     const urlApplySections = Object.keys(dynamicApplySections).reduce((acct, currt) => {
-        return {
-          ...acct,
-          [currt]: Object.keys(dynamicApplySections[currt]).reduce((accv, currv) => {
-            const urlname = `${currt}.${currv}`
-            let valres =  dynamicApplySections[currt][currv]
-            if (urlParams.has(urlname)) {
-              let val = urlParams.get(urlname)
-              valres = val === "true" ? true : val === "false" ? false : isNaN(val) ? val : parseInt(val)
-            }
-            return {...accv, [currv]: valres }}, {})
-        }
+      return {
+        ...acct,
+        [currt]: Object.keys(dynamicApplySections[currt]).reduce((accv, currv) => {
+          const urlname = `${currt}.${currv}`
+          let valres = dynamicApplySections[currt][currv]
+          if (urlParams.has(urlname)) {
+            let val = urlParams.get(urlname)
+            valres = val === "true" ? true : val === "false" ? false : isNaN(val) ? val : parseInt(val)
+          }
+          return { ...accv, [currv]: valres }
+        }, {})
+      }
     }, {})
 
-    return  urlApplySections
+    return urlApplySections
   })
 
 
-  function updateTabValues (currenttabValues, sections, sectionKey, cardKey) {
+  function updateTabValues(currenttabValues, sections, sectionKey, cardKey) {
+    console.log(`updateTabValues`)
     const card_values = sections.find(s => s.key === sectionKey).cards.find(c => c.key === cardKey).values
-    console.log (`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
+    console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
     return Object.keys(card_values).reduce((acc, curr) => {
       return {
         ...acc,
@@ -155,31 +153,16 @@ export default function PortalNav({ config }) {
   }
 
   function updateSelected(sectionKey, cardKey) {
+    console.log("Update Selected Fired " + sectionKey + " - " + cardKey)
 
     setUrlParams((currentUrlParams) => {
 
-      if (selected.entScale !== entScale) {
-        console.log (`User changed entScale switch, and selected a new card, need to unselect old cards`)
-        defaultOps.forEach(element => {
-          currentUrlParams.delete(element.key)
-        })
-        entScaleOps.forEach(element => {
-          currentUrlParams.delete(element.key)
-        })
-      }
-
-      if (entScale) {
-        currentUrlParams.set('entScale', 1)
-      } else {
-        currentUrlParams.delete('entScale')
-      }
-      currentUrlParams.set(sectionKey,cardKey)
+    currentUrlParams.set(sectionKey, cardKey)
       return currentUrlParams
     })
 
-
-    console.log (`updateSelected: sectionKey=${sectionKey} cardKey=${cardKey}`)
-    setSelected({entScale, values: { ...(selected.entScale === entScale && selected.values), [sectionKey]: cardKey }})
+    console.log(`updateSelected: sectionKey=${sectionKey} cardKey=${cardKey}`)
+    setSelected({ preset: selected.preset, values: { ...selected.values, [sectionKey]: cardKey } })
     setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, sectionKey, cardKey))
 
     //window.history.replaceState(null, null, "?"+urlParams.toString())
@@ -190,8 +173,9 @@ export default function PortalNav({ config }) {
     fetch('https://api.ipify.org?format=json').then(response => {
       return response.json();
     }).then((res) => {
-      console.log (`useEffect Get IP`)
-      setTabValues(currentTabValues => { return {
+      console.log(`useEffect Get IP`)
+      setTabValues(currentTabValues => {
+        return {
           ...currentTabValues,
           deploy: {
             ...currentTabValues.deploy,
@@ -208,18 +192,21 @@ export default function PortalNav({ config }) {
     fetch('https://api.github.com/repos/Azure/Aks-Construction/releases').then(response => {
       return response.json();
     }).then((res) => {
-      console.log (`useEffect Get template versions`)
-      const releases = res.filter(rel => rel.assets.find(a => a.name === 'main.json') && rel.draft === false).map((rel, i) => { return {
-        key: rel.tag_name,
-        text: `${rel.tag_name}${i === 0 ? ' (latest)': ''}`,
-        url: rel.assets.find(a => a.name === 'main.json').browser_download_url
-      }}).concat(defaults.deploy.templateVersions)
-      console.log (releases)
-      setTabValues(currentTabValues => { return {
+      console.log(`useEffect Get template versions`)
+      const releases = res.filter(rel => rel.assets.find(a => a.name === 'main.json') && rel.draft === false).map((rel, i) => {
+        return {
+          key: rel.tag_name,
+          text: `${rel.tag_name}${i === 0 ? ' (latest)' : ''}`,
+          url: rel.assets.find(a => a.name === 'main.json').browser_download_url
+        }
+      }).concat(defaults.deploy.templateVersions)
+      //console.log (releases)
+      setTabValues(currentTabValues => {
+        return {
           ...currentTabValues,
           deploy: {
             ...currentTabValues.deploy,
-            ...(process.env.REACT_APP_TEMPLATERELEASE && {selectedTemplate: process.env.REACT_APP_TEMPLATERELEASE }),
+            ...(process.env.REACT_APP_TEMPLATERELEASE && { selectedTemplate: process.env.REACT_APP_TEMPLATERELEASE }),
             templateVersions: releases
           }
         }
@@ -233,14 +220,42 @@ export default function PortalNav({ config }) {
     setPivotkey(item.props.itemKey)
   }
 
+  function presetChanged(preset) {
+    console.log(preset)
+
+    setUrlParams((currentUrlParams) => {
+      currentUrlParams.set('preset', preset)
+      return currentUrlParams
+    })
+
+    setSelected({
+      preset, values: presets[preset].sections.reduce((a, s) => {
+        return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
+      }, {})
+    })
+
+    // Apply selected presets to tab values
+    const tabApplySections = Object.keys(selected.values).reduce((acc, curr) =>
+      updateTabValues(acc, sections, curr, selected.values[curr]),
+      defaults
+    )
+
+    //setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, key, 'standard'))
+  }
+
   function mergeState(tab, field, value) {
-    urlParams.set(`${tab}.${field}`, value)
+    if (typeof field === "string") urlParams.set(`${tab}.${field}`, value)
     //window.history.replaceState(null, null, "?"+urlParams.toString())
     setTabValues((p) => {
       return {
-        ...p, [tab]: {
-          ...p[tab],
-          [field]: value
+        ...p,
+        [tab]: {
+          ...(typeof field === "function" ? {
+            ...field(p[tab])
+          } : {
+            ...p[tab],
+            [field]: value
+          })
         }
       }
     })
@@ -249,7 +264,6 @@ export default function PortalNav({ config }) {
   function getError(page, field) {
     return invalidArray[page].find(e => e.field === field)
   }
-
 
   function invalidFn(page, field, invalid, message) {
     const e = getError(page, field)
@@ -262,7 +276,7 @@ export default function PortalNav({ config }) {
 
   const { deploy, cluster, net, addons } = tabValues
 
-  console.log (`PortalNav: Evaluating configruation warnings...`)
+  console.log(`PortalNav: Evaluating configruation warnings...`)
   invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph,
     <Text><b>ERROR</b>: The selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache</Text>)
   invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36,
@@ -294,9 +308,12 @@ export default function PortalNav({ config }) {
       :
       <Text><b>WARNING</b>: This template can only deploy Azure Firewall in single VNET with Custom Networking"</Text>
   )
+  invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") || (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default"),
+    <Text>When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway</Text>
+)
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
     <Text>Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab</Text>)
-  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length>19,
+  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19,
     <Text>Enter valid cluster name</Text>)
 
 
@@ -312,12 +329,12 @@ export default function PortalNav({ config }) {
   }
 
   const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const {semanticColors, palette } =  dark ? AzureThemeDark : AzureThemeLight
+  const { semanticColors, palette } = dark ? AzureThemeDark : AzureThemeLight
 
   return (
-    <ThemeProvider theme={{semanticColors, palette}}>
+    <ThemeProvider theme={{ semanticColors, palette }}>
       <main id="mainContent" className="wrapper">
-        <Header entScale={entScale} setEntScale={setEntScale} featureFlag={featureFlag} />
+        <Header presets={presets} selectedPreset={selected.preset} setPresets={presetChanged} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
@@ -325,9 +342,9 @@ export default function PortalNav({ config }) {
 
           <Separator styles={{ root: { marginTop: "55px !important", marginBottom: "5px" } }}><b>Deploy</b> (optionally use 'Details' tabs for additional configuration)</Separator>
 
-          <Pivot selectedKey={pivotkey} onLinkClick={_handleLinkClick} focusZoneProps={{ 'data-testid': `portalnav-Pivot`}}>
+          <Pivot selectedKey={pivotkey} onLinkClick={_handleLinkClick} focusZoneProps={{ 'data-testid': `portalnav-Pivot` }}>
             <PivotItem headerText={tabLabels.deploy} itemKey="deploy" onRenderItemLink={(a, b) => _customRenderer('deploy', a, b)}>
-              <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} urlParams={urlParams} />
+              <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} urlParams={urlParams}  featureFlag={featureFlag}  />
             </PivotItem>
             <PivotItem headerText={tabLabels.cluster} itemKey="cluster" onRenderItemLink={(a, b) => _customRenderer('cluster', a, b)} >
               <ClusterTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />

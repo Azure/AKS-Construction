@@ -2,6 +2,7 @@ targetScope='subscription'
 
 param location string = deployment().location
 param resourceName string = 'stest'
+param adminPrincipalId string = ''
 
 //Naming
 var gridResourceName = 'grid-${resourceName}'
@@ -75,6 +76,26 @@ module extrasubnet 'extrasubnet.bicep' = {
   }
 }
 
+var aggressiveAutoScaler ={
+  'balance-similar-node-groups': 'true'
+  'expander': 'random'
+  'max-empty-bulk-delete': '10'
+  'max-graceful-termination-sec': '200'
+  'max-node-provision-time': '15m'
+  'max-total-unready-percentage': '45'
+  'new-pod-scale-up-delay': '0s'
+  'ok-total-unready-count': '5'
+  'scale-down-delay-after-add': '1m'
+  'scale-down-delay-after-delete': '20s'
+  'scale-down-delay-after-failure': '3m'
+  'scale-down-unneeded-time': '1m'
+  'scale-down-unready-time': '2m'
+  'scale-down-utilization-threshold': '0.5'
+  'scan-interval': '10s'
+  'skip-nodes-with-local-storage': 'true'
+  'skip-nodes-with-system-pods': 'true'
+}
+
 //Deploy AKS clusters
 module gridAks '../../bicep/main.bicep' = {
   name: 'seleniumGridCluster'
@@ -92,9 +113,12 @@ module gridAks '../../bicep/main.bicep' = {
     azurepolicy: 'audit'
     agentCount:1
     agentCountMax:3
+    adminPrincipalId: adminPrincipalId
     JustUseSystemPool: false
     SystemPoolType: 'Cost-Optimised'
     byoAKSSubnetId: gridVnet.outputs.aksSubnetId
+    AutoscaleProfile: aggressiveAutoScaler
+    //agentVMTaints:  [for pool in extraAksNodePools: '${nodeTaintKey}=${pool}:NoExecute']
   }
 }
 
@@ -114,6 +138,7 @@ module appAks '../../bicep/main.bicep' = {
     azurepolicy: 'audit'
     agentCount:1
     agentCountMax:2
+    adminPrincipalId: adminPrincipalId
     JustUseSystemPool: true
     byoAKSSubnetId: appVnet.outputs.aksSubnetId
   }
@@ -123,8 +148,10 @@ module appAks '../../bicep/main.bicep' = {
 var extraAksNodePools = [
   'chromepool'
   'firefoxpool'
+  'edgepool'
 ]
 
+var nodeTaintKey = 'selbrowser'
 @batchSize(1) //Need to set this to avoid this concurrent update issue - 'Conflict. Status: Failed. Error: ResourceDeploymentFailure. The resource operation completed with terminal provisioning state 'Failed'
 module aksNodePools '../../bicep/aksagentpool.bicep'  = [for pool in extraAksNodePools:  {
   name: pool
@@ -134,9 +161,15 @@ module aksNodePools '../../bicep/aksagentpool.bicep'  = [for pool in extraAksNod
     PoolName: pool
     subnetId: gridVnet.outputs.aksSubnetId
     agentCount: 0
-    agentCountMax: 3
+    agentCountMax: 10
     agentVMSize: 'Standard_B2s'
     maxPods: 10
     osDiskType: 'Managed'
+    // nodeTaints: [
+    //   '${nodeTaintKey}=${pool}:${nodeTaintEffect}'
+    // ]
+    nodeLabels:{
+      '${nodeTaintKey}' : '${pool}'
+    }
   }
 }]

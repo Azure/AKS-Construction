@@ -4,9 +4,11 @@ import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdow
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
 
-export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams }) {
+export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag }) {
+  const terraformFeatureFlag = featureFlag.includes('tf')
 
   const { net, addons, cluster, deploy } = tabValues
+
   const allok = !(invalidTabs && invalidTabs.length > 0)
   const apiips_array = deploy.apiips.split(',').filter(x => x.trim())
   const aksvnetparams = {
@@ -25,12 +27,14 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
-    ...(cluster.autoscale && cluster.maxCount !== defaults.cluster.maxCount && { agentCountMax: cluster.maxCount }),
+    ...((cluster.autoscale !== defaults.cluster.autoscale || cluster.maxCount !== defaults.cluster.maxCount) && { agentCountMax: cluster.autoscale ? cluster.maxCount : 0 }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
          custom_vnet: true,
          ...serviceparams,
          ...aksvnetparams,
+         ...(net.nsg !== defaults.net.nsg && {CreateNetworkSecurityGroups: net.nsg}),
+         ...(net.nsg && net.nsgFlowLogs !== defaults.net.nsgFlowLogs && {CreateNetworkSecurityGroupFlowLogs: net.nsgFlowLogs}),
          ...(net.bastion !== defaults.net.bastion && {bastion: net.bastion}),
          ...(net.bastion && defaults.net.bastionSubnetAddressPrefix !== net.bastionSubnetAddressPrefix && {bastionSubnetAddressPrefix: net.bastionSubnetAddressPrefix})
        }),
@@ -38,7 +42,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
     ...(cluster.enable_aad && cluster.AksDisableLocalAccounts !== defaults.cluster.AksDisableLocalAccounts && { AksDisableLocalAccounts: cluster.AksDisableLocalAccounts }),
-    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminprincipleid: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
+    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminPrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
     ...(addons.registry !== "none" && {
         registries_sku: addons.registry,
         ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
@@ -52,6 +56,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(defaults.addons.openServiceMeshAddon !== addons.openServiceMeshAddon && {openServiceMeshAddon: addons.openServiceMeshAddon }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
+    ...(addons.azurepolicy !== "none" && addons.azurePolicyInitiative !== defaults.addons.azurePolicyInitiative && { azurePolicyInitiative: addons.azurePolicyInitiative }),
     ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}),
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
@@ -75,6 +80,20 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const preview_params = {
     ...(addons.gitops !== "none" && { gitops: addons.gitops }),
+    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNATGateway' && {
+      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
+      ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
+      ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
+    }),
+    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'userAssignedNATGateway' && {
+      ...({createNatGateway: true}),
+      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
+      ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
+      ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
+    }),
+    ...(net.vnet_opt === "byo" && {
+      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
+    }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
       ...(addons.registry !== "none" && {
         ...(addons.acrPrivatePool !== defaults.addons.acrPrivatePool && {acrPrivatePool: addons.acrPrivatePool}),
@@ -90,7 +109,33 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     return ` \\\n\t${k}=${targetVal}`
   }).join('')
 
-  const params2file = p => Object.keys(p).filter(p => p !== 'adminprincipleid' && p !== 'acrPushRolePrincipalId' && p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
+
+  const params2tf = p => Object.keys(p).map(k => {
+    return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? '{value=data.azurerm_client_config.current.client_id}' : `{value=var.${k}}`}\n`
+  }).join('')
+
+  const params2TfVar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
+        p !== 'acrPushRolePrincipalId' &&
+        p !== 'kvOfficerRolePrincipalId').map(k => {
+
+    const val = p[k]
+
+    switch (typeof val) {
+      case "string":
+        return ` \nvariable ${k} {\n  default="${val}"\n}`
+      case "number": case "boolean":
+        return ` \nvariable ${k} {\n  default=${val}\n}`
+      default:
+        const arrayVal = Array.isArray(val) ? JSON.stringify(val) : val
+        console.log(k + ' ' + val + ' '  + typeof val);
+        return ` \nvariable ${k} {\n  default=${arrayVal}\n}`
+    }
+
+  }).join('')
+
+  const params2file = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
+        p !== 'acrPushRolePrincipalId' &&
+        p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {}
@@ -104,7 +149,50 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
     `# Deploy template with in-line parameters \n` +
     `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` + params2CLI(finalParams)
-  const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
+    const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform init\nterraform plan -out main.tfplan\nterraform apply "main.tfplan"\nterraform output`
+    const deployTfProviders =
+    `#providers.tf\n\n` +
+    `terraform {\n` +
+    `  required_version = ">=1.1.9"\n` +
+    `  required_providers {\n` +
+    `    azurerm = {\n` +
+    `      source = "hashicorp/azurerm"\n` +
+    `      version = "~>3.6"\n` +
+    `    }\n` +
+    `  }\n` +
+    `}\n\n` +
+    `provider "azurerm" {\n` +
+    `  features {}\n` +
+    `}`
+    const deployTfMain =
+    `#main.tf\n\n` +
+    `data "http" "aksc_release" {\n` +
+    `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}"\n`+
+    `  request_headers = {\n` +
+    `    Accept = "application/json"\n` +
+    `    User-Agent = "request module"\n` +
+    `  }\n` +
+    `}\n\n` +
+    `data "azurerm_client_config" "current" {}\n\n` +
+    `resource "azurerm_resource_group" "rg" {\n` +
+    `  name = var.resourceGroupName\n`+
+    `  location = "${deploy.location}"\n` +
+    `}\n\n` +
+    `resource "azurerm_resource_group_template_deployment" "aksc_deploy" {\n` +
+    `  name = "AKS-C"\n` +
+    `  resource_group_name = azurerm_resource_group.rg.name\n` +
+    `  deployment_mode = "Incremental"\n` +
+    `  template_content = data.http.aksc_release.body\n` +
+    `  parameters_content = jsonencode({\n` +
+    params2tf(finalParams) +
+    `  })\n` +
+    `}`
+
+    const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  default="${deploy.rg}"\n}` + params2TfVar(finalParams)
+
+    const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}`
+
+    const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
 
   /*  WIP - Want the UI to call a common post-install script, instead of outputting the individual commands!
@@ -316,6 +404,8 @@ ${postscript_cluster.replaceAll('"', '\\"')}
               { key: "UKSouth", text: "UK South" },
               { key: "UKSouth2", text: "UK South2" },
               { key: "UKWest", text: "UK West" },
+              { key: 'middleeast', text: 'Middle East', itemType: DropdownMenuItemType.Header },
+              { key: "UAENorth", text: "UAE North" },
               { key: 'america', text: 'North America', itemType: DropdownMenuItemType.Header },
               { key: "CentralUS", text: "Central US" },
               { key: "EastUS", text: "East US" },
@@ -355,7 +445,7 @@ ${postscript_cluster.replaceAll('"', '\\"')}
 
       </Stack>
 
-      <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Deploy Cluster</b><Image src="./bicep.png" /> <p style={{ marginLeft: '10px' }}>powered by Bicep</p></div> </Separator>
+      <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Deploy Cluster</b><Image src="./bicep.png" alt="Built with bicep" /> <p style={{ marginLeft: '10px' }}>powered by Bicep</p></div> </Separator>
 
       {Object.keys(preview_params).length > 0 &&
         <MessageBar messageBarType={MessageBarType.warning}>
@@ -366,9 +456,9 @@ ${postscript_cluster.replaceAll('"', '\\"')}
       }
 
 
-      <Pivot >
+      <Pivot defaultSelectedKey={terraformFeatureFlag ? "deployTf" : "deployArmCli" } >
 
-        <PivotItem headerText="Provision Environment (CLI)"  >
+        <PivotItem headerText="Provision Environment (CLI)" itemKey="deployArmCli" itemIcon="PasteAsCode" >
 
           <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
             <Stack.Item>
@@ -399,12 +489,41 @@ ${postscript_cluster.replaceAll('"', '\\"')}
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
           }
-
-
-
         </PivotItem>
 
-        <PivotItem headerText="Post Configuration">
+        {terraformFeatureFlag && (
+          <PivotItem headerText="Provision Environment (Terraform)" itemKey="deployTf" itemIcon="FileCode">
+            <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
+              <Stack.Item>
+                <Label >Commands to deploy your fully operational environment</Label>
+                <Text>
+                  Requires Terraform, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+                </Text>
+              </Stack.Item>
+
+              <Stack.Item  align="end">
+                <Stack horizontal tokens={{childrenGap: 5}}>
+                <Label>Template Version</Label>
+                <Dropdown
+                      disabled={process.env.REACT_APP_TEMPLATERELEASE}
+                      selectedKey={deploy.selectedTemplate}
+                      onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
+                      options={deploy.templateVersions}
+                      styles={{ dropdown: { width: 200 } }}
+                    />
+                </Stack>
+              </Stack.Item>
+            </Stack>
+
+            <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="bash"/>
+            <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'} lang="terraform" filename="providers.tf" />
+            <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'} lang="terraform" filename="main.tf" />
+            <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'} lang="terraform" filename="variables.tf" />
+            <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'} lang="terraform" filename="outputs.tf" />
+
+          </PivotItem>
+        )}
+        <PivotItem headerText="Post Configuration" itemIcon="ConfigurationSolid">
           {addons.gitops === 'none' ? [
 
               <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
@@ -433,7 +552,7 @@ ${postscript_cluster.replaceAll('"', '\\"')}
           }
         </PivotItem>
 
-        <PivotItem headerText="Template Parameters File (for CI/CD)">
+        <PivotItem headerText="Template Parameters File (for CI/CD)" itemIcon="FileSymlink">
 
           <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
           </TextField>
