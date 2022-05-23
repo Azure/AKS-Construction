@@ -17,7 +17,7 @@ This projects focus is split equally over 3 areas, configuration, modular templa
 To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/AKS-Construction/), which will provide a set of parameters and scripts to make deployment simple. It uses several preset configurations to guide configuration decisions.
 The deployment helper provides links to the official Microsoft documentation to help provide additional context for each feature.
 
-[![preview screenshot of the helper wizard](helper_preview_es.png)](https://azure.github.io/AKS-Construction/)
+[![preview screenshot of the helper wizard](docassets/helper_preview_es.png)](https://azure.github.io/AKS-Construction/)
 
 ### IaC - Bicep code files
 
@@ -36,7 +36,7 @@ CI Name | Actions Workflow | Parameter file | CI Status | Notes
 | BYO Vnet | [ByoVnetCI.yml](https://github.com/Azure/AKS-Construction/blob/main/.github/workflows/ByoVnetCI.yml) | [ESLZ Byo peered vnet](.github/workflows_dep/AksDeploy-ByoVnet.parameters.json) | [![ByoVnetCI](https://github.com/Azure/AKS-Construction/actions/workflows/ByoVnetCI.yml/badge.svg?branch=main)](https://github.com/Azure/AKS-Construction/actions/workflows/ByoVnetCI.yml) | Comprehensive IaC flow deploying multiple smoke-test apps |
 | Private cluster | [ByoVnetPrivateCI.yml](https://github.com/Azure/Aks-Construction/blob/main/.github/workflows/ByoVnetPrivateCI.yml) | [ESLZ Byo private vnet](.github/workflows_dep/AksDeploy-ByoVnetPrivate.parameters.json) | [![ByoVNetPrivateCI](https://github.com/Azure/Aks-Construction/actions/workflows/ByoVnetPrivateCI.yml/badge.svg)](https://github.com/Azure/AKS-Construction/actions/workflows/ByoVnetPrivateCI.yml)| A private AKS cluster that deploys a vnet with private link services. |
 
-For a more in depth look at the GitHub Actions used in this project, which steps are performed and the different CI practices they demonstrate, please refer to [this page](GhActions.md).
+For a more in depth look at the GitHub Actions used in this project, which steps are performed and the different CI practices they demonstrate, please refer to [this page](docassets/GhActions.md).
 
 ## Getting Started
 
