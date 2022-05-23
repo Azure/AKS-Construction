@@ -1302,4 +1302,45 @@ output LogAnalyticsName string = (createLaw) ? aks_law.name : ''
 output LogAnalyticsGuid string = (createLaw) ? aks_law.properties.customerId : ''
 output LogAnalyticsId string = (createLaw) ? aks_law.id : ''
 
+//---------------------------------------------------------------------------------- AKS events with Event Grid
+// Supported events : https://docs.microsoft.com/en-gb/azure/event-grid/event-schema-aks?tabs=event-grid-event-schema#available-event-types
+
+@description('Create an Event Grid System Topic for AKS events')
+param createEventGrid bool = false
+
+resource eventGrid 'Microsoft.EventGrid/systemTopics@2021-12-01' = if(createEventGrid) {
+  name: 'evgt-${aks.name}'
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    source: aks.id
+    topicType: 'Microsoft.ContainerService.ManagedClusters'
+  }
+}
+
+output eventGridName string = createEventGrid ? eventGrid.name : ''
+
+resource eventGridDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && createEventGrid) {
+  name: 'eventGridDiags'
+  scope: eventGrid
+  properties: {
+    workspaceId:aks_law.id
+    logs: [
+      {
+        category: 'DeliveryFailures'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
+
 //ACSCII Art link : https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=Star%20Wars&text=changeme
