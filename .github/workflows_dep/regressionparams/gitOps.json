@@ -10,9 +10,6 @@
     },
     "enableFluxAddon": {
       "value": true
-    },
-    "fluxConfigRepo": {
-      "value": "https://github.com/Azure/gitops-flux2-kustomize-helm-mt"
     }
   }
 }
