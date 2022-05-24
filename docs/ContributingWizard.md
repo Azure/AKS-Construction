@@ -1,6 +1,6 @@
 # Wizard
 
-This guide shows an example of how to integrate a simple change into the Wizard Web UI.
+This guide shows how Wizard Web UI is structured, and walks through the approach for making changes.
 
 > Not every addition to the bicep will need representation in the Wizard Web UI - but we find that most will.
 
@@ -85,8 +85,26 @@ Make sure that changing the option of your control has the desired effect on the
 
 ## 7. Presets
 
-In the configpresets directory there are different Architectural Approach files which contain multiple configuration presets. It may be appropriate to add the new parameter to these presets to set a specific value for that preset.
+In the [configpresets](../helper/src/configpresets/) directory there are different Architectural Approach files which contain multiple configuration presets. It may be appropriate to add the new parameter to these presets to set a specific value for that preset.
 
 ## 8. UI Tests
 
 It's recommended to add a Playwright test covering the scenarios for the control as appropriate. With complex logic, tests are mandatory.
+
+The `data-testid` attribute should be set on your FluentUI controls for the Playwright tests to navigate the dom.
+
+Tests can be as simple as checking the correct default is set, but provide much more value when verifying interaction between controls.
+
+```javascript
+const { test, expect } = require('@playwright/test');
+
+test('networkpolicy-test-default-is-azure', async ({ page }) => {
+  await page.goto('http://localhost:3000/AKS-Construction');
+
+  // Click the 3rd Tab in the portal Navigation Pivot (addons)
+  await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(3)');
+
+  // Expect azure network policy to be checked!
+  expect (await page.isChecked('[data-testid="addons-netpolicy-azure"]')).toBeTruthy()
+});
+```
