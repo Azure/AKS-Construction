@@ -10,7 +10,7 @@ This guide shows an example of how to integrate a simple change into the Wizard 
 
 The web app is preset driven, different presets will change the values of the controls in the tabs. Most controls map directly to a parameter for the main.bicep code file.
 
-![overlay preset json](wiz-overlay-config.png)
+![overlay preset json](images/wiz-overlay-config.png)
 
 ### Guidance in the UI
 
@@ -36,7 +36,7 @@ Open the [default control config file](../helper/src/config.json), and locate th
 
 > Choosing the least obtrusive default value is the generally the best tact.
 
-![bicep config](wiz-bicep-config.png)
+![bicep config](images/wiz-bicep-config.png)
 
 ## 3. What control
 
@@ -49,7 +49,7 @@ There are plenty of samples of these controls being used throughout the codebase
 In the components directory there will be a page for the tab you need to work on.
 Locate where is best for the parameter to be added, and paste in the code from Step 3.
 
-![fluent ui control](wiz-fluentui.png)
+![fluent ui control](images/wiz-fluentui.png)
 
 ### Warnings
 
@@ -81,7 +81,7 @@ Either locally or on Codespaces, it's time to fire the application up to make su
 
 Make sure that changing the option of your control has the desired effect on the created Deployment Script output in the "Provision Environment (CLI)" tab.
 
-![provision env parameter appear](wiz-provisionenv.png)
+![provision env parameter appear](images/wiz-provisionenv.png)
 
 ## 7. Presets
 

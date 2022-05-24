@@ -10,14 +10,14 @@ The AKS Bicep Accelerator is part of the official [AKS Landing Zone Accelerator 
 
 This projects focus is split equally over 3 areas, configuration, modular templating and CI implementation.
 
-![project component areas](docs/AKSBicepComponents.png)
+![project component areas](docs/images/AKSBicepComponents.png)
 
 ### Wizard experience
 
 To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/AKS-Construction/), which will provide a set of parameters and scripts to make deployment simple. It uses several preset configurations to guide configuration decisions.
 The deployment helper provides links to the official Microsoft documentation to help provide additional context for each feature.
 
-[![preview screenshot of the helper wizard](docs/helper_preview_es.png)](https://azure.github.io/AKS-Construction/)
+[![preview screenshot of the helper wizard](docs/images/helper_preview_es.png)](https://azure.github.io/AKS-Construction/)
 
 ### IaC - Bicep code files
 
@@ -28,7 +28,7 @@ Releases are used to version the bicep code files, they can be leveraged directl
 ### DevOps - GitHub Actions
 
 A number of [GitHub actions](https://github.com/Azure/AKS-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. A robust deployment pipeline is essential when coordinating the deployment of multiple Azure services that work together, additionally there is configuration that cannot be set in the template and that needs to be automated (and tested) consistently.
-![preview screenshot of the helper wizard](docs/ghactionworkflow.jpg)
+![preview screenshot of the helper wizard](docs/images/ghactionworkflow.jpg)
 
 CI Name | Actions Workflow | Parameter file | CI Status | Notes
 |--------|--------|--------|-----------|------|
