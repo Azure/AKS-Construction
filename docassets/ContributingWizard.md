@@ -2,7 +2,21 @@
 
 This guide shows an example of how to integrate a simple change into the Wizard Web UI.
 
-## The Example
+> Not every addition to the bicep will need representation in the Wizard Web UI - but we find that most will.
+
+## Overview
+
+### Presets
+
+The web app is preset driven, different presets will change the values of the controls in the tabs. Most controls map directly to a parameter for the main.bicep code file.
+
+![overlay preset json](wiz-overlay-config.png)
+
+### Guidance in the UI
+
+Whilst not being a teaching resource, adding UI hints, validation and links to the Azure documentation are very important.
+
+## Design/Dev Process
 
 Adding a new parameter to the main.bicep file will require that a corresponding control/parameter are added to the UI. This allows the property to be easily configured by users of the Wizard Web UI, and not just available for users of the bicep file.
 
@@ -18,16 +32,26 @@ It's important to know which tab the parameter belongs on, because this will dic
 
 ## 2. Default value
 
-Open the [default control config file](../helper/src/config.json), and locate the section corresponding to the tab (eg. Networking). Add a new key value pair, using the identical parameter name from the bicep and the same default.
+Open the [default control config file](../helper/src/config.json), and locate the section corresponding to the tab (eg. Networking). Add a new key value pair, using the identical parameter name from the bicep and the **same default**.
+
+> Choosing the least obtrusive default value is the generally the best tact.
+
+![bicep config](wiz-bicep-config.png)
 
 ## 3. What control
 
-Depending on the type of the parameter, you might want to add a FluentUI control like ChoiceGroup, DropDown, Checkbox etc. There are plenty of samples of these controls being used throughout the codebase. Find an existing use of one of these controls and use it as your reference.
+Depending on the type of the parameter, you might want to add a [FluentUI](https://developer.microsoft.com/fluentui#/controls/web) control like ChoiceGroup, DropDown, Checkbox etc. There are plenty of samples of these controls being used throughout the codebase. Find an existing use of one of these controls and use it as your reference.
 
 ## 4. Adding the control
 
 In the components directory there will be a page for the tab you need to work on.
-Locate where is best for the parameter to be added, and paste in the code from Step 3. You'll need to
+Locate where is best for the parameter to be added, and paste in the code from Step 3.
+
+Consider the impact of the parameter on the deployment, add a warning to the UI to highlight considerations for the user
+
+```javascript
+<MessageBar messageBarType={MessageBarType.warning}>A warning message.</MessageBar>
+```
 
 ## 5. Deployment output
 
