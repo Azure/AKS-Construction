@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceName": {
+      "value": "az-k8s-flux"
+    },
+    "agentVMSize": {
+      "value": "Standard_DS3_v2"
+    },
+    "enableFluxAddon": {
+      "value": true
+    },
+    "fluxConfigRepo": {
+      "value": "https://github.com/Azure/gitops-flux2-kustomize-helm-mt"
+    }
+  }
+}
