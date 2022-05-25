@@ -75,6 +75,7 @@
             "retentionInDays": 30,
             "createAksMetricAlerts": true,
             "csisecret": "none",
+            "kvPollInterval": "2m",
             "kvId": "",
             "gitops": "none"
         },

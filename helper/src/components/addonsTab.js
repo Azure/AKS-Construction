@@ -327,13 +327,24 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         <TextField styles={{ root: { marginBottom: '20px' } }} value={addons.kvId} onChange={(ev, v) => updateFn("kvId", v)} errorMessage={getError(invalidArray, 'kvId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Azure Key Vault Resource Id</Text>} />
                     }
 
+                    <Dropdown
+                        styles={{ root: { marginBottom: '20px' } }}
+                        label="Rotation poll interval"
+                        onChange={(ev, { key }) => updateFn("kvPollInterval", key)} selectedKey={addons.kvPollInterval}
+                        options={[
+                            { key: '2m', text: '2 minutes' },
+                            { key: '5m', text: '5 minutes' },
+                            { key: '10m', text: '10 minutes' },
+                            { key: '30m', text: '30 minutes' }
+                        ]}
+                    />
+
                     <MessageBar messageBarType={MessageBarType.info} styles={{ root: { width: '700px' } }}>
-                        Secrets Store CSI Driver secret roation will be enabled by default, periodically updating pod mounts and the Kubernetes Secrets.
+                        Secrets Store CSI Driver secret roation will be enabled by default, periodically updating pod mounts and the Kubernetes Secrets. For more information see <Link target="_blank" href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver#enable-and-disable-autorotation">here</Link>.
                         <ol>
                             <li>Application will need to watch for changes from the mounted Kubernetes Secret volume or the CSI driver volume.</li>
                             <li>To get the latest secret as an environment variable use something like <Link target="_blank" href="https://github.com/stakater/Reloader">Reloader</Link> to watch for changes on the synced Kubernetes secret.</li>
                         </ol>
-                        For more information see <Link target="_blank" href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver#enable-and-disable-autorotation">here</Link>.
                     </MessageBar>
                 </Stack.Item>
             }
