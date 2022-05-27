@@ -111,6 +111,8 @@ Assert-PSRule -Module 'PSRule.Rules.Azure' -InputPath $paramPath -Format File -o
 
 The [configuration experience](https://azure.github.io/AKS-Construction/) is hosted in GitHub pages. It's a static web app, written in NodeJS using [FluentUI](https://developer.microsoft.com/en-us/fluentui).
 
+For a deep dive into contributing to the Wizard Web App, please see this [document](docs/ContributingWizard.md).
+
 #### Playwright tests
 
 Playwright is used to help verify that the app works properly, you can use Playwright in your local dev experience (see Codespaces below), but crucially it's also leveraged as part of the publish process. If the tests don't pass, then the app will not publish. The `fragile` keyword should be used in any tests where you're learning how they work and run. Once the test is of sufficient quality to be considered a core test, the `fragile` keyword is removed.
