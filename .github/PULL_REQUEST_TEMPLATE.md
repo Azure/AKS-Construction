@@ -8,3 +8,4 @@
 - [ ] Summarized changes
 - [ ] This PR is ready to merge and is not **Work in Progress**
 - [ ] Link to a filed issue
+- [ ] Screenshot of UI changes (if PR includes UI changes)
