@@ -19,7 +19,7 @@ Have awareness of the various workflows run on Push / PR / Schedule.
 | Labeller   | PR | `Tidy` Adds relevant labels to PR's based on files changed |
 | Validate GitHub Pages site | PR | `Quality` Tests changes to the UI work |
 | Release Bicep and Helper | Manual | Publishes a new release and/or new Wizard Web app to GitHub Pages |
-| Lighthouse Checks | Schedule | Checks the Wizard Web app for accessibiltiy/seo/performance
+| Lighthouse Checks | Schedule | Checks the Wizard Web app for accessibility/seo/performance
 | Check Markdown | PR | `Quality` Checks markdown files for spelling mistakes |
 | Infra CI - Private Cluster | Push / PR / Schedule | `Quality` Low maturity IaC deployment example. Tests the most secure/private parameter config |
 | Infra CI - Byo Vnet Cluster | Push / PR / Schedule | `Quality` High maturity IaC deployment example. Tests a typical production grade parameter config |
@@ -85,7 +85,7 @@ Releases are used to capture a tested release (all stages, not just Validation),
 When changing the Bicep code, try to build into your `developer inner loop` the following
 
 - Review the linting warnings in VSCode. When you push, the bicep will be compiled to json with warnings/errors picked up
-- If creating a new Parameter, choose the least obtrustive default value
+- If creating a new Parameter, choose the least obtrusive default value
 - If creating a new Parameter, try to include the corresponding changes to the UI
 - If making a breaking change (eg. changing a parameter name or default), pay attention to the Regression parameter files. These will be checked during PR. If the change you're making isn't covered by an existing parameter file, then add one.
 - Try to keep naming consistent with the file you're adding to
