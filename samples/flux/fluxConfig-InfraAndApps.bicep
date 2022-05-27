@@ -24,7 +24,7 @@ param fluxRepoPassword string = ''
 var fluxRepoPasswordB64 = base64(fluxRepoPassword)
 
 param fluxRepoInfraPath string = './infrastructure'
-param fluxRepoAppsPath string = './infrastructure'
+param fluxRepoAppsPath string = './apps/staging'
 
 resource fluxConfig 'Microsoft.KubernetesConfiguration/fluxConfigurations@2022-03-01' = {
   scope: aks
