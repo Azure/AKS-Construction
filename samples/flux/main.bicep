@@ -8,8 +8,8 @@ module flux 'fluxConfig-InfraAndApps.bicep' = {
     aksName: aksconst.outputs.aksClusterName
     aksFluxAddOnReleaseNamespace: aksconst.outputs.fluxReleaseNamespace
     fluxConfigRepo: 'https://github.com/Azure/gitops-flux2-kustomize-helm-mt'
-    fluxRepoInfraPath: ''
-    fluxRepoAppsPath: ''
+    fluxRepoInfraPath: './infrastructure'
+    fluxRepoAppsPath: './apps/staging'
   }
 }
 
@@ -21,6 +21,8 @@ module aksconst '../../bicep/main.bicep' = {
   params: {
     location : location
     resourceName: nameseed
+    enableFluxAddon: true
+
     enable_aad: true
     enableAzureRBAC : true
     registries_sku: 'Standard'
