@@ -10,11 +10,13 @@ This guide shows how Wizard Web UI is structured, and walks through the approach
 
 The web app is preset driven, different presets will change the values of the controls in the tabs. Most controls map directly to a parameter for the main.bicep code file.
 
+The UI is initially populated with values from the config.json file. Selecting a preset then overlays specific values in the UI.
+
 ![overlay preset json](images/wiz-overlay-config.png)
 
 ### Guidance in the UI
 
-Whilst not being a teaching resource, adding UI hints, validation and links to the Azure documentation are very important.
+Whilst not being a teaching resource, adding UI hints, validation and links to the Azure documentation are all  important to the configuration experience.
 
 ## Design/Dev Process
 
@@ -107,7 +109,7 @@ test('networkpolicy-test-default-is-azure', async ({ page }) => {
 });
 ```
 
-## Example
+## Example Contribution Walkthrough
 
 A simple example change to the UI is when the Flux Addon was added. The bicep change included one new boolean parameter, which the UI would need to also supply.
 
