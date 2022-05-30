@@ -7,7 +7,9 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' exi
 }
 
 @description('The Git Repository URL where your flux configuration is homed')
-param fluxConfigRepo string = 'https://github.com/Azure/gitops-flux2-kustomize-helm-mt' //'https://github.com/fluxcd/flux2-kustomize-helm-example'
+param fluxConfigRepo string = '' //'https://github.com/Azure/gitops-flux2-kustomize-helm-mt' //'https://github.com/fluxcd/flux2-kustomize-helm-example'
+
+param fluxConfigRepoBranch string = 'main'
 
 @description('The name of the flux configuration to apply')
 param fluxConfigName string = 'fluxsetup'
@@ -38,7 +40,7 @@ resource fluxConfig 'Microsoft.KubernetesConfiguration/fluxConfigurations@2022-0
       timeoutInSeconds: 180
       syncIntervalInSeconds: 300
       repositoryRef: {
-        branch: 'main'
+        branch: fluxConfigRepoBranch
       }
     }
     configurationProtectedSettings: !empty(fluxRepoUsernameB64) && !empty(fluxRepoPasswordB64) ? {

@@ -2,7 +2,7 @@ param nameseed string = 'fluxdocs'
 param location string =  resourceGroup().location
 
 //--------------Flux Config---------------
-module flux 'fluxConfig-InfraAndApps.bicep' = {
+module flux 'configpatterns/fluxConfig-InfraAndApps.bicep' = {
   name: 'flux'
   params: {
     aksName: aksconst.outputs.aksClusterName
