@@ -114,7 +114,7 @@ test('networkpolicy-test-default-is-azure', async ({ page }) => {
 A simple example change to the UI is when the Flux Addon was added. The bicep change included one new boolean parameter, which the UI would need to also supply.
 
 1. Flux is a managed addon, so the correct tab for the control to go on is the **AddOns** tab.
-1. `config.json` The default value in the bicep is false (least obtrustive) needs to be replicated into this json object.
+1. `config.json` The default value in the bicep is false and this needs to be replicated into this json file.
 ```json
 "addons": {
     "fluxGitOpsAddon": false,
