@@ -59,8 +59,6 @@ Consider the impact of the parameter on the deployment, add a warning to the UI 
 <MessageBar messageBarType={MessageBarType.warning}>A warning message.</MessageBar>
 ```
 
-
-
 ## 5. Deployment output
 
 Now that the control is working as expected on the page, we need to make sure that it's going to be output in the places that show performing a deployment.
@@ -107,4 +105,41 @@ test('networkpolicy-test-default-is-azure', async ({ page }) => {
   // Expect azure network policy to be checked!
   expect (await page.isChecked('[data-testid="addons-netpolicy-azure"]')).toBeTruthy()
 });
+```
+
+## Example
+
+A simple example change to the UI is when the Flux Addon was added. The bicep change included one new boolean parameter, which the UI would need to also supply.
+
+1. Flux is a managed addon, so the correct tab for the control to go on is the **AddOns** tab.
+1. `config.json` The default value in the bicep is false (least obtrustive) needs to be replicated into this json object.
+```json
+"addons": {
+    "fluxGitOpsAddon": false,
+```
+
+3. As a boolean, the most suitable control is a checkbox, of which there are many samples in the codebase.
+
+4. `addonsTab.js` Customising the code with the correct description, parameter name and adding a messagebox to provide further context.
+
+```javascript
+<Separator className="notopmargin" />
+
+<Stack.Item align="start">
+    <Label required={true}>
+        GitOps with Flux
+        (<a target="_new" href="https://docs.microsoft.com/azure/azure-arc/kubernetes/conceptual-gitops-flux2">docs</a>)
+    </Label>
+    <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: '10px' } }}>
+            Enabling this option installs Flux to the cluster, but it doesn't apply configuration.
+            For samples of Flux configuration see <Link target="_target" href="https://github.com/Azure/AKS-Construction/tree/main/samples/flux">Flux samples</Link>
+    </MessageBar>
+    <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-gitops-checkbox"}} checked={addons.fluxGitOpsAddon} onChange={(ev, v) => updateFn("fluxGitOpsAddon", v)} label="Install the Flux GitOps AddOn" />
+</Stack.Item>
+```
+
+5. `deployTab.js` Adding the parameter to the deployment tab involves just having a basic check against the default to ensure we're not including it unnecessarily.
+
+```javascript
+...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon})
 ```
