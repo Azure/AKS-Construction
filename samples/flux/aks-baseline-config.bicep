@@ -1,21 +1,19 @@
 /*
-This Flux Config implements the configuration referenced in the Azure Documentation.
+This Flux Config implements the configuration used in the AKS Baseline.
 
-Azure Docs: https://docs.microsoft.com/en-gb/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2
+AKS Baseline Flux Docs : https://github.com/mspnp/aks-baseline/blob/main/cluster-manifests/README.md
 */
 
-param nameseed string = 'fluxdocs'
+param nameseed string = 'fluxbase'
 param location string =  resourceGroup().location
 
 //--------------Flux Config---------------
-module flux 'configpatterns/fluxConfig-InfraAndApps.bicep' = {
+module flux 'configpatterns/fluxConfig-Unified.bicep' = {
   name: 'flux'
   params: {
     aksName: aksconst.outputs.aksClusterName
     aksFluxAddOnReleaseNamespace: aksconst.outputs.fluxReleaseNamespace
-    fluxConfigRepo: 'https://github.com/Azure/gitops-flux2-kustomize-helm-mt'
-    fluxRepoInfraPath: './infrastructure'
-    fluxRepoAppsPath: './apps/staging'
+    fluxConfigRepo: 'https://github.com/mspnp/aks-baseline'
   }
 }
 

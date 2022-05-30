@@ -7,12 +7,12 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' exi
 }
 
 @description('The Git Repository URL where your flux configuration is homed')
-param fluxConfigRepo string = '' //'https://github.com/Azure/gitops-flux2-kustomize-helm-mt' //'https://github.com/fluxcd/flux2-kustomize-helm-example'
+param fluxConfigRepo string = '' //''https://github.com/mspnp/aks-baseline''
 
 param fluxConfigRepoBranch string = 'main'
 
 @description('The name of the flux configuration to apply')
-param fluxConfigName string = 'fluxsetup'
+param fluxConfigName string = 'bootstrap'
 var cleanFluxConfigName = toLower(fluxConfigName)
 
 @secure()
@@ -25,8 +25,7 @@ var fluxRepoUsernameB64 = base64(fluxRepoUsername)
 param fluxRepoPassword string = ''
 var fluxRepoPasswordB64 = base64(fluxRepoPassword)
 
-param fluxRepoInfraPath string = './infrastructure'
-param fluxRepoAppsPath string = './apps/staging'
+param fluxRepoPath string = './cluster-manifests'
 
 resource fluxConfig 'Microsoft.KubernetesConfiguration/fluxConfigurations@2022-03-01' = {
   scope: aks
@@ -41,29 +40,28 @@ resource fluxConfig 'Microsoft.KubernetesConfiguration/fluxConfigurations@2022-0
       syncIntervalInSeconds: 300
       repositoryRef: {
         branch: fluxConfigRepoBranch
+        tag: null
+        semver: null
+        commit: null
       }
+      sshKnownHosts: ''
+      httpsUser: null
+      httpsCACert: null
+      localAuthRef: null
     }
     configurationProtectedSettings: !empty(fluxRepoUsernameB64) && !empty(fluxRepoPasswordB64) ? {
       username: fluxRepoUsernameB64
       password: fluxRepoPasswordB64
     } : {}
     kustomizations: {
-      infra: {
-        path: fluxRepoInfraPath
+      unified: {
+        path: fluxRepoPath
+        dependsOn: []
         timeoutInSeconds: 300
         syncIntervalInSeconds: 300
         retryIntervalInSeconds: 300
         prune: true
-      }
-      apps: {
-        path: fluxRepoAppsPath
-        dependsOn: [
-          'infra'
-        ]
-        timeoutInSeconds: 300
-        syncIntervalInSeconds: 300
-        retryIntervalInSeconds: 300
-        prune: true
+        force: false
       }
     }
   }
