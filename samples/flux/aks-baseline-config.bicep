@@ -23,7 +23,7 @@ module aksconst '../../bicep/main.bicep' = {
   params: {
     location : location
     resourceName: nameseed
-    enableFluxAddon: true
+    fluxGitOpsAddon: true
 
     enable_aad: true
     enableAzureRBAC : true

@@ -8,7 +8,7 @@
     "agentVMSize": {
       "value": "Standard_DS3_v2"
     },
-    "enableFluxAddon": {
+    "fluxGitOpsAddon": {
       "value": true
     }
   }

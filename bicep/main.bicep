@@ -844,9 +844,6 @@ param azurepolicy string = ''
 ])
 param azurePolicyInitiative string = 'Baseline'
 
-@description('Enable the git ops addon')
-param gitops string = ''
-
 @description('The IP addresses that are allowed to access the API server')
 param authorizedIPRanges array = []
 
@@ -1027,15 +1024,6 @@ var aks_addons = {
       logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
     }
   }
-  gitops: {
-    //    config": null,
-    enabled: !empty(gitops)
-    //    identity: {
-    //      clientId: 'xxx',
-    //      objectId: 'xxx',
-    //      resourceId: '/subscriptions/95efa97a-9b5d-4f74-9f75-a3396e23344d/resourcegroups/xxx/providers/Microsoft.ManagedIdentity/userAssignedIdentities/xxx'
-    //    }
-  }
   azurepolicy: {
     config: {
       version: !empty(azurepolicy) ? 'v2' : json('null')
@@ -1189,9 +1177,9 @@ resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021
   }
 }
 
-param enableFluxAddon bool = false
+param fluxGitOpsAddon bool = false
 
-resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-preview' = if(enableFluxAddon) {
+resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-preview' = if(fluxGitOpsAddon) {
   name: 'flux'
   scope: aks
   properties: {
@@ -1203,37 +1191,11 @@ resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-prev
         releaseNamespace: 'flux-system'
       }
     }
-    // configurationSettings: {
-    //   'helm-controller.enabled': 'false'
-    //   'source-controller.enabled': 'true'
-    //   'kustomize-controller.enabled': 'true'
-    //   'notification-controller.enabled': 'false'
-    //   'image-automation-controller.enabled': 'false'
-    //   'image-reflector-controller.enabled': 'false'
-    // }
     configurationProtectedSettings: {}
   }
 }
 output fluxReleaseNamespace string = fluxAddon.properties.scope.cluster.releaseNamespace
 
-// Flux Config is super repo structure specific. Think it needs to be an optional post-deploy step, not integrated in main.bicep
-// module fluxConfig 'fluxConfig.bicep' = {
-//   name: ''
-//   params: {
-//     aksName: aks.name
-//     aksFluxAddOnReleaseNamespace: fluxAddon.properties.scope.cluster.releaseNamespace
-//   }
-// }
-
-//---------------------------------------------------------------------------------- gitops (to apply the post-helm packages to the cluster)
-// WAITING FOR PUBLIC PREVIEW
-// https://docs.microsoft.com/en-gb/azure/azure-arc/kubernetes/use-gitops-connected-cluster#using-azure-cli
-/*
-resource gitops 'Microsoft.KubernetesConfiguration/sourceControlConfigurations@2019-11-01-preview' = if (false) {
-  name: 'bla'
-  location: 'bla'
-}
-*/
 
 /*__  ___.   ______   .__   __.  __  .___________.  ______   .______       __  .__   __.   _______
 |   \/   |  /  __  \  |  \ |  | |  | |           | /  __  \  |   _  \     |  | |  \ |  |  /  _____|
