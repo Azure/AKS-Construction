@@ -120,7 +120,7 @@ A simple example change to the UI is when the Flux Addon was added. The bicep ch
 
 3. As a boolean, the most suitable control is a checkbox, of which there are many samples in the codebase.
 
-4. `addonsTab.js` Customising the code with the correct description, parameter name and adding a messagebox to provide further context.
+4. `addonsTab.js` Customising the code with the correct description, parameter name and adding a message-bar to provide further context.
 
 ```javascript
 <Separator className="notopmargin" />
