@@ -199,12 +199,6 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 param azureKeyvaultSecretsProvider bool = false
 
 @description('Rotation poll interval for the AKS KV CSI provider')
-@allowed([
-  '2m'
-  '5m'
-  '10m'
-  '30m'
-])
 param kvPollInterval string = '2m'
 
 @description('Enables Open Service Mesh')
