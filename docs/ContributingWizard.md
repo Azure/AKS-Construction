@@ -16,7 +16,7 @@ The UI is initially populated with values from the config.json file. Selecting a
 
 ### Guidance in the UI
 
-Whilst not being a teaching resource, adding UI hints, validation and links to the Azure documentation are all  important to the configuration experience.
+Whilst not being a teaching resource, adding validation, **concise** UI hints, and links to the Azure documentation are all important to the configuration experience.
 
 ## Design/Dev Process
 
@@ -36,7 +36,7 @@ It's important to know which tab the parameter belongs on, because this will dic
 
 Open the [default control config file](../helper/src/config.json), and locate the section corresponding to the tab (eg. Networking). Add a new key value pair, using the identical parameter name from the bicep and the **same default**.
 
-> Choosing the least obtrusive default value is the generally the best tact.
+> Choosing the least obtrusive default value is generally the best tact.
 
 ![bicep config](images/wiz-bicep-config.png)
 
