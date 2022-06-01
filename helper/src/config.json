@@ -76,7 +76,9 @@
             "retentionInDays": 30,
             "createAksMetricAlerts": true,
             "csisecret": "none",
-            "kvId": ""
+            "kvPollInterval": "2m",
+            "kvId": "",
+            "gitops": "none"
         },
         "net": {
             "networkPlugin": "azure",

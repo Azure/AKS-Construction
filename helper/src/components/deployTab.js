@@ -76,6 +76,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
     ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
+    ...(addons.csisecret !== "none" && addons.kvPollInterval !== defaults.addons.kvPollInterval  && { kvPollInterval: addons.kvPollInterval }),
     ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon})
   }
 
