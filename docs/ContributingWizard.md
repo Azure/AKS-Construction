@@ -2,11 +2,17 @@
 
 This guide shows how Wizard Web UI is structured, and walks through the approach for making changes.
 
-> Not every addition to the bicep will need representation in the Wizard Web UI - but we find that most will.
-
 ## Overview
 
-### Presets
+The web app is located in the repos `./helper` directory, it has been created using the [Create React App](https://reactjs.org/docs/create-a-new-react-app.html) tool, so the layout of the directory should be familiar. It you haven't used this tool, you may like to read over the above link.
+
+The Application components are located in the `./helper/src/components` folder, and are divided as follows:
+
+- `portalnav.js` - the main component responsible for rendering the SPA, and checking errors
+- `presets.js` - the component responsible for rendering the configuration driven preset cards.
+- `*name*Tab.js` - the components to render the individual tabs
+
+### Preset Configuration
 
 The web app is preset driven, different presets will change the values of the controls in the tabs. Most controls map directly to a parameter for the main.bicep code file.
 
@@ -36,7 +42,7 @@ It's important to know which tab the parameter belongs on, because this will dic
 
 Open the [default control config file](../helper/src/config.json), and locate the section corresponding to the tab (eg. Networking). Add a new key value pair, using the identical parameter name from the bicep and the **same default**.
 
-> Choosing the least obtrusive default value is generally the best tact.
+> Choosing the least obtrusive default value is generally the best approach.
 
 ![bicep config](images/wiz-bicep-config.png)
 
