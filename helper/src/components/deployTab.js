@@ -10,7 +10,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const { net, addons, cluster, deploy } = tabValues
 
   const allok = !(invalidTabs && invalidTabs.length > 0)
-  const apiips_array = deploy.apiips.split(',').filter(x => x.trim())
+  const apiips_array = deploy.apiips ? deploy.apiips.split(',').filter(x => x.trim()) : []
   const aksvnetparams = {
     ...(net.vnetAddressPrefix !== defaults.net.vnetAddressPrefix && { vnetAddressPrefix: net.vnetAddressPrefix }),
     ...(net.vnetAksSubnetAddressPrefix !== defaults.net.vnetAksSubnetAddressPrefix && { vnetAksSubnetAddressPrefix: net.vnetAksSubnetAddressPrefix })
@@ -424,7 +424,7 @@ ${postscript_cluster.replaceAll('"', '\\"')}
 
           <Separator ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Environment Access & Build Agents</b></div> </Separator>
 
-          <TextField label="Current IP Address" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+          <TextField label="Current IP Address" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips || ''} required={cluster.apisecurity === "whitelist"} />
 
 
             <Label>Grant AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
