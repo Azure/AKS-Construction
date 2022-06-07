@@ -46,6 +46,7 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "fluxGitOpsAddon": false,
             "networkPolicy": "none",
             "openServiceMeshAddon": false,
             "denydefaultNetworkPolicy": false,

@@ -349,30 +349,33 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 </Stack.Item>
             }
 
-            { osmFeatureFlag &&
-            <>
-                <Separator className="notopmargin" />
+            <Separator className="notopmargin" />
 
-                <Stack.Item align="start">
-                    <Label required={true}>
-                        Open Service Mesh : Enable Open Service Mesh on the AKS Cluster
-                        (<a target="_new" href="https://docs.microsoft.com/azure/aks/open-service-mesh-about">docs</a>)
-                    </Label>
-                    <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-osm-Checkbox"}} checked={addons.openServiceMeshAddon} onChange={(ev, v) => updateFn("openServiceMeshAddon", v)} label="Install the Open Service Mesh AddOn" />
-                </Stack.Item>
-            </>}
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Open Service Mesh : Enable Open Service Mesh on the AKS Cluster
+                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/open-service-mesh-about">docs</a>)
+                </Label>
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-osm-Checkbox"}} checked={addons.openServiceMeshAddon} onChange={(ev, v) => updateFn("openServiceMeshAddon", v)} label="Install the Open Service Mesh AddOn" />
+            </Stack.Item>
 
-            {/*
-        <ChoiceGroup
-          label='Enable gitops'
-          selectedKey={addons.gitops}
-          options={[
-            { key: 'none', text: 'No, I will manage my kubernetes deployments manually' },
-            { key: 'yes', text: 'Yes, enable gitops' }
-          ]}
-          onChange={(ev, { key }) => updateFn("gitops", key)}
-        />
-        */}
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    GitOps with Flux
+                    (<a target="_new" href="https://docs.microsoft.com/azure/azure-arc/kubernetes/conceptual-gitops-flux2">docs</a>)
+                </Label>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: '10px' } }}>
+                        Enabling this option installs Flux to the cluster, but it doesn't apply configuration.
+                        For samples of Flux configuration see <Link target="_target" href="https://github.com/Azure/AKS-Construction/tree/main/samples/flux">Flux samples</Link>
+                </MessageBar>
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-gitops-checkbox"}} checked={addons.fluxGitOpsAddon} onChange={(ev, v) => updateFn("fluxGitOpsAddon", v)} label="Install the Flux GitOps AddOn" />
+
+            </Stack.Item>
+
         </Stack >
+
+
     )
 }

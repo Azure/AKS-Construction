@@ -75,12 +75,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       })
     }),
     ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
+    ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
     ...(addons.csisecret !== "none" && addons.kvPollInterval !== defaults.addons.kvPollInterval  && { kvPollInterval: addons.kvPollInterval }),
-    ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) })
+    ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon})
   }
 
   const preview_params = {
-    ...(addons.gitops !== "none" && { gitops: addons.gitops }),
     ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNATGateway' && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
@@ -525,32 +525,11 @@ ${postscript_cluster.replaceAll('"', '\\"')}
           </PivotItem>
         )}
         <PivotItem headerText="Post Configuration" itemIcon="ConfigurationSolid">
-          {addons.gitops === 'none' ? [
+            <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
 
-              <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
+            <Text key="post-text">Requires <Link target="_bl" href="https://helm.sh/docs/intro/install/">Helm</Link></Text>,
 
-              <Text key="post-text">Requires <Link target="_bl" href="https://helm.sh/docs/intro/install/">Helm</Link></Text>,
-
-              <CodeBlock key="post-code" deploycmd={postscript}/>
-
-          ] :
-            <Stack>
-
-              <TextField readOnly={true} label="While Gitops is in preview, run this manually" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={6} value={`az k8sconfiguration create
-        --name cluster-config
-        --cluster-name ${aks}
-        --resource-group ${deploy.rg}
-        --operator-instance-name flux
-        --operator-namespace cluster-config
-        --enable-helm-operator
-        --operator-params='--git-readonly --git-path=cluster-config'
-        --repository-url git://github.com/khowling/aks-deploy-arm.git
-        --scope cluster
-        --helm-operator-params='--set helm.versions=v3'
-        --cluster-type managedclusters`} />
-
-            </Stack>
-          }
+            <CodeBlock key="post-code" deploycmd={postscript}/>
         </PivotItem>
 
         <PivotItem headerText="Template Parameters File (for CI/CD)" itemIcon="FileSymlink">
