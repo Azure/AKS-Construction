@@ -1198,7 +1198,7 @@ resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-prev
     configurationProtectedSettings: {}
   }
 }
-output fluxReleaseNamespace string = fluxAddon.properties.scope.cluster.releaseNamespace
+output fluxReleaseNamespace string = fluxGitOpsAddon ? fluxAddon.properties.scope.cluster.releaseNamespace : ''
 
 
 /*__  ___.   ______   .__   __.  __  .___________.  ______   .______       __  .__   __.   _______
