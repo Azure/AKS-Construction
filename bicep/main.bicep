@@ -198,6 +198,9 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
 @description('Installs the AKS KV CSI provider')
 param azureKeyvaultSecretsProvider bool = false
 
+@description('Rotation poll interval for the AKS KV CSI provider')
+param kvPollInterval string = '2m'
+
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false
 
@@ -844,9 +847,6 @@ param azurepolicy string = ''
 ])
 param azurePolicyInitiative string = 'Baseline'
 
-@description('Enable the git ops addon')
-param gitops string = ''
-
 @description('The IP addresses that are allowed to access the API server')
 param authorizedIPRanges array = []
 
@@ -1027,15 +1027,6 @@ var aks_addons = {
       logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
     }
   }
-  gitops: {
-    //    config": null,
-    enabled: !empty(gitops)
-    //    identity: {
-    //      clientId: 'xxx',
-    //      objectId: 'xxx',
-    //      resourceId: '/subscriptions/95efa97a-9b5d-4f74-9f75-a3396e23344d/resourcegroups/xxx/providers/Microsoft.ManagedIdentity/userAssignedIdentities/xxx'
-    //    }
-  }
   azurepolicy: {
     config: {
       version: !empty(azurepolicy) ? 'v2' : json('null')
@@ -1044,7 +1035,8 @@ var aks_addons = {
   }
   azureKeyvaultSecretsProvider: {
     config: {
-      enableSecretRotation: 'false'
+      enableSecretRotation: 'true'
+      rotationPollInterval: kvPollInterval
     }
     enabled: azureKeyvaultSecretsProvider
   }
@@ -1189,15 +1181,25 @@ resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021
   }
 }
 
-//---------------------------------------------------------------------------------- gitops (to apply the post-helm packages to the cluster)
-// WAITING FOR PUBLIC PREVIEW
-// https://docs.microsoft.com/en-gb/azure/azure-arc/kubernetes/use-gitops-connected-cluster#using-azure-cli
-/*
-resource gitops 'Microsoft.KubernetesConfiguration/sourceControlConfigurations@2019-11-01-preview' = if (false) {
-  name: 'bla'
-  location: 'bla'
+param fluxGitOpsAddon bool = false
+
+resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-preview' = if(fluxGitOpsAddon) {
+  name: 'flux'
+  scope: aks
+  properties: {
+    extensionType: 'microsoft.flux'
+    autoUpgradeMinorVersion: true
+    releaseTrain: 'Stable'
+    scope: {
+      cluster: {
+        releaseNamespace: 'flux-system'
+      }
+    }
+    configurationProtectedSettings: {}
+  }
 }
-*/
+output fluxReleaseNamespace string = fluxGitOpsAddon ? fluxAddon.properties.scope.cluster.releaseNamespace : ''
+
 
 /*__  ___.   ______   .__   __.  __  .___________.  ______   .______       __  .__   __.   _______
 |   \/   |  /  __  \  |  \ |  | |  | |           | /  __  \  |   _  \     |  | |  \ |  |  /  _____|

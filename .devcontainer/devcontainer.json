@@ -13,6 +13,10 @@
 	// Set *default* container specific settings.json values on container create.
 	"settings": {},
 
+	// Codespaces struggles running/debugging the web app with 4gb memory, so lets explicitly require 8gb
+	"hostRequirements": {
+		"memory": "8gb"
+	},
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [

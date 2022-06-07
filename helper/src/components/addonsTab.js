@@ -321,38 +321,61 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 />
             </Stack.Item>
 
-            <Stack.Item align="center" styles={{ root: { minWidth: '700px', display: (addons.csisecret === "none" ? "none" : "block") } }} >
-                <Stack tokens={{ childrenGap: 15 }}>
+            {addons.csisecret !== 'none' &&
+                <Stack.Item align="center" styles={{ root: { minWidth: '700px' } }} >
                     {addons.csisecret === "akvExist" &&
-                        <TextField value={addons.kvId} onChange={(ev, v) => updateFn("kvId", v)} errorMessage={getError(invalidArray, 'kvId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Azure Key Vault Resource Id</Text>} />
+                        <TextField styles={{ root: { marginBottom: '20px' } }} value={addons.kvId} onChange={(ev, v) => updateFn("kvId", v)} errorMessage={getError(invalidArray, 'kvId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Azure Key Vault Resource Id</Text>} />
                     }
-                </Stack>
+
+                    <Dropdown
+                        styles={{ root: { marginBottom: '20px' } }}
+                        label="Rotation poll interval"
+                        onChange={(ev, { key }) => updateFn("kvPollInterval", key)} selectedKey={addons.kvPollInterval}
+                        options={[
+                            { key: '2m', text: '2 minutes' },
+                            { key: '5m', text: '5 minutes' },
+                            { key: '10m', text: '10 minutes' },
+                            { key: '30m', text: '30 minutes' }
+                        ]}
+                    />
+
+                    <MessageBar messageBarType={MessageBarType.info} styles={{ root: { width: '700px' } }}>
+                        Secrets Store CSI Driver secret rotation will be enabled by default, periodically updating pod mounts and the Kubernetes Secrets. For more information see <Link target="_blank" href="https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver#enable-and-disable-autorotation">here</Link>.
+                        <ol>
+                            <li>Application will need to watch for changes from the mounted Kubernetes Secret volume or the CSI driver volume.</li>
+                            <li>To get the latest secret as an environment variable use something like <Link target="_blank" href="https://github.com/stakater/Reloader">Reloader</Link> to watch for changes on the synced Kubernetes secret.</li>
+                        </ol>
+                    </MessageBar>
+                </Stack.Item>
+            }
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Open Service Mesh : Enable Open Service Mesh on the AKS Cluster
+                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/open-service-mesh-about">docs</a>)
+                </Label>
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-osm-Checkbox"}} checked={addons.openServiceMeshAddon} onChange={(ev, v) => updateFn("openServiceMeshAddon", v)} label="Install the Open Service Mesh AddOn" />
             </Stack.Item>
 
-            { osmFeatureFlag &&
-            <>
-                <Separator className="notopmargin" />
+            <Separator className="notopmargin" />
 
-                <Stack.Item align="start">
-                    <Label required={true}>
-                        Open Service Mesh : Enable Open Service Mesh on the AKS Cluster
-                        (<a target="_new" href="https://docs.microsoft.com/azure/aks/open-service-mesh-about">docs</a>)
-                    </Label>
-                    <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-osm-Checkbox"}} checked={addons.openServiceMeshAddon} onChange={(ev, v) => updateFn("openServiceMeshAddon", v)} label="Install the Open Service Mesh AddOn" />
-                </Stack.Item>
-            </>}
+            <Stack.Item align="start">
+                <Label required={true}>
+                    GitOps with Flux
+                    (<a target="_new" href="https://docs.microsoft.com/azure/azure-arc/kubernetes/conceptual-gitops-flux2">docs</a>)
+                </Label>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: '10px' } }}>
+                        Enabling this option installs Flux to the cluster, but it doesn't apply configuration.
+                        For samples of Flux configuration see <Link target="_target" href="https://github.com/Azure/AKS-Construction/tree/main/samples/flux">Flux samples</Link>
+                </MessageBar>
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-gitops-checkbox"}} checked={addons.fluxGitOpsAddon} onChange={(ev, v) => updateFn("fluxGitOpsAddon", v)} label="Install the Flux GitOps AddOn" />
 
-            {/*
-        <ChoiceGroup
-          label='Enable gitops'
-          selectedKey={addons.gitops}
-          options={[
-            { key: 'none', text: 'No, I will manage my kubernetes deployments manually' },
-            { key: 'yes', text: 'Yes, enable gitops' }
-          ]}
-          onChange={(ev, { key }) => updateFn("gitops", key)}
-        />
-        */}
+            </Stack.Item>
+
         </Stack >
+
+
     )
 }

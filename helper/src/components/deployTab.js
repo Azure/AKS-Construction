@@ -10,7 +10,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const { net, addons, cluster, deploy } = tabValues
 
   const allok = !(invalidTabs && invalidTabs.length > 0)
-  const apiips_array = deploy.apiips.split(',').filter(x => x.trim())
+  const apiips_array = deploy.apiips ? deploy.apiips.split(',').filter(x => x.trim()) : []
   const aksvnetparams = {
     ...(net.vnetAddressPrefix !== defaults.net.vnetAddressPrefix && { vnetAddressPrefix: net.vnetAddressPrefix }),
     ...(net.vnetAksSubnetAddressPrefix !== defaults.net.vnetAksSubnetAddressPrefix && { vnetAksSubnetAddressPrefix: net.vnetAksSubnetAddressPrefix })
@@ -75,11 +75,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       })
     }),
     ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
-    ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) })
+    ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
+    ...(addons.csisecret !== "none" && addons.kvPollInterval !== defaults.addons.kvPollInterval  && { kvPollInterval: addons.kvPollInterval }),
+    ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon})
   }
 
   const preview_params = {
-    ...(addons.gitops !== "none" && { gitops: addons.gitops }),
     ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNATGateway' && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
@@ -423,7 +424,7 @@ ${postscript_cluster.replaceAll('"', '\\"')}
 
           <Separator ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Environment Access & Build Agents</b></div> </Separator>
 
-          <TextField label="Current IP Address" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips} required={cluster.apisecurity === "whitelist"} />
+          <TextField label="Current IP Address" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips || ''} required={cluster.apisecurity === "whitelist"} />
 
 
             <Label>Grant AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
@@ -523,32 +524,11 @@ ${postscript_cluster.replaceAll('"', '\\"')}
         </PivotItem>
 
         <PivotItem headerText="Post Configuration" itemIcon="ConfigurationSolid">
-          {addons.gitops === 'none' ? [
+            <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
 
-              <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
+            <Text key="post-text">Requires <Link target="_bl" href="https://helm.sh/docs/intro/install/">Helm</Link></Text>,
 
-              <Text key="post-text">Requires <Link target="_bl" href="https://helm.sh/docs/intro/install/">Helm</Link></Text>,
-
-              <CodeBlock key="post-code" deploycmd={postscript}/>
-
-          ] :
-            <Stack>
-
-              <TextField readOnly={true} label="While Gitops is in preview, run this manually" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline rows={6} value={`az k8sconfiguration create
-        --name cluster-config
-        --cluster-name ${aks}
-        --resource-group ${deploy.rg}
-        --operator-instance-name flux
-        --operator-namespace cluster-config
-        --enable-helm-operator
-        --operator-params='--git-readonly --git-path=cluster-config'
-        --repository-url git://github.com/khowling/aks-deploy-arm.git
-        --scope cluster
-        --helm-operator-params='--set helm.versions=v3'
-        --cluster-type managedclusters`} />
-
-            </Stack>
-          }
+            <CodeBlock key="post-code" deploycmd={postscript}/>
         </PivotItem>
 
         <PivotItem headerText="Template Parameters File (for CI/CD)" itemIcon="FileSymlink">

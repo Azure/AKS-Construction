@@ -170,22 +170,23 @@ export default function PortalNav({ config }) {
 
 
   useEffect(() => {
-    fetch('https://api.ipify.org?format=json').then(response => {
-      return response.json();
-    }).then((res) => {
-      console.log(`useEffect Get IP`)
-      setTabValues(currentTabValues => {
-        return {
-          ...currentTabValues,
-          deploy: {
-            ...currentTabValues.deploy,
-            apiips: `${res.ip}/32`
+    if (!urlParams.has('deploy.apiips')) {
+      fetch('https://api.ipify.org?format=json').then(response => {
+        return response.json();
+      }).then((res) => {
+        console.log(`useEffect Get IP`)
+        setTabValues(currentTabValues => {
+          return {
+            ...currentTabValues,
+            deploy: {
+              ...currentTabValues.deploy,
+              apiips: `${res.ip}/32`
+            }
           }
-        }
-      })
+        })
 
-    }).catch((err) => console.error('Problem fetching my IP', err))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      }).catch((err) => console.error('Problem fetching my IP', err))
+    }
   }, [])
 
   useEffect(() => {
