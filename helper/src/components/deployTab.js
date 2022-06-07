@@ -492,38 +492,37 @@ ${postscript_cluster.replaceAll('"', '\\"')}
           }
         </PivotItem>
 
-        {terraformFeatureFlag && (
-          <PivotItem headerText="Provision Environment (Terraform)" itemKey="deployTf" itemIcon="FileCode">
-            <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
-              <Stack.Item>
-                <Label >Commands to deploy your fully operational environment</Label>
-                <Text>
-                  Requires Terraform, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
-                </Text>
-              </Stack.Item>
+        <PivotItem headerText="Provision Environment (Terraform)" itemKey="deployTf" itemIcon="FileCode">
+          <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
+            <Stack.Item>
+              <Label >Commands to deploy your fully operational environment</Label>
+              <Text>
+                Requires Terraform, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+              </Text>
+            </Stack.Item>
 
-              <Stack.Item  align="end">
-                <Stack horizontal tokens={{childrenGap: 5}}>
-                <Dropdown
-                      label='Template Version'
-                      disabled={process.env.REACT_APP_TEMPLATERELEASE !== undefined}
-                      selectedKey={deploy.selectedTemplate}
-                      onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
-                      options={deploy.templateVersions}
-                      styles={{ dropdown: { width: 200 } }}
-                    />
-                </Stack>
-              </Stack.Item>
-            </Stack>
+            <Stack.Item  align="end">
+              <Stack horizontal tokens={{childrenGap: 5}}>
+              <Dropdown
+                    label='Template Version'
+                    disabled={process.env.REACT_APP_TEMPLATERELEASE !== undefined}
+                    selectedKey={deploy.selectedTemplate}
+                    onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
+                    options={deploy.templateVersions}
+                    styles={{ dropdown: { width: 200 } }}
+                  />
+              </Stack>
+            </Stack.Item>
+          </Stack>
 
-            <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="bash"/>
-            <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'} lang="terraform" filename="providers.tf" />
-            <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'} lang="terraform" filename="main.tf" />
-            <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'} lang="terraform" filename="variables.tf" />
-            <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'} lang="terraform" filename="outputs.tf" />
+          <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="bash"/>
+          <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'} lang="terraform" filename="providers.tf" />
+          <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'} lang="terraform" filename="main.tf" />
+          <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'} lang="terraform" filename="variables.tf" />
+          <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'} lang="terraform" filename="outputs.tf" />
 
-          </PivotItem>
-        )}
+        </PivotItem>
+
         <PivotItem headerText="Post Configuration" itemIcon="ConfigurationSolid">
             <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
 
