@@ -54,7 +54,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         { key: 'appgw', text: 'Yes, I want a Azure Managed Application Gateway with WAF protection' },
                         { key: 'contour', text: 'Yes, deploy contour in the cluster to expose my apps to the internet (https://projectcontour.io/)' },
                         { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' }
-
+                        { key: 'akswar', text: 'Yes, deploy the Web Application Routing AKS Ingress Profile (nginx ingress controller)' }
                     ]}
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />

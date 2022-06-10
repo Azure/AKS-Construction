@@ -941,6 +941,9 @@ param natGwIpCount int = 2
 @description('Outbound flow idle timeout in minutes for NatGw')
 param natGwIdleTimeout int = 30
 
+@description('Enables the Web App Routing managed ingress profile solution')
+param webAppRouting bool = false
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   'Cost-Optimised' : {
@@ -1112,6 +1115,12 @@ var aksProperties = {
   } : {}
   addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
   autoScalerProfile: autoScale ? AutoscaleProfile : {}
+  ingressProfile: {
+    webAppRouting: {
+      //dnsZoneResourceId: 'string'
+      enabled: webAppRouting
+    }
+  }
 }
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
