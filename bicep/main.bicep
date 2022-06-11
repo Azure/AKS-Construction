@@ -944,6 +944,9 @@ param natGwIdleTimeout int = 30
 @description('Enables the Web App Routing managed ingress profile solution')
 param webAppRouting bool = false
 
+@description('Enables the Web App Routing to manage DNS for your application endpoints')
+param webAppRoutingDnsId string = ''
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   'Cost-Optimised' : {
@@ -1117,7 +1120,7 @@ var aksProperties = {
   autoScalerProfile: autoScale ? AutoscaleProfile : {}
   ingressProfile: {
     webAppRouting: {
-      //dnsZoneResourceId: 'string'
+      dnsZoneResourceId: webAppRoutingDnsId
       enabled: webAppRouting
     }
   }

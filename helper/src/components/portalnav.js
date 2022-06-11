@@ -285,6 +285,8 @@ export default function PortalNav({ config }) {
 
   invalidFn('addons', 'registry', net.vnetprivateend && (addons.registry !== 'Premium' && addons.registry !== 'none'),
     <Text><b>ERROR</b>: Premium tier is required for Private Link, either select Premium, or disable Private Link</Text>)
+  invalidFn('addons', 'warDnsZoneId', addons.warDnsZoneId && !addons.warDnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'),
+    <Text>Enter valid Azure Public resourceId</Text>)
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'),
     <Text>Enter valid Azure Public or Private DNS Zone resourceId</Text>)
   invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'),

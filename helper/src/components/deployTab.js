@@ -102,6 +102,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       })
     }),
     ...(addons.ingress === 'akswar' && addons.ingress !== defaults.addons.ingress && { webAppRouting: true }),
+    ...(addons.ingress === 'akswar' && addons.warDns && { webAppRoutingDnsId: addons.warDnsZoneId }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
   }
 

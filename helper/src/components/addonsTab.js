@@ -6,7 +6,7 @@ import { adv_stackstyle, hasError, getError } from './common'
 
 export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { addons, net } = tabValues
-    const osmFeatureFlag = featureFlag.includes('osm')
+    //const osmFeatureFlag = featureFlag.includes('osm')
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -51,7 +51,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     selectedKey={addons.ingress}
                     options={[
                         { key: 'none', text: 'No, I do not need a Layer7 proxy, or I will configure my own solution' },
-                        { key: 'akswar', text: 'Yes, deploy the Web Application Routing AKS Ingress Profile (nginx ingress controller) (preview)' },
+                        { key: 'akswar', text: 'Yes, deploy the Web Application Routing AKS Ingress Profile (nginx ingress controller) (*preview)' },
                         { key: 'appgw', text: 'Yes, I want a Azure Managed Application Gateway with WAF protection' },
                         { key: 'contour', text: 'Yes, deploy contour in the cluster to expose my apps to the internet (https://projectcontour.io/)' },
                         { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' }
@@ -152,7 +152,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             </>)
                     }
 
-                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") &&
+                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" ) &&
                         <>
                             <Checkbox inputProps={{ "data-testid": "addons-dns"}} checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
                                 <Text>Create FQDN URLs for your applications using
@@ -169,6 +169,21 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                     {addons.certMan &&
                                         <TextField value={addons.certEmail} onChange={(ev, v) => updateFn("certEmail", v)} errorMessage={getError(invalidArray, 'certEmail') ? "Enter valid email" : ''} label="Enter mail address for certificate notification:" required />
                                     }
+                                </>
+                            }
+                        </>
+                    }
+
+                    {(addons.ingress === "akswar") &&
+                        <>
+                            <Checkbox inputProps={{ "data-testid": "addons-dns-war"}} checked={addons.warDns} onChange={(ev, v) => updateFn("warDns", v)} label={
+                                <Text>Create publicly accessible DNS names for your applications endpoints
+                                    (requires a Azure <Link href="https://docs.microsoft.com/en-us/azure/dns/dns-getstarted-portal#create-a-dns-zone" target="_t1"> <b>Public</b> </Link> DNS Zone)
+                                </Text>} />
+                            {addons.warDns &&
+                                <>
+                                    <MessageBar messageBarType={MessageBarType.warning}>Public DNS Zones require you to own a custom domain. You can easily purchase a custom domain with Azure <Link target="_t1" href="https://docs.microsoft.com/azure/app-service/manage-custom-dns-buy-domain"> <b>more info</b></Link></MessageBar>
+                                    <TextField value={addons.warDnsZoneId} onChange={(ev, v) => updateFn("warDnsZoneId", v)} errorMessage={getError(invalidArray, 'warDnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Public Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
                                 </>
                             }
                         </>
