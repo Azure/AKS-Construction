@@ -145,8 +145,8 @@ module network './network.bicep' = if (custom_vnet) {
     bastion: bastion
     bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
     availabilityZones: availabilityZones
-    workspaceName: aks_law.name
-    workspaceResourceGroupName: resourceGroup().name
+    workspaceName: createLaw ? aks_law.name : ''
+    workspaceResourceGroupName:  createLaw ? resourceGroup().name : ''
     networkSecurityGroups: CreateNetworkSecurityGroups
     CreateNsgFlowLogs: CreateNetworkSecurityGroups && CreateNetworkSecurityGroupFlowLogs
     ingressApplicationGatewayPublic: empty(privateIpApplicationGateway)
@@ -1278,7 +1278,7 @@ param retentionInDays int = 30
 
 var aks_law_name = 'log-${resourceName}'
 
-var createLaw = (omsagent || deployAppGw || azureFirewalls)
+var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecurityGroups)
 
 resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (createLaw) {
   name: aks_law_name
