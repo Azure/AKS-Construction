@@ -31,6 +31,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
         updateFn ((p) => {
             let newp = {...p, ...updates}
+            let updatevals = {...updates}
 
             const
                 AGENT_COUNT_MIN = newp.SystemPoolType==='none' || !newp.autoscale  ? 1 : 0,
@@ -41,16 +42,16 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             console.log (`maxCount=${newp.maxCount} MIN=${MAXCOUNT_MIN}`)
 
             if (newp.maxCount < MAXCOUNT_MIN) {
-                newp = {...newp, maxCount: MAXCOUNT_MIN}
+                updatevals = {...updatevals, maxCount: MAXCOUNT_MIN}
             }
             // check agentCount
             if (newp.agentCount < AGENT_COUNT_MIN) {
-                newp = {...newp, agentCount: AGENT_COUNT_MIN }
+                updatevals = {...updatevals, agentCount: AGENT_COUNT_MIN }
             } else if (newp.agentCount > AGENT_COUNT_MAX) {
-                newp = {...newp, agentCount: AGENT_COUNT_MAX }
+                updatevals = {...updatevals, agentCount: AGENT_COUNT_MAX }
             }
 
-            return newp
+            return updatevals
         })
     }
 

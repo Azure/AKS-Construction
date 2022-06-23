@@ -245,18 +245,25 @@ export default function PortalNav({ config }) {
   }
 
   function mergeState(tab, field, value) {
-    if (typeof field === "string") urlParams.set(`${tab}.${field}`, value)
+
+    let updatevals
+    if (typeof field === "string") {
+      updatevals = { [field]: value }
+      urlParams.set(`${tab}.${field}`, value)
+    } else if (typeof field === "function") {
+      updatevals = field(tabValues[tab])
+      for (let nfield of Object.keys(updatevals)) {
+        urlParams.set(`${tab}.${nfield}`, updatevals[nfield])
+      }
+    }
+
     //window.history.replaceState(null, null, "?"+urlParams.toString())
     setTabValues((p) => {
       return {
         ...p,
         [tab]: {
-          ...(typeof field === "function" ? {
-            ...field(p[tab])
-          } : {
             ...p[tab],
-            [field]: value
-          })
+            ...updatevals
         }
       }
     })
