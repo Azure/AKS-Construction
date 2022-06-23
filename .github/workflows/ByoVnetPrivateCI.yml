@@ -367,7 +367,6 @@ jobs:
       INGRESSTYPE: "AGIC-Public-Ingress"
       UNINSTALLAFTERVERIFY: false
       FORCEHELMCLEANINSTALL: true
-      POSTDEPLOYDELAY: 120
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
