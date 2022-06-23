@@ -55,6 +55,11 @@ on:
         type: number
         default: 10
         required: false
+      POSTDEPLOYDELAY:
+        description: 'How many seconds to wait after deployment before starting verification'
+        type: number
+        default: 3
+        required: false
     secrets:
       AZURE_CREDENTIALS:
         required: true
@@ -158,6 +163,9 @@ jobs:
             echo $cmdout | jq -r ".logs"
             exit $exitCode
           fi
+
+      - name: Delay
+        run: sleep ${{ inputs.POSTDEPLOYDELAY}}s
 
       - name: Checking deployment
         run: |
