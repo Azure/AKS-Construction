@@ -55,11 +55,6 @@ on:
         type: number
         default: 10
         required: false
-      POSTDEPLOYDELAY:
-        description: 'How many seconds to wait after deployment before starting verification'
-        type: number
-        default: 3
-        required: false
     secrets:
       AZURE_CREDENTIALS:
         required: true
@@ -164,9 +159,6 @@ jobs:
             exit $exitCode
           fi
 
-      - name: Delay
-        run: sleep ${{ inputs.POSTDEPLOYDELAY}}s
-
       - name: Checking deployment
         run: |
           command="kubectl get po -n $NAMESP"
@@ -182,6 +174,8 @@ jobs:
           az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"| jq -r ".logs"
 
       - name: Wait for IP
+        env: 
+          SLEEPSECONDS: 10
         id: waitforip
         run: |
 
@@ -206,15 +200,17 @@ jobs:
             then
                 break 2
             else
-                echo "going to wait another 10s [$counter] [$(date +"%T")]"
+                echo "going to wait another $(($SLEEPSECONDS*$counter))s [$counter] [$(date +"%T")]"
                 ((counter++))
-                sleep 10
+                sleep $(($SLEEPSECONDS*$counter))
             fi
           done
 
           echo "::set-output name=IPADDRESS::$ipAddress"
 
       - name: Verify App is publicly reachable (from hosted GitHub runner)
+        env: 
+          SLEEPSECONDS: 10
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
         run: |
           ipAddress='${{ steps.waitforip.outputs.IPADDRESS}}'
@@ -231,9 +227,9 @@ jobs:
                 echo "200 response code received after $counter trys"
                 break 2
             else
-                echo "going to wait another 15s [$counter] [$(date +"%T")]"
+                echo "going to wait another $(($SLEEPSECONDS*$counter))s [$counter] [$(date +"%T")]"
                 ((counter++))
-                sleep 15
+                sleep $(($SLEEPSECONDS*$counter))
             fi
           done
 
