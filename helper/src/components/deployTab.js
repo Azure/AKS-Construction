@@ -42,10 +42,10 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
     ...(cluster.enable_aad && cluster.AksDisableLocalAccounts !== defaults.cluster.AksDisableLocalAccounts && { AksDisableLocalAccounts: cluster.AksDisableLocalAccounts }),
-    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminPrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)" }) }),
+    ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminPrincipalId: "$(az ad signed-in-user show --query id --out tsv)" }) }),
     ...(addons.registry !== "none" && {
         registries_sku: addons.registry,
-        ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) }),
+        ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
         privateLinks: true,
@@ -75,7 +75,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       })
     }),
     ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
-    ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query objectId --out tsv)"}) })
+    ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) })
   }
 
   const preview_params = {
@@ -103,12 +103,17 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
   }
 
-  const params2CLI = p => Object.keys(p).map(k => {
-    const val = p[k]
-    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-    return ` \\\n\t${k}=${targetVal}`
-  }).join('')
-
+  const post_params = {
+    vnet_opt: net.vnet_opt,
+    ...(addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy && { denydefaultNetworkPolicy: addons.denydefaultNetworkPolicy}),
+    ...(addons.ingress == "appgw" && { agw: `agw-${deploy.clusterName}` }),
+    ...(addons.ingress !== "none" && { ingress: addons.ingress}),
+    ...(cluster.apisecurity !== "none" && { apisecurity: cluster.apisecurity }),
+    ...(cluster.monitor !== "none" && { monitor: addons.monitor }),
+    ...(addons.ingressEveryNode && { ingressEveryNode: addons.ingressEveryNode}),
+    ...(addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId}),
+    ...(addons.ingress !== 'none' && addons.certMan && { certEmail: addons.certEmail})
+  }
 
   const params2tf = p => Object.keys(p).map(k => {
     return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? '{value=data.azurerm_client_config.current.client_id}' : `{value=var.${k}}`}\n`
@@ -144,13 +149,44 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const finalParams = { ...params, ...(!deploy.disablePreviews && preview_params) }
   const aks = `aks-${deploy.clusterName}`
   const agw = `agw-${deploy.clusterName}`
+
+  const post_deploycmd =  `\n\n# Deploy charts into cluster\n` +
+  `sh ${process.env.REACT_APP_TEMPLATERELEASE || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_TEMPLATERELEASE ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_TEMPLATERELEASE ? `-r ${process.env.REACT_APP_TEMPLATERELEASE}` : ''}` +
+  Object.keys(post_params).map(k => {
+    const val = post_params[k]
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+    return ` \\\n\t-p ${k}=${targetVal}`
+  }).join('')
+
+  const post_deploystr = cluster.apisecurity !== "private" ?
+    '# Get credentials for your new AKS cluster & login (interactive)\n' +
+    `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
+    'kubectl get nodes' +
+    post_deploycmd
+    :
+    '# Private cluster, so use command invoke\n' +
+    `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "\n` +
+    post_deploycmd.replaceAll('"', '\\"') +
+    '\n"'
+
   const deploycmd =
-    `# Create Resource Group \n` +
-    `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
-    `# Deploy template with in-line parameters \n` +
-    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` + params2CLI(finalParams)
-    const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform init\nterraform plan -out main.tfplan\nterraform apply "main.tfplan"\nterraform output`
-    const deployTfProviders =
+    `# Create Resource Group\n` +
+    `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` +
+    `# Deploy template with in-line parameters\n` +
+    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` +
+    Object.keys(finalParams).map(k => {
+      const val = finalParams[k]
+      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+      return ` \\\n\t${k}=${targetVal}`
+    }).join('') + '\n\n' + post_deploystr
+
+
+
+
+
+
+  const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform init\nterraform plan -out main.tfplan\nterraform apply "main.tfplan"\nterraform output`
+  const deployTfProviders =
     `#providers.tf\n\n` +
     `terraform {\n` +
     `  required_version = ">=1.1.9"\n` +
@@ -164,7 +200,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `provider "azurerm" {\n` +
     `  features {}\n` +
     `}`
-    const deployTfMain =
+  const deployTfMain =
     `#main.tf\n\n` +
     `data "http" "aksc_release" {\n` +
     `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}"\n`+
@@ -188,26 +224,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  })\n` +
     `}`
 
-    const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  default="${deploy.rg}"\n}` + params2TfVar(finalParams)
+  const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  default="${deploy.rg}"\n}` + params2TfVar(finalParams)
 
-    const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}`
+  const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}`
 
-    const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
+  const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
-
-  /*  WIP - Want the UI to call a common post-install script, instead of outputting the individual commands!
-   *
-  const post_script = `sh ${process.env.REACT_APP_TEMPLATERELEASE || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_TEMPLATERELEASE ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_TEMPLATERELEASE ? `-r ${process.env.REACT_APP_TEMPLATERELEASE}` : ''} -p vnet_opt=${net.vnet_opt}` +
-    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `,denydefaultNetworkPolicy=${addons.denydefaultNetworkPolicy}` : '') +
-    (addons.ingress == "appgw" ? `,agw=agw-${deploy.clusterName}` : '') +
-    (addons.ingress !== "none" ? `,ingress=${addons.ingress}` : '') +
-    (cluster.apisecurity !== "none" ? `,apisecurity=${cluster.apisecurity}` : '') +
-    (cluster.monitor !== "none" ? `,monitor=${addons.monitor}` : '') +
-    (addons.ingressEveryNode ? `,ingressEveryNode=${addons.ingressEveryNode}` : '') +
-    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `,dnsZoneId=${addons.dnsZoneId}` : '') +
-    (addons.ingress !== 'none' && addons.certMan ? `,certMan=${addons.certMan}` : '')
-
-  */
 
   /*  Post Script START - To be replaced with external common script
    *  --------------------------------------------------------------

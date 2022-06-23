@@ -145,7 +145,7 @@ module network './network.bicep' = if (custom_vnet) {
     bastion: bastion
     bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
     availabilityZones: availabilityZones
-    workspaceName: aks_law.name
+    workspaceName: createLaw ? aks_law.name : ''
     workspaceResourceGroupName: resourceGroup().name
     networkSecurityGroups: CreateNetworkSecurityGroups
     CreateNsgFlowLogs: CreateNetworkSecurityGroups && CreateNetworkSecurityGroupFlowLogs

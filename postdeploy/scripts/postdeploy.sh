@@ -4,6 +4,7 @@
 #  Looking to remove the Post-Install scripting out of the react app, and to just call a bash file
 #  This way, the UI and the github actions can call a common script for all the cluster post-install configuration
 #
+#  Want to remove all 'az' cli commands out of here, into the bicep, so this only contains kubectl and helm (as need to run using invote command for secure clusters)
 
 # Fail if any command fails
 set -e
@@ -125,6 +126,8 @@ EXTERNAL_DNS_REPO="external-dns/external-dns"
 EXTERNAL_DNS_TAG="v0.10.2"
 
 
+## KH - Check this workaround is still needed with the latest AGIC - MAYBE NOT!
+
 if [ "$vnet_opt" = "byo" ] && [ "$ingress" = "appgw" ]; then
     echo "# ------------------------------------------------"
     echo "#          Workaround to enable AGIC with BYO VNET"
@@ -143,6 +146,8 @@ if [ "$vnet_opt" = "byo" ] && [ "$ingress" = "appgw" ]; then
         az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
     fi
 fi
+
+## KH - Move this to the Bicep using GB module
 
 if [ "$dnsZoneId"  ] && [ "$ingress" ]; then
 
