@@ -45,7 +45,7 @@ while getopts "p:g:n:r:" opt; do
      aks=$OPTARG
      ;;
     r )
-     release_url=$OPTARG
+     template_release=$OPTARG
      ;;
     \? )
       echo "Unknown arg"
@@ -172,6 +172,30 @@ if [ "$monitor" = "oss" ]; then
     ingress_metrics_enabled=true
 fi
 
+ingressClass=$ingress
+if [ "$ingress" = "appgw" ]; then
+    ingressClass="azure/application-gateway"
+fi
+
+prometheus_namespace="monitoring"
+prometheus_helm_release_name="monitoring"
+
+if [ "$monitor" = "oss" ]; then
+    echo "# ------------------------------------------------"
+    echo "#              Install kube-prometheus-stack chart"
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm repo update
+    kubectl create namespace ${prometheus_namespace} --dry-run=client -o yaml | kubectl apply -f -
+    helm upgrade --install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace} \
+        --set grafana.ingress.enabled=${enableMonitorIngress} \
+        --set grafana.ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt-prod \
+        --set grafana.ingress.annotations."ingress\.kubernetes\.io/force-ssl-redirect"=\"true\" \
+        --set grafana.ingress.ingressClassName=${ingressClass} \
+        --set grafana.ingress.hosts[0]=grafana.${dnsZoneId_domain} \
+        --set grafana.ingress.tls[0].hosts[0]=grafana.${dnsZoneId_domain},grafana.ingress.tls[0].secretName=aks-grafana
+fi
+
+
 if [ "$ingress" = "nginx" ]; then
 
     nginx_namespace="ingress-basic"
@@ -243,10 +267,6 @@ if [ "$dnsZoneId" ]; then
     --set image.tag=${EXTERNAL_DNS_TAG}
 fi
 
-ingressClass=$ingress
-if [ "$ingress" = "appgw" ]; then
-    ingressClass="azure/application-gateway"
-fi
 
 if [ "$certEmail" ]; then
 
@@ -266,31 +286,13 @@ if [ "$certEmail" ]; then
 
     kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${certMan_Version}/cert-manager.yaml
     sleep 30s # wait for cert-manager webhook to install
-    helm upgrade --install letsencrypt-issuer ${release_url:-.}${certIssuerPath}/Az-CertManagerIssuer-0.3.0.tgz \
+    helm upgrade --install letsencrypt-issuer ${template_release:-.}${certIssuerPath}/Az-CertManagerIssuer-0.3.0.tgz \
         --set email=${certEmail}  \
         --set ingressClass=${ingressClass}
-fi
-
-prometheus_namespace="monitoring"
-prometheus_helm_release_name="monitoring"
-
-if [ "$monitor" = "oss" ]; then
-    echo "# ------------------------------------------------"
-    echo "#              Install kube-prometheus-stack chart"
-    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-    helm repo update
-    kubectl create namespace ${prometheus_namespace} --dry-run=client -o yaml | kubectl apply -f -
-    helm upgrade --install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace} \
-        --set grafana.ingress.enabled=${enableMonitorIngress} \
-        --set grafana.ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt-prod \
-        --set grafana.ingress.annotations."ingress\.kubernetes\.io/force-ssl-redirect"=\"true\" \
-        --set grafana.ingress.ingressClassName=${ingressClass} \
-        --set grafana.ingress.hosts[0]=grafana.${dnsZoneId_domain} \
-        --set grafana.ingress.tls[0].hosts[0]=grafana.${dnsZoneId_domain},grafana.ingress.tls[0].secretName=aks-grafana
 fi
 
 
 if [ "$denydefaultNetworkPolicy" ]; then
     echo "# ----------- Default Deny All Network Policy, east-west traffic in cluster"
-    kubectl apply -f ${release_url:-.}/postdeploy/k8smanifests/networkpolicy-deny-all.yml
+    kubectl apply -f ${template_release:-.}/postdeploy/k8smanifests/networkpolicy-deny-all.yml
 fi

@@ -194,11 +194,12 @@ export default function PortalNav({ config }) {
       return response.json();
     }).then((res) => {
       console.log(`useEffect Get template versions`)
-      const releases = res.filter(rel => rel.assets.find(a => a.name === 'main.json') && rel.draft === false).map((rel, i) => {
+      const releases = res.filter(rel => rel.assets.find(a => a.name === 'main.json') &&  rel.assets.find(a => a.name === 'postdeploy.sh') && rel.draft === false).map((rel, i) => {
         return {
           key: rel.tag_name,
           text: `${rel.tag_name}${i === 0 ? ' (latest)' : ''}`,
-          url: rel.assets.find(a => a.name === 'main.json').browser_download_url
+          main_url: rel.assets.find(a => a.name === 'main.json').browser_download_url,
+          post_url: rel.assets.find(a => a.name === 'postdeploy.sh').browser_download_url
         }
       }).concat(defaults.deploy.templateVersions)
       //console.log (releases)

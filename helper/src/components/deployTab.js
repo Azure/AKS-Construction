@@ -154,7 +154,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const agw = `agw-${deploy.clusterName}`
 
   const post_deploycmd =  `\n\n# Deploy charts into cluster\n` +
-  `sh ${process.env.REACT_APP_TEMPLATERELEASE || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_TEMPLATERELEASE ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_TEMPLATERELEASE ? `-r ${process.env.REACT_APP_TEMPLATERELEASE}` : ''}` +
+  (deploy.selectedTemplate === "local" ? 'bash ./postdeploy/scripts/postdeploy.sh' : `curl  ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).post_url}  | bash -s`) + ` -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_TEMPLATERELEASE ? `-r ${process.env.REACT_APP_TEMPLATERELEASE}` : ''}` +
   Object.keys(post_params).map(k => {
     const val = post_params[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
@@ -176,7 +176,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Resource Group\n` +
     `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` +
     `# Deploy template with in-line parameters\n` +
-    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` +
+    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).main_url}` } --parameters` +
     Object.keys(finalParams).map(k => {
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
@@ -206,7 +206,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const deployTfMain =
     `#main.tf\n\n` +
     `data "http" "aksc_release" {\n` +
-    `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}"\n`+
+    `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).main_url}"\n`+
     `  request_headers = {\n` +
     `    Accept = "application/json"\n` +
     `    User-Agent = "request module"\n` +
