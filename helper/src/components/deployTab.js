@@ -514,6 +514,26 @@ ${postscript_cluster.replaceAll('"', '\\"')}
           }
         </PivotItem>
 
+        <PivotItem headerText="Github Actions" itemIcon="ConfigurationSolid">
+            <Label key="post-label" style={{marginTop: '10px'}}>To call the AKS-Construction re-usable workflow</Label>
+
+            <CodeBlock key="post-code" deploycmd={`
+# Vault the CLuster credentaial in your guthub secret
+????????????????????
+
+
+# Add a Taks to your workload reoo
+
+jobs:
+  call-workflow-passing-data:
+    uses: Azure/aks-construction/.github/workflows/reusable.yml@main
+    with:
+      username: mona
+    secrets:
+      envPAT: \${{ secrets.envPAT }}
+            `}/>
+        </PivotItem>
+
         <PivotItem headerText="Provision Environment (Terraform)" itemKey="deployTf" itemIcon="FileCode">
           <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
             <Stack.Item>
@@ -545,20 +565,14 @@ ${postscript_cluster.replaceAll('"', '\\"')}
 
         </PivotItem>
 
-        <PivotItem headerText="Post Configuration" itemIcon="ConfigurationSolid">
-            <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
-
-            <Text key="post-text">Requires <Link target="_bl" href="https://helm.sh/docs/intro/install/">Helm</Link></Text>,
-
-            <CodeBlock key="post-code" deploycmd={postscript}/>
-        </PivotItem>
-
-        <PivotItem headerText="Template Parameters File (for CI/CD)" itemIcon="FileSymlink">
+        <PivotItem headerText="Template Parameters File" itemIcon="FileSymlink">
 
           <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
           </TextField>
 
         </PivotItem>
+
+
       </Pivot>
 
     </Stack>

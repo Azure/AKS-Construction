@@ -1,0 +1,71 @@
+name: Deploy AKS-Construction
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      username:
+        required: false
+        type: string
+    secrets:
+      token:
+        required: false
+
+env:
+  resourceName: xx
+  AZURE_RG: xx
+  certEmail: xx
+  dnsZoneId: xx
+
+jobs:
+  aksc:
+    runs-on: ubuntu-latest
+    environment:
+      name: "kh-emp-dev"
+      url: https://${{ env.APP_NAME }}.${{ env.APP_DOMAIN }}
+    steps:
+
+      # Log into Azure
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Get User ObjectId
+      run: |
+        echo "userObjectId=$(az ad signed-in-user show --query objectId --out tsv)" >> $GITHUB_ENV
+
+    - name: Create Resource Group
+      run: |
+        az group create -l WestEurope -n ${{ env.AZURE_RG }}
+
+      # Deploy Bicep file
+    - name: Deploy Bicep
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.AZURE_RG }}
+        template: https://github.com/Azure/AKS-Construction/releases/download/0.6.2/main.json
+        parameters: 	resourceName=${{ env.resourceName }} agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true AksDisableLocalAccounts=true enableAzureRBAC=true adminprincipleid=${{ env.userObjectId }} registries_sku=Standard acrPushRolePrincipalId=${{ env.userObjectId }} azurepolicy=audit dnsZoneId=${{ env.dnsZoneId }} azureKeyvaultSecretsProvider=true createKV=true kvOfficerRolePrincipalId=${{ env.userObjectId }}
+        failOnStdErr: false
+
+
+    - name: Kubelogin
+      env:
+        kubeloginversion: 'v0.0.12'
+      run: |
+
+        az aks get-credentials -n aks-${{ env.resourceName }} -g ${{ env.AZURE_RG }} --overwrite-existing
+
+        wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
+        unzip kubelogin-linux-amd64.zip
+        sudo mv bin/linux_amd64/kubelogin /usr/bin
+        kubelogin convert-kubeconfig -l azurecli
+
+
+    - name: Post Deploy
+      run: |
+        curl -sL https://github.com/Azure/AKS-Construction/releases/download/0.6.2/postdeploy.sh | bash -s -- -g $AZURE_RG -n $aks-${{ env.resourceName }} -p ingress=contour,monitor=oss,enableMonitorIngress=true,ingressEveryNode=true,dnsZoneId=${{ env.dnsZoneId }},certEmail=${{ env.certEmail }}
