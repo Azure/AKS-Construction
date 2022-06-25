@@ -3,11 +3,15 @@ import React from 'react';
 import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
+import dependencies from "../dependencies.json";
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag }) {
   const terraformFeatureFlag = featureFlag.includes('tf')
 
   const { net, addons, cluster, deploy } = tabValues
+
+  const aks = `aks-${deploy.clusterName}`
+  const agw = `agw-${deploy.clusterName}`
 
   const allok = !(invalidTabs && invalidTabs.length > 0)
   const apiips_array = deploy.apiips ? deploy.apiips.split(',').filter(x => x.trim()) : []
@@ -45,7 +49,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminPrincipalId: "$(az ad signed-in-user show --query id --out tsv)" }) }),
     ...(addons.registry !== "none" && {
         registries_sku: addons.registry,
-        ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
+        ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
+        ...(cluster.apisecurity === "private" && { imageNames: [
+          ...(addons.ingress === "contour" &&  Object.keys(dependencies['bitnami/contour']['8.0.2'].images).map(i => `${dependencies['bitnami/contour']['8.0.2'].images[i].registry}/${dependencies['bitnami/contour']['8.0.2'].images[i].repository}:${dependencies['bitnami/contour']['8.0.2'].images[i].tag}`)),
+          ...(addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId &&  Object.keys(dependencies['externaldns']['1.9.0'].images).map(i => `${dependencies['externaldns']['1.9.0'].images[i].registry}/${dependencies['externaldns']['1.9.0'].images[i].repository}:${dependencies['externaldns']['1.9.0'].images[i].tag}`))
+        ]})
+    }),
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
         privateLinks: true,
@@ -110,9 +119,17 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.ingress == "appgw" && { agw: `agw-${deploy.clusterName}` }),
     ...(addons.ingress !== "none" && { ingress: addons.ingress}),
     ...(cluster.apisecurity !== "none" && { apisecurity: cluster.apisecurity }),
+    ...(cluster.apisecurity === "private" && (addons.ingress === "contour" || (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId) ) && {
+        acrName: `$(az acr list -g ${deploy.rg} --query [0].name -o tsv)`,
+        dependenciesFile: './helper/src/dependencies.json'
+    }),
     ...(cluster.monitor !== "none" && { monitor: addons.monitor }),
     ...(addons.ingressEveryNode && { ingressEveryNode: addons.ingressEveryNode}),
-    ...(addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId}),
+    ...(addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId && {
+        dnsZoneId: addons.dnsZoneId,
+        KubeletId: `$(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)`,
+        TenantId: `$(az account show --query tenantId -o tsv)`
+      }),
     ...(addons.ingress !== 'none' && addons.certMan && { certEmail: addons.certEmail})
   }
 
@@ -150,8 +167,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   })
 
   const finalParams = { ...params, ...(!deploy.disablePreviews && preview_params) }
-  const aks = `aks-${deploy.clusterName}`
-  const agw = `agw-${deploy.clusterName}`
 
   const post_deploycmd =  `\n\n# Deploy charts into cluster\n` +
   (deploy.selectedTemplate === "local" ? 'bash ./postdeploy/scripts/postdeploy.sh' : `curl  ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).post_url}  | bash -s`) + ` -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_TEMPLATERELEASE ? `-r ${process.env.REACT_APP_TEMPLATERELEASE}` : ''}` +

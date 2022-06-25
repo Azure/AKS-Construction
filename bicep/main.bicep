@@ -455,6 +455,21 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
   }
 }
 
+
+param imageNames array = []
+
+module acrImport 'br/public:deployment-scripts/import-acr:2.0.1' = if (!empty(registries_sku) && !empty(imageNames)) {
+  name: 'testAcrImportMulti'
+  params: {
+    acrName: acr.name
+    location: location
+    images: imageNames
+  }
+}
+
+
+
+
 /*______  __  .______       _______ ____    __    ____  ___       __       __
 |   ____||  | |   _  \     |   ____|\   \  /  \  /   / /   \     |  |     |  |
 |  |__   |  | |  |_)  |    |  |__    \   \/    \/   / /  ^  \    |  |     |  |

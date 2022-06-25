@@ -21,12 +21,18 @@ dnsZoneId=""
 denydefaultNetworkPolicy=""
 certEmail=""
 
+acrName=""
+dependenciesFile=""
+KubeletId=""
+TenantId=""
+
+
 while getopts "p:g:n:r:" opt; do
   case ${opt} in
     p )
         IFS=',' read -ra params <<< "$OPTARG"
         for i in "${params[@]}"; do
-            if [[ $i =~ (agw|vnet_opt|ingress|apisecurity|monitor|enableMonitorIngress|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail)=([^ ]*) ]]; then
+            if [[ $i =~ (agw|vnet_opt|ingress|apisecurity|monitor|enableMonitorIngress|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|acrName|dependenciesFile|KubeletId|TenantId)=([^ ]*) ]]; then
                 echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
                 declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
             else
@@ -64,6 +70,11 @@ if [ "$dnsZoneId" ]; then
         dnsZoneId_domain=${BASH_REMATCH[4]}
     else
         echo "dnsZoneId paramter needs to be a resourceId format for Azure DNS Zone"
+        show_usage=true
+    fi
+
+    if [ -z "$KubeletId" ] || [ -z "$TenantId" ]; then
+        echo "If supplying dnsZoneId for extneral-dns, need to also provide 'KubeletId' && 'TenantId'"
         show_usage=true
     fi
 
@@ -119,47 +130,60 @@ if [ -z "$rg" ] || [ -z "$aks" ] || [ "$show_usage" ]; then
     exit 1
 fi
 
-
-EXTERNAL_DNS_REGISTRY="k8s.gcr.io"
-EXTERNAL_DNS_REPO="external-dns/external-dns"
-# appVersion :: https://raw.githubusercontent.com/kubernetes-sigs/external-dns/master/charts/external-dns/Chart.yaml
-EXTERNAL_DNS_TAG="v0.10.2"
+#  Use the dependencies file to get the helmchart image details
+get_image_property () {
+    cat $dependenciesFile | awk -v key=$1 'BEGIN { FS="[: \t\n,]+";  RS="[ \t\n]+:[ \t\n]+"; nk=0; n=0; split(key,ka,":")} {
+        for(i=1;i<=NF;i++) {
+            if ($i ~ /[{\[]/ ) {
+                n++; if ($1 == "{") nk=1; else nk=0
+            } else if ($i ~ /[}\]]/) { n-- } else {
+                gsub(/"/, "", $i)
+                if (nk) { l[n] = $i; nk=0
+                } else {
+                    p=1; for (o=0;o<=n;o++) if (l[o]!=ka[o]) p=0
+                    if (p) printf("%s", $i)
+                    nk=1
+                }
+            }
+        }
+    }' -
+}
 
 
 ## KH - Check this workaround is still needed with the latest AGIC - MAYBE NOT!
 
-if [ "$vnet_opt" = "byo" ] && [ "$ingress" = "appgw" ]; then
-    echo "# ------------------------------------------------"
-    echo "#          Workaround to enable AGIC with BYO VNET"
-    APPGW_RG_ID="$(az group show -n ${rg} --query id -o tsv)"
-    APPGW_ID="$(az network application-gateway show -g ${rg} -n ${agw} --query id -o tsv)"
-    az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $APPGW_ID
+#if [ "$vnet_opt" = "byo" ] && [ "$ingress" = "appgw" ]; then
+#    echo "# ------------------------------------------------"
+#    echo "#          Workaround to enable AGIC with BYO VNET"
+#    APPGW_RG_ID="$(az group show -n ${rg} --query id -o tsv)"
+#    APPGW_ID="$(az network application-gateway show -g ${rg} -n ${agw} --query id -o tsv)"
+#    az aks enable-addons -n ${aks} -g ${rg} -a ingress-appgw --appgw-id $APPGW_ID
 
-    AKS_AGIC_IDENTITY_ID="$(az aks show -g ${rg} -n ${aks} --query addonProfiles.ingressApplicationGateway.identity.objectId -o tsv)"
-    az role assignment create --role "Contributor" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_ID
-    az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
+#    AKS_AGIC_IDENTITY_ID="$(az aks show -g ${rg} -n ${aks} --query addonProfiles.ingressApplicationGateway.identity.objectId -o tsv)"
+#    az role assignment create --role "Contributor" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_ID
+#    az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
 
     #  additionally required if appgwKVIntegration (app gateway has assigned identity)
-    if true; then
+#    if true; then
 
-        APPGW_IDENTITY="$(az network application-gateway show -g ${rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
-        az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
-    fi
-fi
+#        APPGW_IDENTITY="$(az network application-gateway show -g ${rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
+#        az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
+#    fi
+#fi
 
-## KH - Move this to the Bicep using GB module
+## KH - Moved to Bicep!! YAY
+#
+#if [ "$dnsZoneId"  ] && [ "$ingress" ]; then
 
-if [ "$dnsZoneId"  ] && [ "$ingress" ]; then
+#    KubeletId=$(az aks show -g ${rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
+#    TenantId=$(az account show --query tenantId -o tsv)
 
-    KubeletId=$(az aks show -g ${rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
-    TenantId=$(az account show --query tenantId -o tsv)
-
-        if [ "$apisecurity" = "private" ]; then
-            # Import external-dns Image to ACR
-            export ACRNAME=$(az acr list -g ${rg} --query [0].name -o tsv)
-            az acr import -n $ACRNAME --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG} --image ${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG}
-        fi
-fi
+#        if [ "$apisecurity" = "private" ]; then
+#            # Import external-dns Image to ACR
+#            export acrName=$(az acr list -g ${rg} --query [0].name -o tsv)
+#            az acr import -n $acrName --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG} --image ${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG}
+#        fi
+#fi
 
 ingress_controller_kind="deployment"
 ingress_externalTrafficPolicy="cluster"
@@ -216,6 +240,7 @@ if [ "$ingress" = "nginx" ]; then
         --namespace ${nginx_namespace}
 fi
 
+
 if [ "$ingress" = "contour" ]; then
 
     contour_namespace="ingress-basic"
@@ -253,18 +278,19 @@ if [ "$dnsZoneId" ]; then
         provider="azure-private-dns"
     fi
 
-    dnsImageRepo="${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG}"
+    EXTERNAL_DNS_REPO=$(get_image_property "externaldns:1.9.0:images:image:repository")
+    dnsImageRepo="$(get_image_property "externaldns:1.9.0:images:image:registry")/${EXTERNAL_DNS_REPO}"
     if [ "$apisecurity" = "private" ]; then
-        dnsImageRepo="${ACRNAME}.azurecr.io/${EXTERNAL_DNS_REPO}"
+        dnsImageRepo="${acrName}.azurecr.io/${EXTERNAL_DNS_REPO}"
     fi
 
-    helm upgrade --install externaldns https://github.com/kubernetes-sigs/external-dns/releases/download/external-dns-helm-chart-1.7.1/external-dns-1.7.1.tgz \
+    helm upgrade --install externaldns "https://$(get_image_property "externaldns:1.9.0:github_https_url")" \
     --set domainFilters={"${dnsZoneId_domain}"} \
     --set provider="${provider}" \
     --set extraVolumeMounts[0].name=aks-kube-msi,extraVolumeMounts[0].mountPath=/etc/kubernetes,extraVolumeMounts[0].readOnly=true \
     --set extraVolumes[0].name=aks-kube-msi,extraVolumes[0].secret.secretName=aks-kube-msi \
     --set image.repository=${dnsImageRepo} \
-    --set image.tag=${EXTERNAL_DNS_TAG}
+    --set image.tag=$(get_image_property "externaldns:1.9.0:images:image:tag")
 fi
 
 

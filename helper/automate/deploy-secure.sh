@@ -1,1 +1,0 @@
-npx playwright test .playwrighttests/helper-test-fullsecure.spec.js
