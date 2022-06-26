@@ -1,4 +1,26 @@
 {
+    "cert_manager": {
+        "1.8.2": {
+            "github_https_url": "github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml",
+            "images": {
+                "cainjector": {
+                    "registry": "quay.io",
+                    "repository": "jetstack/cert-manager-cainjector",
+                    "tag": "v1.8.2"
+                },
+                "controller": {
+                    "registry": "quay.io",
+                    "repository": "jetstack/cert-manager-controller",
+                    "tag": "v1.8.2"
+                },
+                "webhook": {
+                    "registry": "quay.io",
+                    "repository": "jetstack/cert-manager-webhook",
+                    "tag": "v1.8.2"
+                }
+            }
+        }
+    },
     "bitnami/contour": {
         "8.0.2": {
             "images": {

@@ -22,9 +22,10 @@ denydefaultNetworkPolicy=""
 certEmail=""
 
 acrName=""
-dependenciesFile=""
 KubeletId=""
 TenantId=""
+
+release_version=""
 
 
 while getopts "p:g:n:r:" opt; do
@@ -32,7 +33,7 @@ while getopts "p:g:n:r:" opt; do
     p )
         IFS=',' read -ra params <<< "$OPTARG"
         for i in "${params[@]}"; do
-            if [[ $i =~ (agw|vnet_opt|ingress|apisecurity|monitor|enableMonitorIngress|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|acrName|dependenciesFile|KubeletId|TenantId)=([^ ]*) ]]; then
+            if [[ $i =~ (agw|vnet_opt|ingress|apisecurity|monitor|enableMonitorIngress|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|acrName|KubeletId|TenantId)=([^ ]*) ]]; then
                 echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
                 declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
             else
@@ -51,7 +52,7 @@ while getopts "p:g:n:r:" opt; do
      aks=$OPTARG
      ;;
     r )
-     template_release=$OPTARG
+     release_version=$OPTARG
      ;;
     \? )
       echo "Unknown arg"
@@ -116,6 +117,7 @@ if [ -z "$rg" ] || [ -z "$aks" ] || [ "$show_usage" ]; then
     echo "args:"
     echo " < -g resource-group> (required)"
     echo " < -n aks-name> (required)"
+    echo " < -r release download url>  the github release download url where the dependent files will be referenced"
     echo " [ -p: parameters] : Can provide one or multiple features:"
     echo "     agw=<name> - Name of Application Gateway"
     echo "     vnet_opt=byo - Deployed AKS into BYO Vnet"
@@ -127,12 +129,24 @@ if [ -z "$rg" ] || [ -z "$aks" ] || [ "$show_usage" ]; then
     echo "     denydefaultNetworkPolicy=<true> - Deploy deny all network police"
     echo "     dnsZoneId=<Azure DNS Zone resourceId> - Enable cluster AutoScaler with max nodes"
     echo "     certEmail=<email for certman certificates> - Enables cert-manager"
+    echo "     KubeletId=<managed identity of Kubelet> *Require for cert-manager"
+    echo "     TenantId=<AzureAD TenentId> *Require for cert-manager"
+    echo "     acrName=<name of ACR> * If apisecurity=private and this is provided, used imported images for 3rd party charts"
     exit 1
 fi
 
 #  Use the dependencies file to get the helmchart image details
 get_image_property () {
-    cat $dependenciesFile | awk -v key=$1 'BEGIN { FS="[: \t\n,]+";  RS="[ \t\n]+:[ \t\n]+"; nk=0; n=0; split(key,ka,":")} {
+
+    fileloc=${release_version:-./helper/src}/dependencies.json
+
+    if [ "$release_version" ] && [[ $release_version == http* ]]; then
+      dependenciesJson=$(curl  $fileloc)
+    else
+      dependenciesJson=$(cat $fileloc)
+    fi
+
+    echo $dependenciesJson | awk -v key=$1 'BEGIN { FS="[: \t\n,]+";  RS="[ \t\n]+:[ \t\n]+"; nk=0; n=0; split(key,ka,":")} {
         for(i=1;i<=NF;i++) {
             if ($i ~ /[{\[]/ ) {
                 n++; if ($1 == "{") nk=1; else nk=0
@@ -197,8 +211,9 @@ if [ "$monitor" = "oss" ]; then
 fi
 
 ingressClass=$ingress
+# https://azure.github.io/application-gateway-kubernetes-ingress/ingress-v1/
 if [ "$ingress" = "appgw" ]; then
-    ingressClass="azure/application-gateway"
+    ingressClass="azure-application-gateway"
 fi
 
 prometheus_namespace="monitoring"
@@ -280,7 +295,7 @@ if [ "$dnsZoneId" ]; then
 
     EXTERNAL_DNS_REPO=$(get_image_property "externaldns:1.9.0:images:image:repository")
     dnsImageRepo="$(get_image_property "externaldns:1.9.0:images:image:registry")/${EXTERNAL_DNS_REPO}"
-    if [ "$apisecurity" = "private" ]; then
+    if [ "$apisecurity" = "private" ] && [ "$acrName" ]; then
         dnsImageRepo="${acrName}.azurecr.io/${EXTERNAL_DNS_REPO}"
     fi
 
@@ -299,20 +314,18 @@ if [ "$certEmail" ]; then
     echo "# ------------------------------------------------"
     echo "#                             Install cert-manager"
 
-    certMan_Version="v1.6.0"
-    if [ "$ingress" = "appgw" ]; then
-        echo "Downgrading cert-manager for AppGateway IC"
-        certMan_Version="v1.5.3"
-    fi
+    #certMan_Version="v1.8.2"
+    # NOT Needed anymore!
+    #if [ "$ingress" = "appgw" ]; then
+    #    echo "Downgrading cert-manager for AppGateway IC"
+    #    certMan_Version="v1.5.3"
+    #fi
 
-    certIssuerPath=""
-    if [ "$apisecurity" = "private" ]; then
-        certIssuerPath="/postdeploy/helm"
-    fi
 
-    kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${certMan_Version}/cert-manager.yaml
+    kubectl apply -f "https://$(get_image_property "cert_manager:1.8.2:github_https_url")"
     sleep 30s # wait for cert-manager webhook to install
-    helm upgrade --install letsencrypt-issuer ${template_release:-.}${certIssuerPath}/Az-CertManagerIssuer-0.3.0.tgz \
+
+    helm upgrade --install letsencrypt-issuer ${release_version:-./postdeploy/helm}/Az-CertManagerIssuer-0.3.0.tgz \
         --set email=${certEmail}  \
         --set ingressClass=${ingressClass}
 fi
@@ -320,5 +333,5 @@ fi
 
 if [ "$denydefaultNetworkPolicy" ]; then
     echo "# ----------- Default Deny All Network Policy, east-west traffic in cluster"
-    kubectl apply -f ${template_release:-.}/postdeploy/k8smanifests/networkpolicy-deny-all.yml
+    kubectl apply -f ${release_version:-./postdeploy/k8smanifests}/networkpolicy-deny-all.yml
 fi

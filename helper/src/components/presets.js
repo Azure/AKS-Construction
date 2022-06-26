@@ -16,7 +16,7 @@ export default function ({ sections, selectedValues, updateSelected, featureFlag
     return sections.map(s => [
         <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
 
-        <Stack horizontal tokens={{ childrenGap: 10 }}>
+        <Stack  key={`st${s.key}`} horizontal tokens={{ childrenGap: 10 }}>
             <Text variant="mediumPlus" styles={{ root: { marginBottom: "15px" } }} >{s.sectionDescription}</Text>
             { s.sectionMoreInfoLink != null &&
             <DefaultButton

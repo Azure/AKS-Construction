@@ -37,14 +37,14 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
       <img id="aksLogo" src="aks.svg" alt="Kubernetes Service" style={{  }}></img>
       <Stack tokens={{ padding: 10, maxWidth: 700 }} className="intro">
         <Text variant="xLarge">AKS Deploy helper</Text>
-        <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance. Start by selecting your Architectural Approach.</Text>
+        <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance.</Text>
         <Text variant="medium" >Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
       <Stack grow={1} tokens={{ padding: 10 }} >
-        Architectural Approach
+
         <ChoiceGroup
           defaultSelectedKey={selectedPreset}
-          options={Object.keys(presets).map(p => { return { key: p, text: presets[p].title, disabled: presets[p].disabled, iconProps: { iconName: presets[p].icon } } })}
+          options={Object.keys(presets).map(p => { return { key: p, text: presets[p].title, disabled: presets[p].disabled } })}
           onChange={(ev, { key }) => setPresets(key)}
         >
         </ChoiceGroup>
@@ -199,7 +199,8 @@ export default function PortalNav({ config }) {
           key: rel.tag_name,
           text: `${rel.tag_name}${i === 0 ? ' (latest)' : ''}`,
           main_url: rel.assets.find(a => a.name === 'main.json').browser_download_url,
-          post_url: rel.assets.find(a => a.name === 'postdeploy.sh').browser_download_url
+          post_url: rel.assets.find(a => a.name === 'postdeploy.sh').browser_download_url,
+          base_download_url: rel.assets.find(a => a.name === 'main.json').browser_download_url.replace('/main.json','')
         }
       }).concat(defaults.deploy.templateVersions)
       //console.log (releases)
