@@ -1,6 +1,6 @@
 {
     "cert_manager": {
-        "1.8.2": {
+        "1_8_2": {
             "github_https_url": "github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml",
             "images": {
                 "cainjector": {
@@ -22,7 +22,7 @@
         }
     },
     "bitnami/contour": {
-        "8.0.2": {
+        "8_0_2": {
             "images": {
                 "contour.image":  {
                     "registry": "docker.io",
@@ -38,7 +38,7 @@
         }
     },
     "externaldns" : {
-        "1.9.0": {
+        "1_9_0": {
             "github_https_url": "github.com/kubernetes-sigs/external-dns/releases/download/external-dns-helm-chart-1.9.0/external-dns-1.9.0.tgz",
             "images": {
                 "image": {

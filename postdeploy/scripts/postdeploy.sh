@@ -146,7 +146,55 @@ get_image_property () {
       dependenciesJson=$(cat $fileloc)
     fi
 
-    echo $dependenciesJson | awk -v key=$1 'BEGIN { FS="[: \t\n,]+";  RS="[ \t\n]+:[ \t\n]+"; nk=0; n=0; split(key,ka,":")} {
+    arrKey=(${1//./ })
+    nk=false
+    n=-1
+    l=()
+    while IFS="[: ,]+" read -ra tokens; do
+        for i in "${tokens[@]}"; do
+            if [ "$i" = "{" ]; then
+            ((n+=1))
+            nk=true
+            elif  [ "$i" = "}" ]; then
+            ((n-=1))
+            else
+            if $nk; then
+                #echo "new key $n - $i"
+                l[$n]=$(echo $i | tr -d '"')
+                nk=false
+            else
+                print=true
+                #echo "testing:  n=$n"
+                for o in $(seq 0 $n); do
+                    #echo "testing:  ${l[$o]} = ${arrKey[$o]}"
+                    if [[ ! ${l[$o]} = ${arrKey[$o]} ]]; then
+                    print=false
+                    break
+                    fi
+                done
+                if $print; then
+                echo -n $i | tr -d '"'
+                fi
+                nk=true
+            fi
+            fi
+        done
+    done <<<$dependenciesJson
+
+}
+
+#  AWK Not on Invote Command. Use the dependencies file to get the helmchart image details
+get_image_property_awk () {
+
+    fileloc=${release_version:-./helper/src}/dependencies.json
+
+    if [ "$release_version" ] && [[ $release_version == http* ]]; then
+      dependenciesJson=$(curl  $fileloc)
+    else
+      dependenciesJson=$(cat $fileloc)
+    fi
+
+    echo $dependenciesJson | awk -v key=$1 'BEGIN { FS="[: \t\n,]+";  RS="[ \t\n]+:[ \t\n]+"; nk=0; n=0; split(key,ka,".")} {
         for(i=1;i<=NF;i++) {
             if ($i ~ /[{\[]/ ) {
                 n++; if ($1 == "{") nk=1; else nk=0
@@ -293,19 +341,19 @@ if [ "$dnsZoneId" ]; then
         provider="azure-private-dns"
     fi
 
-    EXTERNAL_DNS_REPO=$(get_image_property "externaldns:1.9.0:images:image:repository")
-    dnsImageRepo="$(get_image_property "externaldns:1.9.0:images:image:registry")/${EXTERNAL_DNS_REPO}"
+    EXTERNAL_DNS_REPO=$(get_image_property "externaldns.1_9_0.images.image.repository")
+    dnsImageRepo="$(get_image_property "externaldns.1_9_0.images.image.registry")/${EXTERNAL_DNS_REPO}"
     if [ "$apisecurity" = "private" ] && [ "$acrName" ]; then
         dnsImageRepo="${acrName}.azurecr.io/${EXTERNAL_DNS_REPO}"
     fi
 
-    helm upgrade --install externaldns "https://$(get_image_property "externaldns:1.9.0:github_https_url")" \
+    helm upgrade --install externaldns "https://$(get_image_property "externaldns.1_9_0.github_https_url")" \
     --set domainFilters={"${dnsZoneId_domain}"} \
     --set provider="${provider}" \
     --set extraVolumeMounts[0].name=aks-kube-msi,extraVolumeMounts[0].mountPath=/etc/kubernetes,extraVolumeMounts[0].readOnly=true \
     --set extraVolumes[0].name=aks-kube-msi,extraVolumes[0].secret.secretName=aks-kube-msi \
     --set image.repository=${dnsImageRepo} \
-    --set image.tag=$(get_image_property "externaldns:1.9.0:images:image:tag")
+    --set image.tag=$(get_image_property "externaldns.1_9_0.images.image.tag")
 fi
 
 
@@ -322,7 +370,7 @@ if [ "$certEmail" ]; then
     #fi
 
 
-    kubectl apply -f "https://$(get_image_property "cert_manager:1.8.2:github_https_url")"
+    kubectl apply -f "https://$(get_image_property "cert_manager.1_8_2.github_https_url")"
     sleep 30s # wait for cert-manager webhook to install
 
     helm upgrade --install letsencrypt-issuer ${release_version:-./postdeploy/helm}/Az-CertManagerIssuer-0.3.0.tgz \
