@@ -175,15 +175,15 @@ var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.a
 param dnsZoneId string = ''
 var dnsZoneRg = !empty(dnsZoneId) ? split(dnsZoneId, '/')[4] : ''
 var dnsZoneName = !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''
-var isPrivate = !empty(dnsZoneId) ? split(dnsZoneId, '/')[7] == 'privateDnsZones' : false
+var isDnsZonePrivate = !empty(dnsZoneId) ? split(dnsZoneId, '/')[7] == 'privateDnsZones' : false
 
 module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
   name: 'addDnsContributor'
   scope: resourceGroup(dnsZoneRg)
   params: {
     dnsZoneName: dnsZoneName
-    isPrivate: isPrivate
-    vnetId: isPrivate ? (!empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/subnets')[0] : (custom_vnet ? network.outputs.vnetId : '')) : ''
+    isPrivate: isDnsZonePrivate
+    vnetId: isDnsZonePrivate ? (!empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/subnets')[0] : (custom_vnet ? network.outputs.vnetId : '')) : ''
     principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
   }
 }
@@ -853,6 +853,17 @@ param authorizedIPRanges array = []
 @description('Enable private cluster')
 param enablePrivateCluster bool = false
 
+@allowed([
+  'system'
+  'none'
+  'privateDnsZone'
+])
+@description('Private cluster dns advertisment method, leverages the dnsApiPrivateZoneId parameter')
+param privateClusterDnsMethod string = 'system'
+
+@description('The full Azure resource ID of the privatelink DNS zone to use for the AKS cluster API Server')
+param dnsApiPrivateZoneId string = ''
+
 @description('The zones to use for a node pool')
 param availabilityZones array = []
 
@@ -1019,7 +1030,6 @@ var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPool
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
-
 var aks_addons = {
   omsagent: {
     enabled: createLaw && omsagent
@@ -1072,6 +1082,9 @@ var aks_identity = {
   }
 }
 
+@description('Sets the private dns zone id if provided')
+var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
+
 var aksProperties = {
   kubernetesVersion: kubernetesVersion
   enableRBAC: true
@@ -1085,8 +1098,8 @@ var aksProperties = {
     authorizedIPRanges: authorizedIPRanges
   } : {
     enablePrivateCluster: enablePrivateCluster
-    privateDNSZone: enablePrivateCluster ? 'none' : ''
-    enablePrivateClusterPublicFQDN: enablePrivateCluster
+    privateDNSZone: enablePrivateCluster ? aksPrivateDnsZone : 'none'
+    enablePrivateClusterPublicFQDN: enablePrivateCluster && privateClusterDnsMethod=='none'
   }
   agentPoolProfiles: agentPoolProfiles
   networkProfile: {
