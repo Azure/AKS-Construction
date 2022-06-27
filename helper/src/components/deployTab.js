@@ -114,25 +114,33 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
 
   const post_params = {
-    vnet_opt: net.vnet_opt,
     ...(addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy && { denydefaultNetworkPolicy: addons.denydefaultNetworkPolicy}),
-    ...(addons.ingress == "appgw" && { agw: `agw-${deploy.clusterName}` }),
     ...(addons.ingress !== "none" && {
-        ingress: addons.ingress,
-        ...(addons.enableMonitorIngress && {enableMonitorIngress: addons.enableMonitorIngress})
+
+        ...((addons.ingress === "contour" || addons.ingress === "nginx") && {
+          ingress: addons.ingress,
+          ...(addons.ingressEveryNode && { ingressEveryNode: addons.ingressEveryNode})
+        }),
+        ...(addons.dns &&  addons.dnsZoneId && {
+            dnsZoneId: addons.dnsZoneId,
+            KubeletId: `$(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)`,
+            TenantId: `$(az account show --query tenantId -o tsv)`
+          }),
+        ...( addons.certMan && {
+          ingress: addons.ingress,
+          certEmail: addons.certEmail
+        })
       }),
-    ...(cluster.apisecurity !== "none" && { apisecurity: cluster.apisecurity }),
     ...(cluster.apisecurity === "private" && (addons.ingress === "contour" || (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId) ) && {
         acrName: `$(az acr list -g ${deploy.rg} --query [0].name -o tsv)`
     }),
-    ...(cluster.monitor !== "none" && { monitor: addons.monitor }),
-    ...(addons.ingressEveryNode && { ingressEveryNode: addons.ingressEveryNode}),
-    ...(addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId && {
-        dnsZoneId: addons.dnsZoneId,
-        KubeletId: `$(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)`,
-        TenantId: `$(az account show --query tenantId -o tsv)`
-      }),
-    ...(addons.ingress !== 'none' && addons.certMan && { certEmail: addons.certEmail})
+    ...(addons.monitor === "oss" && {
+      monitor: addons.monitor,
+      ...(addons.ingress !== "none" && {
+        ingress: addons.ingress,
+        ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
+      })
+    }),
   }
 
   const params2tf = p => Object.keys(p).map(k => {
@@ -171,7 +179,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const finalParams = { ...params, ...(!deploy.disablePreviews && preview_params) }
 
   const post_deploycmd =  `\n\n# Deploy charts into cluster\n` +
-  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh` : `curl  ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).post_url}  | bash -s`) + ` -g ${deploy.rg} -n ${aks} ${deploy.selectedTemplate === 'local' ? ( cluster.apisecurity === "private" ? ' -r .' : '') : `-r ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).base_download_url}`}` +
+  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh` : `curl -sL ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).post_url}  | bash -s --`) + ` ${deploy.selectedTemplate === 'local' ? ( cluster.apisecurity === "private" ? ' -r .' : '') : `-r ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).base_download_url}`}` +
   Object.keys(post_params).map(k => {
     const val = post_params[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
@@ -198,7 +206,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
       return ` \\\n\t${k}=${targetVal}`
-    }).join('') + '\n\n' + post_deploystr
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deploystr : '')
 
 
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`

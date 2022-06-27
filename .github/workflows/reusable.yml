@@ -3,17 +3,33 @@ name: Deploy AKS-Construction
 on:
   workflow_dispatch:
     inputs:
-      username:
-        required: false
+      rg:
+        description: 'ResourceGroup name'
+        required: true
         type: string
+
+
   workflow_call:
     inputs:
-      username:
+      templateVersion:
+        description: 'ResourceGroup name'
         required: false
+        default: '0.8.1'
         type: string
-    secrets:
-      token:
+      rg:
+        description: 'ResourceGroup name'
+        required: true
+        type: string
+      resourceName:
+        description: 'Unique name all your resources are based on'
+        required: true
+        type: string
+      JustUseSystemPool:
+        description: 'Use a single nodepool for system and user workloads'
         required: false
+        type: boolean
+        default: false
+
 
 env:
   resourceName: xx
@@ -48,8 +64,8 @@ jobs:
       with:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ env.AZURE_RG }}
-        template: https://github.com/Azure/AKS-Construction/releases/download/0.6.2/main.json
-        parameters: 	resourceName=${{ env.resourceName }} agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true AksDisableLocalAccounts=true enableAzureRBAC=true adminprincipleid=${{ env.userObjectId }} registries_sku=Standard acrPushRolePrincipalId=${{ env.userObjectId }} azurepolicy=audit dnsZoneId=${{ env.dnsZoneId }} azureKeyvaultSecretsProvider=true createKV=true kvOfficerRolePrincipalId=${{ env.userObjectId }}
+        template: https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json
+        parameters: 	resourceName=${{ inputs.resourceName }} agentCount=2 JustUseSystemPool=${{ inputs.JustUseSystemPool }} custom_vnet=true enable_aad=true AksDisableLocalAccounts=true enableAzureRBAC=true adminprincipleid=${{ env.userObjectId }} registries_sku=Standard acrPushRolePrincipalId=${{ env.userObjectId }} azurepolicy=audit dnsZoneId=${{ env.dnsZoneId }} azureKeyvaultSecretsProvider=true createKV=true kvOfficerRolePrincipalId=${{ env.userObjectId }}
         failOnStdErr: false
 
 
@@ -68,4 +84,4 @@ jobs:
 
     - name: Post Deploy
       run: |
-        curl -sL https://github.com/Azure/AKS-Construction/releases/download/0.6.2/postdeploy.sh | bash -s -- -g $AZURE_RG -n $aks-${{ env.resourceName }} -p ingress=contour,monitor=oss,enableMonitorIngress=true,ingressEveryNode=true,dnsZoneId=${{ env.dnsZoneId }},certEmail=${{ env.certEmail }}
+        curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p ingress=contour,monitor=oss,enableMonitorIngress=true,ingressEveryNode=true,dnsZoneId=${{ env.dnsZoneId }},certEmail=${{ env.certEmail }}

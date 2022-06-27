@@ -9,11 +9,7 @@
 # Fail if any command fails
 set -e
 
-
-agw=""
-vnet_opt=""
 ingress=""
-apisecurity=""
 monitor=""
 enableMonitorIngress="false"
 ingressEveryNode=""
@@ -33,7 +29,7 @@ while getopts "p:g:n:r:" opt; do
     p )
         IFS=',' read -ra params <<< "$OPTARG"
         for i in "${params[@]}"; do
-            if [[ $i =~ (agw|vnet_opt|ingress|apisecurity|monitor|enableMonitorIngress|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|acrName|KubeletId|TenantId)=([^ ]*) ]]; then
+            if [[ $i =~ (ingress|monitor|enableMonitorIngress|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|acrName|KubeletId|TenantId)=([^ ]*) ]]; then
                 echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
                 declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
             else
@@ -43,14 +39,6 @@ while getopts "p:g:n:r:" opt; do
             fi
         done
       ;;
-
-    g )
-     rg=$OPTARG
-     ;;
-
-    n )
-     aks=$OPTARG
-     ;;
     r )
      release_version=$OPTARG
      ;;
@@ -101,28 +89,17 @@ if [ "$ingressEveryNode" ] && [[ $ingress = "appgw" ]]; then
  show_usage=true
 fi
 
-
-if [ -z "$agw" ] && [ "$ingress" = "appgw" ]; then
- echo "If ingress=appgw, please provide a 'agw' parameter"
- show_usage=true
-fi
-
 if [  "$monitor" ] && [[ ! "$monitor" = "oss" ]]; then
  echo "supported monitor parameter values are (oss)"
  show_usage=true
 fi
 
-if [ -z "$rg" ] || [ -z "$aks" ] || [ "$show_usage" ]; then
+if [ "$show_usage" ]; then
     echo "Usage: $0"
     echo "args:"
-    echo " < -g resource-group> (required)"
-    echo " < -n aks-name> (required)"
     echo " < -r release download url>  the github release download url where the dependent files will be referenced"
     echo " [ -p: parameters] : Can provide one or multiple features:"
-    echo "     agw=<name> - Name of Application Gateway"
-    echo "     vnet_opt=byo - Deployed AKS into BYO Vnet"
     echo "     ingress=<appgw|contour|nginx> - Enable cluster AutoScaler with max nodes"
-    echo "     apisecurity=<max> - Enable cluster AutoScaler with max nodes"
     echo "     monitor=<oss> - Enable cluster AutoScaler with max nodes"
     echo "     enableMonitorIngress=<true> - Enable Ingress for Promethous"
     echo "     ingressEveryNode=<true> - Enable cluster AutoScaler with max nodes"
@@ -131,7 +108,7 @@ if [ -z "$rg" ] || [ -z "$aks" ] || [ "$show_usage" ]; then
     echo "     certEmail=<email for certman certificates> - Enables cert-manager"
     echo "     KubeletId=<managed identity of Kubelet> *Require for cert-manager"
     echo "     TenantId=<AzureAD TenentId> *Require for cert-manager"
-    echo "     acrName=<name of ACR> * If apisecurity=private and this is provided, used imported images for 3rd party charts"
+    echo "     acrName=<name of ACR> * If provided, used imported images for 3rd party charts"
     exit 1
 fi
 
@@ -141,7 +118,7 @@ get_image_property () {
     fileloc=${release_version:-./helper/src}/dependencies.json
 
     if [ "$release_version" ] && [[ $release_version == http* ]]; then
-      dependenciesJson=$(curl  $fileloc)
+      dependenciesJson=$(curl -sL $fileloc)
     else
       dependenciesJson=$(cat $fileloc)
     fi
@@ -189,7 +166,7 @@ get_image_property_awk () {
     fileloc=${release_version:-./helper/src}/dependencies.json
 
     if [ "$release_version" ] && [[ $release_version == http* ]]; then
-      dependenciesJson=$(curl  $fileloc)
+      dependenciesJson=$(curl -sL $fileloc)
     else
       dependenciesJson=$(cat $fileloc)
     fi
@@ -343,7 +320,7 @@ if [ "$dnsZoneId" ]; then
 
     EXTERNAL_DNS_REPO=$(get_image_property "externaldns.1_9_0.images.image.repository")
     dnsImageRepo="$(get_image_property "externaldns.1_9_0.images.image.registry")/${EXTERNAL_DNS_REPO}"
-    if [ "$apisecurity" = "private" ] && [ "$acrName" ]; then
+    if [ "$acrName" ]; then
         dnsImageRepo="${acrName}.azurecr.io/${EXTERNAL_DNS_REPO}"
     fi
 
