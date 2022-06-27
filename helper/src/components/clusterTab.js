@@ -342,21 +342,33 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Label style={{ marginBottom: "0px" }}>Private dns zone mode for private cluster.</Label>
                 <Stack tokens={{ childrenGap: 15 }}>
                     {cluster.apisecurity === "private" &&
-                        <ChoiceGroup selectedKey={cluster.privateDNSZone} onChange={(ev, { key }) => updateFn("privateDNSZone", key)}
+                    <>
+                        <ChoiceGroup selectedKey={cluster.privateClusterDnsMethod} onChange={(ev, { key }) => updateFn("privateClusterDnsMethod", key)}
                             options={[
                                 {
                                     key: 'none',
                                     text: 'None: Defaults to public DNS (AKS will not create a Private DNS Zone)'
                                 }, {
                                     key: 'system',
-                                    disabled: true,
                                     text: 'System: AKS will create a Private DNS Zone in the Node Resource Group'
                                 }, {
-                                    key: 'custom',
-                                    disabled: true,
+                                    key: 'privateDnsZone',
                                     text: 'Custom: BYO Private DNS Zone (provide ResourceId)'
                                 }
                             ]} />
+                            {cluster.privateClusterDnsMethod==='privateDnsZone' &&
+                                <>
+                                    <TextField
+                                       value={cluster.dnsApiPrivateZoneId}
+                                       onChange={(ev, v) => updateFn("dnsApiPrivateZoneId", v)}
+                                       errorMessage={getError(invalidArray, 'dnsApiPrivateZoneId')}
+                                       required
+                                       placeholder="Resource Id"
+                                       label={<Text style={{ fontWeight: 600 }}>Enter your Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>}
+                                       />
+                                </>
+                            }
+                        </>
                     }
                 </Stack>
             </Stack.Item>
