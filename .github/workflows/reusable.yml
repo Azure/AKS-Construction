@@ -1,20 +1,12 @@
 name: Deploy AKS-Construction
 
 on:
-  workflow_dispatch:
-    inputs:
-      rg:
-        description: 'ResourceGroup name'
-        required: true
-        type: string
-
-
   workflow_call:
     inputs:
       templateVersion:
-        description: 'ResourceGroup name'
+        description: 'Template Version'
         required: false
-        default: '0.8.1'
+        default: '0.8.5-preview'
         type: string
       rg:
         description: 'ResourceGroup name'
@@ -24,48 +16,112 @@ on:
         description: 'Unique name all your resources are based on'
         required: true
         type: string
+      agentCount:
+        description: 'agentCount'
+        required: false
+        default: 2
+        type: number
+      upgradeChannel:
+        description: 'upgradeChannel'
+        required: false
       JustUseSystemPool:
         description: 'Use a single nodepool for system and user workloads'
         required: false
         type: boolean
         default: false
+      custom_vnet:
+        description: 'Create a custom VNET'
+        required: false
+        default: false
+        type: boolean
+      CreateNetworkSecurityGroups:
+        description: 'CreateNetworkSecurityGroups'
+        required: false
+        default: false
+        type: boolean
+      enable_aad:
+        description: 'enable_aad'
+        required: false
+        default: false
+        type: boolean
+      AksDisableLocalAccounts:
+        description: 'AksDisableLocalAccounts'
+        required: false
+        default: false
+        type: boolean
+      enableAzureRBAC:
+        description: 'enableAzureRBAC'
+        required: false
+        default: false
+        type: boolean
+      adminPrincipalId:
+        description: 'adminPrincipalId'
+        required: false
+        type: string
+      registries_sku:
+        description: 'registries_sku'
+        required: false
+        type: string
+      acrPushRolePrincipalId:
+        description: 'acrPushRolePrincipalId'
+        required: false
+        type: string
+      azurepolicy:
+        description: 'azurepolicy'
+        required: false
+        type: string
+      dnsZoneId:
+        description: 'dnsZoneId'
+        required: false
+        type: string
+      azureKeyvaultSecretsProvider:
+        description: 'azureKeyvaultSecretsProvider'
+        required: false
+        default: false
+        type: boolean
+      createKV:
+        description: 'createKV'
+        required: false
+        default: false
+        type: boolean
+      kvOfficerRolePrincipalId:
+        description: 'kvOfficerRolePrincipalId'
+        required: false
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
 
-
-env:
-  resourceName: xx
-  AZURE_RG: xx
-  certEmail: xx
-  dnsZoneId: xx
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   aksc:
-    runs-on: ubuntu-latest
-    environment:
-      name: "kh-emp-dev"
-      url: https://${{ env.APP_NAME }}.${{ env.APP_DOMAIN }}
     steps:
-
       # Log into Azure
     - uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     - name: Get User ObjectId
       run: |
-        echo "userObjectId=$(az ad signed-in-user show --query objectId --out tsv)" >> $GITHUB_ENV
-
-    - name: Create Resource Group
-      run: |
-        az group create -l WestEurope -n ${{ env.AZURE_RG }}
+        echo "userObjectId=$(az ad signed-in-user show --query id --out tsv)" >> $GITHUB_ENV
 
       # Deploy Bicep file
     - name: Deploy Bicep
       uses: azure/arm-deploy@v1
       with:
-        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
-        resourceGroupName: ${{ env.AZURE_RG }}
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        resourceGroupName: ${{ inputs.rg }}
         template: https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json
-        parameters: 	resourceName=${{ inputs.resourceName }} agentCount=2 JustUseSystemPool=${{ inputs.JustUseSystemPool }} custom_vnet=true enable_aad=true AksDisableLocalAccounts=true enableAzureRBAC=true adminprincipleid=${{ env.userObjectId }} registries_sku=Standard acrPushRolePrincipalId=${{ env.userObjectId }} azurepolicy=audit dnsZoneId=${{ env.dnsZoneId }} azureKeyvaultSecretsProvider=true createKV=true kvOfficerRolePrincipalId=${{ env.userObjectId }}
+        parameters: 	resourceName=${{ inputs.resourceName }} agentCount=${{ inputs.agentCount }} upgradeChannel=${{ inputs.upgradeChannel}} JustUseSystemPool=${{ inputs.JustUseSystemPool }} custom_vnet=${{ inputs.custom_vnet }} CreateNetworkSecurityGroups=${{ inputs.CreateNetworkSecurityGroups }} enable_aad=${{ inputs.enable_aad }} AksDisableLocalAccounts=${{ inputs.AksDisableLocalAccounts }} enableAzureRBAC=${{ inputs.enableAzureRBAC }} adminprincipleid=${{ env.userObjectId }} registries_sku=${{ inputs.registries_sku }} acrPushRolePrincipalId=${{ env.userObjectId }} azurepolicy=${{ inputs.azurepolicy }} dnsZoneId=${{ inputs.dnsZoneId }} azureKeyvaultSecretsProvider=${{ inputs.azureKeyvaultSecretsProvider }} createKV=${{ inputs.createKV }} kvOfficerRolePrincipalId=${{ env.userObjectId }}
         failOnStdErr: false
 
 
@@ -74,9 +130,9 @@ jobs:
         kubeloginversion: 'v0.0.12'
       run: |
 
-        az aks get-credentials -n aks-${{ env.resourceName }} -g ${{ env.AZURE_RG }} --overwrite-existing
+        az aks get-credentials -n aks-${{ inputs.resourceName }} -g ${{ inputs.rg }} --overwrite-existing
 
-        wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
+        wget https://github.com/Azure/kubelogin/releases/download/${{ inputs.templateVersion }}/kubelogin-linux-amd64.zip
         unzip kubelogin-linux-amd64.zip
         sudo mv bin/linux_amd64/kubelogin /usr/bin
         kubelogin convert-kubeconfig -l azurecli

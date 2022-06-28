@@ -326,6 +326,7 @@ export default function PortalNav({ config }) {
   invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19,
     <Text>Enter valid cluster name</Text>)
 
+  invalidFn('deploy', 'githubrepo', deploy.deployItemKey === 'github' && (!deploy.githubrepo || !deploy.githubrepo.match('https://github.com/[^/ ]+/[^/ ]+$')), <Text>Please enter your application github repo URL (https://github.com/org/repo)</Text>)
 
   function _customRenderer(page, link, defaultRenderer) {
     return (

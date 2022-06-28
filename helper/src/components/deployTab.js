@@ -31,7 +31,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
-    ...((cluster.autoscale !== defaults.cluster.autoscale || cluster.maxCount !== defaults.cluster.maxCount) && { agentCountMax: cluster.autoscale ? cluster.maxCount : 0 }),
+    ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
          custom_vnet: true,
@@ -254,7 +254,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
-
+/*
   const appgw_workaround =
     // App Gateway addon: see main.bicep DEPLOY_APPGW_ADDON
     (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `
@@ -267,11 +267,17 @@ AKS_AGIC_IDENTITY_ID="$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfi
 az role assignment create --role "Contributor" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_ID
 az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
 ` : '') +
-    (net.vnet_opt === "byo" && addons.ingress === 'appgw' /* && appgwKVIntegration */ ? `
+    (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `
 APPGW_IDENTITY="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
 az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
 ` : '')
+*/
 
+  const ghOrg = deploy.githubrepo.replace(/.*com\//, "").replace(/\/.*/, '')
+  const ghRepo = deploy.githubrepo.replace(/.*\//, '')
+  const ghBranch = "main"
+
+  console.log (`deploy.deployItemKey=${deploy.deployItemKey}`)
   return (
 
     <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
@@ -353,7 +359,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
       }
 
 
-      <Pivot defaultSelectedKey={terraformFeatureFlag ? "deployTf" : "deployArmCli" } >
+      <Pivot selectedKey={deploy.deployItemKey}  onLinkClick={({props}) => updateFn('deployItemKey', props.itemKey)}>
 
         <PivotItem headerText="Provision Environment (CLI)" itemKey="deployArmCli" itemIcon="PasteAsCode" >
 
@@ -379,31 +385,59 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             </Stack.Item>
           </Stack>
 
-          <CodeBlock deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
+          <CodeBlock lang="shell script" deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
           }
         </PivotItem>
 
-        <PivotItem headerText="Github Actions" itemIcon="ConfigurationSolid">
-            <Label key="post-label" style={{marginTop: '10px'}}>To call the AKS-Construction re-usable workflow</Label>
+        <PivotItem headerText="Github Actions" itemKey="github" itemIcon="ConfigurationSolid">
+            <Stack horizontal>
+              <Stack.Item>
+                <Label key="post-label" style={{marginTop: '10px'}}>Create Service Principle to authorize github to deploy to Azure</Label>
+                <Text>Run this codeblock and vault the output values as github repository action secrets in your application's repo</Text>
+              </Stack.Item>
+              <TextField label="Your application github Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
+            </Stack>
 
-            <CodeBlock key="post-code" deploycmd={`
-# Vault the CLuster credentaial in your guthub secret
-????????????????????
 
+            <CodeBlock key="github-auth" lang="shell script" deploycmd={`# Create resource group, and an identity with contributor access that github can federate
+az group create -l WestEurope -n ${deploy.rg}
 
-# Add a Taks to your workload reoo
+app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | tr ' ' "\\n"))
+spId=$(az ad sp create --id \${app[0]} --query id -o tsv )
+subId=$(az account show --query id -o tsv)
 
+az role assignment create --role contributor --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope /subscriptions/$subId/resourceGroups/${deploy.rg}
+az rest --method POST --uri "https://graph.microsoft.com/beta/applications/\${app[1]}/federatedIdentityCredentials" --body "{\\"name\\":\\"${ghRepo}-gh\\",\\"issuer\\":\\"https://token.actions.githubusercontent.com\\",\\"subject\\":\\"repo:${ghOrg}/${ghRepo}:ref:refs/heads/${ghBranch}\\",\\"description\\":\\"Access to branch ${ghBranch}\\",\\"audiences\\":[\\"api://AzureADTokenExchange\\"]}"
+
+echo -e "AZURE_CLIENT_ID: \${app[0]}\\nAZURE_TENANT_ID: $(az account show --query tenantId -o tsv)\\nAZURE_SUBSCRIPTION_ID: $subId"
+`}/>
+
+            <Text style={{marginTop: '20px'}}>Add the following snipit to call the Aks-Constuction reusable workflow from your application repo</Text>
+            <CodeBlock  lang="github actions"  deploycmd={`
 jobs:
-  call-workflow-passing-data:
-    uses: Azure/aks-construction/.github/workflows/reusable.yml@main
-    with:
-      username: mona
-    secrets:
-      envPAT: \${{ secrets.envPAT }}
-            `}/>
+  reusable_workflow_job:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: Azure/AKS-Construction/.github/workflows/reusable.yml@main
+        with:
+          rg: ${deploy.rg}
+${Object.keys(finalParams).filter(k => !k.endsWith('PrincipalId')).map(k => {
+  const val = finalParams[k]
+  const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+  return `          ${k}: ${targetVal}`
+}).join('\n')}
+        secrets:
+          AZURE_CLIENT_ID: {{ secret.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: {{ secret.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: {{ secret.AZURE_SUBSCRIPTION_ID }}
+
+
+
+`}/>
         </PivotItem>
 
         <PivotItem headerText="Provision Environment (Terraform)" itemKey="deployTf" itemIcon="FileCode">
@@ -437,7 +471,7 @@ jobs:
 
         </PivotItem>
 
-        <PivotItem headerText="Template Parameters File" itemIcon="FileSymlink">
+        <PivotItem headerText="Template Parameters File" itemKey="params"  itemIcon="FileSymlink">
 
           <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
           </TextField>
