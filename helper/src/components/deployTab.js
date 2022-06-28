@@ -419,21 +419,18 @@ echo -e "AZURE_CLIENT_ID: \${app[0]}\\nAZURE_TENANT_ID: $(az account show --quer
             <CodeBlock  lang="github actions"  deploycmd={`
 jobs:
   reusable_workflow_job:
-    runs-on: ubuntu-latest
-    environment: dev
-    steps:
-      - uses: Azure/AKS-Construction/.github/workflows/reusable.yml@main
-        with:
-          rg: ${deploy.rg}
+    uses: Azure/AKS-Construction/.github/workflows/reusable.yml@main
+    with:
+      rg: ${deploy.rg}
 ${Object.keys(finalParams).filter(k => !k.endsWith('PrincipalId')).map(k => {
   const val = finalParams[k]
   const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-  return `          ${k}: ${targetVal}`
+  return `      ${k}: ${targetVal}`
 }).join('\n')}
-        secrets:
-          AZURE_CLIENT_ID: {{ secret.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: {{ secret.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID: {{ secret.AZURE_SUBSCRIPTION_ID }}
+    secrets:
+      AZURE_CLIENT_ID: {{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: {{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: {{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 
 

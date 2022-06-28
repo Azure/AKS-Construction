@@ -24,6 +24,7 @@ on:
       upgradeChannel:
         description: 'upgradeChannel'
         required: false
+        type: string
       JustUseSystemPool:
         description: 'Use a single nodepool for system and user workloads'
         required: false
