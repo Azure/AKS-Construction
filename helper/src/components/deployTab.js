@@ -396,7 +396,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             <Stack horizontal>
               <Stack.Item>
                 <Label key="post-label" style={{marginTop: '10px'}}>Create Service Principle to authorize github to deploy to Azure</Label>
-                <Text>Run this codeblock and vault the output values as github repository action secrets in your application's repo</Text>
+                <Text>Run this codeblock and RECORD the output values,  as you need to manually substitute them into the github action snippit below</Text>
               </Stack.Item>
               <TextField label="Your application github Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
             </Stack>
@@ -412,26 +412,27 @@ subId=$(az account show --query id -o tsv)
 az role assignment create --role contributor --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope /subscriptions/$subId/resourceGroups/${deploy.rg}
 az rest --method POST --uri "https://graph.microsoft.com/beta/applications/\${app[1]}/federatedIdentityCredentials" --body "{\\"name\\":\\"${ghRepo}-gh\\",\\"issuer\\":\\"https://token.actions.githubusercontent.com\\",\\"subject\\":\\"repo:${ghOrg}/${ghRepo}:ref:refs/heads/${ghBranch}\\",\\"description\\":\\"Access to branch ${ghBranch}\\",\\"audiences\\":[\\"api://AzureADTokenExchange\\"]}"
 
-echo -e "AZURE_CLIENT_ID: \${app[0]}\\nAZURE_TENANT_ID: $(az account show --query tenantId -o tsv)\\nAZURE_SUBSCRIPTION_ID: $subId"
+echo -e "AZURE_CLIENT_ID: \${app[0]}\\nAZURE_TENANT_ID: $(az account show --query tenantId -o tsv)\\nAZURE_SUBSCRIPTION_ID: $subId\\nUSER_OBJECT_ID: $spId"
 `}/>
 
-            <Text style={{marginTop: '20px'}}>Add the following snipit to call the Aks-Constuction reusable workflow from your application repo</Text>
+            <Text style={{marginTop: '20px'}}>Add the following snipit to call the Aks-Constuction reusable workflow from your application repo (REPLACING THE SECRET VALUES FROM THE OUTPUT ABOVE)</Text>
             <CodeBlock  lang="github actions"  deploycmd={`
 jobs:
   reusable_workflow_job:
     uses: Azure/AKS-Construction/.github/workflows/reusable.yml@main
     with:
       rg: ${deploy.rg}
-${Object.keys(finalParams).filter(k => !k.endsWith('PrincipalId')).map(k => {
+${Object.keys(finalParams).filter(k => ! k.endsWith('PrincipalId')).map(k => {
   const val = finalParams[k]
-  const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+  const targetVal = k.endsWith('PrincipalId')? true : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)
   return `      ${k}: ${targetVal}`
 }).join('\n')}
+${Object.keys(post_params).filter( k => k !== 'dnsZoneId' && k !== 'KubeletId' && k !== 'TenantId').map(k => `      ${k}: ${post_params[k]}`).join('\n')}
     secrets:
-      AZURE_CLIENT_ID: {{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: {{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: {{ secrets.AZURE_SUBSCRIPTION_ID }}
-
+      AZURE_CLIENT_ID: <-- AZURE_CLIENT_ID -->
+      AZURE_TENANT_ID: <-- AZURE_TENANT_ID -->
+      AZURE_SUBSCRIPTION_ID: <-- AZURE_SUBSCRIPTION_ID -->
+      USER_OBJECT_ID: <-- USER_OBJECT_ID -->
 
 
 `}/>

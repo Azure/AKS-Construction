@@ -89,6 +89,22 @@ on:
         description: 'kvOfficerRolePrincipalId'
         required: false
         type: string
+      monitor:
+        description: 'monitor'
+        required: false
+        type: string
+      ingress:
+        description: 'ingress'
+        required: false
+        type: string
+      certEmail:
+        description: 'certEmail'
+        required: false
+        type: string
+      enableMonitorIngress:
+        description: 'enableMonitorIngress'
+        required: false
+        type: boolean
     secrets:
       AZURE_CLIENT_ID:
         required: true
@@ -96,6 +112,8 @@ on:
         required: true
       AZURE_SUBSCRIPTION_ID:
         required: true
+      USER_OBJECT_ID:
+        required: false
 
 permissions:
   id-token: write
@@ -112,10 +130,6 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Get User ObjectId
-      run: |
-        echo "userObjectId=$(az ad signed-in-user show --query id --out tsv)" >> $GITHUB_ENV
-
       # Deploy Bicep file
     - name: Deploy Bicep
       uses: azure/arm-deploy@v1
@@ -123,7 +137,7 @@ jobs:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ inputs.rg }}
         template: https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json
-        parameters: 	resourceName=${{ inputs.resourceName }} agentCount=${{ inputs.agentCount }} upgradeChannel=${{ inputs.upgradeChannel}} JustUseSystemPool=${{ inputs.JustUseSystemPool }} custom_vnet=${{ inputs.custom_vnet }} CreateNetworkSecurityGroups=${{ inputs.CreateNetworkSecurityGroups }} enable_aad=${{ inputs.enable_aad }} AksDisableLocalAccounts=${{ inputs.AksDisableLocalAccounts }} enableAzureRBAC=${{ inputs.enableAzureRBAC }} adminprincipleid=${{ env.userObjectId }} registries_sku=${{ inputs.registries_sku }} acrPushRolePrincipalId=${{ env.userObjectId }} azurepolicy=${{ inputs.azurepolicy }} dnsZoneId=${{ inputs.dnsZoneId }} azureKeyvaultSecretsProvider=${{ inputs.azureKeyvaultSecretsProvider }} createKV=${{ inputs.createKV }} kvOfficerRolePrincipalId=${{ env.userObjectId }}
+        parameters: 	resourceName=${{ inputs.resourceName }} agentCount=${{ inputs.agentCount }} upgradeChannel=${{ inputs.upgradeChannel}} JustUseSystemPool=${{ inputs.JustUseSystemPool }} custom_vnet=${{ inputs.custom_vnet }} CreateNetworkSecurityGroups=${{ inputs.CreateNetworkSecurityGroups }} enable_aad=${{ inputs.enable_aad }} AksDisableLocalAccounts=${{ inputs.AksDisableLocalAccounts }} enableAzureRBAC=${{ inputs.enableAzureRBAC }} adminprincipleid=${{ secrets.USER_OBJECT_ID }} registries_sku=${{ inputs.registries_sku }} acrPushRolePrincipalId=${{ secrets.USER_OBJECT_ID }} azurepolicy=${{ inputs.azurepolicy }} dnsZoneId=${{ inputs.dnsZoneId }} azureKeyvaultSecretsProvider=${{ inputs.azureKeyvaultSecretsProvider }} createKV=${{ inputs.createKV }} kvOfficerRolePrincipalId=${{ secrets.USER_OBJECT_ID }}
         failOnStdErr: false
 
 
@@ -134,7 +148,7 @@ jobs:
 
         az aks get-credentials -n aks-${{ inputs.resourceName }} -g ${{ inputs.rg }} --overwrite-existing
 
-        wget https://github.com/Azure/kubelogin/releases/download/${{ inputs.templateVersion }}/kubelogin-linux-amd64.zip
+        wget https://github.com/Azure/kubelogin/releases/download/v0.0.13/kubelogin-linux-amd64.zip
         unzip kubelogin-linux-amd64.zip
         sudo mv bin/linux_amd64/kubelogin /usr/bin
         kubelogin convert-kubeconfig -l azurecli
@@ -142,4 +156,4 @@ jobs:
 
     - name: Post Deploy
       run: |
-        curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p ingress=contour,monitor=oss,enableMonitorIngress=true,ingressEveryNode=true,dnsZoneId=${{ env.dnsZoneId }},certEmail=${{ env.certEmail }}
+        curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n aks-${{ inputs.resourceName }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},ingress=${{ inputs.ingress }},monitor=${{ inputs.monitor }},enableMonitorIngress=${{ inputs.enableMonitorIngress }},ingressEveryNode=${{ inputs.ingressEveryNode }},dnsZoneId=${{ inputs.dnsZoneId }},certEmail=${{ inputs.certEmail }}
