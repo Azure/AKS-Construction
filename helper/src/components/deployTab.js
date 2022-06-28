@@ -409,7 +409,7 @@ app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | t
 spId=$(az ad sp create --id \${app[0]} --query id -o tsv )
 subId=$(az account show --query id -o tsv)
 
-az role assignment create --role contributor --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope /subscriptions/$subId/resourceGroups/${deploy.rg}
+az role assignment create --role owner --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope /subscriptions/$subId/resourceGroups/${deploy.rg}
 az rest --method POST --uri "https://graph.microsoft.com/beta/applications/\${app[1]}/federatedIdentityCredentials" --body "{\\"name\\":\\"${ghRepo}-gh\\",\\"issuer\\":\\"https://token.actions.githubusercontent.com\\",\\"subject\\":\\"repo:${ghOrg}/${ghRepo}:ref:refs/heads/${ghBranch}\\",\\"description\\":\\"Access to branch ${ghBranch}\\",\\"audiences\\":[\\"api://AzureADTokenExchange\\"]}"
 
 echo -e "AZURE_CLIENT_ID: \${app[0]}\\nAZURE_TENANT_ID: $(az account show --query tenantId -o tsv)\\nAZURE_SUBSCRIPTION_ID: $subId\\nUSER_OBJECT_ID: $spId"
