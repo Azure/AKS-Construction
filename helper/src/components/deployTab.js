@@ -383,7 +383,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             </Stack.Item>
           </Stack>
 
-          <CodeBlock lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before deploying'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
+          <CodeBlock lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
@@ -404,12 +404,12 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
                 </Stack>
               </Stack.Item>
               <Stack.Item>
-                 <TextField label="Your application github Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
-                 <TextField label="Your application branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
+                 <TextField label="Application github Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
+                 <TextField label="Application branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
               </Stack.Item>
             </Stack>
 
-            <CodeBlock key="github-auth" lang="shell script" error={getError(invalidArray, 'githubrepo')} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
+            <CodeBlock key="github-auth" lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
 az group create -l WestEurope -n ${deploy.rg}
 
 app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | tr ' ' "\\n"))
