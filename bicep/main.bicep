@@ -1149,7 +1149,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
 }
 output aksClusterName string = aks.name
 
-@description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used.')
+@description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
 var uaiNetworkScopeRbac = enablePrivateCluster && !empty(dnsApiPrivateZoneId) ? 'Vnet' : 'Subnet'
 module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !empty(dnsApiPrivateZoneId)) {
   name: 'addPrivateK8sApiDnsContributor'
