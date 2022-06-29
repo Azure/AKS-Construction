@@ -417,7 +417,7 @@ spId=$(az ad sp create --id \${app[0]} --query id -o tsv )
 subId=$(az account show --query id -o tsv)
 
 az role assignment create --role owner --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope /subscriptions/$subId/resourceGroups/${deploy.rg}
-${addons.dnsZoneId ? `az role assignment create --role contributor --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope ${addons.dnsZoneId.replace(/\/providers.*/, '')}`:'' }
+${addons.dnsZoneId ? `az role assignment create --role owner --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope ${addons.dnsZoneId.replace(/\/providers.*/, '')}`:'' }
 
 # Create a new federated identity credential
 az rest --method POST --uri "https://graph.microsoft.com/beta/applications/\${app[1]}/federatedIdentityCredentials" --body "{\\"name\\":\\"${ghRepo}-${deploy.githubrepobranch}-gh\\",\\"issuer\\":\\"https://token.actions.githubusercontent.com\\",\\"subject\\":\\"repo:${ghOrg}/${ghRepo}:ref:refs/heads/${deploy.githubrepobranch}\\",\\"description\\":\\"Access to branch ${deploy.githubrepobranch}\\",\\"audiences\\":[\\"api://AzureADTokenExchange\\"]}"
