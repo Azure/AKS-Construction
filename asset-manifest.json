@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/AKS-Construction/static/css/main.4f27b4ef.css",
-    "main.js": "/AKS-Construction/static/js/main.87a86565.js",
+    "main.js": "/AKS-Construction/static/js/main.d2748eeb.js",
     "index.html": "/AKS-Construction/index.html",
     "main.4f27b4ef.css.map": "/AKS-Construction/static/css/main.4f27b4ef.css.map",
-    "main.87a86565.js.map": "/AKS-Construction/static/js/main.87a86565.js.map"
+    "main.d2748eeb.js.map": "/AKS-Construction/static/js/main.d2748eeb.js.map"
   },
   "entrypoints": [
     "static/css/main.4f27b4ef.css",
-    "static/js/main.87a86565.js"
+    "static/js/main.d2748eeb.js"
   ]
 }
