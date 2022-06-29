@@ -1,5 +1,3 @@
-//Minimum Bicep version required : v0.4.1124
-
 @minLength(2)
 @description('The location to use for the deployment. defaults to Resource Groups location.')
 param location string = resourceGroup().location
@@ -947,6 +945,9 @@ param natGwIpCount int = 2
 @description('Outbound flow idle timeout in minutes for NatGw')
 param natGwIdleTimeout int = 30
 
+@description('Configures the cluster as an OIDC issuer for use with Workload Identity')
+param oidcIssuer bool = false
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   'Cost-Optimised' : {
@@ -1120,6 +1121,9 @@ var aksProperties = {
   } : {}
   addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
   autoScalerProfile: autoScale ? AutoscaleProfile : {}
+  oidcIssuerProfile: {
+    enabled: oidcIssuer
+  }
 }
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
@@ -1148,6 +1152,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   ]
 }
 output aksClusterName string = aks.name
+output aksOidcIssuerUrl string = aks.properties.oidcIssuerProfile.issuerURL
 
 @description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
 var uaiNetworkScopeRbac = enablePrivateCluster && !empty(dnsApiPrivateZoneId) ? 'Vnet' : 'Subnet'
