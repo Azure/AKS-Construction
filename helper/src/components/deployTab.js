@@ -429,7 +429,8 @@ gh secret set --repo ${deploy.githubrepo} AZURE_SUBSCRIPTION_ID -b $subId
 gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 `}/>
 
-            <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos .github/workflows folder to call the Aks-Constuction reusable workflow (this example is manually triggered)</Text>
+            <Label>To run te Github reusable workflow</Label>
+            <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos <code>.github/workflows</code> folder to call the Aks-Constuction reusable workflow (this example creates a manually triggered Action)</Text>
             <CodeBlock  lang="github actions"  deploycmd={`
 name: Deploy AKS-Construction
 
@@ -454,6 +455,14 @@ ${Object.keys(post_params).filter( k => k !== 'dnsZoneId' && k !== 'KubeletId' &
       USER_OBJECT_ID: \${{ secrets.USER_OBJECT_ID }}
 
 
+`}/>
+
+            <Separator styles={{root: {marginTop: '20px'}}} ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Cleanup / Reruns</b></div> </Separator>
+
+            <Label>The Create Service Principlal script is not re-runnable, so to clean up the Service Principal and federated identity credential, run the following</Label>
+            <CodeBlock  lang="github actions"  deploycmd={`
+az rest -m DELETE  -u "https://graph.microsoft.com/beta/applications/\${app[1]}/federatedIdentityCredentials/$(az rest -m GET -u "https://graph.microsoft.com/beta/applications/\${app[1]}/federatedIdentityCredentials" --query 'value[0].id' -o tsv)
+az ad sp delete --id  \${app[0]}
 `}/>
         </PivotItem>
 
