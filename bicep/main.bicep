@@ -1182,7 +1182,7 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
   }
 }
 
-@description('If automated deployment, set Principle Type to Service Principle')
+@description('If automated deployment, for the 3 automated user assignments, set Principal Type on each to "ServicePrincipal" rarter than "User"')
 param automatedDeployment bool = false
 
 @description('The principal ID to assign the AKS admin role.')

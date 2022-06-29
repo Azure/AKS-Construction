@@ -41,7 +41,8 @@ jobs:
       - name: Build and start node app
         run: |
           cd helper
-          npm install
+          # Needs legacy-peer-deps until Fluentui supports React18
+          npm install --legacy-peer-deps
           npm run build
           npm run start&
 

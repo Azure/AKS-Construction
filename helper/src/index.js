@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { mergeStyles } from '@fluentui/react';
@@ -41,10 +41,12 @@ mergeStyles({
   },
 });
 
-ReactDOM.render(
-  <React.StrictMode>
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+
       <ConfigContext.Provider value={configData}>
         <App />
       </ConfigContext.Provider>
-    </React.StrictMode>, document.getElementById('root'));
+
+)
 

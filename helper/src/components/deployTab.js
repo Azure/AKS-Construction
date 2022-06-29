@@ -275,8 +275,6 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
   const ghOrg = deploy.githubrepo.replace(/.*com\//, "").replace(/\/.*/, '')
   const ghRepo = deploy.githubrepo.replace(/.*\//, '')
-  const ghBranch = "main"
-
   console.log (`deploy.deployItemKey=${deploy.deployItemKey}`)
   return (
 
@@ -385,7 +383,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             </Stack.Item>
           </Stack>
 
-          <CodeBlock lang="shell script" deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
+          <CodeBlock lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before deploying'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
@@ -395,14 +393,23 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
         <PivotItem headerText="Github CI/CD" itemKey="github" itemIcon="ConfigurationSolid">
             <Stack horizontal>
               <Stack.Item>
-                <Label key="post-label" style={{marginTop: '10px'}}>Create Service Principle to authorize github to deploy to Azure</Label>
-                <Text>Run this codeblock and RECORD the output values,  as you need to manually substitute them into the github action snippit below</Text>
+                <Stack>
+
+                <Label key="post-label" style={{marginTop: '10px'}}>Create Service Principle gitub will use to deploy to Azure</Label>
+                <Text>Run this code block to create the Service Principle, provide it the necassary permissions to run the deployment, then It will create the secrets in your application repository</Text>
+                <Separator></Separator>
+                <Text>
+                  * Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+                </Text>
+                </Stack>
               </Stack.Item>
-              <TextField label="Your application github Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
+              <Stack.Item>
+                 <TextField label="Your application github Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
+                 <TextField label="Your application branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
+              </Stack.Item>
             </Stack>
 
-
-            <CodeBlock key="github-auth" lang="shell script" deploycmd={`# Create resource group, and an identity with contributor access that github can federate
+            <CodeBlock key="github-auth" lang="shell script" error={getError(invalidArray, 'githubrepo')} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
 az group create -l WestEurope -n ${deploy.rg}
 
 app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | tr ' ' "\\n"))
@@ -412,13 +419,23 @@ subId=$(az account show --query id -o tsv)
 az role assignment create --role owner --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope /subscriptions/$subId/resourceGroups/${deploy.rg}
 ${addons.dnsZoneId ? `az role assignment create --role contributor --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope ${addons.dnsZoneId.replace(/\/providers.*/, '')}`:'' }
 
-az rest --method POST --uri "https://graph.microsoft.com/beta/applications/\${app[1]}/federatedIdentityCredentials" --body "{\\"name\\":\\"${ghRepo}-gh\\",\\"issuer\\":\\"https://token.actions.githubusercontent.com\\",\\"subject\\":\\"repo:${ghOrg}/${ghRepo}:ref:refs/heads/${ghBranch}\\",\\"description\\":\\"Access to branch ${ghBranch}\\",\\"audiences\\":[\\"api://AzureADTokenExchange\\"]}"
+# Create a new federated identity credential
+az rest --method POST --uri "https://graph.microsoft.com/beta/applications/\${app[1]}/federatedIdentityCredentials" --body "{\\"name\\":\\"${ghRepo}-${deploy.githubrepobranch}-gh\\",\\"issuer\\":\\"https://token.actions.githubusercontent.com\\",\\"subject\\":\\"repo:${ghOrg}/${ghRepo}:ref:refs/heads/${deploy.githubrepobranch}\\",\\"description\\":\\"Access to branch ${deploy.githubrepobranch}\\",\\"audiences\\":[\\"api://AzureADTokenExchange\\"]}"
 
-echo -e "AZURE_CLIENT_ID: \${app[0]}\\nAZURE_TENANT_ID: $(az account show --query tenantId -o tsv)\\nAZURE_SUBSCRIPTION_ID: $subId\\nUSER_OBJECT_ID: $spId"
+# Set Secrets
+gh secret set --repo ${deploy.githubrepo} AZURE_CLIENT_ID -b \${app[0]}
+gh secret set --repo ${deploy.githubrepo} AZURE_TENANT_ID -b $(az account show --query tenantId -o tsv)
+gh secret set --repo ${deploy.githubrepo} AZURE_SUBSCRIPTION_ID -b $subId
+gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 `}/>
 
-            <Text style={{marginTop: '20px'}}>Add the following snipit to call the Aks-Constuction reusable workflow from your application repo (REPLACING THE SECRET VALUES FROM THE OUTPUT ABOVE)</Text>
+            <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos .github/workflows folder to call the Aks-Constuction reusable workflow (this example is manually triggered)</Text>
             <CodeBlock  lang="github actions"  deploycmd={`
+name: Deploy AKS-Construction
+
+on:
+  workflow_dispatch:
+
 jobs:
   reusable_workflow_job:
     uses: Azure/AKS-Construction/.github/workflows/reusable.yml@main
@@ -431,10 +448,10 @@ ${Object.keys(finalParams).filter(k => ! k.endsWith('PrincipalId')).map(k => {
 }).join('\n')}
 ${Object.keys(post_params).filter( k => k !== 'dnsZoneId' && k !== 'KubeletId' && k !== 'TenantId').map(k => `      ${k}: ${post_params[k]}`).join('\n')}
     secrets:
-      AZURE_CLIENT_ID: <-- AZURE_CLIENT_ID -->
-      AZURE_TENANT_ID: <-- AZURE_TENANT_ID -->
-      AZURE_SUBSCRIPTION_ID: <-- AZURE_SUBSCRIPTION_ID -->
-      USER_OBJECT_ID: <-- USER_OBJECT_ID -->
+      AZURE_CLIENT_ID: \${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: \${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: \${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      USER_OBJECT_ID: \${{ secrets.USER_OBJECT_ID }}
 
 
 `}/>

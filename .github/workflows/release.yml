@@ -29,7 +29,8 @@ jobs:
       - name: Build node app with bicep release
         run: |
           cd helper
-          npm install
+           # Needs legacy-peer-deps until Fluentui supports React18
+          npm install --legacy-peer-deps
           REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
 
       - name: Create GitHub pages release artifact
