@@ -358,14 +358,16 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             ]} />
                             {cluster.privateClusterDnsMethod==='privateDnsZone' &&
                                 <>
+                                    <MessageBar messageBarType={MessageBarType.info}>Custom Private DNS Zones are useful for having more control on zone naming or resource group homing, in most cases System created DNS should be sufficient</MessageBar>
                                     <TextField
                                        value={cluster.dnsApiPrivateZoneId}
                                        onChange={(ev, v) => updateFn("dnsApiPrivateZoneId", v)}
                                        errorMessage={getError(invalidArray, 'dnsApiPrivateZoneId')}
                                        required
                                        placeholder="Resource Id"
-                                       label={<Text style={{ fontWeight: 600 }}>Enter your Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>}
+                                       label={<Text style={{ fontWeight: 600 }}>Enter your Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FprivateDnsZones">find it here</Link></Text>}
                                        />
+                                    <MessageBar messageBarType={MessageBarType.warning}>Private DNS Zone for the Cluster API Server must be in the format: privatelink.*region*.azmk8s.io or *subzone*.privatelink.*region*.azmk8s.io<a target="_target" href="https://docs.microsoft.com/azure/aks/private-clusters#configure-private-dns-zone">docs</a></MessageBar>
                                 </>
                             }
                         </>

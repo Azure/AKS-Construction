@@ -287,7 +287,7 @@ export default function PortalNav({ config }) {
     <Text><b>ERROR</b>: Premium tier is required for Private Link, either select Premium, or disable Private Link</Text>)
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'),
     <Text>Enter valid Azure Public or Private DNS Zone resourceId</Text>)
-  invalidFn('cluster', 'dnsApiPrivateZoneId', cluster.apisecurity === 'private' && cluster.privateClusterDnsMethod==='privateDnsZone' && !cluster.dnsApiPrivateZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'),
+  invalidFn('cluster', 'dnsApiPrivateZoneId', cluster.apisecurity === 'private' && cluster.privateClusterDnsMethod==='privateDnsZone' && !cluster.dnsApiPrivateZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/privateDnsZones/[^/ ]+.azmk8s.io$'),
     <Text>Enter valid Azure Private DNS Zone resourceId</Text>)
   invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'),
     <Text>Enter valid email for certificate generation</Text>)

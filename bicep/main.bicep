@@ -39,8 +39,8 @@ param byoAKSSubnetId string = ''
 @description('Full resource id path of an existing subnet to use for Application Gateway')
 param byoAGWSubnetId string = ''
 
-//--- Custom or BYO networking requires BYO AKS User Identity
-var aks_byo_identity = custom_vnet || !empty(byoAKSSubnetId)
+//--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
+var aks_byo_identity = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId)
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (aks_byo_identity) {
   name: 'id-aks-${resourceName}'
   location: location
@@ -57,6 +57,7 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId)) {
     user_identity_principalId: aks_byo_identity ? uai.properties.principalId : ''
     user_identity_name: uai.name
     user_identity_rg: resourceGroup().name
+    rbacAssignmentScope: uaiNetworkScopeRbac
   }
 }
 
@@ -162,8 +163,6 @@ var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
 var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
 
 
-
-
 /*______  .__   __.      _______.    ________    ______   .__   __.  _______      _______.
 |       \ |  \ |  |     /       |   |       /   /  __  \  |  \ |  | |   ____|    /       |
 |  .--.  ||   \|  |    |   (----`   `---/  /   |  |  |  | |   \|  | |  |__      |   (----`
@@ -173,20 +172,16 @@ var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.a
 
 @description('The full Azure resource ID of the DNS zone to use for the AKS cluster')
 param dnsZoneId string = ''
-var dnsZoneRg = !empty(dnsZoneId) ? split(dnsZoneId, '/')[4] : ''
-var dnsZoneName = !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''
 var isDnsZonePrivate = !empty(dnsZoneId) ? split(dnsZoneId, '/')[7] == 'privateDnsZones' : false
 
-module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
+module dnsZone './dnsZoneRbac.bicep' = if (!empty(dnsZoneId)) {
   name: 'addDnsContributor'
-  scope: resourceGroup(dnsZoneRg)
   params: {
-    dnsZoneName: dnsZoneName
-    isPrivate: isDnsZonePrivate
     vnetId: isDnsZonePrivate ? (!empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/subnets')[0] : (custom_vnet ? network.outputs.vnetId : '')) : ''
     principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
   }
 }
+
 
 /*__  __  _______ ____    ____    ____    ____  ___      __    __   __      .___________.
 |  |/  / |   ____|\   \  /   /    \   \  /   / /   \    |  |  |  | |  |     |           |
@@ -485,7 +480,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     certManagerFW: certManagerFW
-    appDnsZoneName: dnsZoneName
+    appDnsZoneName: !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
     // inboundHttpFW: inboundHttpFW
@@ -1137,7 +1132,7 @@ var azureDefenderSecurityProfile = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
@@ -1148,8 +1143,25 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
     name: 'Basic'
     tier: akssku
   }
+  dependsOn: [
+    privateDnsZoneRbac
+  ]
 }
 output aksClusterName string = aks.name
+
+@description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used.')
+var uaiNetworkScopeRbac = !empty(dnsApiPrivateZoneId) ? 'Vnet' : 'Subnet'
+module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (!empty(dnsApiPrivateZoneId)) {
+  name: 'addPrivateK8sApiDnsContributor'
+  params: {
+    vnetId: ''
+    dnsZoneId: dnsApiPrivateZoneId
+    principalId: uai.properties.principalId
+  }
+  dependsOn: [
+    aksnetcontrib
+  ]
+}
 
 var policySetBaseline = '/providers/Microsoft.Authorization/policySetDefinitions/a8640138-9b0a-4a28-b8cb-1666c838647d'
 var policySetRestrictive = '/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00'

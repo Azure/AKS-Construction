@@ -27,7 +27,8 @@
         "cluster": {
             "AksPaidSkuForSLA": false,
             "apisecurity": "none",
-            "privateClusterDnsMethod": "none",
+            "privateClusterDnsMethod": "system",
+            "dnsApiPrivateZoneId":"",
             "autoscale": true,
             "upgradeChannel": "none",
             "SystemPoolType": "Cost-Optimised",
