@@ -361,7 +361,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
       <Pivot selectedKey={deploy.deployItemKey}  onLinkClick={({props}) => updateFn('deployItemKey', props.itemKey)}>
 
-        <PivotItem headerText="Provision Environment (CLI)" itemKey="deployArmCli" itemIcon="PasteAsCode" >
+        <PivotItem headerText="Command Line" itemKey="deployArmCli" itemIcon="PasteAsCode" >
 
           <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
             <Stack.Item>
@@ -392,7 +392,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           }
         </PivotItem>
 
-        <PivotItem headerText="Github Actions" itemKey="github" itemIcon="ConfigurationSolid">
+        <PivotItem headerText="Github CI/CD" itemKey="github" itemIcon="ConfigurationSolid">
             <Stack horizontal>
               <Stack.Item>
                 <Label key="post-label" style={{marginTop: '10px'}}>Create Service Principle to authorize github to deploy to Azure</Label>
@@ -440,7 +440,7 @@ ${Object.keys(post_params).filter( k => k !== 'dnsZoneId' && k !== 'KubeletId' &
 `}/>
         </PivotItem>
 
-        <PivotItem headerText="Provision Environment (Terraform)" itemKey="deployTf" itemIcon="FileCode">
+        <PivotItem headerText="Terraform" itemKey="deployTf" itemIcon="FileCode">
           <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
             <Stack.Item>
               <Label >Commands to deploy your fully operational environment</Label>
@@ -471,7 +471,7 @@ ${Object.keys(post_params).filter( k => k !== 'dnsZoneId' && k !== 'KubeletId' &
 
         </PivotItem>
 
-        <PivotItem headerText="Template Parameters File" itemKey="params"  itemIcon="FileSymlink">
+        <PivotItem headerText="Raw Parameters File" itemKey="params"  itemIcon="FileSymlink">
 
           <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
           </TextField>

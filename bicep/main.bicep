@@ -281,7 +281,7 @@ resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-0
   name: guid(aks.id, 'usersecret', keyVaultSecretsOfficerRole)
   properties: {
     roleDefinitionId: keyVaultSecretsOfficerRole
-    principalType: 'User'
+    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
     principalId: kvOfficerRolePrincipalId
   }
 }
@@ -293,7 +293,7 @@ resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04
   name: guid(aks.id, 'usercert', keyVaultCertsOfficerRole)
   properties: {
     roleDefinitionId: keyVaultCertsOfficerRole
-    principalType: 'User'
+    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
     principalId: kvOfficerRolePrincipalId
   }
 }
@@ -450,7 +450,7 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
   name: guid(aks.id, 'Acr' , AcrPushRole)
   properties: {
     roleDefinitionId: AcrPushRole
-    principalType: 'User'
+    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
     principalId: acrPushRolePrincipalId
   }
 }
@@ -1182,6 +1182,9 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
   }
 }
 
+@description('If automated deployment, set Principle Type to Service Principle')
+param automatedDeployment bool = false
+
 @description('The principal ID to assign the AKS admin role.')
 param adminPrincipalId string = ''
 // for AAD Integrated Cluster wusing 'enableAzureRBAC', add Cluster admin to the current user!
@@ -1191,7 +1194,7 @@ resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021
   name: guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)
   properties: {
     roleDefinitionId: buildInAKSRBACClusterAdmin
-    principalType: 'User'
+    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
     principalId: adminPrincipalId
   }
 }
