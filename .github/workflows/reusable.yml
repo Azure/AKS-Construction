@@ -95,7 +95,7 @@ jobs:
           if [ "$acrName" ]; then
             postcmd="${postcmd},acrName=${acrName}"
           fi
-          az aks command invoke -g ${{ inputs.rg }} -n aks-${{ inputs.resourceName }}  --command $postcmd
+          az aks command invoke -g ${{ inputs.rg }} -n aks-${{ inputs.resourceName }}  --command "$postcmd"
         else
           eval $postcmd
         fi
