@@ -442,19 +442,19 @@ jobs:
     uses: Azure/AKS-Construction/.github/workflows/reusable.yml@main
     with:
       rg: ${deploy.rg}
-${Object.keys(finalParams).filter(k => ! k.endsWith('PrincipalId')).map(k => {
-  const val = finalParams[k]
-  const targetVal = k.endsWith('PrincipalId')? true : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)
-  return `      ${k}: ${targetVal}`
-}).join('\n')}
-${Object.keys(post_params).filter( k => k !== 'dnsZoneId' && k !== 'KubeletId' && k !== 'TenantId').map(k => `      ${k}: ${post_params[k]}`).join('\n')}
+      templateParams: "${Object.keys(finalParams).filter(k => ! k.endsWith('PrincipalId')).map(k => {
+          const val = finalParams[k]
+          const targetVal = k.endsWith('PrincipalId')? true : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)
+          return `${k}=${targetVal}`
+      }).join(' \n                       ')}"` +
+      (Object.keys(post_params).length >0 ? `
+      postScriptInvokeCommand: ${cluster.apisecurity === "private" ? "true" : "false"}
+      postScriptParams: "${Object.keys(post_params).filter( k => k !== 'dnsZoneId' && k !== 'KubeletId' && k !== 'TenantId').map(k => `${k}=${post_params[k]}`).join(',')}"` : '') + `
     secrets:
       AZURE_CLIENT_ID: \${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: \${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: \${{ secrets.AZURE_SUBSCRIPTION_ID }}
       USER_OBJECT_ID: \${{ secrets.USER_OBJECT_ID }}
-
-
 `}/>
 
             <Separator styles={{root: {marginTop: '20px'}}} ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Cleanup / Reruns</b></div> </Separator>
