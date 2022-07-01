@@ -81,7 +81,7 @@ jobs:
       if: inputs.postScriptParams
       run: |
 
-        postcmd=(curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n aks-${{ inputs.resourceName }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptInvokeCommand }})
+        postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n aks-${{ inputs.resourceName }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptParams }}"
 
         if ${{ inputs.postScriptInvokeCommand}}; then
           acrName=$(az acr list -g ${{ inputs.rg }} --query [0].name -o tsv)
