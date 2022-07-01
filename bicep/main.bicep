@@ -1035,13 +1035,7 @@ var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPool
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
 
-var aks_addons = {
-  omsagent: {
-    enabled: createLaw && omsagent
-    config: {
-      logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
-    }
-  }
+var aks_addons = union({
   azurepolicy: {
     config: {
       version: !empty(azurepolicy) ? 'v2' : json('null')
@@ -1059,7 +1053,13 @@ var aks_addons = {
     enabled: openServiceMeshAddon
     config: {}
   }
-}
+}, createLaw && omsagent ? {
+  omsagent: {
+    enabled: createLaw && omsagent
+    config: {
+      logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
+    }
+  }} : {})
 
 var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   ingressApplicationGateway: {
