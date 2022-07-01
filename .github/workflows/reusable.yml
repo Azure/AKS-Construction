@@ -114,6 +114,7 @@ on:
       imageNames:
         description: 'imageNames'
         required: false
+        default: '[]'
         type: string
       azureFirewalls:
         description: 'azureFirewalls'
@@ -150,6 +151,7 @@ on:
       availabilityZones:
         description: 'availabilityZones'
         required: false
+        default: '[]'
         type: string
       authorizedIPRanges:
         description: 'authorizedIPRanges'
