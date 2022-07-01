@@ -16,6 +16,10 @@ on:
         description: 'Unique name all your resources are based on'
         required: true
         type: string
+      templateParamFile:
+        desciption: 'Template Parameters file'
+        required: false
+        type: string
       templateParams:
         description: 'Template Paramterss, space seperated key=value'
         required: true
@@ -57,7 +61,7 @@ jobs:
       # Deploy Bicep file
     - name: Deploy Bicep
       run: |
-        az group deployment create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParams }}
+        az group deployment create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ input.templateParamFile}} ${{ inputs.templateParams }}
 
 
     - name: Kubelogin
