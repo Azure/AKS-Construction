@@ -431,8 +431,7 @@ gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 
             <Label>To run te Github reusable workflow</Label>
             <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos <code>.github/workflows</code> folder to call the Aks-Constuction reusable workflow (this example creates a manually triggered Action)</Text>
-            <CodeBlock  lang="github actions"  deploycmd={`
-name: Deploy AKS-Construction
+            <CodeBlock  lang="github actions"  deploycmd={`name: Deploy AKS-Construction
 
 on:
   workflow_dispatch:
@@ -447,7 +446,7 @@ jobs:
           const val = finalParams[k]
           const targetVal = k.endsWith('PrincipalId')? true : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)
           return `${k}=${targetVal}`
-      }).join(' \n                       ')}"` +
+      }).join(' ')}"` +
       (Object.keys(post_params).length >0 ? `
       postScriptInvokeCommand: ${cluster.apisecurity === "private" ? "true" : "false"}
       postScriptParams: "${Object.keys(post_params).filter( k => k !== 'dnsZoneId' && k !== 'KubeletId' && k !== 'TenantId').map(k => `${k}=${post_params[k]}`).join(',')}"` : '') + `
@@ -461,8 +460,7 @@ jobs:
             <Separator styles={{root: {marginTop: '20px'}}} ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Cleanup / Reruns</b></div> </Separator>
 
             <Label>The Create Service Principlal script is not re-runnable, so to clean up the Service Principal and federated identity credential, run the following</Label>
-            <CodeBlock  lang="github actions"  deploycmd={`
-rmId=($(az ad app list --display-name ${ghRepo} --query '[[0].appId,[0].id]' -o tsv))
+            <CodeBlock  lang="github actions"  deploycmd={`rmId=($(az ad app list --display-name ${ghRepo} --query '[[0].appId,[0].id]' -o tsv))
 az rest -m DELETE  -u "https://graph.microsoft.com/beta/applications/\${rmId[1]}/federatedIdentityCredentials/$(az rest -m GET -u https://graph.microsoft.com/beta/applications/\${rmId[1]}/federatedIdentityCredentials --query value[0].id -o tsv)"
 az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
 `}/>
