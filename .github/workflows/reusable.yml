@@ -156,6 +156,7 @@ on:
       authorizedIPRanges:
         description: 'authorizedIPRanges'
         required: false
+        default: '[]'
         type: string
       enablePrivateCluster:
         description: 'enablePrivateCluster'
