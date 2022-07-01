@@ -16,6 +16,10 @@ on:
         description: 'Unique name all your resources are based on'
         required: true
         type: string
+      kubernetesVersion:
+        description: 'kubernetesVersion'
+        required: false
+        type: string
       agentCount:
         description: 'agentCount'
         required: false
@@ -25,11 +29,37 @@ on:
         description: 'upgradeChannel'
         required: false
         type: string
+      AksPaidSkuForSLA:
+        description: 'AksPaidSkuForSLA'
+        required: false
+        type: boolean
+        default: false
       JustUseSystemPool:
         description: 'Use a single nodepool for system and user workloads'
         required: false
         type: boolean
         default: false
+      SystemPoolType:
+        description: 'SystemPoolType'
+        required: false
+        type: string
+      agentVMSize:
+        description: 'agentVMSize'
+        required: false
+        type: string
+      agentCountMax:
+        description: 'Used for autoscale if greater than agent count'
+        required: false
+        default: 0
+        type: number
+      osDiskType:
+        description: 'osDiskType'
+        required: false
+        type: string
+      osDiskSizeGB:
+        description: 'osDiskSizeGB'
+        required: false
+        type: number
       custom_vnet:
         description: 'Create a custom VNET'
         required: false
@@ -40,6 +70,20 @@ on:
         required: false
         default: false
         type: boolean
+      CreateNetworkSecurityGroupFlowLogs:
+        description: 'CreateNetworkSecurityGroupFlowLogs'
+        required: false
+        default: false
+        type: boolean
+      bastion:
+        description: 'bastion'
+        required: false
+        default: false
+        type: boolean
+      bastionSubnetAddressPrefix:
+        description: 'bastionSubnetAddressPrefix'
+        required: false
+        type: string
       enable_aad:
         description: 'enable_aad'
         required: false
@@ -67,12 +111,70 @@ on:
         description: 'acrPushRolePrincipalId'
         required: false
         type: string
+      imageNames:
+        description: 'imageNames'
+        required: false
+        type: string
+      azureFirewalls:
+        description: 'azureFirewalls'
+        required: false
+        default: false
+        type: boolean
+      privateLinks:
+        description: 'privateLinks'
+        required: false
+        default: false
+        type: boolean
+      omsagent:
+        description: 'omsagent'
+        required: false
+        default: false
+        type: boolean
+      createAksMetricAlerts:
+        description: 'createAksMetricAlerts'
+        required: false
+        default: false
+        type: boolean
+      networkPolicy:
+        description: 'networkPolicy'
+        required: false
+        type: string
       azurepolicy:
         description: 'azurepolicy'
         required: false
         type: string
+      networkPlugin:
+        description: 'networkPlugin'
+        required: false
+        type: string
+      availabilityZones:
+        description: 'availabilityZones'
+        required: false
+        type: string
+      authorizedIPRanges:
+        description: 'authorizedIPRanges'
+        required: false
+        type: string
+      enablePrivateCluster:
+        description: 'enablePrivateCluster'
+        required: false
+        default: false
+        type: boolean
       dnsZoneId:
         description: 'dnsZoneId'
+        required: false
+        type: string
+      ingressApplicationGateway:
+        description: 'ingressApplicationGateway'
+        required: false
+        default: false
+        type: boolean
+      appGWcount:
+        description: 'appGWcount'
+        required: false
+        type: number
+      appGWsku:
+        description: 'appGWsku'
         required: false
         type: string
       azureKeyvaultSecretsProvider:
@@ -137,11 +239,12 @@ jobs:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ inputs.rg }}
         template: https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json
-        parameters: 	automatedDeployment=true resourceName=${{ inputs.resourceName }} agentCount=${{ inputs.agentCount }} upgradeChannel=${{ inputs.upgradeChannel}} JustUseSystemPool=${{ inputs.JustUseSystemPool }} custom_vnet=${{ inputs.custom_vnet }} CreateNetworkSecurityGroups=${{ inputs.CreateNetworkSecurityGroups }} enable_aad=${{ inputs.enable_aad }} AksDisableLocalAccounts=${{ inputs.AksDisableLocalAccounts }} enableAzureRBAC=${{ inputs.enableAzureRBAC }} adminPrincipalId=${{ secrets.USER_OBJECT_ID }} registries_sku=${{ inputs.registries_sku }} acrPushRolePrincipalId=${{ secrets.USER_OBJECT_ID }} azurepolicy=${{ inputs.azurepolicy }} dnsZoneId=${{ inputs.dnsZoneId }} azureKeyvaultSecretsProvider=${{ inputs.azureKeyvaultSecretsProvider }} createKV=${{ inputs.createKV }} kvOfficerRolePrincipalId=${{ secrets.USER_OBJECT_ID }}
+        parameters: 	automatedDeployment=true resourceName=${{ inputs.resourceName }} kubernetesVersion=${{ inputs.kubernetesVersion }} agentCount=${{ inputs.agentCount }} upgradeChannel=${{ inputs.upgradeChannel}} AksPaidSkuForSLA=${{ inputs.AksPaidSkuForSLA }} JustUseSystemPool=${{ inputs.JustUseSystemPool }} SystemPoolType=${{ inputs.SystemPoolType}} agentVMSize=${{ inputs.agentVMSize }} agentCountMax=${{ inputs.agentCountMax }} osDiskType=${{ inputs.osDiskType }} osDiskSizeGB=${{ inputs.osDiskSizeGB }} custom_vnet=${{ inputs.custom_vnet }} CreateNetworkSecurityGroups=${{ inputs.CreateNetworkSecurityGroups }} CreateNetworkSecurityGroupFlowLogs=${{ inputs.CreateNetworkSecurityGroupFlowLogs }} bastion=${{ inputs.bastion }} bastionSubnetAddressPrefix=${{ inputs.bastionSubnetAddressPrefix }} enable_aad=${{ inputs.enable_aad }} AksDisableLocalAccounts=${{ inputs.AksDisableLocalAccounts }} enableAzureRBAC=${{ inputs.enableAzureRBAC }} adminPrincipalId=${{ secrets.USER_OBJECT_ID }} registries_sku=${{ inputs.registries_sku }} acrPushRolePrincipalId=${{ secrets.USER_OBJECT_ID }} imageNam=${{ inputs.imageNames}} azureFirewalls=${{ inputs.azureFirewalls }} privateLinks=${{ inputs.privateLinks }} omsagent=${{ inputs.omsagent }} createAksMetricAlerts=${{ inputs.createAksMetricAlerts }} networkPolicy=${{ inputs.networkPolicy }} azurepolicy=${{ inputs.azurepolicy }} networkPlugin=$${{ inputs.networkPlugin }} availabilityZones=${{ inputs.availabilityZones }} authorizedIPRanges=${{ inputs.authorizedIPRanges }} enablePrivateCluster=${{ inputs.enablePrivateCluster }} dnsZoneId=${{ inputs.dnsZoneId }} ingressApplicationGateway=${{ inputs.ingressApplicationGateway }} appGWcount=${{ inputs.appGWcount }} appGWsku=${{ inputs.appGWsku }} azureKeyvaultSecretsProvider=${{ inputs.azureKeyvaultSecretsProvider }} createKV=${{ inputs.createKV }} kvOfficerRolePrincipalId=${{ secrets.USER_OBJECT_ID }}
         failOnStdErr: false
 
 
     - name: Kubelogin
+      if: ! inputs.enablePrivateCluster
       env:
         kubeloginversion: 'v0.0.12'
       run: |
@@ -155,5 +258,21 @@ jobs:
 
 
     - name: Post Deploy
+      if: inputs.ingress  || inputs.monitor || inputs.dnsZoneId || inputs.certEmail
       run: |
-        curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n aks-${{ inputs.resourceName }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},ingress=${{ inputs.ingress }},monitor=${{ inputs.monitor }},enableMonitorIngress=${{ inputs.enableMonitorIngress }},ingressEveryNode=${{ inputs.ingressEveryNode }},dnsZoneId=${{ inputs.dnsZoneId }},certEmail=${{ inputs.certEmail }}
+
+        postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n aks-${{ inputs.resourceName }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},ingress=${{ inputs.ingress }},monitor=${{ inputs.monitor }},enableMonitorIngress=${{ inputs.enableMonitorIngress }},ingressEveryNode=${{ inputs.ingressEveryNode }},dnsZoneId=${{ inputs.dnsZoneId }},certEmail=${{ inputs.certEmail }}"
+
+        if ${{ inputs.enablePrivateCluster}}; then
+          if [ "${{ inputs.registries_sku }}" ]; then
+            acrName=$(az acr list -g ${{ inputs.rg }} --query [0].name -o tsv)
+            postcmd="${postcmd},acrName=${acrName}"
+          fi
+          az aks command invoke -g ${{ inputs.rg }} -n aks-${{ inputs.resourceName }}  --command $postcmd
+
+        else
+          $(postcmd)
+        fi
+
+
+
