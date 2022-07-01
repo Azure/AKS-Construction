@@ -395,8 +395,8 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
               <Stack.Item>
                 <Stack>
 
-                <Label key="post-label" style={{marginTop: '10px'}}>Create Service Principle gitub will use to deploy to Azure</Label>
-                <Text>Run this code block to create the Service Principle, provide it the necassary permissions to run the deployment, then It will create the secrets in your application repository</Text>
+                <Label key="post-label" style={{marginTop: '10px'}}>Create Service Principle github will use to deploy to Azure</Label>
+                <Text>Run this code block to create the Service Principle, provide it the permissions needed to run the deployment, then It will create the secrets in your application repository</Text>
                 <Separator></Separator>
                 <Text>
                   * Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
