@@ -442,6 +442,7 @@ jobs:
     uses: Azure/AKS-Construction/.github/workflows/reusable.yml@main
     with:
       rg: ${deploy.rg}
+      resourceName: ${finalParams.resourceName}
       templateParams: "${Object.keys(finalParams).filter(k => ! k.endsWith('PrincipalId')).map(k => {
           const val = finalParams[k]
           const targetVal = k.endsWith('PrincipalId')? true : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)

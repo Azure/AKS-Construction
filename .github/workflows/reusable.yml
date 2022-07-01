@@ -78,12 +78,12 @@ jobs:
         postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n aks-${{ inputs.resourceName }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptInvokeCommand }}"
 
         if ${{ inputs.postScriptInvokeCommand}}; then
-          if [ "${{ inputs.registries_sku }}" ]; then
-            acrName=$(az acr list -g ${{ inputs.rg }} --query [0].name -o tsv)
+#          if [ "${{ inputs.registries_sku }}" ]; then
+          acrName=$(az acr list -g ${{ inputs.rg }} --query [0].name -o tsv)
+          if [ "$acrName" ]; then
             postcmd="${postcmd},acrName=${acrName}"
           fi
           az aks command invoke -g ${{ inputs.rg }} -n aks-${{ inputs.resourceName }}  --command $postcmd
-
         else
           $(postcmd)
         fi
