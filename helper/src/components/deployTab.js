@@ -458,7 +458,7 @@ jobs:
 
             <Separator styles={{root: {marginTop: '20px'}}} ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Cleanup / Reruns</b></div> </Separator>
 
-            <Label>The Create Service Principlal script is not re-runnable, so to clean up the Service Principal and federated identity credential, run the following</Label>
+            <Label>The Create Service Principal script is not re-runnable, so to clean up the Service Principal and federated identity credential, run the following</Label>
             <CodeBlock  lang="github actions"  deploycmd={`rmId=($(az ad app list --display-name ${ghRepo} --query '[[0].appId,[0].id]' -o tsv))
 az rest -m DELETE  -u "https://graph.microsoft.com/beta/applications/\${rmId[1]}/federatedIdentityCredentials/$(az rest -m GET -u https://graph.microsoft.com/beta/applications/\${rmId[1]}/federatedIdentityCredentials --query value[0].id -o tsv)"
 az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
