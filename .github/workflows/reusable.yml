@@ -26,6 +26,9 @@ on:
         type: string
       postScriptInvokeCommand:
         description: 'Private Cluster, so use invoke commant for postscript'
+        required: false
+        default: false
+        type: boolean
     secrets:
       AZURE_CLIENT_ID:
         required: true
@@ -69,7 +72,6 @@ jobs:
         unzip kubelogin-linux-amd64.zip
         sudo mv bin/linux_amd64/kubelogin /usr/bin
         kubelogin convert-kubeconfig -l azurecli
-
 
     - name: Post Deploy
       if: inputs.postScriptParams
