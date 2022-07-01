@@ -430,7 +430,7 @@ gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 `}/>
 
             <Label>To run te Github reusable workflow</Label>
-            <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos <code>.github/workflows</code> folder to call the Aks-Constuction reusable workflow (this example creates a manually triggered Action)</Text>
+            <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos <code>.github/workflows</code> folder to call the AKS-Construction reusable workflow (this example creates a manually triggered Action)</Text>
             <CodeBlock  lang="github actions"  deploycmd={`name: Deploy AKS-Construction
 
 on:
