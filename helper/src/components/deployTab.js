@@ -442,9 +442,9 @@ jobs:
     with:
       rg: ${deploy.rg}
       resourceName: ${finalParams.resourceName}
-      templateParams: "${Object.keys(finalParams).filter(k => ! k.endsWith('PrincipalId')).map(k => {
+      templateParams: "${Object.keys(finalParams).map(k => {
           const val = finalParams[k]
-          const targetVal = k.endsWith('PrincipalId')? true : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)
+          const targetVal = k.endsWith('PrincipalId')? '\${{ secrets.USER_OBJECT_ID }}' : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)
           return `${k}=${targetVal}`
       }).join(' ')}"` +
       (Object.keys(post_params).length >0 ? `
@@ -454,7 +454,6 @@ jobs:
       AZURE_CLIENT_ID: \${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: \${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: \${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      USER_OBJECT_ID: \${{ secrets.USER_OBJECT_ID }}
 `}/>
 
             <Separator styles={{root: {marginTop: '20px'}}} ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Cleanup / Reruns</b></div> </Separator>

@@ -40,8 +40,6 @@ on:
         required: true
       AZURE_SUBSCRIPTION_ID:
         required: true
-      USER_OBJECT_ID:
-        required: false
 
 permissions:
   id-token: write
