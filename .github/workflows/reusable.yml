@@ -17,7 +17,7 @@ on:
         required: true
         type: string
       templateParamFile:
-        desciption: 'Template Parameters file'
+        description: 'Template Parameters file'
         required: false
         type: string
       templateParams:
