@@ -61,7 +61,7 @@ jobs:
       # Deploy Bicep file
     - name: Deploy Bicep
       run: |
-        az group deployment create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParamFile}} ${{ inputs.templateParams }}
+        az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParamFile}} ${{ inputs.templateParams }}
 
 
     - name: Kubelogin
