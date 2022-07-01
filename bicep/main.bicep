@@ -1,5 +1,3 @@
-//Minimum Bicep version required : v0.4.1124
-
 @minLength(2)
 @description('The location to use for the deployment. defaults to Resource Groups location.')
 param location string = resourceGroup().location
@@ -956,6 +954,9 @@ param natGwIpCount int = 2
 @description('Outbound flow idle timeout in minutes for NatGw')
 param natGwIdleTimeout int = 30
 
+@description('Configures the cluster as an OIDC issuer for use with Workload Identity')
+param oidcIssuer bool = false
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   'Cost-Optimised' : {
@@ -1127,6 +1128,9 @@ var aksProperties = {
   } : {}
   addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
   autoScalerProfile: autoScale ? AutoscaleProfile : {}
+  oidcIssuerProfile: {
+    enabled: oidcIssuer
+  }
 }
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
@@ -1139,7 +1143,7 @@ var azureDefenderSecurityProfile = {
   }
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
@@ -1152,6 +1156,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
   }
 }
 output aksClusterName string = aks.name
+output aksOidcIssuerUrl string = aks.properties.oidcIssuerProfile.issuerURL
 
 var policySetBaseline = '/providers/Microsoft.Authorization/policySetDefinitions/a8640138-9b0a-4a28-b8cb-1666c838647d'
 var policySetRestrictive = '/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00'

@@ -81,7 +81,7 @@
             "value": true
           },
           "upgradeChannel": {
-            "value": "stable"
+            "value": "none"
           },
           "CreateNetworkSecurityGroups": {
             "value": true

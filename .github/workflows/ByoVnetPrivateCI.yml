@@ -279,7 +279,16 @@ jobs:
             echo "::set-output name=LAWGUID::$LAWGUID"
 
       - name: Post Deploy Delay
-        run: sleep ${{ github.event.inputs.postDeployDelay }}
+        run: |
+          if [ -z "${{ github.event.inputs.postDeployDelay }}" ]
+            then
+              echo "postDeployDelay parameter not available through GitHub event data, setting default"
+              DELAY="30s"
+            else
+              echo "postDeployDelay parameter found in GitHub event (${{ github.event.inputs.region }})"
+              DELAY="${{ github.event.inputs.postDeployDelay }}"
+            fi
+          sleep $DELAY
 
       - name: Enable AGIC Addon
         uses: Azure/cli@v1.0.6
