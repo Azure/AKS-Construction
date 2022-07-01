@@ -447,9 +447,8 @@ jobs:
           const targetVal = k.endsWith('PrincipalId')? '_USER_OBJECT_ID_' : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)
           return `${k}=${targetVal}`
       }).join(' ')}"` +
-      (Object.keys(post_params).length >0 ? `
-      postScriptInvokeCommand: ${cluster.apisecurity === "private" ? "true" : "false"}
-      postScriptParams: "${Object.keys(post_params).filter( k => k !== 'dnsZoneId' && k !== 'KubeletId' && k !== 'TenantId').map(k => `${k}=${post_params[k]}`).join(',')}"` : '') + `
+      (Object.keys(post_params).length >0 ? (cluster.apisecurity === "private" ? '\n      postScriptInvokeCommand: true' : '') +  `
+      postScriptParams: "${Object.keys(post_params).filter(k => k !== 'KubeletId' && k !== 'TenantId').map(k => `${k}=${post_params[k]}`).join(',')}"` : '') + `
     secrets:
       AZURE_CLIENT_ID: \${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: \${{ secrets.AZURE_TENANT_ID }}
