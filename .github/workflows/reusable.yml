@@ -67,7 +67,7 @@ jobs:
           echo "Substitute _USER_OBJECT_ID_ placeholder value with real guid from secret"
           templateParams=${templateParams//=_USER_OBJECT_ID_/=${{ secrets.USER_OBJECT_ID }}}
         fi
-        az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParamFile}} $templateParams
+        az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams
 
 
     - name: Kubelogin
