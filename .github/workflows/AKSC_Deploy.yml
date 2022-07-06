@@ -70,7 +70,7 @@ jobs:
     - name: Deploy Bicep
       id: deployAks
       env:
-        templateParams: ${{ inputs.templateParams}}
+        templateParams: "${{ inputs.templateParams}}"
       run: |
         if [ -n "${{ secrets.USER_OBJECT_ID }}" ]
         then
