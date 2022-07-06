@@ -72,31 +72,23 @@ jobs:
       env:
         templateParams: "${{ inputs.templateParams}}"
       run: |
-        if [ -n "${{ secrets.USER_OBJECT_ID }}" ]
-        then
-          echo "Substitute _USER_OBJECT_ID_ placeholder value with real guid from secret"
-          templateParams=${templateParams//=_USER_OBJECT_ID_/=${{ secrets.USER_OBJECT_ID }}}
-        else
-          echo "USER_OBJECT_ID not being leveraged in workflow"
-        fi
-
-        echo "template params $templateParams"
         DEP=$(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams)
+        echo $DEP
 
         #outputs
         AKSNAME=$(echo $DEP | jq -r '.properties.outputs.aksClusterName.value')
         echo "AKSName returned from az deployment = $AKSNAME"
-        echo "::set-output name=AKSNAME::$AKSNAME"
+        echo "::set-output name=AKSNAME::$AKSNAME"``
 
     - name: Kubelogin
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == false
       env:
-        kubeloginversion: 'v0.0.12'
+        kubeloginversion: 'v0.0.13'
       run: |
 
-        az aks get-credentials -n aks-${{ inputs.resourceName }} -g ${{ inputs.rg }} --overwrite-existing
+        az aks get-credentials -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --overwrite-existing
 
-        wget https://github.com/Azure/kubelogin/releases/download/v0.0.13/kubelogin-linux-amd64.zip
+        wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
         unzip kubelogin-linux-amd64.zip
         sudo mv bin/linux_amd64/kubelogin /usr/bin
         kubelogin convert-kubeconfig -l azurecli
