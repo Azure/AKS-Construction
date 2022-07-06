@@ -31,6 +31,10 @@ env:
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
 
+permissions:
+      id-token: write
+      contents: read
+
 jobs:
   ReusableWF:
     runs-on: ubuntu-latest
