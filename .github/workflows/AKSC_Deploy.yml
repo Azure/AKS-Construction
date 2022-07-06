@@ -5,7 +5,7 @@ on:
     inputs:
       environment:
         description: 'Which GitHub Environment to deploy to'
-        required: true
+        required: false
         type: string
       templateVersion:
         description: 'Template Version'
