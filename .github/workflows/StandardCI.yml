@@ -57,7 +57,7 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-
+          echo "Environment is: ${{ github.event.inputs.environment }}"
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
