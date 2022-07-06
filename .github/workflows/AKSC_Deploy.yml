@@ -13,24 +13,24 @@ on:
         default: '0.8.5-preview'
         type: string
       rg:
-        description: 'ResourceGroup name'
+        description: 'Resource Group name'
         required: true
         type: string
       resourceName:
-        description: 'Unique name all your resources are based on'
+        description: 'Unique name that all your resources will be based on'
         required: true
         type: string
       templateParamFile:
-        description: 'Template Parameters file'
+        description: 'Template parameters file'
         required: false
         type: string
       templateParams:
-        description: 'Template Paramters, space seperated key=value'
+        description: 'Template parameters, space seperated key=value'
         required: false
         default: ''
         type: string
       postScriptParams:
-        description: 'Template Paramters, comma seperated key=value'
+        description: 'Template parameters, comma seperated key=value'
         required: false
         type: string
       postScriptInvokeCommand:
