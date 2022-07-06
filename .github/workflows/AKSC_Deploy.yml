@@ -79,10 +79,11 @@ jobs:
         else
           echo "USER_OBJECT_ID not being leveraged in workflow"
         fi
-        az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams
+
+        DEP=$(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams)
 
         #outputs
-        AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
+        AKSNAME=$(echo $DEP | jq -r '.properties.outputs.aksClusterName.value')
         echo "AKSName returned from az deployment = $AKSNAME"
         echo "::set-output name=AKSNAME::$AKSNAME"
 
