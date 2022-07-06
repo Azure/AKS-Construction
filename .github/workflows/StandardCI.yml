@@ -6,6 +6,12 @@ name: InfraCI - Starter cluster
 on:
   #Run on Manual execution
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Which GitHub Environment to deploy to'
+        required: true
+        default: "csu"
+        type: environment
 
   #Run when PR's are made to main, where the changes are in the bicep directory or this workflow file itself
   pull_request:
@@ -20,15 +26,31 @@ on:
     - cron: "0 23 * * 2"
 env:
   RG: "AksBicepAcc-Ci-BasicCluster" #The resource group we're deploying to.
-  ParamFilePath: ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
+  ParamFilePath: "https://raw.githubusercontent.com/Azure/AKS-Construction/gb-postdeploy/.github/workflows_dep/AksDeploy-Basic.parameters.json" # ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-  AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.38.0 #Pinning to a specific AZ CLI version
+
+permissions:
+      id-token: write
+      contents: read
 
 jobs:
+  ReusableWF:
+    runs-on: ubuntu-latest
+    outputs:
+      RG: ${{ env.RG }}
+      ENVIRONMENT: ${{ github.event.inputs.Environment }}
+      RESNAME: ${{ env.RESNAME }}
+      PARAMFILE: ${{ env.ParamFilePath }}
+
+    steps:
+      - name: Dummy step
+        run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet)"
+
   Validation:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: ${{ github.event.inputs.environment }}
     if: ${{ !github.event.pull_request.head.repo.fork }}
 
     steps:
@@ -39,10 +61,10 @@ jobs:
         run: |
           RG='${{ env.RG }}'
           echo "RG is: $RG"
-
+          echo "Environment is: ${{ github.event.inputs.environment }}"
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Arm Parameter file check exists
         shell: pwsh
@@ -57,12 +79,11 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: false
-          environment: azurecloud
-          allow-no-subscriptions: false
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
@@ -73,53 +94,34 @@ jobs:
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME
 
   Deploy:
-    runs-on: ubuntu-latest
-    environment: csu
-    needs: [Validation]
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
-    outputs:
-      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Azure Login
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: false
-          environment: azurecloud
-          allow-no-subscriptions: false
-
-      - name: Deploy Infrastructure
-        id: deployAks
-        uses: Azure/cli@1.0.4
-        with:
-          azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |
-            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --name $DEPNAME --verbose
-
-            DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
-            echo $DEPSTATUS
-
-            #outputs
-            AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
-            echo "AKSName returned from az deployment = $AKSNAME"
-            echo "::set-output name=AKSNAME::$AKSNAME"
+    uses: ./.github/workflows/AKSC_Deploy.yml
+    #environment: ${{ github.event.inputs.environment }}
+    needs: [ReusableWF, Validation]
+    with:
+      environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      rg: ${{ needs.ReusableWF.outputs.RG }}
+      resourceName: ${{ needs.ReusableWF.outputs.RESNAME }}
+      templateParamFile: ${{ needs.ReusableWF.outputs.PARAMFILE }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    #outputs:
+    #  AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
 
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: ${{ github.event.inputs.environment }}
     needs: [Deploy]
     steps:
       - uses: actions/checkout@v2
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: AKS Connect
         env:
@@ -128,7 +130,7 @@ jobs:
 
       - name: Kubelogin
         env:
-          kubeloginversion: 'v0.0.10'
+          kubeloginversion: 'v0.0.13'
         run: |
           wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
           unzip kubelogin-linux-amd64.zip
@@ -164,17 +166,16 @@ jobs:
 
   Cleanup:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: ${{ github.event.inputs.environment }}
     needs: [Validation, Deploy, SmokeTest_SimpleApp]
     if: github.event_name == 'schedule'
     steps:
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Install Pwsh modules
         shell: pwsh
