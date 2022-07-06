@@ -3,7 +3,7 @@ name: Deploy AKS-Construction
 on:
   workflow_call:
     inputs:
-      ENVIRONMENT:
+      environment:
         description: 'Which GitHub Environment to deploy to'
         required: true
         type: string
@@ -55,6 +55,7 @@ permissions:
 jobs:
   Deploy-AKSC:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
     steps:
