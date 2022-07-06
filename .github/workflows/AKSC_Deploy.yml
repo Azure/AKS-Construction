@@ -3,6 +3,10 @@ name: Deploy AKS-Construction
 on:
   workflow_call:
     inputs:
+      ENVIRONMENT:
+        description: 'Which GitHub Environment to deploy to'
+        required: true
+        type: string
       templateVersion:
         description: 'Template Version'
         required: false

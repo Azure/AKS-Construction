@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Which environment to deploy to'
+        description: 'Which GitHub Environment to deploy to'
         required: true
         default: "csu"
         type: environment
@@ -32,6 +32,18 @@ env:
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
 
 jobs:
+  ReusableWF:
+    runs-on: ubuntu-latest
+    outputs:
+      RG: ${{ env.RG }}
+      ENVIRONMENT: ${{ github.event.inputs.Environment }}
+      RESNAME: ${{ env.RESNAME }}
+      PARAMFILE: ${{ env.ParamFilePath }}"
+
+    steps:
+      - name: Dummy step
+        run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet)"
+
   Validation:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
@@ -47,8 +59,8 @@ jobs:
           echo "RG is: $RG"
 
           echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}
-          echo "Deployment name is ${{ env.DEPNAME }}
+          echo "Resource name is ${{ env.RESNAME }}"
+          echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Arm Parameter file check exists
         shell: pwsh
@@ -113,11 +125,12 @@ jobs:
   DeployNew:
     uses: ./.github/workflows/AKSC_Deploy.yml
     #environment: ${{ github.event.inputs.environment }}
-    needs: [Validation]
+    needs: [ReusableWF, Validation]
     with:
-      rg: "AksBicepAcc-Ci-BasicCluster"
-      resourceName: "AksStan"
-      templateParamFile: ".github/workflows_dep/AksDeploy-Basic.parameters.json"
+      environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      rg: ${{ needs.ReusableWF.outputs.RG }}
+      resourceName: ${{ needs.ReusableWF.outputs.RESNAME }}
+      templateParamFile: ${{ needs.ReusableWF.outputs.PARAMFILE }}
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
