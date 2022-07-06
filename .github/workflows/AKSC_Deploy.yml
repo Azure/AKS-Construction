@@ -29,7 +29,7 @@ on:
         required: false
         type: string
       postScriptInvokeCommand:
-        description: 'Private Cluster, so use invoke commant for postscript'
+        description: 'Private Cluster, so use invoke command for postscript'
         required: false
         default: false
         type: boolean
@@ -48,7 +48,7 @@ permissions:
   contents: read
 
 jobs:
-  aksc_reusable_workflow:
+  Deploy-AKSC:
     runs-on: ubuntu-latest
     steps:
       # Log into Azure

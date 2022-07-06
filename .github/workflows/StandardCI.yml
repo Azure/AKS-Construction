@@ -57,12 +57,11 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: false
-          environment: azurecloud
-          allow-no-subscriptions: false
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
@@ -72,23 +71,22 @@ jobs:
             az account show --query name -o tsv
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME
 
-  Deploy:
+  DeployOld:
     runs-on: ubuntu-latest
     environment: csu
     needs: [Validation]
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
+    if: false #github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
     steps:
       - uses: actions/checkout@v2
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: false
-          environment: azurecloud
-          allow-no-subscriptions: false
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy Infrastructure
         id: deployAks
@@ -106,20 +104,31 @@ jobs:
             echo "AKSName returned from az deployment = $AKSNAME"
             echo "::set-output name=AKSNAME::$AKSNAME"
 
+  DeployNew:
+    uses: ./.github/workflows/AKSC_Deploy.yml
+    with:
+      rg: ${{ env.RG }}
+      resourceName: ${finalParams.resourceName}
+      templateParams: ${{ env.RESNAME }}
+      templateParamFile: ${{ env.ParamFilePath }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
     environment: csu
-    needs: [Deploy]
+    needs: [DeployNew]
     steps:
       - uses: actions/checkout@v2
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: AKS Connect
         env:
