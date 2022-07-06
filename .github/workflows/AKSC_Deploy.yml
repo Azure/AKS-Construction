@@ -21,11 +21,12 @@ on:
         required: false
         type: string
       templateParams:
-        description: 'Template Paramterss, space seperated key=value'
-        required: true
+        description: 'Template Paramters, space seperated key=value'
+        required: false
+        default: ''
         type: string
       postScriptParams:
-        description: 'Template Paramterss, comma seperated key=value'
+        description: 'Template Paramters, comma seperated key=value'
         required: false
         type: string
       postScriptInvokeCommand:
