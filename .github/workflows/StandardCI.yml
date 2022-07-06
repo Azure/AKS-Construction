@@ -93,40 +93,7 @@ jobs:
             az account show --query name -o tsv
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME
 
-  DeployOld:
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    needs: [Validation]
-    if: false #github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
-    outputs:
-      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Azure Login
-        uses: Azure/login@v1.4.3
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Deploy Infrastructure
-        id: deployAks
-        uses: Azure/cli@1.0.4
-        with:
-          azcliversion: ${{ env.AZCLIVERSION }}
-          inlineScript: |
-            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME --name $DEPNAME --verbose
-
-            DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
-            echo $DEPSTATUS
-
-            #outputs
-            AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
-            echo "AKSName returned from az deployment = $AKSNAME"
-            echo "::set-output name=AKSNAME::$AKSNAME"
-
-  DeployNew:
+  Deploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     #environment: ${{ github.event.inputs.environment }}
     needs: [ReusableWF, Validation]
@@ -145,7 +112,7 @@ jobs:
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [DeployNew]
+    needs: [Deploy]
     steps:
       - uses: actions/checkout@v2
 
@@ -158,7 +125,7 @@ jobs:
 
       - name: AKS Connect
         env:
-          AKSNAME: ${{ needs.DeployNew.outputs.AKSNAME}}
+          AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
@@ -200,7 +167,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [Validation, DeployNew, SmokeTest_SimpleApp]
+    needs: [Validation, Deploy, SmokeTest_SimpleApp]
     if: github.event_name == 'schedule'
     steps:
       - name: Azure Login
