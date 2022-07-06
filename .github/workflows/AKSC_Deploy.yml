@@ -72,13 +72,13 @@ jobs:
       env:
         templateParams: "${{ inputs.templateParams}}"
       run: |
-        DEP=$(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams)
+        DEP=$(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters "${{ inputs.templateParamFile}}" automatedDeployment=true $templateParams)
         echo $DEP
 
         #outputs
         AKSNAME=$(echo $DEP | jq -r '.properties.outputs.aksClusterName.value')
         echo "AKSName returned from az deployment = $AKSNAME"
-        echo "::set-output name=AKSNAME::$AKSNAME"``
+        echo "::set-output name=AKSNAME::$AKSNAME"
 
     - name: Kubelogin
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == false
