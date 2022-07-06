@@ -122,8 +122,8 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    outputs:
-      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
+    #outputs:
+    #  AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
 
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
