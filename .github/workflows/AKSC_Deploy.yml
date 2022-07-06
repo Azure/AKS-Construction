@@ -34,7 +34,7 @@ on:
         required: false
         type: string
       postScriptInvokeCommand:
-        description: 'Private Cluster, so use invoke command for postscript'
+        description: 'Use invoke (run) command for postscript execution (suitable for Private Clusters)'
         required: false
         default: false
         type: boolean
@@ -72,7 +72,7 @@ jobs:
       env:
         templateParams: ${{ inputs.templateParams}}
       run: |
-        if [ "${{ secrets.USER_OBJECT_ID }}" ]; then
+        if [ -n "${{ secrets.USER_OBJECT_ID }}" ]; then
           echo "Substitute _USER_OBJECT_ID_ placeholder value with real guid from secret"
           templateParams=${templateParams//=_USER_OBJECT_ID_/=${{ secrets.USER_OBJECT_ID }}}
         fi
