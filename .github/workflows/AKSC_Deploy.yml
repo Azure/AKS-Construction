@@ -72,7 +72,8 @@ jobs:
       env:
         templateParams: ${{ inputs.templateParams}}
       run: |
-        if [ -n "${{ secrets.USER_OBJECT_ID }}" ]; then
+        if [ -n "${{ secrets.USER_OBJECT_ID }}" ]
+        then
           echo "Substitute _USER_OBJECT_ID_ placeholder value with real guid from secret"
           templateParams=${templateParams//=_USER_OBJECT_ID_/=${{ secrets.USER_OBJECT_ID }}}
         fi
