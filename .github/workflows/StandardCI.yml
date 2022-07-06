@@ -116,9 +116,8 @@ jobs:
     needs: [Validation]
     with:
       rg: "AksBicepAcc-Ci-BasicCluster"
-      resourceName: ${finalParams.resourceName}
-      templateParams: ${{ env.RESNAME }}
-      templateParamFile: ${{ env.ParamFilePath }}
+      resourceName: "AksStan"
+      templateParamFile: ".github/workflows_dep/AksDeploy-Basic.parameters.json"
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
