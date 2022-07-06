@@ -42,7 +42,7 @@ jobs:
       RG: ${{ env.RG }}
       ENVIRONMENT: ${{ github.event.inputs.Environment }}
       RESNAME: ${{ env.RESNAME }}
-      PARAMFILE: ${{ env.ParamFilePath }}"
+      PARAMFILE: ${{ env.ParamFilePath }}
 
     steps:
       - name: Dummy step
