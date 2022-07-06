@@ -50,6 +50,8 @@ permissions:
 jobs:
   Deploy-AKSC:
     runs-on: ubuntu-latest
+    outputs:
+      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
     steps:
       # Log into Azure
     - uses: azure/login@v1
@@ -60,6 +62,7 @@ jobs:
 
       # Deploy Bicep file
     - name: Deploy Bicep
+      id: deployAks
       env:
         templateParams: ${{ inputs.templateParams}}
       run: |
@@ -69,6 +72,10 @@ jobs:
         fi
         az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams
 
+        #outputs
+        AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
+        echo "AKSName returned from az deployment = $AKSNAME"
+        echo "::set-output name=AKSNAME::$AKSNAME"
 
     - name: Kubelogin
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == false

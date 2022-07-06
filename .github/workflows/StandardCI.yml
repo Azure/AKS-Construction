@@ -6,6 +6,12 @@ name: InfraCI - Starter cluster
 on:
   #Run on Manual execution
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Which environment to deploy to'
+        required: true
+        default: "csu"
+        type: environment
 
   #Run when PR's are made to main, where the changes are in the bicep directory or this workflow file itself
   pull_request:
@@ -28,7 +34,7 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: ${{ github.event.inputs.environment }}
     if: ${{ !github.event.pull_request.head.repo.fork }}
 
     steps:
@@ -73,7 +79,7 @@ jobs:
 
   DeployOld:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: ${{ github.event.inputs.environment }}
     needs: [Validation]
     if: false #github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop'
     outputs:
@@ -106,6 +112,8 @@ jobs:
 
   DeployNew:
     uses: ./.github/workflows/AKSC_Deploy.yml
+    environment: ${{ github.event.inputs.environment }}
+    needs: [Validation]
     with:
       rg: ${{ env.RG }}
       resourceName: ${finalParams.resourceName}
@@ -115,10 +123,12 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    outputs:
+      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
 
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
-    environment: csu
+    environment: ${{ github.event.inputs.environment }}
     needs: [DeployNew]
     steps:
       - uses: actions/checkout@v2
@@ -132,7 +142,7 @@ jobs:
 
       - name: AKS Connect
         env:
-          AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
+          AKSNAME: ${{ needs.DeployNew.outputs.AKSNAME}}
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
@@ -173,17 +183,16 @@ jobs:
 
   Cleanup:
     runs-on: ubuntu-latest
-    environment: csu
-    needs: [Validation, Deploy, SmokeTest_SimpleApp]
+    environment: ${{ github.event.inputs.environment }}
+    needs: [Validation, DeployNew, SmokeTest_SimpleApp]
     if: github.event_name == 'schedule'
     steps:
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.3
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Install Pwsh modules
         shell: pwsh
