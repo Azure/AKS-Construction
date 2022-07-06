@@ -112,10 +112,10 @@ jobs:
 
   DeployNew:
     uses: ./.github/workflows/AKSC_Deploy.yml
-    environment: ${{ github.event.inputs.environment }}
+    #environment: ${{ github.event.inputs.environment }}
     needs: [Validation]
     with:
-      rg: ${{ env.RG }}
+      rg: "AksBicepAcc-Ci-BasicCluster"
       resourceName: ${finalParams.resourceName}
       templateParams: ${{ env.RESNAME }}
       templateParamFile: ${{ env.ParamFilePath }}
