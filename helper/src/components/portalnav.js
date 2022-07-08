@@ -44,7 +44,7 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
 
         <ChoiceGroup
           defaultSelectedKey={selectedPreset}
-          options={Object.keys(presets).map(p => { return { key: p, text: presets[p].title, disabled: presets[p].disabled } })}
+          options={Object.keys(presets).map(p => { return { key: p, text: presets[p].title, disabled: presets[p].disabled, iconProps: { iconName: presets[p].icon }  } })}
           onChange={(ev, { key }) => setPresets(key)}
         >
         </ChoiceGroup>
