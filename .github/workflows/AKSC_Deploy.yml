@@ -84,13 +84,16 @@ jobs:
           echo "USER_OBJECT_ID not being leveraged in workflow"
         fi
 
-        AKSNAME=$(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query properties.outputs.aksClusterName.value -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams)
-        #echo $DEP
+        DeployOut=($(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
 
-        #outputs
-        #AKSNAME=$(echo $DEP | jq -r '.properties.outputs.aksClusterName.value')
-        echo "AKSName returned from az deployment = $AKSNAME"
-        echo "::set-output name=AKSNAME::$AKSNAME"
+        aksClusterName=${DeployOut[0]}
+        containerRegistryName=${DeployOut[1]}
+
+        echo "aksClusterName returned from az deployment = $aksClusterName"
+        echo "containerRegistryName returned from az deployment = $containerRegistryName"
+
+        echo "::set-output name=AKSNAME::$aksClusterName"
+        echo "::set-output name=ACRNAME::$containerRegistryName"
 
     - name: Kubelogin
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == false
@@ -112,10 +115,8 @@ jobs:
         postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptParams }}"
 
         if ${{ inputs.postScriptInvokeCommand}}; then
-          acrName=$(az acr list -g ${{ inputs.rg }} --query [0].name -o tsv)
-
-          if [ "$acrName" ]; then
-            postcmd="${postcmd},acrName=${acrName}"
+          if [ "${{ steps.deployAks.outputs.ACRNAME }}" ]; then
+            postcmd="${postcmd},acrName=${{ steps.deployAks.outputs.ACRNAME }}"
           fi
           az aks command invoke -g ${{ inputs.rg }} -n ${{ steps.deployAks.outputs.AKSNAME }}  --command "$postcmd"
         else
