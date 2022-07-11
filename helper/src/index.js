@@ -41,10 +41,11 @@ mergeStyles({
   },
 });
 
+
 ReactDOM.render(
   <React.StrictMode>
       <ConfigContext.Provider value={configData}>
         <App />
       </ConfigContext.Provider>
-    </React.StrictMode>, document.getElementById('root'));
+      </React.StrictMode>, document.getElementById('root'))
 

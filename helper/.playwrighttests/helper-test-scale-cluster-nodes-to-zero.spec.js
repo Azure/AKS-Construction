@@ -16,7 +16,7 @@ test('scale-can-be-set-to-zero-by-default', async ({ page }) => {
   await page.waitForSelector('[data-testid="deploy-deploycmd"]')
   const clitextbox = await page.$('[data-testid="deploy-deploycmd"]')
   await expect(clitextbox).toBeVisible()
-  await expect(clitextbox).not.toContainText('agentCount')
+  await expect(clitextbox).not.toContainText('agentCount=')
 
   // Click the 2nd Tab in the portal Navigation Pivot (cluster details)
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(2)');

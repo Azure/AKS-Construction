@@ -3,11 +3,15 @@ import React from 'react';
 import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
+import dependencies from "../dependencies.json";
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag }) {
   const terraformFeatureFlag = featureFlag.includes('tf')
 
   const { net, addons, cluster, deploy } = tabValues
+
+  const aks = `aks-${deploy.clusterName}`
+  const agw = `agw-${deploy.clusterName}`
 
   const allok = !(invalidTabs && invalidTabs.length > 0)
   const apiips_array = deploy.apiips ? deploy.apiips.split(',').filter(x => x.trim()) : []
@@ -27,7 +31,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
-    ...((cluster.autoscale !== defaults.cluster.autoscale || cluster.maxCount !== defaults.cluster.maxCount) && { agentCountMax: cluster.autoscale ? cluster.maxCount : 0 }),
+    ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
          custom_vnet: true,
@@ -45,7 +49,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminPrincipalId: "$(az ad signed-in-user show --query id --out tsv)" }) }),
     ...(addons.registry !== "none" && {
         registries_sku: addons.registry,
-        ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
+        ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
+        ...(cluster.apisecurity === "private" && ((addons.ingress === "contour")  || (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId)) &&  { imageNames: [
+          ...(addons.ingress === "contour" ?  Object.keys(dependencies['bitnami/contour']['8_0_2'].images).map(i => `${dependencies['bitnami/contour']['8_0_2'].images[i].registry}/${dependencies['bitnami/contour']['8_0_2'].images[i].repository}:${dependencies['bitnami/contour']['8_0_2'].images[i].tag}`) : []),
+          ...(addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? Object.keys(dependencies['externaldns']['1_9_0'].images).map(i => `${dependencies['externaldns']['1_9_0'].images[i].registry}/${dependencies['externaldns']['1_9_0'].images[i].repository}:${dependencies['externaldns']['1_9_0'].images[i].tag}`) : [])
+        ]})
+    }),
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
         privateLinks: true,
@@ -104,12 +113,35 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
   }
 
-  const params2CLI = p => Object.keys(p).map(k => {
-    const val = p[k]
-    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-    return ` \\\n\t${k}=${targetVal}`
-  }).join('')
+  const post_params = {
+    ...(addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy && { denydefaultNetworkPolicy: addons.denydefaultNetworkPolicy}),
+    ...(addons.ingress !== "none" && {
 
+        ...((addons.ingress === "contour" || addons.ingress === "nginx") && {
+          ingress: addons.ingress,
+          ...(addons.ingressEveryNode && { ingressEveryNode: addons.ingressEveryNode})
+        }),
+        ...(addons.dns &&  addons.dnsZoneId && {
+            dnsZoneId: addons.dnsZoneId,
+            KubeletId: `$(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)`,
+            TenantId: `$(az account show --query tenantId -o tsv)`
+          }),
+        ...( addons.certMan && {
+          ingress: addons.ingress,
+          certEmail: addons.certEmail
+        })
+      }),
+    ...(cluster.apisecurity === "private" && (addons.ingress === "contour" || (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId) ) && {
+        acrName: `$(az acr list -g ${deploy.rg} --query [0].name -o tsv)`
+    }),
+    ...(addons.monitor === "oss" && {
+      monitor: addons.monitor,
+      ...(addons.ingress !== "none" && {
+        ingress: addons.ingress,
+        ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
+      })
+    }),
+  }
 
   const params2tf = p => Object.keys(p).map(k => {
     return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? '{value=data.azurerm_client_config.current.client_id}' : `{value=var.${k}}`}\n`
@@ -145,15 +177,41 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   })
 
   const finalParams = { ...params, ...(!deploy.disablePreviews && preview_params) }
-  const aks = `aks-${deploy.clusterName}`
-  const agw = `agw-${deploy.clusterName}`
+
+  const post_deploycmd =  `\n\n# Deploy charts into cluster\n` +
+  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh` : `curl -sL ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).post_url}  | bash -s --`) + ` ${deploy.selectedTemplate === 'local' ? ( cluster.apisecurity === "private" ? ' -r .' : '') : `-r ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).base_download_url}`}` +
+  Object.keys(post_params).map(k => {
+    const val = post_params[k]
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+    return ` \\\n\t-p ${k}=${targetVal}`
+  }).join('')
+
+  const post_deploystr = cluster.apisecurity !== "private" ?
+    '# Get credentials for your new AKS cluster & login (interactive)\n' +
+    `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
+    'kubectl get nodes' +
+    post_deploycmd
+    :
+    '# Private cluster, so use command invoke\n' +
+    `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` +
+    post_deploycmd.replaceAll('"', '\\"') +
+    `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
+
   const deploycmd =
-    `# Create Resource Group \n` +
-    `az group create -l ${deploy.location} -n ${deploy.rg} \n\n` +
-    `# Deploy template with in-line parameters \n` +
-    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}` } --parameters` + params2CLI(finalParams)
-    const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
-    const deployTfProviders =
+    `# Create Resource Group\n` +
+    `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` +
+    `# Deploy template with in-line parameters\n` +
+    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).main_url}` } --parameters` +
+    Object.keys(finalParams).map(k => {
+      const val = finalParams[k]
+      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+      return ` \\\n\t${k}=${targetVal}`
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deploystr : '')
+
+
+  const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
+
+  const deployTfProviders =
     `#providers.tf\n\n` +
     `terraform {\n` +
     `  required_version = ">=1.1.9"\n` +
@@ -167,10 +225,10 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `provider "azurerm" {\n` +
     `  features {}\n` +
     `}`
-    const deployTfMain =
+  const deployTfMain =
     `#main.tf\n\n` +
     `data "http" "aksc_release" {\n` +
-    `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).url}"\n`+
+    `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).main_url}"\n`+
     `  request_headers = {\n` +
     `    Accept = "application/json"\n` +
     `    User-Agent = "request module"\n` +
@@ -191,45 +249,13 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  })\n` +
     `}`
 
-    const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  type=string\n  default="${deploy.rg}"\n}\nvariable location {\n  type=string\n  default="${deploy.location}"\n}` + params2TfVar(finalParams)
+  const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  type=string\n  default="${deploy.rg}"\n}\nvariable location {\n  type=string\n  default="${deploy.location}"\n}` + params2TfVar(finalParams)
+  const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}`
 
-    const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}`
+  const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
-    const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
-
-
-  /*  WIP - Want the UI to call a common post-install script, instead of outputting the individual commands!
-   *
-  const post_script = `sh ${process.env.REACT_APP_TEMPLATERELEASE || '.'}${cluster.apisecurity === "private" && !process.env.REACT_APP_TEMPLATERELEASE ? '' : '/postdeploy/scripts'}/postdeploy.sh -g ${deploy.rg} -n ${aks} ${process.env.REACT_APP_TEMPLATERELEASE ? `-r ${process.env.REACT_APP_TEMPLATERELEASE}` : ''} -p vnet_opt=${net.vnet_opt}` +
-    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `,denydefaultNetworkPolicy=${addons.denydefaultNetworkPolicy}` : '') +
-    (addons.ingress == "appgw" ? `,agw=agw-${deploy.clusterName}` : '') +
-    (addons.ingress !== "none" ? `,ingress=${addons.ingress}` : '') +
-    (cluster.apisecurity !== "none" ? `,apisecurity=${cluster.apisecurity}` : '') +
-    (cluster.monitor !== "none" ? `,monitor=${addons.monitor}` : '') +
-    (addons.ingressEveryNode ? `,ingressEveryNode=${addons.ingressEveryNode}` : '') +
-    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `,dnsZoneId=${addons.dnsZoneId}` : '') +
-    (addons.ingress !== 'none' && addons.certMan ? `,certMan=${addons.certMan}` : '')
-
-  */
-
-  /*  Post Script START - To be replaced with external common script
-   *  --------------------------------------------------------------
-  */
-
-  const prometheus_namespace = 'monitoring'
-  const prometheus_helm_release_name = 'monitoring'
-  const nginx_namespace = 'ingress-basic'
-  const nginx_helm_release_name = 'nginx-ingress'
-  const contour_namespace = 'ingress-basic'
-  const contour_helm_release_name = 'contour-ingress'
-
-  const EXTERNAL_DNS_REGISTRY = 'k8s.gcr.io'
-  const EXTERNAL_DNS_REPO = 'external-dns/external-dns'
-  // appVersion :: https://raw.githubusercontent.com/kubernetes-sigs/external-dns/master/charts/external-dns/Chart.yaml
-  const EXTERNAL_DNS_TAG = 'v0.10.2'
-
-
-  const postscript_az =
+/*
+  const appgw_workaround =
     // App Gateway addon: see main.bicep DEPLOY_APPGW_ADDON
     (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `
 # ------------------------------------------------
@@ -241,143 +267,15 @@ AKS_AGIC_IDENTITY_ID="$(az aks show -g ${deploy.rg} -n ${aks} --query addonProfi
 az role assignment create --role "Contributor" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_ID
 az role assignment create --role "Reader" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_RG_ID
 ` : '') +
-    (net.vnet_opt === "byo" && addons.ingress === 'appgw' /* && appgwKVIntegration */ ? `
+    (net.vnet_opt === "byo" && addons.ingress === 'appgw' ? `
 APPGW_IDENTITY="$(az network application-gateway show -g ${deploy.rg} -n ${agw} --query 'keys(identity.userAssignedIdentities)[0]' -o tsv)"
 az role assignment create --role "Managed Identity Operator" --assignee-principal-type ServicePrincipal --assignee-object-id $AKS_AGIC_IDENTITY_ID --scope $APPGW_IDENTITY
-` : '') +
-    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId && cluster.apisecurity === "private" ? `
-# ------------------------------------------------
-#                 Import external-dns Image to ACR
-export ACRNAME=$(az acr list -g ${deploy.rg} --query [0].name -o tsv)
-az acr import -n $ACRNAME --source ${EXTERNAL_DNS_REGISTRY}/${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG} --image ${EXTERNAL_DNS_REPO}:${EXTERNAL_DNS_TAG}
-`:'')
-
-const postscript_cluster =
-    // Default Deny All Network Policy, east-west traffic in cluster
-    (addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy ? `
-# ------------------------------------------------
-#   Create a default-deny namespace network policy
-kubectl apply -f ${deploy.selectedTemplate === "local" ? (cluster.apisecurity !== "private" ? './postdeploy/k8smanifests/' : './') : 'https://raw.githubusercontent.com/Azure/AKS-Construction/main/postdeploy/k8smanifests/'}networkpolicy-deny-all.yml
-` : '') +
-
-    // Nginx Ingress Controller
-    (addons.ingress === 'nginx' ? `
-# ------------------------------------------------
-#                 Install Nginx Ingress Controller
-kubectl create namespace ${nginx_namespace}
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm upgrade --install  ${nginx_helm_release_name} ingress-nginx/ingress-nginx \\
-  --set controller.publishService.enabled=true \\
-` + (addons.ingressEveryNode ?
-        `  --set controller.kind=DaemonSet \\
-  --set controller.service.externalTrafficPolicy=Local \\
-` : '') +
-      (addons.monitor === 'oss' ?
-        `  --set controller.metrics.enabled=true \\
-  --set controller.metrics.serviceMonitor.enabled=true \\
-  --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \\
-  --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \\
-` : '') +
-      `  --namespace ${nginx_namespace}
-` : '') +
-
-    // Contour Ingress Controller
-    (addons.ingress === 'contour' ? `
-# ------------------------------------------------
-#               Install Contour Ingress Controller
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm upgrade --install  ${contour_helm_release_name} bitnami/contour --version 7.3.4 --namespace ${contour_namespace} --create-namespace \\
-    --set envoy.kind=${addons.ingressEveryNode ? 'daemonset' : 'deployment'} \\
-    --set contour.service.externalTrafficPolicy=${addons.ingressEveryNode ? 'local' : 'cluster'} \\
-    --set metrics.serviceMonitor.enabled=${addons.monitor === 'oss' ? 'true' : 'false'} \\
-    --set commonLabels."release"=${prometheus_helm_release_name} \\
-    --set metrics.serviceMonitor.namespace=${prometheus_namespace}
-` : '') +
-
-    // External DNS
-    // external-dns needs permissions to make changes in the Azure DNS server.
-    // https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/azure.md#azure-managed-service-identity-msi
-    (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? `
-# ------------------------------------------------
-#                             Install external-dns
-kubectl create secret generic aks-kube-msi --from-literal=azure.json="{
-  userAssignedIdentityID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv),
-  tenantId: $(az account show --query tenantId -o tsv),
-  useManagedIdentityExtension: true,
-  subscriptionId: ${addons.dnsZoneId.split('/')[2]},
-  resourceGroup: ${addons.dnsZoneId.split('/')[4]}
-}"
-helm upgrade --install externaldns https://github.com/kubernetes-sigs/external-dns/releases/download/external-dns-helm-chart-1.7.1/external-dns-1.7.1.tgz \\
-  --set domainFilters={"${addons.dnsZoneId.split('/')[8]}"} \\
-  --set provider="${addons.dnsZoneId.split('/')[7] === 'privateDnsZones' ? 'azure-private-dns' : 'azure'}" \\
-  --set extraVolumeMounts[0].name=aks-kube-msi,extraVolumeMounts[0].mountPath=/etc/kubernetes,extraVolumeMounts[0].readOnly=true \\
-  --set extraVolumes[0].name=aks-kube-msi,extraVolumes[0].secret.secretName=aks-kube-msi${false? ',extraVolumes[0].secret.items[0].key=externaldns-config.json,extraVolumes[0].secret.items[0].path=azure.json':''} ${cluster.apisecurity === "private" ? `\\
-  --set image.repository="$ACRNAME.azurecr.io/${EXTERNAL_DNS_REPO}"
-  --set image.tag="${EXTERNAL_DNS_TAG}"` : ''}
-` : '') +
-    // Cert-Manager
-    // https://cert-manager.io/docs/installation/
-    // Cannot use 1.6.0 with AGIC https://github.com/jetstack/cert-manager/issues/4547
-    // cert-manager ACME ClusterIssuer Configuration (client owns the domain)
-    // Lets Encrypt production Issuer, using either HTTP01 for external services, or DNS01 for internal
-    // https://cert-manager.io/docs/configuration/acme/
-
-    /*
-    - dns01:
-        # Add azureDNS resolver for Private endpoints, but this need to be fixed: https://github.com/cert-manager/website/issues/662
-        azureDNS:
-          subscriptionID: ${addons.dnsZoneId.split('/')[2]}
-          resourceGroupName: ${addons.dnsZoneId.split('/')[4]}
-          hostedZoneName: ${addons.dnsZoneId.split('/')[8]}
-          managedIdentity:
-            # client id of the node pool managed identity (can not be set at the same time as resourceID)
-            # https://github.com/tomasfreund/website/blob/ee75bf5685474c651d08750ecfe3a150de5eb586/content/en/docs/configuration/acme/dns01/azuredns.md
-            clientID: $(az aks show -g ${deploy.rg} -n ${aks} --query identityProfile.kubeletidentity.clientId -o tsv)
-    */
-    (addons.ingress !== 'none' && addons.certMan ? `
-# ------------------------------------------------
-#                             Install cert-manager
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${addons.ingress === 'appgw' ? 'v1.5.3' : 'v1.6.0'}/cert-manager.yaml
-sleep 20s # wait for cert-manager webhook to install
-helm upgrade --install letsencrypt-issuer ${deploy.selectedTemplate === "local" ? (cluster.apisecurity !== "private" ? './postdeploy/helm/' : './') : 'https://raw.githubusercontent.com/Azure/AKS-Construction/main/postdeploy/helm/'}Az-CertManagerIssuer-0.3.0.tgz \\
-    --set email=${addons.certEmail}  \\
-    --set ingressClass=${addons.ingress === 'appgw' ? "azure/application-gateway" : addons.ingress}
-`: '') +
-    // Prometheus
-    (addons.monitor === 'oss' ? `
-# ------------------------------------------------
-#              Install kube-prometheus-stack chart
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-kubectl create namespace ${prometheus_namespace}
-helm upgrade --install  ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace} ${addons.monitor === 'oss' && addons.enableMonitorIngress && addons.dns && addons.dnsZoneId ? `\\
-  --set grafana.ingress.enabled=true \\
-  --set grafana.ingress.annotations."cert-manager\\.io/cluster-issuer"=letsencrypt-prod \\
-  --set grafana.ingress.annotations."ingress\\.kubernetes\\.io/force-ssl-redirect"=\\"true\\" \\
-  --set grafana.ingress.ingressClassName=${addons.ingress} \\
-  --set grafana.ingress.hosts[0]=grafana.${addons.dnsZoneId.split('/')[8]} \\
-  --set grafana.ingress.tls[0].hosts[0]=grafana.${addons.dnsZoneId.split('/')[8]},grafana.ingress.tls[0].secretName=aks-grafana
-`: ''}
 ` : '')
+*/
 
-
-  /*  Post Script END - To be replaced with external common script
-   *  --------------------------------------------------------------
-  */
-
-
-  const postscript = `${postscript_az}
-${postscript_cluster ? (cluster.apisecurity !== "private" ? `
-# ------------------------------------------------
-#         Get credentials for your new AKS cluster
-az aks get-credentials -g ${deploy.rg} -n ${aks}
-${postscript_cluster}` : `
-# ------------------------------------------------
-#           Private cluster, so use command invoke
-az aks command invoke -g ${deploy.rg} -n ${aks}  --command "
-${postscript_cluster.replaceAll('"', '\\"')}
-"  ${addons.certMan && deploy.selectedTemplate === "local" ? '--file  ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz' : ''} ${addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy && deploy.selectedTemplate === "local" ? '--file  ./postdeploy/k8smanifests/networkpolicy-deny-all.yml' : ''}  `): ''}`
-
+  const ghOrg = deploy.githubrepo.replace(/.*com\//, "").replace(/\/.*/, '')
+  const ghRepo = deploy.githubrepo.replace(/.*\//, '')
+  console.log (`deploy.deployItemKey=${deploy.deployItemKey}`)
   return (
 
     <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
@@ -459,9 +357,9 @@ ${postscript_cluster.replaceAll('"', '\\"')}
       }
 
 
-      <Pivot defaultSelectedKey={terraformFeatureFlag ? "deployTf" : "deployArmCli" } >
+      <Pivot selectedKey={deploy.deployItemKey}  onLinkClick={({props}) => updateFn('deployItemKey', props.itemKey)}>
 
-        <PivotItem headerText="Provision Environment (CLI)" itemKey="deployArmCli" itemIcon="PasteAsCode" >
+        <PivotItem headerText="Command Line" itemKey="deployArmCli" itemIcon="PasteAsCode" >
 
           <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
             <Stack.Item>
@@ -485,14 +383,89 @@ ${postscript_cluster.replaceAll('"', '\\"')}
             </Stack.Item>
           </Stack>
 
-          <CodeBlock deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
+          <CodeBlock lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
           }
         </PivotItem>
 
-        <PivotItem headerText="Provision Environment (Terraform)" itemKey="deployTf" itemIcon="FileCode">
+        <PivotItem headerText="Github CI/CD" itemKey="github" itemIcon="ConfigurationSolid">
+            <Stack horizontal>
+              <Stack.Item>
+                <Stack>
+
+                <Label key="post-label" style={{marginTop: '10px'}}>Create Service Principle github will use to deploy to Azure</Label>
+                <Text>Run this code block to create the Service Principle, provide it the permissions needed to run the deployment, then It will create the secrets in your application repository</Text>
+                <Separator></Separator>
+                <Text>
+                  * Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+                </Text>
+                </Stack>
+              </Stack.Item>
+              <Stack.Item>
+                 <TextField label="Application github Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
+                 <TextField label="Application branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
+              </Stack.Item>
+            </Stack>
+
+            <CodeBlock key="github-auth" lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
+az group create -l WestEurope -n ${deploy.rg}
+
+app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | tr ' ' "\\n"))
+spId=$(az ad sp create --id \${app[0]} --query id -o tsv )
+subId=$(az account show --query id -o tsv)
+
+az role assignment create --role owner --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope /subscriptions/$subId/resourceGroups/${deploy.rg}
+${addons.dnsZoneId ? `az role assignment create --role owner --assignee-object-id  $spId --assignee-principal-type ServicePrincipal --scope ${addons.dnsZoneId.replace(/\/providers.*/, '')}`:'' }
+
+# Create a new federated identity credential
+az rest --method POST --uri "https://graph.microsoft.com/beta/applications/\${app[1]}/federatedIdentityCredentials" --body "{\\"name\\":\\"${ghRepo}-${deploy.githubrepobranch}-gh\\",\\"issuer\\":\\"https://token.actions.githubusercontent.com\\",\\"subject\\":\\"repo:${ghOrg}/${ghRepo}:ref:refs/heads/${deploy.githubrepobranch}\\",\\"description\\":\\"Access to branch ${deploy.githubrepobranch}\\",\\"audiences\\":[\\"api://AzureADTokenExchange\\"]}"
+
+# Set Secrets
+gh secret set --repo ${deploy.githubrepo} AZURE_CLIENT_ID -b \${app[0]}
+gh secret set --repo ${deploy.githubrepo} AZURE_TENANT_ID -b $(az account show --query tenantId -o tsv)
+gh secret set --repo ${deploy.githubrepo} AZURE_SUBSCRIPTION_ID -b $subId
+gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
+`}/>
+
+            <Label>To run te Github reusable workflow</Label>
+            <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos <code>.github/workflows</code> folder to call the AKS-Construction reusable workflow (this example creates a manually triggered Action)</Text>
+            <CodeBlock  lang="github actions"  deploycmd={`name: Deploy AKS-Construction
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reusable_workflow_job:
+    uses: Azure/AKS-Construction/.github/workflows/AKSC_Deploy.yml@main
+    with:
+      rg: ${deploy.rg}
+      resourceName: ${finalParams.resourceName}
+      templateParams: "${Object.keys(finalParams).map(k => {
+          const val = finalParams[k]
+          const targetVal = k.endsWith('PrincipalId')? '_USER_OBJECT_ID_' : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)
+          return `${k}=${targetVal}`
+      }).join(' ')}"` +
+      (Object.keys(post_params).length >0 ? (cluster.apisecurity === "private" ? '\n      postScriptInvokeCommand: true' : '') +  `
+      postScriptParams: "${Object.keys(post_params).filter(k => k !== 'KubeletId' && k !== 'TenantId').map(k => `${k}=${post_params[k]}`).join(',')}"` : '') + `
+    secrets:
+      AZURE_CLIENT_ID: \${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: \${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: \${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      USER_OBJECT_ID: \${{ secrets.USER_OBJECT_ID }}
+`}/>
+
+            <Separator styles={{root: {marginTop: '20px'}}} ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Cleanup / Reruns</b></div> </Separator>
+
+            <Label>The Create Service Principal script is not re-runnable, so to clean up the Service Principal and federated identity credential, run the following</Label>
+            <CodeBlock  lang="github actions"  deploycmd={`rmId=($(az ad app list --display-name ${ghRepo} --query '[[0].appId,[0].id]' -o tsv))
+az rest -m DELETE  -u "https://graph.microsoft.com/beta/applications/\${rmId[1]}/federatedIdentityCredentials/$(az rest -m GET -u https://graph.microsoft.com/beta/applications/\${rmId[1]}/federatedIdentityCredentials --query value[0].id -o tsv)"
+az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
+`}/>
+        </PivotItem>
+
+        <PivotItem headerText="Terraform" itemKey="deployTf" itemIcon="FileCode">
           <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
             <Stack.Item>
               <Label >Commands to deploy your fully operational environment</Label>
@@ -523,20 +496,14 @@ ${postscript_cluster.replaceAll('"', '\\"')}
 
         </PivotItem>
 
-        <PivotItem headerText="Post Configuration" itemIcon="ConfigurationSolid">
-            <Label key="post-label" style={{marginTop: '10px'}}>Commands to install kubernetes packages into your cluster</Label>,
-
-            <Text key="post-text">Requires <Link target="_bl" href="https://helm.sh/docs/intro/install/">Helm</Link></Text>,
-
-            <CodeBlock key="post-code" deploycmd={postscript}/>
-        </PivotItem>
-
-        <PivotItem headerText="Template Parameters File (for CI/CD)" itemIcon="FileSymlink">
+        <PivotItem headerText="Raw Parameters File" itemKey="params"  itemIcon="FileSymlink">
 
           <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
           </TextField>
 
         </PivotItem>
+
+
       </Pivot>
 
     </Stack>
