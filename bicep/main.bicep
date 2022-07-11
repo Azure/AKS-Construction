@@ -274,7 +274,7 @@ resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-0
   name: guid(aks.id, 'usersecret', keyVaultSecretsOfficerRole)
   properties: {
     roleDefinitionId: keyVaultSecretsOfficerRole
-    principalType: 'User'
+    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
     principalId: kvOfficerRolePrincipalId
   }
 }
@@ -286,7 +286,7 @@ resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04
   name: guid(aks.id, 'usercert', keyVaultCertsOfficerRole)
   properties: {
     roleDefinitionId: keyVaultCertsOfficerRole
-    principalType: 'User'
+    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
     principalId: kvOfficerRolePrincipalId
   }
 }
@@ -443,10 +443,25 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-previe
   name: guid(aks.id, 'Acr' , AcrPushRole)
   properties: {
     roleDefinitionId: AcrPushRole
-    principalType: 'User'
+    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
     principalId: acrPushRolePrincipalId
   }
 }
+
+
+param imageNames array = []
+
+module acrImport 'br/public:deployment-scripts/import-acr:2.0.1' = if (!empty(registries_sku) && !empty(imageNames)) {
+  name: 'testAcrImportMulti'
+  params: {
+    acrName: acr.name
+    location: location
+    images: imageNames
+  }
+}
+
+
+
 
 /*______  __  .______       _______ ____    __    ____  ___       __       __
 |   ____||  | |   _  \     |   ____|\   \  /  \  /   / /   \     |  |     |  |
@@ -1026,13 +1041,8 @@ var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPool
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
-var aks_addons = {
-  omsagent: {
-    enabled: createLaw && omsagent
-    config: {
-      logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
-    }
-  }
+
+var aks_addons = union({
   azurepolicy: {
     config: {
       version: !empty(azurepolicy) ? 'v2' : json('null')
@@ -1050,7 +1060,13 @@ var aks_addons = {
     enabled: openServiceMeshAddon
     config: {}
   }
-}
+}, createLaw && omsagent ? {
+  omsagent: {
+    enabled: createLaw && omsagent
+    config: {
+      logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
+    }
+  }} : {})
 
 var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   ingressApplicationGateway: {
@@ -1194,6 +1210,9 @@ resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = i
   }
 }
 
+@description('If automated deployment, for the 3 automated user assignments, set Principal Type on each to "ServicePrincipal" rarter than "User"')
+param automatedDeployment bool = false
+
 @description('The principal ID to assign the AKS admin role.')
 param adminPrincipalId string = ''
 // for AAD Integrated Cluster wusing 'enableAzureRBAC', add Cluster admin to the current user!
@@ -1203,7 +1222,7 @@ resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021
   name: guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)
   properties: {
     roleDefinitionId: buildInAKSRBACClusterAdmin
-    principalType: 'User'
+    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
     principalId: adminPrincipalId
   }
 }

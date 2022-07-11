@@ -37,14 +37,14 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
       <img id="aksLogo" src="aks.svg" alt="Kubernetes Service" style={{  }}></img>
       <Stack tokens={{ padding: 10, maxWidth: 700 }} className="intro">
         <Text variant="xLarge">AKS Deploy helper</Text>
-        <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance. Start by selecting your Architectural Approach.</Text>
+        <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance.</Text>
         <Text variant="medium" >Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
       <Stack grow={1} tokens={{ padding: 10 }} >
-        Architectural Approach
+
         <ChoiceGroup
           defaultSelectedKey={selectedPreset}
-          options={Object.keys(presets).map(p => { return { key: p, text: presets[p].title, disabled: presets[p].disabled, iconProps: { iconName: presets[p].icon } } })}
+          options={Object.keys(presets).map(p => { return { key: p, text: presets[p].title, disabled: presets[p].disabled, iconProps: { iconName: presets[p].icon }  } })}
           onChange={(ev, { key }) => setPresets(key)}
         >
         </ChoiceGroup>
@@ -194,11 +194,13 @@ export default function PortalNav({ config }) {
       return response.json();
     }).then((res) => {
       console.log(`useEffect Get template versions`)
-      const releases = res.filter(rel => rel.assets.find(a => a.name === 'main.json') && rel.draft === false).map((rel, i) => {
+      const releases = res.filter(rel => rel.assets.find(a => a.name === 'main.json') &&  rel.assets.find(a => a.name === 'postdeploy.sh')  &&  rel.assets.find(a => a.name === 'dependencies.json') && rel.draft === false).map((rel, i) => {
         return {
           key: rel.tag_name,
           text: `${rel.tag_name}${i === 0 ? ' (latest)' : ''}`,
-          url: rel.assets.find(a => a.name === 'main.json').browser_download_url
+          main_url: rel.assets.find(a => a.name === 'main.json').browser_download_url,
+          post_url: rel.assets.find(a => a.name === 'postdeploy.sh').browser_download_url,
+          base_download_url: rel.assets.find(a => a.name === 'main.json').browser_download_url.replace('/main.json','')
         }
       }).concat(defaults.deploy.templateVersions)
       //console.log (releases)
@@ -245,18 +247,25 @@ export default function PortalNav({ config }) {
   }
 
   function mergeState(tab, field, value) {
-    if (typeof field === "string") urlParams.set(`${tab}.${field}`, value)
+
+    let updatevals
+    if (typeof field === "string") {
+      updatevals = { [field]: value }
+      urlParams.set(`${tab}.${field}`, value)
+    } else if (typeof field === "function") {
+      updatevals = field(tabValues[tab])
+      for (let nfield of Object.keys(updatevals)) {
+        urlParams.set(`${tab}.${nfield}`, updatevals[nfield])
+      }
+    }
+
     //window.history.replaceState(null, null, "?"+urlParams.toString())
     setTabValues((p) => {
       return {
         ...p,
         [tab]: {
-          ...(typeof field === "function" ? {
-            ...field(p[tab])
-          } : {
             ...p[tab],
-            [field]: value
-          })
+            ...updatevals
         }
       }
     })
@@ -278,48 +287,32 @@ export default function PortalNav({ config }) {
   const { deploy, cluster, net, addons } = tabValues
 
   console.log(`PortalNav: Evaluating configruation warnings...`)
-  invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph,
-    <Text><b>ERROR</b>: The selected VM cache is not large enough to support Ephemeral. Select 'Managed' or a VM with a larger cache</Text>)
-  invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36,
-    <Text>Enter Valid Directory ID</Text>)
-
-  invalidFn('addons', 'registry', net.vnetprivateend && (addons.registry !== 'Premium' && addons.registry !== 'none'),
-    <Text><b>ERROR</b>: Premium tier is required for Private Link, either select Premium, or disable Private Link</Text>)
-  invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'),
-    <Text>Enter valid Azure Public or Private DNS Zone resourceId</Text>)
+  invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph, 'The selected VM cache is not large enough to support Ephemeral. Select \'Managed\' or a VM with a larger cache')
+  invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36, 'Enter Valid Directory ID')
+  invalidFn('addons', 'registry', net.vnetprivateend && (addons.registry !== 'Premium' && addons.registry !== 'none'), 'Premium tier is required for Private Link, either select Premium, or disable Private Link')
+  invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'), 'Enter valid Azure Public or Private DNS Zone resourceId')
   invalidFn('cluster', 'dnsApiPrivateZoneId', cluster.apisecurity === 'private' && cluster.privateClusterDnsMethod==='privateDnsZone' && !cluster.dnsApiPrivateZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/privateDnsZones/[^/ ]+.azmk8s.io$'),
     <Text>Enter valid Azure Private DNS Zone resourceId</Text>)
-  invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'),
-    <Text>Enter valid email for certificate generation</Text>)
-  invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'),
-    <Text>Enter valid Azure KeyVault resourceId</Text>)
-  invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}.){3}[0-9]{1,3}$'),
-    <Text>Enter valid IP address</Text>)
-  invalidFn('addons', 'appgwKVIntegration', addons.ingress === "appgw" && addons.appgwKVIntegration && addons.csisecret !== 'akvNew',
-    <Text><b>ERROR</b>: KeyVault integration requires the 'CSI Secrets' 'Yes, Provision a new KeyVault' option to be selected</Text>)
+  invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'), 'Enter valid email for certificate generation')
+  invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'), 'Enter valid Azure KeyVault resourceId')
+  invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}.){3}[0-9]{1,3}$'), 'Enter valid IP address')
+  invalidFn('addons', 'appgwKVIntegration', addons.ingress === "appgw" && addons.appgwKVIntegration && addons.csisecret !== 'akvNew', 'KeyVault integration requires the \'CSI Secrets\' \'Yes, Provision a new KeyVault\' option to be selected')
   invalidFn('addons', 'ingress', net.afw && (addons.ingress !== "none" && addons.ingress !== "appgw"),
     <Text><b>WARNING</b>: Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configuration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule to Azure Firewall</Link></Text>)
-  invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
-    <Text>Enter a valid Subnet Id where AKS nodes will be installed</Text>)
-  invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'),
-    <Text>Enter a valid Subnet Id where Application Gateway is installed</Text>)
-  invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.afw || net.vnetprivateend),
-    <Text>Cannot use default networking of you select Firewall or Private Link</Text>)
+  invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'), 'Enter a valid Subnet Id where AKS nodes will be installed')
+  invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'), 'Enter a valid Subnet Id where Application Gateway is installed')
+  invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.afw || net.vnetprivateend), 'Cannot use default networking of you select Firewall or Private Link')
   invalidFn('net', 'afw', net.afw && net.vnet_opt !== "custom",
     net.vnet_opt === "byo" ?
-      <Text>Please de-select, when using Bring your own VNET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)</Text>
+      'Please de-select, when using Bring your own VNET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)'
       :
-      <Text><b>WARNING</b>: This template can only deploy Azure Firewall in single VNET with Custom Networking"</Text>
-  )
-  invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") || (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default"),
-    <Text>When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway</Text>
-)
-  invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7,
-    <Text>Enter an IP/CIDR, or disable API Security in 'Cluster Details' tab</Text>)
-  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19,
-    <Text>Enter valid cluster name</Text>)
+      'This template can only deploy Azure Firewall in single VNET with Custom Networking' )
+  invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") || (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default"), 'When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway')
+  invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7, 'Enter an IP/CIDR, or disable API Security in \'Cluster Details\' tab')
+  invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19, 'Enter valid cluster name')
 
-
+  invalidFn('deploy', 'githubrepo', deploy.deployItemKey === 'github' && (!deploy.githubrepo || !deploy.githubrepo.match('https://github.com/[^/ ]+/[^/ ]+$')), 'Please enter your application github repo URL (https://github.com/org/repo)')
+  invalidFn('deploy', 'githubrepobranch', deploy.deployItemKey === 'github' && !deploy.githubrepobranch, 'Please enter your application github repo branch the can run the workflow')
   function _customRenderer(page, link, defaultRenderer) {
     return (
       <span>

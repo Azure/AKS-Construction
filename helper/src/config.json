@@ -22,7 +22,10 @@
                 "key": "local",
                 "text": "local"
             }],
-            "selectedTemplate": "local"
+            "selectedTemplate": "local",
+            "githubrepo": "",
+            "githubrepobranch": "main",
+            "deployItemKey": "deployArmCli"
         },
         "cluster": {
             "AksPaidSkuForSLA": false,

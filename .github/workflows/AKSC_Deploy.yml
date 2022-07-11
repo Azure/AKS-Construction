@@ -1,0 +1,127 @@
+name: Deploy AKS-Construction
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Which GitHub Environment to deploy to'
+        required: false
+        type: string
+      templateVersion:
+        description: 'Template Version'
+        required: false
+        default: '0.8.5-preview'
+        type: string
+      rg:
+        description: 'Resource Group name'
+        required: true
+        type: string
+      resourceName:
+        description: 'Unique name that all your resources will be based on'
+        required: true
+        type: string
+      templateParamFile:
+        description: 'Template parameters file'
+        required: false
+        type: string
+      templateParams:
+        description: 'Template parameters, space seperated key=value'
+        required: false
+        default: ''
+        type: string
+      postScriptParams:
+        description: 'Template parameters, comma seperated key=value'
+        required: false
+        type: string
+      postScriptInvokeCommand:
+        description: 'Use invoke (run) command for postscript execution (suitable for Private Clusters)'
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      USER_OBJECT_ID:
+        required: false
+    outputs:
+      AKSNAME:
+        description: "The AKS Cluster name"
+        value: ${{ jobs.Deploy-AKSC.outputs.AKSNAME }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  Deploy-AKSC:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    outputs:
+      AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
+    steps:
+      # Log into Azure
+    - uses: azure/login@v1.4.3
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Deploy Bicep file
+    - name: Deploy Bicep
+      id: deployAks
+      env:
+        templateParams: "${{ inputs.templateParams}}"
+      run: |
+        if [ -n "${{ secrets.USER_OBJECT_ID }}" ]
+        then
+          echo "Substitute _USER_OBJECT_ID_ placeholder value with real guid from secret"
+          templateParams=${templateParams//=_USER_OBJECT_ID_/=${{ secrets.USER_OBJECT_ID }}}
+        else
+          echo "USER_OBJECT_ID not being leveraged in workflow"
+        fi
+
+        DeployOut=($(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
+
+        aksClusterName=${DeployOut[0]}
+        containerRegistryName=${DeployOut[1]}
+
+        echo "aksClusterName returned from az deployment = $aksClusterName"
+        echo "containerRegistryName returned from az deployment = $containerRegistryName"
+
+        echo "::set-output name=AKSNAME::$aksClusterName"
+        echo "::set-output name=ACRNAME::$containerRegistryName"
+
+    - name: Kubelogin
+      if: inputs.postScriptParams && inputs.postScriptInvokeCommand == false
+      env:
+        kubeloginversion: 'v0.0.13'
+      run: |
+
+        az aks get-credentials -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --overwrite-existing
+
+        wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
+        unzip kubelogin-linux-amd64.zip
+        sudo mv bin/linux_amd64/kubelogin /usr/bin
+        kubelogin convert-kubeconfig -l azurecli
+
+    - name: Post Deploy
+      if: inputs.postScriptParams
+      run: |
+
+        postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptParams }}"
+
+        if ${{ inputs.postScriptInvokeCommand}}; then
+          if [ "${{ steps.deployAks.outputs.ACRNAME }}" ]; then
+            postcmd="${postcmd},acrName=${{ steps.deployAks.outputs.ACRNAME }}"
+          fi
+          az aks command invoke -g ${{ inputs.rg }} -n ${{ steps.deployAks.outputs.AKSNAME }}  --command "$postcmd"
+        else
+          eval $postcmd
+        fi
+
+
+
