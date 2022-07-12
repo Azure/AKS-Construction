@@ -351,7 +351,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                     text: 'None: Defaults to public DNS (AKS will not create a Private DNS Zone)'
                                 }, {
                                     key: 'system',
-                                    text: 'System: AKS will create a Private DNS Zone in the Node Resource Group'
+                                    text: 'System: AKS will create a Private DNS Zone in the Managed AKS Resource Group'
                                 }, {
                                     key: 'privateDnsZone',
                                     text: 'Custom: BYO Private DNS Zone (provide ResourceId)'
@@ -359,7 +359,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             ]} />
                             {cluster.privateClusterDnsMethod==='privateDnsZone' &&
                                 <>
-                                    <MessageBar messageBarType={MessageBarType.info}>Custom Private DNS Zones are useful for having more control on zone naming or resource group homing, in most cases System created DNS should be sufficient</MessageBar>
+                                    <MessageBar messageBarType={MessageBarType.info}>Custom Private DNS Zones are useful for having more control on zone naming or for shared zones in other resource groups, in most cases System created DNS should be sufficient</MessageBar>
                                     <TextField
                                        value={cluster.dnsApiPrivateZoneId}
                                        onChange={(ev, v) => updateFn("dnsApiPrivateZoneId", v)}
