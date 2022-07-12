@@ -1156,7 +1156,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   }
 }
 output aksClusterName string = aks.name
-output aksOidcIssuerUrl string = aks.properties.oidcIssuerProfile.issuerURL
+output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
 
 var policySetBaseline = '/providers/Microsoft.Authorization/policySetDefinitions/a8640138-9b0a-4a28-b8cb-1666c838647d'
 var policySetRestrictive = '/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00'
