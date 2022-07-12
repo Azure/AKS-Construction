@@ -1110,7 +1110,7 @@ var aksProperties = {
     authorizedIPRanges: authorizedIPRanges
   } : {
     enablePrivateCluster: enablePrivateCluster
-    privateDNSZone: enablePrivateCluster ? aksPrivateDnsZone : 'none'
+    privateDNSZone: enablePrivateCluster ? aksPrivateDnsZone : ''
     enablePrivateClusterPublicFQDN: enablePrivateCluster && privateClusterDnsMethod=='none'
   }
   agentPoolProfiles: agentPoolProfiles
