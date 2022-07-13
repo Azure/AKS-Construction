@@ -36,7 +36,7 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
     <Stack horizontal tokens={{ childrenGap: 10 }}>
       <img id="aksLogo" src="aks.svg" alt="Kubernetes Service" style={{  }}></img>
       <Stack tokens={{ padding: 10, maxWidth: 700 }} className="intro">
-        <Text variant="xLarge">AKS Deploy helper</Text>
+        <Text variant="xLarge">AKS Platform Deploy helper</Text>
         <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance.</Text>
         <Text variant="medium" >Documentation and CI/CD samples are in the <a href="https://github.com/evilazaro/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
