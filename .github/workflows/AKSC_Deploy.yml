@@ -84,7 +84,7 @@ jobs:
           echo "USER_OBJECT_ID not being leveraged in workflow"
         fi
 
-        DeployOut=($(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
+        DeployOut=($(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/evilazaro/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
 
         aksClusterName=${DeployOut[0]}
         containerRegistryName=${DeployOut[1]}
@@ -112,7 +112,7 @@ jobs:
       if: inputs.postScriptParams
       run: |
 
-        postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptParams }}"
+        postcmd="curl -sL https://github.com/evilazaro/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/evilazaro/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptParams }}"
 
         if ${{ inputs.postScriptInvokeCommand}}; then
           if [ "${{ steps.deployAks.outputs.ACRNAME }}" ]; then

@@ -16,7 +16,7 @@ module acrRbac 'acr-rbac.bicep' = {
 }
 
 //---------Kubernetes Construction---------
-//ref: https://github.com/Azure/AKS-Construction
+//ref: https://github.com/evilazaro/AKS-Construction
 
 module aksconst '../../bicep/main.bicep' = {
   name: 'aksconstruction'

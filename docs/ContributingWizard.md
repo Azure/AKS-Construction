@@ -140,7 +140,7 @@ A simple example change to the UI is when the Flux Addon was added. The bicep ch
     </Label>
     <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: '10px' } }}>
             Enabling this option installs Flux to the cluster, but it doesn't apply configuration.
-            For samples of Flux configuration see <Link target="_target" href="https://github.com/Azure/AKS-Construction/tree/main/samples/flux">Flux samples</Link>
+            For samples of Flux configuration see <Link target="_target" href="https://github.com/evilazaro/AKS-Construction/tree/main/samples/flux">Flux samples</Link>
     </MessageBar>
     <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-gitops-checkbox"}} checked={addons.fluxGitOpsAddon} onChange={(ev, v) => updateFn("fluxGitOpsAddon", v)} label="Install the Flux GitOps AddOn" />
 </Stack.Item>

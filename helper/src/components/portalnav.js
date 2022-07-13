@@ -38,7 +38,7 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
       <Stack tokens={{ padding: 10, maxWidth: 700 }} className="intro">
         <Text variant="xLarge">AKS Deploy helper</Text>
         <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance.</Text>
-        <Text variant="medium" >Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
+        <Text variant="medium" >Documentation and CI/CD samples are in the <a href="https://github.com/evilazaro/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
       <Stack grow={1} tokens={{ padding: 10 }} >
 
@@ -190,7 +190,7 @@ export default function PortalNav({ config }) {
   }, [])
 
   useEffect(() => {
-    fetch('https://api.github.com/repos/Azure/Aks-Construction/releases').then(response => {
+    fetch('https://api.github.com/repos/evilazaro/aks-construction/releases').then(response => {
       return response.json();
     }).then((res) => {
       console.log(`useEffect Get template versions`)

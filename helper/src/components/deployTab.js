@@ -438,7 +438,7 @@ on:
 
 jobs:
   reusable_workflow_job:
-    uses: Azure/AKS-Construction/.github/workflows/AKSC_Deploy.yml@main
+    uses: evilazaro/aks-construction/.github/workflows/AKSC_Deploy.yml@main
     with:
       rg: ${deploy.rg}
       resourceName: ${finalParams.resourceName}

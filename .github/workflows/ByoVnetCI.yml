@@ -500,7 +500,7 @@ jobs:
         run:
           AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
 
-          netpolicycmd="kubectl apply -f https://raw.githubusercontent.com/Azure/Aks-Construction/0.4.3/postdeploy/k8smanifests/networkpolicy-deny-all.yml";
+          netpolicycmd="kubectl apply -f https://raw.githubusercontent.com/evilazaro/aks-construction/0.4.3/postdeploy/k8smanifests/networkpolicy-deny-all.yml";
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
@@ -558,7 +558,7 @@ jobs:
 
   SmokeTest_JavaApp-certmgr:
     needs: [Deploy, ReusableWF, Post-Deploy]
-    #uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
+    #uses: evilazaro/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
     uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.1
     with:
       #REPOREF:  "0.9.1-preview"
@@ -579,7 +579,7 @@ jobs:
 
   SmokeTest_JavaApp-appgw:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr]
-    #uses: azure/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
+    #uses: evilazaro/aks-construction/.github/workflows/AppDeploy_JavaApp.yml@0.4.2-preview
     uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.1
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
