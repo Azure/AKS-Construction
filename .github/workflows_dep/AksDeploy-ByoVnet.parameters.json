@@ -65,7 +65,7 @@
         "SystemPoolType" : {
             "value" : "Standard"
         },
-        "creatkeyVaultCreateeKV" : {
+        "keyVaultCreate" : {
             "value" : true
         },
         "keyVaultAksCSI" : {
