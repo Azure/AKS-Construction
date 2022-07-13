@@ -58,7 +58,7 @@
                         "icon": "DeveloperTools",
                         "values": {
                             "cluster": {
-                                "SystemPoolType": "Cost-Optimised",
+                                "SystemPoolType": "CostOptimised",
                                 "autoscale": false,
                                 "upgradeChannel": "none"
                             },
@@ -100,7 +100,7 @@
                         "icon": "Touch",
                         "values": {
                             "cluster": {
-                                "SystemPoolType": "Cost-Optimised",
+                                "SystemPoolType": "CostOptimised",
                                 "autoscale": true,
                                 "upgradeChannel": "stable"
                             },
@@ -148,7 +148,7 @@
                         "icon": "Unlock",
                         "values": {
                             "deploy": {
-                                "kvIPAllowlist": false
+                                "keyVaultIPAllowlist": false
                             },
                             "cluster": {
                                 "enable_aad": false,
@@ -220,7 +220,7 @@
                         "icon": "Lock12",
                         "values": {
                             "deploy": {
-                                "kvIPAllowlist": false
+                                "keyVaultIPAllowlist": false
                             },
                             "cluster": {
                                 "enable_aad": true,
@@ -324,7 +324,7 @@
                         "icon": "ProtectionCenterLogo32",
                         "values": {
                             "deploy": {
-                                "kvIPAllowlist": true
+                                "keyVaultIPAllowlist": true
                             },
                             "cluster": {
                                 "enable_aad": true,

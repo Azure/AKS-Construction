@@ -58,7 +58,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
         privateLinks: true,
-        ...(addons.csisecret === 'akvNew' && deploy.kvIPAllowlist  && apiips_array.length > 0 && {kvIPAllowlist: apiips_array }),
+        ...(addons.csisecret === 'akvNew' && deploy.keyVaultIPAllowlist  && apiips_array.length > 0 && {keyVaultIPAllowlist: apiips_array }),
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
@@ -83,9 +83,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
       })
     }),
-    ...(addons.csisecret !== "none" && { azureKeyvaultSecretsProvider: true }),
-    ...(addons.csisecret === 'akvNew' && { createKV: true, ...(deploy.kvCertSecretRole && { kvOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
-    ...(addons.csisecret !== "none" && addons.kvPollInterval !== defaults.addons.kvPollInterval  && { kvPollInterval: addons.kvPollInterval }),
+    ...(addons.csisecret !== "none" && { keyVaultAksCSI: true }),
+    ...(addons.csisecret === 'akvNew' && { keyVaultCreate: true, ...(deploy.kvCertSecretRole && { keyVaultOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
+    ...(addons.csisecret !== "none" && addons.keyVaultAksCSIPollInterval !== defaults.addons.keyVaultAksCSIPollInterval  && { keyVaultAksCSIPollInterval: addons.keyVaultAksCSIPollInterval }),
     ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon})
   }
 
@@ -149,7 +149,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const params2TfVar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
         p !== 'acrPushRolePrincipalId' &&
-        p !== 'kvOfficerRolePrincipalId').map(k => {
+        p !== 'keyVaultOfficerRolePrincipalId').map(k => {
 
     const val = p[k]
 
@@ -170,7 +170,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const params2file = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
         p !== 'acrPushRolePrincipalId' &&
-        p !== 'kvOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
+        p !== 'keyVaultOfficerRolePrincipalId').reduce((a, c) => { return { ...a, parameters: { ...a.parameters, [c]: { value: p[c] } } } }, {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {}
@@ -338,9 +338,9 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             <Label>Grant Key Vault Certificate and Secret Officer role <a target="_target" href="https://docs.microsoft.com/azure/key-vault/general/rbac-guide?tabs=azure-cli#azure-built-in-roles-for-key-vault-data-plane-operations">docs</a></Label>
             <Stack.Item>
             <Checkbox disabled={addons.csisecret !== 'akvNew'} checked={deploy.kvCertSecretRole} onChange={(ev, v) => updateFn("kvCertSecretRole", v)} label="Assign deployment user Certificate and Secret Officer" />
-            <Checkbox disabled={addons.csisecret !== 'akvNew' || !net.vnetprivateend} checked={deploy.kvIPAllowlist} onChange={(ev, v) => updateFn("kvIPAllowlist", v)} label="Add current IP to KeyVault firewall (applicable to private link)" />
+            <Checkbox disabled={addons.csisecret !== 'akvNew' || !net.vnetprivateend} checked={deploy.keyVaultIPAllowlist} onChange={(ev, v) => updateFn("keyVaultIPAllowlist", v)} label="Add current IP to KeyVault firewall (applicable to private link)" />
             </Stack.Item>
-            { deploy.kvIPAllowlist && net.vnetprivateend && <MessageBar messageBarType={MessageBarType.info}> <Text >"Add current IP to KeyVault firewall" will enable KeyVaults  PublicNetworkAccess property</Text></MessageBar> }
+            { deploy.keyVaultIPAllowlist && net.vnetprivateend && <MessageBar messageBarType={MessageBarType.info}> <Text >"Add current IP to KeyVault firewall" will enable KeyVaults  PublicNetworkAccess property</Text></MessageBar> }
 
         </Stack>
 

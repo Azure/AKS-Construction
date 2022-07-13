@@ -32,13 +32,13 @@
     "appgwKVIntegration": {
       "value": true
     },
-    "azureKeyvaultSecretsProvider": {
+    "keyVaultAksCSI": {
       "value": true
     },
-    "createKV": {
+    "keyVaultCreate": {
       "value": true
     },
-    "kvIPAllowlist": {
+    "keyVaultIPAllowlist": {
       "value": [
         "1.2.3.4/32"
       ]

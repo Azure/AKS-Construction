@@ -53,10 +53,10 @@
     "appgwKVIntegration": {
       "value": true
     },
-    "createKV": {
+    "keyVaultCreate": {
       "value": true
     },
-    "azureKeyvaultSecretsProvider": {
+    "keyVaultAksCSI": {
       "value": true
     },
     "upgradeChannel": {

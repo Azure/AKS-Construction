@@ -15,7 +15,7 @@
             "disablePreviews": false,
             "acrPushRole": true,
             "kvCertSecretRole": true,
-            "kvIPAllowlist": false,
+            "keyVaultIPAllowlist": false,
             "clusterAdminRole": true,
             "clusterIPWhitelist" : true,
             "templateVersions": [{
@@ -33,7 +33,7 @@
             "privateDNSZone": "none",
             "autoscale": true,
             "upgradeChannel": "none",
-            "SystemPoolType": "Cost-Optimised",
+            "SystemPoolType": "CostOptimised",
             "agentCount": 3,
             "maxCount": 20,
             "vmSize": "Standard_DS3_v2",
@@ -79,7 +79,7 @@
             "retentionInDays": 30,
             "createAksMetricAlerts": true,
             "csisecret": "none",
-            "kvPollInterval": "2m",
+            "keyVaultAksCSIPollInterval": "2m",
             "kvId": "",
             "gitops": "none"
         },

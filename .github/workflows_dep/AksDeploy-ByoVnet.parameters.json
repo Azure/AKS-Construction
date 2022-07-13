@@ -65,10 +65,10 @@
         "SystemPoolType" : {
             "value" : "Standard"
         },
-        "createKV" : {
+        "creatkeyVaultCreateeKV" : {
             "value" : true
         },
-        "azureKeyvaultSecretsProvider" : {
+        "keyVaultAksCSI" : {
             "value" : true
         },
         "appgwKVIntegration" : {
@@ -87,10 +87,10 @@
               "guard"
             ]
         },
-        "KeyVaultSoftDelete" : {
+        "keyVaultSoftDelete" : {
             "value" : false
         },
-        "KeyVaultPurgeProtection" : {
+        "keyVaultPurgeProtection" : {
             "value" : false
         },
         "dnsZoneId" : {
