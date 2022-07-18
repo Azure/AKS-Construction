@@ -96,6 +96,7 @@ jobs:
         - 'postdeploy/scripts/postdeploy.sh'
         - 'postdeploy/k8smanifests/networkpolicy-deny-all.yml'
         - 'postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz'
+        - 'helper/src/dependencies.json'
 
     name: Add extra release file-artifacts
     if: ${{ github.event.inputs.createRelease == 'true' }}
