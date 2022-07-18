@@ -312,6 +312,9 @@ export default function PortalNav({ config }) {
 
   invalidFn('deploy', 'githubrepo', deploy.deployItemKey === 'github' && (!deploy.githubrepo || !deploy.githubrepo.match('https://github.com/[^/ ]+/[^/ ]+$')), 'Please enter your application github repo URL (https://github.com/org/repo)')
   invalidFn('deploy', 'githubrepobranch', deploy.deployItemKey === 'github' && !deploy.githubrepobranch, 'Please enter your application github repo branch the can run the workflow')
+  invalidFn('deploy', 'selectedTemplate', !deploy.templateVersions.find(t => t.key === deploy.selectedTemplate), `Invalid release name: ${deploy.selectedTemplate}, ensure all assests are attached`)
+
+
   function _customRenderer(page, link, defaultRenderer) {
     return (
       <span>
