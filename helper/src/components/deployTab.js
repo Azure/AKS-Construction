@@ -178,8 +178,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const finalParams = { ...params, ...(!deploy.disablePreviews && preview_params) }
 
+  const deployRelease = deploy.templateVersions.find(t => t.key === deploy.selectedTemplate) || {}
+
   const post_deploycmd =  `\n\n# Deploy charts into cluster\n` +
-  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh` : `curl -sL ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).post_url}  | bash -s --`) + ` ${deploy.selectedTemplate === 'local' ? ( cluster.apisecurity === "private" ? ' -r .' : '') : `-r ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).base_download_url}`}` +
+  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh` : `curl -sL ${deployRelease.post_url}  | bash -s --`) +
+  (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? ' -r .' : '') : `-r ${deployRelease.base_download_url}`) +
   Object.keys(post_params).map(k => {
     const val = post_params[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
@@ -201,7 +204,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Resource Group\n` +
     `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` +
     `# Deploy template with in-line parameters\n` +
-    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).main_url}` } --parameters` +
+    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deployRelease.main_url}` } --parameters` +
     Object.keys(finalParams).map(k => {
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
@@ -228,7 +231,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const deployTfMain =
     `#main.tf\n\n` +
     `data "http" "aksc_release" {\n` +
-    `  url = "${deploy.templateVersions.length >1 && deploy.templateVersions.find(t => t.key === deploy.selectedTemplate).main_url}"\n`+
+    `  url = "${deployRelease.main_url}"\n`+
     `  request_headers = {\n` +
     `    Accept = "application/json"\n` +
     `    User-Agent = "request module"\n` +
@@ -372,13 +375,14 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             <Stack.Item  align="end">
               <Stack horizontal tokens={{childrenGap: 5}}>
               <Dropdown
-                    label='Template Version'
-                    disabled={process.env.REACT_APP_TEMPLATERELEASE !== undefined}
-                    selectedKey={deploy.selectedTemplate}
-                    onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
-                    options={deploy.templateVersions}
-                    styles={{ dropdown: { width: 200 } }}
-                  />
+                errorMessage={getError(invalidArray, 'selectedTemplate')}
+                label='Template Version'
+                disabled={process.env.REACT_APP_TEMPLATERELEASE !== undefined}
+                selectedKey={deploy.selectedTemplate}
+                onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
+                options={deploy.templateVersions}
+                styles={{ dropdown: { width: 200 } }}
+              />
               </Stack>
             </Stack.Item>
           </Stack>
