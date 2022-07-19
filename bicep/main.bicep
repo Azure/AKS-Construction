@@ -47,7 +47,7 @@ resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if 
 //----------------------------------------------------- BYO Vnet
 var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 4 ? split(byoAKSSubnetId, '/')[4] : '') : ''
 
-module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId)) {
+module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId) && aks_byo_identity) {
   name: 'addAksNetContributor'
   scope: resourceGroup(existingAksVnetRG)
   params: {
@@ -1174,12 +1174,12 @@ output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.i
 
 @description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
 var uaiNetworkScopeRbac = enablePrivateCluster && !empty(dnsApiPrivateZoneId) ? 'Vnet' : 'Subnet'
-module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !empty(dnsApiPrivateZoneId)) {
+module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !empty(dnsApiPrivateZoneId) && aks_byo_identity) {
   name: 'addPrivateK8sApiDnsContributor'
   params: {
     vnetId: ''
     dnsZoneId: dnsApiPrivateZoneId
-    principalId: uai.properties.principalId
+    principalId: aks_byo_identity ? uai.properties.principalId : ''
   }
 }
 
