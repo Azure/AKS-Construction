@@ -175,6 +175,7 @@ var isDnsZonePrivate = !empty(dnsZoneId) ? split(dnsZoneId, '/')[7] == 'privateD
 module dnsZone './dnsZoneRbac.bicep' = if (!empty(dnsZoneId)) {
   name: 'addDnsContributor'
   params: {
+    dnsZoneId: dnsZoneId
     vnetId: isDnsZonePrivate ? (!empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/subnets')[0] : (custom_vnet ? network.outputs.vnetId : '')) : ''
     principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
   }
@@ -778,7 +779,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.22.6'
+param kubernetesVersion string = '1.22.11'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -1096,6 +1097,7 @@ var aks_identity = {
 
 @description('Sets the private dns zone id if provided')
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
+output aksPrivateDnsZone string = aksPrivateDnsZone
 
 var aksProperties = {
   kubernetesVersion: kubernetesVersion

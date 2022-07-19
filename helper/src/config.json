@@ -8,7 +8,7 @@
     },
     "defaults": {
         "deploy": {
-            "kubernetesVersion": "1.22.6",
+            "kubernetesVersion": "1.22.11",
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,

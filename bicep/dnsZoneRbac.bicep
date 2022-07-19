@@ -2,7 +2,7 @@
 //The DNS Zone Id is extracted and the scope is set correctly.
 
 @description('The full Azure resource ID of the DNS zone to use for the AKS cluster')
-param dnsZoneId string = ''
+param dnsZoneId string
 
 @description('The id of a virtual network to be linked to a PRIVATE DNS Zone')
 param vnetId string
@@ -15,7 +15,7 @@ var dnsZoneName = !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''
 var isDnsZonePrivate = !empty(dnsZoneId) ? split(dnsZoneId, '/')[7] == 'privateDnsZones' : false
 
 module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
-  name: 'addDnsContributor'
+  name: 'dns-${dnsZoneName}'
   scope: resourceGroup(dnsZoneRg)
   params: {
     dnsZoneName: dnsZoneName
