@@ -38,8 +38,8 @@ param byoAKSSubnetId string = ''
 param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
-var aks_byo_identity = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId)
-resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (aks_byo_identity) {
+var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId)
+resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
 }
@@ -47,13 +47,13 @@ resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if 
 //----------------------------------------------------- BYO Vnet
 var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 4 ? split(byoAKSSubnetId, '/')[4] : '') : ''
 
-module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId)) {
+module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId) && createAksUai) {
   name: 'addAksNetContributor'
   scope: resourceGroup(existingAksVnetRG)
   params: {
     byoAKSSubnetId: byoAKSSubnetId
-    user_identity_principalId: aks_byo_identity ? uai.properties.principalId : ''
-    user_identity_name: uai.name
+    user_identity_principalId: createAksUai ? aksUai.properties.principalId : ''
+    user_identity_name: aksUai.name
     user_identity_rg: resourceGroup().name
     rbacAssignmentScope: uaiNetworkScopeRbac
   }
@@ -129,7 +129,7 @@ module network './network.bicep' = if (custom_vnet) {
     resourceName: resourceName
     location: location
     vnetAddressPrefix: vnetAddressPrefix
-    aksPrincipleId: aks_byo_identity ? uai.properties.principalId : ''
+    aksPrincipleId: createAksUai ? aksUai.properties.principalId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     ingressApplicationGateway: ingressApplicationGateway
     vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
@@ -1027,7 +1027,7 @@ var aks_addons1 = DEPLOY_APPGW_ADDON && ingressApplicationGateway ? union(aks_ad
 var aks_identity = {
   type: 'UserAssigned'
   userAssignedIdentities: {
-    '${uai.id}': {}
+    '${aksUai.id}': {}
   }
 }
 
@@ -1094,7 +1094,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
-  identity: aks_byo_identity ? aks_identity : {
+  identity: createAksUai ? aks_identity : {
     type: 'SystemAssigned'
   }
   sku: {
@@ -1112,12 +1112,12 @@ output aksNodeResourceGroup string = aks.properties.nodeResourceGroup
 
 @description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
 var uaiNetworkScopeRbac = enablePrivateCluster && !empty(dnsApiPrivateZoneId) ? 'Vnet' : 'Subnet'
-module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !empty(dnsApiPrivateZoneId)) {
+module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !empty(dnsApiPrivateZoneId) && createAksUai) {
   name: 'addPrivateK8sApiDnsContributor'
   params: {
     vnetId: ''
     dnsZoneId: dnsApiPrivateZoneId
-    principalId: uai.properties.principalId
+    principalId: createAksUai ? aksUai.properties.principalId : ''
   }
 }
 

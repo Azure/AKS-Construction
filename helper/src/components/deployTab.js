@@ -401,16 +401,16 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
               <Stack.Item>
                 <Stack>
 
-                <Label key="post-label" style={{marginTop: '10px'}}>Create Service Principle github will use to deploy to Azure</Label>
-                <Text>Run this code block to create the Service Principle, provide it the permissions needed to run the deployment, then It will create the secrets in your application repository</Text>
+                <Label key="post-label" style={{marginTop: '10px'}}>Create an Azure AD Service Principal that GitHub will use to deploy to Azure</Label>
+                <Text>Run this code block to create the Service Principal, provide it the permissions needed to run the deployment, then it will create the secrets in your application repository</Text>
                 <Separator></Separator>
                 <Text>
-                  * Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+                  * Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell (where it is pre-installed)</Link>.
                 </Text>
                 </Stack>
               </Stack.Item>
               <Stack.Item>
-                 <TextField label="Application github Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
+                 <TextField label="Application GitHub Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
                  <TextField label="Application branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
               </Stack.Item>
             </Stack>
