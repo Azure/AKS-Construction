@@ -32,6 +32,7 @@ resource privateDnsContributor 'Microsoft.Authorization/roleAssignments@2020-04-
     principalId: principalId
   }
 }
+
 resource dns_vnet_link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (isPrivate && !empty(vnetId)) {
   parent: privateDns
   name: 'privatedns'

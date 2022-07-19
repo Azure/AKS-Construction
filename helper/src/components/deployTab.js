@@ -71,6 +71,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
+    ...(cluster.apisecurity === "private" && cluster.apisecurity === "private" && defaults.cluster.privateClusterDnsMethod !== cluster.privateClusterDnsMethod && { privateClusterDnsMethod: cluster.privateClusterDnsMethod }),
+    ...(cluster.apisecurity === "private" && cluster.apisecurity === "private" && cluster.privateClusterDnsMethod === 'privateDnsZone' && { dnsApiPrivateZoneId: cluster.dnsApiPrivateZoneId }),
     ...(addons.ingress !== "none" && addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
     ...(addons.ingress === "appgw" && {
       ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
