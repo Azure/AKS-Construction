@@ -2,12 +2,12 @@
 
 ## Creating a release
 
-Usually a release of the Web UI will be accompanied by changes to the bicep code. In which case a new symantic release tag needs to be chosen (0.8.2 or 0.8.5 etc).
+Usually a release of the Web UI will be accompanied by changes to the bicep code. In which case a new symantec release tag needs to be chosen (0.8.2 or 0.8.5 etc).
 There is a [GitHub action workflow](https://github.com/Azure/AKS-Construction/actions/workflows/release.yml) which is initiated manually but automates the release, all that needs to be provided is the new release tag.
 
 ## Releasing just the Web UI
 
-Occassionally there will be UI improvements that we want to release that do not have any dependencies in a new release.
+Occasionally there will be UI improvements that we want to release that do not have any dependencies in a new release.
 For these scenarios, we use the same [GitHub action workflow](https://github.com/Azure/AKS-Construction/actions/workflows/release.yml) but choose not to create a new release. Instead, just repeating the release tag that is current.
 
 ## Rolling back the release
@@ -15,7 +15,7 @@ For these scenarios, we use the same [GitHub action workflow](https://github.com
 When the release workflow runs, it stores assets of the UI and bicep code in zip files.
 If we need to rollback a *bad release* then process is as follows
 
-1. In the [GitHub action workflow](https://github.com/Azure/AKS-Construction/actions/workflows/release.yml) history, locate the release you want to rollback to. 
+1. In the [GitHub action workflow](https://github.com/Azure/AKS-Construction/actions/workflows/release.yml) history, locate the release you want to rollback to.
 2. Download the artifact zip for the `WizardApp`
 3. In you local git environment checkout the `gh-pages` branch
 4. Extract the contents of the artifact zip over the top of branch
