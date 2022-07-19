@@ -6,6 +6,12 @@ param user_identity_name string
 param user_identity_rg string
 param user_identity_principalId string
 
+@allowed([
+  'Subnet'
+  'Vnet'
+])
+param rbacAssignmentScope string = 'Subnet'
+
 var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
 
 var existingAksSubnetName = !empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/')[10] : ''
@@ -25,8 +31,8 @@ resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' exist
 }
 
 resource existing_vnet_cont 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name:  guid(user_identity_principalId, existingAksSubnetName)
-  scope: existingAksSubnet
+  name:  guid(user_identity_principalId, networkContributorRole, rbacAssignmentScope=='subnet' ? existingAksSubnetName : existingAksVnetName)
+  scope: rbacAssignmentScope=='subnet' ? existingAksSubnet : existingvnet
   properties: {
     roleDefinitionId: networkContributorRole
     principalId: uai.properties.principalId
