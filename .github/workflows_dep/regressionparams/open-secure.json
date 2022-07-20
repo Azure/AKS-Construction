@@ -23,10 +23,10 @@
     "azurepolicy": {
       "value": "audit"
     },
-    "azureKeyvaultSecretsProvider": {
+    "keyVaultAksCSI": {
       "value": true
     },
-    "createKV": {
+    "keyVaultCreate": {
       "value": true
     }
   }

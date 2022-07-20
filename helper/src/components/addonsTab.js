@@ -330,7 +330,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <Dropdown
                         styles={{ root: { marginBottom: '20px' } }}
                         label="Rotation poll interval"
-                        onChange={(ev, { key }) => updateFn("kvPollInterval", key)} selectedKey={addons.kvPollInterval}
+                        onChange={(ev, { key }) => updateFn("keyVaultAksCSIPollInterval", key)} selectedKey={addons.keyVaultAksCSIPollInterval}
                         options={[
                             { key: '2m', text: '2 minutes' },
                             { key: '5m', text: '5 minutes' },

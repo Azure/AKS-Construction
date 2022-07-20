@@ -44,10 +44,10 @@
 		"networkPlugin": {
 			"value": "azure"
 		},
-        "KeyVaultSoftDelete" : {
+        "keyVaultSoftDelete" : {
             "value" : false
         },
-        "KeyVaultPurgeProtection" : {
+        "keyVaultPurgeProtection" : {
             "value" : false
         }
 	}

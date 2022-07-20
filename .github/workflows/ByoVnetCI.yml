@@ -203,7 +203,7 @@ jobs:
             } else { Write-Output "-- Looks like $feature is registered properly" }
           }
 
-          if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
+          if($params.parameters.keyVaultAksCSI.value -eq $true) {
             $feature='AKS-AzureKeyVaultSecretsProvider'
             write-output "-- $feature"
             $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"}
@@ -336,7 +336,7 @@ jobs:
               $paramFileContent=Get-Content $paramFilePath
               $params=$paramFileContent|ConvertFrom-Json
 
-              if($params.parameters.createKV.value -eq $true) {
+              if($params.parameters.keyVaultCreate.value -eq $true) {
                 Write-Output "Checking for already existing soft deleted KV"
 
                 #lets do this properly and interrogate the whatif file for the KVNAME
@@ -641,7 +641,7 @@ jobs:
           }
 
           Write-Output "Checking for CSI Secrets driver"
-          if($params.parameters.azureKeyvaultSecretsProvider.value -eq $true) {
+          if($params.parameters.keyVaultAksCSI.value -eq $true) {
             $csiEnabled=az aks show -n $AKSNAME -g $RG --query "addonProfiles.omsagent.enabled" -o tsv
             write-output $csiEnabled
 

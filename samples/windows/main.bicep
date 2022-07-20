@@ -38,7 +38,7 @@ module aks '../../bicep/main.bicep' = {
     agentCount:1
     agentCountMax:3
     JustUseSystemPool: true
-    SystemPoolType: 'Cost-Optimised'
+    SystemPoolType: 'CostOptimised'
     byoAKSSubnetId: vnet.properties.subnets[0].id
   }
 }
