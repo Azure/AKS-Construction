@@ -85,7 +85,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             selectedKey={cluster.SystemPoolType}
                             options={[
                                 { "data-testid":'cluster-systempool-none', key: 'none', text: 'No separate system pool: Use a single pool for System and User workloads' },
-                                { "data-testid":'cluster-systempool-Cost-Optimised', key: 'Cost-Optimised', text: 'Cost-Optimised: use low-cost Burstable VMs, with 1-3 node autoscale' },
+                                { "data-testid":'cluster-systempool-Cost-Optimised', key: 'CostOptimised', text: 'CostOptimised: use low-cost Burstable VMs, with 1-3 node autoscale' },
                                 { "data-testid":'cluster-systempool-Standard', key: 'Standard', text: 'Standard: use standard 4-core VMs, with 2-3 node autoscale' }
                             ]}
                             onChange={(ev, { key }) => { sliderUpdateFn({SystemPoolType: key}) }}

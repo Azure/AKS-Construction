@@ -34,7 +34,7 @@ module aksconst '../../bicep/main.bicep' = {
     retentionInDays: 30
     agentCount: 1
     JustUseSystemPool: false
-    SystemPoolType: 'Cost-Optimised'
+    SystemPoolType: 'CostOptimised'
     createEventGrid: true
   }
 }

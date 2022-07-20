@@ -115,7 +115,7 @@ module gridAks '../../bicep/main.bicep' = {
     agentCountMax:3
     adminPrincipalId: adminPrincipalId
     JustUseSystemPool: false
-    SystemPoolType: 'Cost-Optimised'
+    SystemPoolType: 'CostOptimised'
     byoAKSSubnetId: gridVnet.outputs.aksSubnetId
     AutoscaleProfile: aggressiveAutoScaler
     //agentVMTaints:  [for pool in extraAksNodePools: '${nodeTaintKey}=${pool}:NoExecute']

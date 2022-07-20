@@ -138,7 +138,7 @@ module network './network.bicep' = if (custom_vnet) {
     privateLinks: privateLinks
     privateLinkSubnetAddressPrefix: privateLinkSubnetAddressPrefix
     privateLinkAcrId: privateLinks && !empty(registries_sku) ? acr.id : ''
-    privateLinkAkvId: privateLinks && createKV ? kv.id : ''
+    privateLinkAkvId: privateLinks && keyVaultCreate ? kv.outputs.keyVaultId : ''
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
     bastion: bastion
@@ -189,131 +189,64 @@ module dnsZone './dnsZoneRbac.bicep' = if (!empty(dnsZoneId)) {
 |  .  \  |  |____     |  |           \    / /  _____  \ |  `--'  | |  `----.    |  |
 |__|\__\ |_______|    |__|            \__/ /__/     \__\ \______/  |_______|    |__|     */
 
-@description('Installs the AKS KV CSI provider')
-param azureKeyvaultSecretsProvider bool = false
-
-@description('Rotation poll interval for the AKS KV CSI provider')
-param kvPollInterval string = '2m'
-
-@description('Enables Open Service Mesh')
-param openServiceMeshAddon bool = false
-
-@description('Creates a Key Vault')
-param createKV bool = false
+@description('Creates a KeyVault')
+param keyVaultCreate bool = false
 
 @description('If soft delete protection is enabled')
-param KeyVaultSoftDelete bool = true
+param keyVaultSoftDelete bool = true
 
 @description('If purge protection is enabled')
-param KeyVaultPurgeProtection bool = true
+param keyVaultPurgeProtection bool = true
 
 @description('Add IP to KV firewall allow-list')
-param kvIPAllowlist array = []
+param keyVaultIPAllowlist array = []
 
-var akvRawName = 'kv-${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
-var akvName = length(akvRawName) > 24 ? substring(akvRawName, 0, 24) : akvRawName
+@description('Installs the AKS KV CSI provider')
+param keyVaultAksCSI bool = false
 
-var kvIPRules = [for kvIp in kvIPAllowlist: {
-  value: kvIp
-}]
+@description('Rotation poll interval for the AKS KV CSI provider')
+param keyVaultAksCSIPollInterval string = '2m'
 
-resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' = if (createKV) {
-  name: akvName
-  location: location
-  properties: {
-    tenantId: subscription().tenantId
-    sku: {
-      family: 'A'
-      name: 'standard'
-    }
-    // publicNetworkAccess:  whether the vault will accept traffic from public internet. If set to 'disabled' all traffic except private endpoint traffic and that that originates from trusted services will be blocked.
-    publicNetworkAccess: privateLinks && empty(kvIPAllowlist) ? 'disabled' : 'enabled'
-
-    networkAcls: privateLinks && !empty(kvIPAllowlist) ? {
-      bypass: 'AzureServices'
-      defaultAction: 'Deny'
-      ipRules: kvIPRules
-      virtualNetworkRules: []
-    } : {}
-
-    //enabledForTemplateDeployment: true
-    enableRbacAuthorization: true
-    enabledForDeployment: false
-    enabledForDiskEncryption: false
-    enabledForTemplateDeployment: false
-    enableSoftDelete: KeyVaultSoftDelete
-    enablePurgeProtection: KeyVaultPurgeProtection ? true : json('null')
+module kv 'keyvault.bicep' = if(keyVaultCreate) {
+  name: 'keyvault'
+  params: {
+    resourceName: resourceName
+    keyVaultPurgeProtection: keyVaultPurgeProtection
+    keyVaultSoftDelete: keyVaultSoftDelete
+    keyVaultIPAllowlist: keyVaultIPAllowlist
+    location: location
+    privateLinks: privateLinks
   }
 }
 
-var keyVaultSecretsUserRole = resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
-resource kvAppGwSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && appgwKVIntegration) {
-  scope: kv
-  name: guid(aks.id, 'AppGw', keyVaultSecretsUserRole)
-  properties: {
-    roleDefinitionId: keyVaultSecretsUserRole
-    principalType: 'ServicePrincipal'
-    principalId: deployAppGw ? appGwIdentity.properties.principalId : ''
+@description('The principal ID of the user or service principal that requires access to the Key Vault. Set automatedDeployment to toggle between user and service prinicpal')
+param keyVaultOfficerRolePrincipalId string = ''
+var keyVaultOfficerRolePrincipalIds = [
+  keyVaultOfficerRolePrincipalId
+]
+
+@description('Parsing an array with union ensures that duplicates are removed, which is great when dealing with highly conditional elements')
+var rbacSecretUserSps = union([deployAppGw && appgwKVIntegration ? appGwIdentity.properties.principalId : ''],[keyVaultAksCSI ? aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.objectId : ''])
+
+@description('A seperate module is used for RBAC to avoid delaying the KeyVault creation and causing a circular reference.')
+module kvRbac 'keyvaultrbac.bicep' = if (keyVaultCreate) {
+  name: 'KeyVaultRbac'
+  params: {
+    keyVaultName: kv.outputs.keyVaultName
+
+    //service principals
+    rbacSecretUserSps: rbacSecretUserSps
+    rbacSecretOfficerSps: !empty(keyVaultOfficerRolePrincipalId) && automatedDeployment ? keyVaultOfficerRolePrincipalIds : []
+    rbacCertOfficerSps: !empty(keyVaultOfficerRolePrincipalId) && automatedDeployment ? keyVaultOfficerRolePrincipalIds : []
+
+    //users
+    rbacSecretOfficerUsers: !empty(keyVaultOfficerRolePrincipalId) && !automatedDeployment ? keyVaultOfficerRolePrincipalIds : []
+    rbacCertOfficerUsers: !empty(keyVaultOfficerRolePrincipalId) && !automatedDeployment ? keyVaultOfficerRolePrincipalIds : []
   }
 }
 
-resource kvCSIdriverSecretsUserRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && azureKeyvaultSecretsProvider) {
-  scope: kv
-  name: guid(aks.id, 'CSIDriver', keyVaultSecretsUserRole)
-  properties: {
-    roleDefinitionId: keyVaultSecretsUserRole
-    principalType: 'ServicePrincipal'
-    principalId: aks.properties.addonProfiles.azureKeyvaultSecretsProvider.identity.objectId
-  }
-}
-
-@description('The principal ID of the service principal that has access to the Key Vault')
-param kvOfficerRolePrincipalId string = ''
-var keyVaultSecretsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
-resource kvUserSecretOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
-  scope: kv
-  name: guid(aks.id, 'usersecret', keyVaultSecretsOfficerRole)
-  properties: {
-    roleDefinitionId: keyVaultSecretsOfficerRole
-    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
-    principalId: kvOfficerRolePrincipalId
-  }
-}
-
-
-var keyVaultCertsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'a4417e6f-fecd-4de8-b567-7b0420556985')
-resource kvUserCertsOfficerRole 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createKV && !empty(kvOfficerRolePrincipalId)) {
-  scope: kv
-  name: guid(aks.id, 'usercert', keyVaultCertsOfficerRole)
-  properties: {
-    roleDefinitionId: keyVaultCertsOfficerRole
-    principalType: automatedDeployment ? 'ServicePrincipal' : 'User'
-    principalId: kvOfficerRolePrincipalId
-  }
-}
-
-output keyVaultName string = createKV ? kv.name : ''
-output keyVaultId string = createKV ? kv.id : ''
-
-resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && createKV) {
-  name: 'kvDiags'
-  scope: kv
-  properties: {
-    workspaceId:aks_law.id
-    logs: [
-      {
-        category: 'AuditEvent'
-        enabled: true
-      }
-    ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-      }
-    ]
-  }
-}
+output keyVaultName string = keyVaultCreate ? kv.outputs.keyVaultName : ''
+output keyVaultId string = keyVaultCreate ? kv.outputs.keyVaultId : ''
 
 
 /*   ___           ______     .______
@@ -793,6 +726,9 @@ param omsagent bool = false
 @description('Enable RBAC using AAD')
 param enableAzureRBAC bool = false
 
+@description('Enables Open Service Mesh')
+param openServiceMeshAddon bool = false
+
 @allowed([
   ''
   'none'
@@ -909,13 +845,13 @@ param DefenderForContainers bool = false
 param JustUseSystemPool bool = false
 
 @allowed([
-  'Cost-Optimised'
+  'CostOptimised'
   'Standard'
   'HighSpec'
   'Custom'
 ])
 @description('The System Pool Preset sizing')
-param SystemPoolType string = 'Cost-Optimised'
+param SystemPoolType string = 'CostOptimised'
 
 @description('A custom system pool spec')
 param SystemPoolCustomPreset object = {}
@@ -966,7 +902,7 @@ param oidcIssuer bool = false
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
-  'Cost-Optimised' : {
+  CostOptimised : {
     vmSize: 'Standard_B4ms'
     count: 1
     minCount: 1
@@ -974,7 +910,7 @@ var systemPoolPresets = {
     enableAutoScaling: true
     availabilityZones: []
   }
-  'Standard' : {
+  Standard : {
     vmSize: 'Standard_DS2_v2'
     count: 3
     minCount: 3
@@ -986,7 +922,7 @@ var systemPoolPresets = {
       '3'
     ]
   }
-  'HighSpec' : {
+  HighSpec : {
     vmSize: 'Standard_D4s_v3'
     count: 3
     minCount: 3
@@ -1053,9 +989,9 @@ var aks_addons = union({
   azureKeyvaultSecretsProvider: {
     config: {
       enableSecretRotation: 'true'
-      rotationPollInterval: kvPollInterval
+      rotationPollInterval: keyVaultAksCSIPollInterval
     }
-    enabled: azureKeyvaultSecretsProvider
+    enabled: keyVaultAksCSI
   }
   openServiceMesh: {
     enabled: openServiceMeshAddon
@@ -1171,6 +1107,8 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
 }
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+output aksNodeResourceGroup string = aks.properties.nodeResourceGroup
+//output aksNodePools array = [for nodepool in agentPoolProfiles: name]
 
 @description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
 var uaiNetworkScopeRbac = enablePrivateCluster && !empty(dnsApiPrivateZoneId) ? 'Vnet' : 'Subnet'
@@ -1294,11 +1232,11 @@ param createAksMetricAlerts bool = true
 param AksMetricAlertMetricFrequencyModel string = 'Long'
 
 var AlertFrequencyLookup = {
-  'Short': {
+  Short: {
     evalFrequency: 'PT1M'
     windowSize: 'PT5M'
   }
-  'Long': {
+  Long: {
     evalFrequency: 'PT15M'
     windowSize: 'PT1H'
   }
