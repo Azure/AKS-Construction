@@ -76,5 +76,21 @@ resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
   }
 }
 
+param createKmsKey bool = false
+
+resource kvKmsKey 'Microsoft.KeyVault/vaults/keys@2021-11-01-preview' = if(createKmsKey) {
+  name: 'kmskey'
+  parent: kv
+  properties: {
+    kty: 'RSA'
+    keySize: 2048
+    keyOps: [
+      'wrapKey'
+      'unwrapKey'
+    ]
+  }
+}
+
 output keyVaultName string = kv.name
 output keyVaultId string = kv.id
+output keyVaultKmsKeyUri string = createKmsKey ? kvKmsKey.properties.keyUriWithVersion : ''

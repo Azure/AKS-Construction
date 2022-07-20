@@ -38,7 +38,7 @@ param byoAKSSubnetId string = ''
 param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
-var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId)
+var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreate
 resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
@@ -207,8 +207,9 @@ param keyVaultAksCSI bool = false
 @description('Rotation poll interval for the AKS KV CSI provider')
 param keyVaultAksCSIPollInterval string = '2m'
 
+@description('Creates a KeyVault for application secrets (eg. CSI)')
 module kv 'keyvault.bicep' = if(keyVaultCreate) {
-  name: 'keyvault'
+  name: 'keyvaultApps'
   params: {
     resourceName: resourceName
     keyVaultPurgeProtection: keyVaultPurgeProtection
@@ -230,9 +231,9 @@ var rbacSecretUserSps = union([deployAppGw && appgwKVIntegration ? appGwIdentity
 
 @description('A seperate module is used for RBAC to avoid delaying the KeyVault creation and causing a circular reference.')
 module kvRbac 'keyvaultrbac.bicep' = if (keyVaultCreate) {
-  name: 'KeyVaultRbac'
+  name: 'KeyVaultAppsRbac'
   params: {
-    keyVaultName: kv.outputs.keyVaultName
+    keyVaultName: keyVaultCreate ? kv.outputs.keyVaultName : ''
 
     //service principals
     rbacSecretUserSps: rbacSecretUserSps
@@ -247,6 +248,41 @@ module kvRbac 'keyvaultrbac.bicep' = if (keyVaultCreate) {
 
 output keyVaultName string = keyVaultCreate ? kv.outputs.keyVaultName : ''
 output keyVaultId string = keyVaultCreate ? kv.outputs.keyVaultId : ''
+
+
+/* KeyVault for KMS Etcd*/
+
+@description('Enable encryption at rest for Kubernetes etcd data')
+param keyVaultKmsCreate bool = false
+
+module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate) {
+  name: 'keyvaultKms'
+  params: {
+    resourceName: 'kms${resourceName}'
+    keyVaultPurgeProtection: keyVaultPurgeProtection
+    keyVaultSoftDelete: keyVaultSoftDelete
+    location: location
+    privateLinks: privateLinks
+    createKmsKey: true
+  }
+}
+
+module kvKmsRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreate) {
+  name: 'keyvaultKmsRbac'
+  params: {
+    keyVaultName: keyVaultKmsCreate ? kvKms.outputs.keyVaultName : ''
+    rbacCryptoUserSps: [
+      createAksUai ? aksUai.properties.principalId : ''
+    ]
+  }
+}
+
+var azureKeyVaultKms = {
+  enabled: keyVaultKmsCreate
+  keyId: keyVaultKmsCreate ? kvKms.outputs.keyVaultKmsKeyUri : ''
+  keyVaultNetworkAccess: privateLinks ? 'private' : 'public'
+  keyVaultResourceId:  keyVaultKmsCreate && privateLinks ? kvKms.outputs.keyVaultId : ''
+}
 
 
 /*   ___           ______     .______
@@ -838,7 +874,7 @@ param dnsServiceIP string = '172.10.0.10'
 @description('The address range to use for the docker bridge')
 param dockerBridgeCidr string = '172.17.0.1/16'
 
-@description('Enable Microsoft Defender for Containers (currently preview)')
+@description('Enable Microsoft Defender for Containers (preview)')
 param DefenderForContainers bool = false
 
 @description('Only use the system node pool')
@@ -899,6 +935,9 @@ param natGwIdleTimeout int = 30
 
 @description('Configures the cluster as an OIDC issuer for use with Workload Identity')
 param oidcIssuer bool = false
+
+@description('Enable workload identity')
+param workloadIdentity bool = false
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
@@ -978,7 +1017,6 @@ var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPool
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
-
 var aks_addons = union({
   azurepolicy: {
     config: {
@@ -1035,65 +1073,66 @@ var aks_identity = {
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
 output aksPrivateDnsZone string = aksPrivateDnsZone
 
-var aksProperties = {
-  kubernetesVersion: kubernetesVersion
-  enableRBAC: true
-  dnsPrefix: dnsPrefix
-  aadProfile: enable_aad ? {
-    managed: true
-    enableAzureRBAC: enableAzureRBAC
-    tenantID: aad_tenant_id
-  } : null
-  apiServerAccessProfile: !empty(authorizedIPRanges) ? {
-    authorizedIPRanges: authorizedIPRanges
-  } : {
-    enablePrivateCluster: enablePrivateCluster
-    privateDNSZone: enablePrivateCluster ? aksPrivateDnsZone : ''
-    enablePrivateClusterPublicFQDN: enablePrivateCluster && privateClusterDnsMethod=='none'
-  }
-  agentPoolProfiles: agentPoolProfiles
-  networkProfile: {
-    loadBalancerSku: 'standard'
-    networkPlugin: networkPlugin
-    #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
-    networkPolicy: networkPolicy
-    podCidr: podCidr
-    serviceCidr: serviceCidr
-    dnsServiceIP: dnsServiceIP
-    dockerBridgeCidr: dockerBridgeCidr
-    outboundType: aksOutboundTrafficType
-    natGatewayProfile: aksOutboundTrafficType == 'managedNATGateway' ? {
-      managedOutboundIPProfile: {
-        count: natGwIpCount
-      }
-      idleTimeoutInMinutes: natGwIdleTimeout
-    } : {}
-  }
-  disableLocalAccounts: AksDisableLocalAccounts && enable_aad
-  autoUpgradeProfile: !empty(upgradeChannel) ? {
-    upgradeChannel: upgradeChannel
-  } : {}
-  addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
-  autoScalerProfile: autoScale ? AutoscaleProfile : {}
-  oidcIssuerProfile: {
-    enabled: oidcIssuer
-  }
-}
-
-@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
-var azureDefenderSecurityProfile = {
-  securityProfile : {
-    azureDefender: {
-      enabled: true
-      logAnalyticsWorkspaceResourceId: aks_law.id
-    }
-  }
-}
 
 resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
-  properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
+  properties: {
+    kubernetesVersion: kubernetesVersion
+    enableRBAC: true
+    dnsPrefix: dnsPrefix
+    aadProfile: enable_aad ? {
+      managed: true
+      enableAzureRBAC: enableAzureRBAC
+      tenantID: aad_tenant_id
+    } : null
+    apiServerAccessProfile: !empty(authorizedIPRanges) ? {
+      authorizedIPRanges: authorizedIPRanges
+    } : {
+      enablePrivateCluster: enablePrivateCluster
+      privateDNSZone: enablePrivateCluster ? aksPrivateDnsZone : ''
+      enablePrivateClusterPublicFQDN: enablePrivateCluster && privateClusterDnsMethod=='none'
+    }
+    agentPoolProfiles: agentPoolProfiles
+    networkProfile: {
+      loadBalancerSku: 'standard'
+      networkPlugin: networkPlugin
+      #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
+      networkPolicy: networkPolicy
+      podCidr: podCidr
+      serviceCidr: serviceCidr
+      dnsServiceIP: dnsServiceIP
+      dockerBridgeCidr: dockerBridgeCidr
+      outboundType: aksOutboundTrafficType
+      natGatewayProfile: aksOutboundTrafficType == 'managedNATGateway' ? {
+        managedOutboundIPProfile: {
+          count: natGwIpCount
+        }
+        idleTimeoutInMinutes: natGwIdleTimeout
+      } : {}
+    }
+    disableLocalAccounts: AksDisableLocalAccounts && enable_aad
+    autoUpgradeProfile: !empty(upgradeChannel) ? {
+      upgradeChannel: upgradeChannel
+    } : {}
+    addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
+    autoScalerProfile: autoScale ? AutoscaleProfile : {}
+    oidcIssuerProfile: {
+      enabled: oidcIssuer
+    }
+    securityProfile: {
+      azureKeyVaultKms: azureKeyVaultKms
+      defender: {
+        logAnalyticsWorkspaceResourceId: createLaw ? aks_law.id : null
+        securityMonitoring: {
+          enabled: DefenderForContainers
+        }
+      }
+      workloadIdentity: {
+        enabled: workloadIdentity
+      }
+    }
+  }
   identity: createAksUai ? aks_identity : {
     type: 'SystemAssigned'
   }
@@ -1103,6 +1142,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   }
   dependsOn: [
     privateDnsZoneRbac
+    kvKmsRbac
   ]
 }
 output aksClusterName string = aks.name
@@ -1264,7 +1304,7 @@ param retentionInDays int = 30
 
 var aks_law_name = 'log-${resourceName}'
 
-var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecurityGroups)
+var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecurityGroups || DefenderForContainers)
 
 resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (createLaw) {
   name: aks_law_name
