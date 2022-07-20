@@ -108,6 +108,11 @@ jobs:
         sudo mv bin/linux_amd64/kubelogin /usr/bin
         kubelogin convert-kubeconfig -l azurecli
 
+    - name: Sleep before Post Deploy
+      if: inputs.postScriptParams
+      run: |
+        sleep 1m
+
     - name: Post Deploy
       if: inputs.postScriptParams
       run: |

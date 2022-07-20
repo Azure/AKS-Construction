@@ -248,7 +248,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 {addons.azurepolicy !== 'none' &&
                 <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
                     <Dropdown
-                        label="Pod Security Policy"
+                        label="Azure Policy Initiative"
                         onChange={(ev, { key }) => updateFn("azurePolicyInitiative", key)} selectedKey={addons.azurePolicyInitiative}
                         styles={{ root: {  marginTop: '20px', marginLeft: '100px', width: '700px' } }}
                         options={[
