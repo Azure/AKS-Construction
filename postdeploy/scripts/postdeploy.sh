@@ -236,9 +236,11 @@ if [ "$monitor" = "oss" ]; then
 fi
 
 ingressClass=$ingress
+legacyIngressClass=$ingress
 # https://azure.github.io/application-gateway-kubernetes-ingress/ingress-v1/
 if [ "$ingress" = "appgw" ]; then
     ingressClass="azure-application-gateway"
+    legacyIngressClass="azure/application-gateway"
 fi
 
 prometheus_namespace="monitoring"
@@ -352,7 +354,7 @@ if [ "$certEmail" ]; then
 
     helm upgrade --install letsencrypt-issuer ${release_version:-./postdeploy/helm}/Az-CertManagerIssuer-0.3.0.tgz \
         --set email=${certEmail}  \
-        --set ingressClass=${ingressClass}
+        --set ingressClass=${legacyIngressClass}
 fi
 
 

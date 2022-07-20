@@ -396,7 +396,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           }
         </PivotItem>
 
-        <PivotItem headerText="Github CI/CD" itemKey="github" itemIcon="ConfigurationSolid">
+        <PivotItem headerText="Github Actions" itemKey="github" itemIcon="GitGraph">
             <Stack horizontal>
               <Stack.Item>
                 <Stack>
@@ -445,16 +445,17 @@ on:
 jobs:
   reusable_workflow_job:
     uses: Azure/AKS-Construction/.github/workflows/AKSC_Deploy.yml@main
-    with:
+    with:` + (deploy.selectedTemplate !== 'local' ? `
+      templateVersion: ${deploy.selectedTemplate}` : '') + `
       rg: ${deploy.rg}
       resourceName: ${finalParams.resourceName}
-      templateParams: "${Object.keys(finalParams).map(k => {
+      templateParams: ${Object.keys(finalParams).map(k => {
           const val = finalParams[k]
-          const targetVal = k.endsWith('PrincipalId')? '_USER_OBJECT_ID_' : ( Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val)
+          const targetVal = k.endsWith('PrincipalId')? '_USER_OBJECT_ID_' : ( Array.isArray(val) ? JSON.stringify(val) : val)
           return `${k}=${targetVal}`
-      }).join(' ')}"` +
+      }).join(' ')}` +
       (Object.keys(post_params).length >0 ? (cluster.apisecurity === "private" ? '\n      postScriptInvokeCommand: true' : '') +  `
-      postScriptParams: "${Object.keys(post_params).filter(k => k !== 'KubeletId' && k !== 'TenantId').map(k => `${k}=${post_params[k]}`).join(',')}"` : '') + `
+      postScriptParams: "${Object.keys(post_params).filter(k => k !== 'KubeletId' && k !== 'TenantId' && k !== 'acrName').map(k => `${k}=${post_params[k]}`).join(',')}"` : '') + `
     secrets:
       AZURE_CLIENT_ID: \${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: \${{ secrets.AZURE_TENANT_ID }}

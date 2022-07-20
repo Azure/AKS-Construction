@@ -9,13 +9,13 @@ export default function AppsTab({  tabValues }) {
     const aks = `aks-${deploy.clusterName}`
 
     const deploycmd = `
-# Build app
+# Build app using ACR Tasks and Private Pools (ACR Preview)
 export ACRNAME=$(az acr list -g ${deploy.rg} --query [0].name -o tsv)
 az acr build -r $ACRNAME -t openjdk-demo:0.0.1  ${net.vnetprivateend ? "--agent-pool private-pool" : ""} https://github.com/Azure-Samples/java-aks-keyvault-tls.git
 
 
 
-# Create backend Certificate in KeyVault
+# Create backend self-signed Certificate in KeyVault
 export KVNAME=$(az keyvault list -g ${deploy.rg} --query [0].name -o tsv)
 export COMMON_NAME=openjdk-demo
 az keyvault certificate create --vault-name $KVNAME -n $COMMON_NAME -p "$(az keyvault certificate get-default-policy | sed -e s/CN=CLIGetDefaultPolicy/CN=$\{COMMON_NAME}/g )"
@@ -35,7 +35,7 @@ az network application-gateway root-cert create \\
 # Install
 export APPNAME=openjdk-demo
 ${cluster.apisecurity === "private" ? `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` : ``}
-helm upgrade --install $APPNAME https://github.com/Azure-Samples/java-aks-keyvault-tls/blob/main/helm/openjdk-demo-3.5.0.tgz?raw=true \\
+helm upgrade --install $APPNAME https://github.com/Azure-Samples/java-aks-keyvault-tls/blob/main/helm/openjdk-demo-3.6.1.tgz?raw=true \\
   --set ingressType=${addons.ingress} \\
   --set letsEncrypt.issuer=letsencrypt-prod \\
   --set image.repository=$\{ACRNAME}.azurecr.io/openjdk-demo \\
