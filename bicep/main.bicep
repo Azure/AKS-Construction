@@ -232,7 +232,7 @@ var rbacSecretUserSps = union([deployAppGw && appgwKVIntegration ? appGwIdentity
 module kvRbac 'keyvaultrbac.bicep' = if (keyVaultCreate) {
   name: 'KeyVaultRbac'
   params: {
-    keyVaultName: kv.outputs.keyVaultName
+    keyVaultName: keyVaultCreate ? kv.outputs.keyVaultName : ''
 
     //service principals
     rbacSecretUserSps: rbacSecretUserSps
