@@ -1271,6 +1271,9 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (cre
   location: location
   properties: {
     retentionInDays: retentionInDays
+    sku: {
+      name: 'PerGB2018'
+    }
   }
 }
 
