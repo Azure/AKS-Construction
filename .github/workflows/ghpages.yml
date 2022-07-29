@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       REACT_APP_TEMPLATERELEASE: ${{ github.event.inputs.REACT_APP_TEMPLATERELEASE }}
-      doAzCmdDeployment: ${{ github.event.inputs.doAzCmdDeployment }}
+      doAzCmdDeployment: ${{ github.event.inputs.doAzCmdDeployment == 'true' }}
     steps:
       - name: Reusable workflow
         run: |
