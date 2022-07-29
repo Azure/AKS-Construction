@@ -12,11 +12,15 @@ on:
       REACT_APP_TEMPLATERELEASE:
         required: false
         type: string
-        default: ""
+        default: ''
       RG:
         required: false
         type: string
         default: "Automation-Actions-AksPublishCI"
+      doAzCmdDeployment:
+        required: false
+        type: boolean
+        default: true
     secrets:
       AZURE_CREDENTIALS:
         required: true
@@ -31,7 +35,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build and start node app
-        if: inputs.REACT_APP_TEMPLATERELEASE == ""
+        if: inputs.REACT_APP_TEMPLATERELEASE == ''
         run: |
           cd helper
           npm install
@@ -39,7 +43,7 @@ jobs:
           npm run start&
 
       - name: Build node app with bicep release
-        if: inputs.REACT_APP_TEMPLATERELEASE != ""
+        if: inputs.REACT_APP_TEMPLATERELEASE != ''
         run: |
           cd helper
           npm install
@@ -153,7 +157,7 @@ jobs:
             sh $azcmdpath
 
       - name: Full deploy test AZ Commands
-        if: ${{ !github.event.pull_request.head.repo.fork && ( github.event.inputs.doAzCmdDeployment == 'true' || contains( github.event.pull_request.labels.*.name, 'test-deploy-wizard')) }}
+        if: ${{ !github.event.pull_request.head.repo.fork && ( inputs.doAzCmdDeployment == 'true' || contains( github.event.pull_request.labels.*.name, 'test-deploy-wizard')) }}
         uses: Azure/cli@v1.0.6
         env:
           azcmdpath: "helper/azcmd-managed-private.sh"
