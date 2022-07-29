@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build and start node app
+      - name: Build and start node app (targeting Bicep in MAIN)
         if: inputs.REACT_APP_TEMPLATERELEASE == ''
         run: |
           cd helper
@@ -42,13 +42,12 @@ jobs:
           npm run build
           npm run start&
 
-      - name: Build node app with bicep release
+      - name: Build and start node app (targeting bicep release tag)
         if: inputs.REACT_APP_TEMPLATERELEASE != ''
         run: |
           cd helper
           npm install
-          REACT_APP_TEMPLATERELEASE="${{inputs.REACT_APP_TEMPLATERELEASE}}"  npm run build
-          npm run start&
+          REACT_APP_TEMPLATERELEASE="${{inputs.REACT_APP_TEMPLATERELEASE}}" npm run start&
 
       - name: Playwright - Install w/ OS dependencies
         run: |
