@@ -29,7 +29,7 @@ jobs:
   TestWebApp:
     needs: [SetupWF]
     uses: ./.github/workflows/ghpagesTest.yml
-    if:  ${{ github.event.inputs.createRelease == false }}
+    if:  ${{ github.event.inputs.createRelease == 'false' }}
     with:
       REACT_APP_TEMPLATERELEASE: ${{ needs.SetupWF.outputs.REACT_APP_TEMPLATERELEASE }}
       doAzCmdDeployment: true
