@@ -10,7 +10,7 @@ test('azurevote-catswin', async ({ page }) => {
   await page.click('#container > #form > center > #form > .button3')
 
   //Click Vote for Cats x3
-  i=0
+  var i=0;
   while (i < 3) {
     await page.waitForSelector('#container > #form > center > #form > .button1')
     await page.click('#container > #form > center > #form > .button1')
