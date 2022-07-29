@@ -16,6 +16,25 @@ env:
   templateRelease: ${{ github.event.inputs.templateRelease }}
 
 jobs:
+  SetupWF:
+    runs-on: ubuntu-latest
+    outputs:
+      REACT_APP_TEMPLATERELEASE: ${{ env.REACT_APP_TEMPLATERELEASE }}
+    steps:
+      - name: Reusable workflow
+        run: |
+          echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+          echo "So we need this job to be able to access the value in env.RG"
+          echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
+  TestWebApp:
+    needs: [SetupWF]
+    uses: ./.github/workflows/ghpagesTest.yml
+    if:  ${{ github.event.inputs.createRelease == false }}
+    with:
+      REACT_APP_TEMPLATERELEASE: ${{ needs.SetupWF.outputs.REACT_APP_TEMPLATERELEASE }}
+      doAzCmdDeployment: true
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
   BuildWebApp:
     runs-on: ubuntu-latest
     name: Build Web App
