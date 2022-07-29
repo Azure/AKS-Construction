@@ -42,7 +42,7 @@ jobs:
           npm run build
           npm run start&
 
-      - name: Build and start node app (targeting bicep release tag)
+      - name: Build and start node app (targeting Bicep release tag)
         if: inputs.REACT_APP_TEMPLATERELEASE != ''
         run: |
           cd helper
