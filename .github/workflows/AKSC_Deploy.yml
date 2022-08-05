@@ -10,7 +10,7 @@ on:
       templateVersion:
         description: 'Template Version'
         required: false
-        default: '0.8.5-preview'
+        default: '0.8.8'
         type: string
       rg:
         description: 'Resource Group name'
@@ -51,7 +51,10 @@ on:
       AKSNAME:
         description: "The AKS Cluster name"
         value: ${{ jobs.Deploy-AKSC.outputs.AKSNAME }}
-
+      ACRNAME:
+        description: "The Container Registry name"
+        value: ${{ jobs.Deploy-AKSC.outputs.ACRNAME }}
+        
 permissions:
   id-token: write
   contents: read
@@ -62,9 +65,11 @@ jobs:
     environment: ${{ github.event.inputs.environment }}
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
+      ACRNAME: ${{ steps.deployAks.outputs.ACRNAME }}
     steps:
-      # Log into Azure
+      # Login to Azure
     - uses: azure/login@v1.4.3
+      name: Initial Login to Azure to Deploy
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -95,12 +100,20 @@ jobs:
         echo "::set-output name=AKSNAME::$aksClusterName"
         echo "::set-output name=ACRNAME::$containerRegistryName"
 
+      # Re-Login to Azure if we're using the AKS RUN COMMAND
+    - uses: azure/login@v1.4.3
+      name: Initial Login to Azure to Deploy
+      if: inputs.postScriptParams && inputs.postScriptInvokeCommand == true
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
     - name: Kubelogin
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == false
       env:
         kubeloginversion: 'v0.0.13'
       run: |
-
         az aks get-credentials -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --overwrite-existing
 
         wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
@@ -108,15 +121,9 @@ jobs:
         sudo mv bin/linux_amd64/kubelogin /usr/bin
         kubelogin convert-kubeconfig -l azurecli
 
-    - name: Sleep before Post Deploy
-      if: inputs.postScriptParams
-      run: |
-        sleep 1m
-
     - name: Post Deploy
       if: inputs.postScriptParams
       run: |
-
         postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptParams }}"
 
         if ${{ inputs.postScriptInvokeCommand}}; then
