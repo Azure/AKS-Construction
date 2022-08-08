@@ -384,12 +384,13 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <Label required={true}>
                         Microsoft Defender for Containers  <Link target='_' href='https://docs.microsoft.com/azure/defender-for-cloud/defender-for-cloud-introduction'>docs</Link>
                     </Label>
+                    <MessageBar messageBarType={MessageBarType.info}>Microsoft Defender for Containers will usually be enabled at the Subscription scope, and includes the scanning of Container Images in an Azure Container Registry. This sets Microsoft Defender for Containers to be enabled specifically on the cluster <a target="_target" href="https://docs.microsoft.com/azure/defender-for-cloud/defender-for-containers-enable">docs</a></MessageBar>
                     <ChoiceGroup
                         selectedKey={cluster.DefenderForContainers}
                         styles={{ root: { marginLeft: '50px' } }}
                         options={[
-                            { key: false, text: 'Disable Microsoft Defender security alerting' },
-                            { key: true, text: 'Enable Microsoft Defender security alerting' }
+                            { key: false, text: 'Use the subscription setting for Defender' },
+                            { key: true, text: 'Enable Defender security alerting' }
 
                         ]}
                         onChange={(ev, { key }) => updateFn("DefenderForContainers", key)}
