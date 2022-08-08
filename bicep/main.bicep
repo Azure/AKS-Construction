@@ -838,8 +838,8 @@ param dnsServiceIP string = '172.10.0.10'
 @description('The address range to use for the docker bridge')
 param dockerBridgeCidr string = '172.17.0.1/16'
 
-@description('Enable Microsoft Defender for Containers (currently preview)')
-param DefenderForContainers bool = false
+@description('Enable Microsoft Defender for Containers (preview)')
+param defenderForContainers bool = false
 
 @description('Only use the system node pool')
 param JustUseSystemPool bool = false
@@ -1083,9 +1083,11 @@ var aksProperties = {
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
 var azureDefenderSecurityProfile = {
   securityProfile : {
-    azureDefender: {
-      enabled: true
-      logAnalyticsWorkspaceResourceId: aks_law.id
+    defender: {
+      logAnalyticsWorkspaceResourceId: createLaw ? aks_law.id : null
+      securityMonitoring: {
+        enabled: defenderForContainers
+      }
     }
   }
 }
@@ -1093,7 +1095,7 @@ var azureDefenderSecurityProfile = {
 resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
-  properties: DefenderForContainers && omsagent ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
+  properties: defenderForContainers && createLaw ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
   identity: createAksUai ? aks_identity : {
     type: 'SystemAssigned'
   }
@@ -1264,7 +1266,7 @@ param retentionInDays int = 30
 
 var aks_law_name = 'log-${resourceName}'
 
-var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecurityGroups)
+var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecurityGroups || defenderForContainers)
 
 resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (createLaw) {
   name: aks_law_name
