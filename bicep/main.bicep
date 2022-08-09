@@ -344,7 +344,7 @@ module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
 
-resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku)) {
+resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(registries_sku)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
   name: guid(aks.id, 'Acr' , AcrPullRole)
   properties: {
@@ -359,7 +359,7 @@ var AcrPushRole = resourceId('Microsoft.Authorization/roleDefinitions', '8311e38
 @description('The principal ID of the service principal to assign the push role to the ACR')
 param acrPushRolePrincipalId string = ''
 
-resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (!empty(registries_sku) && !empty(acrPushRolePrincipalId)) {
+resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(registries_sku) && !empty(acrPushRolePrincipalId)) {
   scope: acr // Use when specifying a scope that is different than the deployment scope
   name: guid(aks.id, 'Acr' , AcrPushRole)
   properties: {
@@ -625,7 +625,7 @@ var DEPLOY_APPGW_ADDON = ingressApplicationGateway && empty(byoAGWSubnetId)
 var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
 // https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
 // AGIC's identity requires "Contributor" permission over Application Gateway.
-resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
+resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: appgw
   name: guid(aks.id, 'Agic', contributor)
   properties: {
@@ -637,7 +637,7 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2021-04-01-pr
 
 // AGIC's identity requires "Reader" permission over Application Gateway's resource group.
 var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
-resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
+resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (DEPLOY_APPGW_ADDON && deployAppGw) {
   scope: resourceGroup()
   name: guid(aks.id, 'Agic', reader)
   properties: {
@@ -649,7 +649,7 @@ resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2021-04-01-p
 
 // AGIC's identity requires "Managed Identity Operator" permission over the user assigned identity of Application Gateway.
 var managedIdentityOperator = resourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830')
-resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (DEPLOY_APPGW_ADDON &&  deployAppGw) {
+resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (DEPLOY_APPGW_ADDON &&  deployAppGw) {
   scope: appGwIdentity
   name: guid(aks.id, 'Agic', managedIdentityOperator)
   properties: {
@@ -1154,7 +1154,7 @@ param automatedDeployment bool = false
 param adminPrincipalId string = ''
 // for AAD Integrated Cluster wusing 'enableAzureRBAC', add Cluster admin to the current user!
 var buildInAKSRBACClusterAdmin = resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
-resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (enableAzureRBAC && !empty(adminPrincipalId)) {
+resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (enableAzureRBAC && !empty(adminPrincipalId)) {
   scope: aks // Use when specifying a scope that is different than the deployment scope
   name: guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)
   properties: {
@@ -1273,7 +1273,7 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (cre
 
 //This role assignment enables AKS->LA Fast Alerting experience
 var MonitoringMetricsPublisherRole = resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
-resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (omsagent) {
+resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (omsagent) {
   scope: aks
   name: guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)
   properties: {
