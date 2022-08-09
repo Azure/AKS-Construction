@@ -713,6 +713,9 @@ param omsagent bool = false
 @description('Enable RBAC using AAD')
 param enableAzureRBAC bool = false
 
+@description('Enables Kubernetes Event-driven Autoscaling (KEDA)')
+param kedaAddon bool = false
+
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false
 
@@ -1039,6 +1042,11 @@ var aksProperties = {
     enablePrivateClusterPublicFQDN: enablePrivateCluster && privateClusterDnsMethod=='none'
   }
   agentPoolProfiles: agentPoolProfiles
+  workloadAutoScalerProfile: {
+    keda: {
+        enabled: kedaAddon
+    }
+  }
   networkProfile: {
     loadBalancerSku: 'standard'
     networkPlugin: networkPlugin

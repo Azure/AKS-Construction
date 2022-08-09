@@ -52,6 +52,7 @@
         "addons": {
             "fluxGitOpsAddon": false,
             "networkPolicy": "none",
+            "kedaAddon": false,
             "openServiceMeshAddon": false,
             "denydefaultNetworkPolicy": false,
             "azurepolicy": "none",
