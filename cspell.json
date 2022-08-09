@@ -124,7 +124,8 @@
         "vnetprivateend",
         "Walkthrough",
         "Wautoscale",
-        "Wsku"
+        "Wsku",
+        "keda"
     ],
     "ignoreWords": [
         "sconfiguration",
