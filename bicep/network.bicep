@@ -164,17 +164,14 @@ output acrPoolSubnetId string = acrPrivatePool ? '${vnet.id}/subnets/${acrpool_s
 output appGwSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, appgw_subnet_name)
 output privateLinkSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, private_link_subnet_name)
 
-var networkContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
-
-resource aks_vnet_cont 'Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments@2020-04-01-preview' = if (!empty(aksPrincipleId)) {
-  name: '${vnet.name}/${aks_subnet_name}/Microsoft.Authorization/${guid(resourceGroup().id, vnetName, aks_subnet_name)}'
-  properties: {
-    roleDefinitionId: networkContributorRole
-    principalId: aksPrincipleId
-    principalType: 'ServicePrincipal'
+module aks_vnet_con 'networksubnetrbac.bicep' = if (!empty(aksPrincipleId)) {
+  name: '${resourceName}-subnetRbac'
+  params: {
+    servicePrincipalId: aksPrincipleId
+    subnetName: aks_subnet_name
+    vnetName: vnet.name
   }
 }
-
 
 /*   --------------------------------------------------------------------------  Private Link for ACR      */
 var privateLinkAcrName = 'pl-acr-${resourceName}'

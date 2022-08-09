@@ -59,19 +59,6 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId) && cre
   }
 }
 
-var existingAGWSubnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 10 ? split(byoAGWSubnetId, '/')[10] : '') : ''
-var existingAGWVnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[8] : '') : ''
-var existingAGWVnetRG = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[4] : '') : ''
-
-resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = if (!empty(byoAGWSubnetId)) {
-  name: existingAGWVnetName
-  scope: resourceGroup(existingAGWVnetRG)
-}
-resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' existing = if (!empty(byoAGWSubnetId)) {
-  parent: existingAgwVnet
-  name: existingAGWSubnetName
-}
-
 //------------------------------------------------------ Create custom vnet
 @minLength(9)
 @maxLength(18)
@@ -858,7 +845,7 @@ param SystemPoolCustomPreset object = {}
 
 param AutoscaleProfile object = {
   'balance-similar-node-groups': 'true'
-  'expander': 'random'
+  expander: 'random'
   'max-empty-bulk-delete': '10'
   'max-graceful-termination-sec': '600'
   'max-node-provision-time': '15m'

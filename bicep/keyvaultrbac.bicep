@@ -1,15 +1,18 @@
 param keyVaultName string
 
 @description('An array of Service Principal IDs')
+#disable-next-line secure-secrets-in-params //Disabling validation of this linter rule as param does not contain a secret.
 param rbacSecretUserSps array = []
 
 @description('An array of Service Principal IDs')
+#disable-next-line secure-secrets-in-params //Disabling validation of this linter rule as param does not contain a secret.
 param rbacSecretOfficerSps array = []
 
 @description('An array of Service Principal IDs')
 param rbacCertOfficerSps array = []
 
 @description('An array of User IDs')
+#disable-next-line secure-secrets-in-params //Disabling validation of this linter rule as param does not contain a secret.
 param rbacSecretOfficerUsers array = []
 
 @description('An array of User IDs')
