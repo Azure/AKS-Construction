@@ -59,19 +59,6 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId) && cre
   }
 }
 
-var existingAGWSubnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 10 ? split(byoAGWSubnetId, '/')[10] : '') : ''
-var existingAGWVnetName = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[8] : '') : ''
-var existingAGWVnetRG = !empty(byoAGWSubnetId) ? (length(split(byoAGWSubnetId, '/')) > 9 ? split(byoAGWSubnetId, '/')[4] : '') : ''
-
-resource existingAgwVnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = if (!empty(byoAGWSubnetId)) {
-  name: existingAGWVnetName
-  scope: resourceGroup(existingAGWVnetRG)
-}
-resource existingAGWSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' existing = if (!empty(byoAGWSubnetId)) {
-  parent: existingAgwVnet
-  name: existingAGWSubnetName
-}
-
 //------------------------------------------------------ Create custom vnet
 @minLength(9)
 @maxLength(18)
@@ -254,6 +241,10 @@ output keyVaultId string = keyVaultCreate ? kv.outputs.keyVaultId : ''
 
 @description('Enable encryption at rest for Kubernetes etcd data')
 param keyVaultKmsCreate bool = false
+param keyVaultKmsOfficerRolePrincipalId string = ''
+
+var kmsRbacWaitSeconds=0
+var keyVaultKmsPrereqs = !empty(keyVaultKmsOfficerRolePrincipalId)
 
 module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate) {
   name: 'keyvaultKms'
@@ -263,7 +254,6 @@ module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate) {
     keyVaultSoftDelete: keyVaultSoftDelete
     location: location
     privateLinks: privateLinks
-    createKmsKey: true
   }
 }
 
@@ -271,17 +261,49 @@ module kvKmsRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreate) {
   name: 'keyvaultKmsRbac'
   params: {
     keyVaultName: keyVaultKmsCreate ? kvKms.outputs.keyVaultName : ''
+    rbacCryptoServiceEncryptSps: [
+      createAksUai ? aksUai.properties.principalId : ''
+    ]
     rbacCryptoUserSps: [
       createAksUai ? aksUai.properties.principalId : ''
+    ]
+    rbacCryptoOfficerUsers: [
+      !empty(keyVaultKmsOfficerRolePrincipalId) && !automatedDeployment ? keyVaultKmsOfficerRolePrincipalId : ''
+    ]
+    rbacCryptoOfficerSps: [
+      !empty(keyVaultKmsOfficerRolePrincipalId) && automatedDeployment ? keyVaultKmsOfficerRolePrincipalId : ''
     ]
   }
 }
 
+module waitForRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKmsPrereqs && kmsRbacWaitSeconds>0) {
+  name: 'keyvaultKmsRbac-wait'
+  params: {
+    waitSeconds: kmsRbacWaitSeconds
+    location: location
+  }
+  dependsOn: [
+    kvKmsRbac
+  ]
+}
+
+module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreate && keyVaultKmsPrereqs) {
+  name: 'keyvaultKmsKey'
+  params: {
+    keyVaultName: kvKms.outputs.keyVaultName
+  }
+  dependsOn: [waitForRbac]
+}
+
 var azureKeyVaultKms = {
-  enabled: keyVaultKmsCreate
-  keyId: keyVaultKmsCreate ? kvKms.outputs.keyVaultKmsKeyUri : ''
-  keyVaultNetworkAccess: privateLinks ? 'private' : 'public'
-  keyVaultResourceId:  keyVaultKmsCreate && privateLinks ? kvKms.outputs.keyVaultId : ''
+  securityProfile : {
+    azureKeyVaultKms : {
+      enabled: (keyVaultKmsCreate && keyVaultKmsPrereqs)
+      keyId: (keyVaultKmsCreate && keyVaultKmsPrereqs) ? kvKmsKey.outputs.keyVaultKmsKeyUri : ''
+      keyVaultNetworkAccess: privateLinks ? 'private' : 'public'
+      keyVaultResourceId:  (keyVaultKmsCreate && keyVaultKmsPrereqs && privateLinks) ? kvKms.outputs.keyVaultId : ''
+    }
+  }
 }
 
 
@@ -875,7 +897,7 @@ param dnsServiceIP string = '172.10.0.10'
 param dockerBridgeCidr string = '172.17.0.1/16'
 
 @description('Enable Microsoft Defender for Containers (preview)')
-param DefenderForContainers bool = false
+param defenderForContainers bool = false
 
 @description('Only use the system node pool')
 param JustUseSystemPool bool = false
@@ -894,7 +916,7 @@ param SystemPoolCustomPreset object = {}
 
 param AutoscaleProfile object = {
   'balance-similar-node-groups': 'true'
-  'expander': 'random'
+  expander: 'random'
   'max-empty-bulk-delete': '10'
   'max-graceful-termination-sec': '600'
   'max-node-provision-time': '15m'
@@ -935,9 +957,6 @@ param natGwIdleTimeout int = 30
 
 @description('Configures the cluster as an OIDC issuer for use with Workload Identity')
 param oidcIssuer bool = false
-
-@description('Enable workload identity')
-param workloadIdentity bool = false
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
@@ -1073,66 +1092,71 @@ var aks_identity = {
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
 output aksPrivateDnsZone string = aksPrivateDnsZone
 
-
-resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
-  name: 'aks-${resourceName}'
-  location: location
-  properties: {
-    kubernetesVersion: kubernetesVersion
-    enableRBAC: true
-    dnsPrefix: dnsPrefix
-    aadProfile: enable_aad ? {
-      managed: true
-      enableAzureRBAC: enableAzureRBAC
-      tenantID: aad_tenant_id
-    } : null
-    apiServerAccessProfile: !empty(authorizedIPRanges) ? {
-      authorizedIPRanges: authorizedIPRanges
-    } : {
-      enablePrivateCluster: enablePrivateCluster
-      privateDNSZone: enablePrivateCluster ? aksPrivateDnsZone : ''
-      enablePrivateClusterPublicFQDN: enablePrivateCluster && privateClusterDnsMethod=='none'
-    }
-    agentPoolProfiles: agentPoolProfiles
-    networkProfile: {
-      loadBalancerSku: 'standard'
-      networkPlugin: networkPlugin
-      #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
-      networkPolicy: networkPolicy
-      podCidr: podCidr
-      serviceCidr: serviceCidr
-      dnsServiceIP: dnsServiceIP
-      dockerBridgeCidr: dockerBridgeCidr
-      outboundType: aksOutboundTrafficType
-      natGatewayProfile: aksOutboundTrafficType == 'managedNATGateway' ? {
-        managedOutboundIPProfile: {
-          count: natGwIpCount
-        }
-        idleTimeoutInMinutes: natGwIdleTimeout
-      } : {}
-    }
-    disableLocalAccounts: AksDisableLocalAccounts && enable_aad
-    autoUpgradeProfile: !empty(upgradeChannel) ? {
-      upgradeChannel: upgradeChannel
-    } : {}
-    addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
-    autoScalerProfile: autoScale ? AutoscaleProfile : {}
-    oidcIssuerProfile: {
-      enabled: oidcIssuer
-    }
-    securityProfile: {
-      azureKeyVaultKms: azureKeyVaultKms
-      defender: {
-        logAnalyticsWorkspaceResourceId: createLaw ? aks_law.id : null
-        securityMonitoring: {
-          enabled: DefenderForContainers
-        }
+var aksProperties = {
+  kubernetesVersion: kubernetesVersion
+  enableRBAC: true
+  dnsPrefix: dnsPrefix
+  aadProfile: enable_aad ? {
+    managed: true
+    enableAzureRBAC: enableAzureRBAC
+    tenantID: aad_tenant_id
+  } : null
+  apiServerAccessProfile: !empty(authorizedIPRanges) ? {
+    authorizedIPRanges: authorizedIPRanges
+  } : {
+    enablePrivateCluster: enablePrivateCluster
+    privateDNSZone: enablePrivateCluster ? aksPrivateDnsZone : ''
+    enablePrivateClusterPublicFQDN: enablePrivateCluster && privateClusterDnsMethod=='none'
+  }
+  agentPoolProfiles: agentPoolProfiles
+  networkProfile: {
+    loadBalancerSku: 'standard'
+    networkPlugin: networkPlugin
+    #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
+    networkPolicy: networkPolicy
+    podCidr: podCidr
+    serviceCidr: serviceCidr
+    dnsServiceIP: dnsServiceIP
+    dockerBridgeCidr: dockerBridgeCidr
+    outboundType: aksOutboundTrafficType
+    natGatewayProfile: aksOutboundTrafficType == 'managedNATGateway' ? {
+      managedOutboundIPProfile: {
+        count: natGwIpCount
       }
-      workloadIdentity: {
-        enabled: workloadIdentity
+      idleTimeoutInMinutes: natGwIdleTimeout
+    } : {}
+  }
+  disableLocalAccounts: AksDisableLocalAccounts && enable_aad
+  autoUpgradeProfile: !empty(upgradeChannel) ? {
+    upgradeChannel: upgradeChannel
+  } : {}
+  addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
+  autoScalerProfile: autoScale ? AutoscaleProfile : {}
+  oidcIssuerProfile: {
+    enabled: oidcIssuer
+  }
+  securityProfile: securityProfile.securityProfile
+}
+
+@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
+var azureDefenderSecurityProfile = {
+  securityProfile : {
+    defender: {
+      logAnalyticsWorkspaceResourceId: createLaw ? aks_law.id : null
+      securityMonitoring: {
+        enabled: defenderForContainers
       }
     }
   }
+}
+
+var securityProfile = defenderForContainers && omsagent ? union(azureDefenderSecurityProfile,azureKeyVaultKms) : azureKeyVaultKms
+output debugsecurityProfile object = securityProfile.securityProfile
+
+resource aks 'Microsoft.ContainerService/managedClusters@2022-06-02-preview' = {
+  name: 'aks-${resourceName}'
+  location: location
+  properties: aksProperties
   identity: createAksUai ? aks_identity : {
     type: 'SystemAssigned'
   }
@@ -1304,7 +1328,7 @@ param retentionInDays int = 30
 
 var aks_law_name = 'log-${resourceName}'
 
-var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecurityGroups || DefenderForContainers)
+var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecurityGroups || defenderForContainers)
 
 resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (createLaw) {
   name: aks_law_name

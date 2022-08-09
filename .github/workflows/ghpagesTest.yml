@@ -1,0 +1,190 @@
+#Takes the source code from main and validates that it will
+#1. Pass Playwright UI tests
+#2. Results in a successful deployment to Azure
+#
+#As an optional parameter, an existing release TAG can be provided which helps test for breaking changes for slip-releases
+
+name: Deploy Helper - Validate
+
+on:
+  workflow_call:
+    inputs:
+      REACT_APP_TEMPLATERELEASE:
+        required: false
+        type: string
+        default: ''
+      RG:
+        required: false
+        type: string
+        default: "Automation-Actions-AksPublishCI"
+      doAzCmdDeployment:
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+
+env:
+  AZCLIVERSION: 2.34.1 #2.29.2 #2.26.0 #latest
+
+jobs:
+  Validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build and start node app (targeting Bicep in MAIN)
+        if: inputs.REACT_APP_TEMPLATERELEASE == ''
+        run: |
+          cd helper
+          npm install
+          npm run build
+          npm run start&
+
+      - name: Build and start node app (targeting Bicep release tag)
+        if: inputs.REACT_APP_TEMPLATERELEASE != ''
+        run: |
+          cd helper
+          npm install
+          REACT_APP_TEMPLATERELEASE="${{inputs.REACT_APP_TEMPLATERELEASE}}" npm run start&
+
+      - name: Playwright - Install w/ OS dependencies
+        run: |
+          cd helper
+          npx playwright install #https://github.com/microsoft/playwright/issues/4033
+          npx playwright install-deps chromium
+          npm i -D playwright-expect
+
+      - name: Test web server is up
+        run: curl http://localhost:3000/AKS-Construction
+
+      - name: Verifying Playwright install
+        run: |
+          cd helper
+
+          echo "Looking for playwright"
+          ls node_modules | grep playwright
+
+          echo "Playwright version"
+          npx playwright -V
+
+      - name: File system prep
+        run: |
+          mkdir failscreengrabs
+          mkdir alwaysscreengrabs
+
+      - name: Playwright - Run fragile helper tests
+        env:
+          filenamewordmatch: 'helper-fragile'
+        continue-on-error: true
+        run: |
+          cd helper
+          npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter dot
+
+      - name: Playwright - Run stable helper tests
+        env:
+          filenamewordmatch: 'helper-test'
+          filenamewordexclude: 'fragile'
+        run: |
+          cd helper
+          npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}' --reporter list
+
+      - name: Playwright - Grab Az Commands
+        env:
+          filenamewordmatch: 'helper-export'
+        run: |
+          cd helper
+          npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter list
+
+      - name: Persist exported Az Commands for visibility
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: AzCmds
+          path: helper/azcmd-*.sh
+
+      - name: Install Bicep
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        shell: pwsh
+        run: |
+          az bicep install
+
+      - name: Bicep build
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        shell: pwsh
+        run: |
+          #write-output $pwd
+          $compiledir=Join-Path -Path $pwd -ChildPath "bicep/compiled"
+
+          write-output $compiledir
+          If(!(test-path $compiledir))
+          {
+                New-Item -ItemType Directory -Force -Path $compiledir
+          }
+
+          /home/runner/.azure/bin/bicep build ./bicep/main.bicep --outdir $compiledir
+
+      - name: Azure Login
+        if: ${{ !github.event.pull_request.head.repo.fork }}
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          environment: azurecloud
+
+      #TODO: If/When we capture more AZ CMD's, then we'll want to iterate over files beginning with "azcmd"
+      - name: Verify AZ Commands
+        if: ${{ !github.event.pull_request.head.repo.fork }}
+        uses: Azure/cli@v1.0.6
+        env:
+          azcmdpath: "helper/azcmd-managed-private.sh"
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+            #Change the Create to a Validate statement
+            sed -i 's/az deployment group create/az deployment group validate/' $azcmdpath
+
+            #Remove lines that refer to signed-in-user which don't work with a SP.
+            sed -i '/az ad signed-in-user show/d' $azcmdpath
+
+            #Debug
+            cat $azcmdpath
+
+            #Run the script
+            echo "Running the validation script"
+            sh $azcmdpath
+
+      - name: Full deploy test AZ Commands
+        if: ${{ !github.event.pull_request.head.repo.fork && ( inputs.doAzCmdDeployment == 'true' || contains( github.event.pull_request.labels.*.name, 'test-deploy-wizard')) }}
+        uses: Azure/cli@v1.0.6
+        env:
+          azcmdpath: "helper/azcmd-managed-private.sh"
+        with:
+          azcliversion: ${{ env.AZCLIVERSION }}
+          inlineScript: |
+            #Change the Create to a Validate statement
+            sed -i 's/az deployment group validate/az deployment group create --mode Complete --name ghpages/' $azcmdpath
+
+            #Debug
+            cat $azcmdpath
+
+            #Run the script
+            sh $azcmdpath
+
+            #Cleanup
+            #az deploymentg group delete -n ghpages  -g $RG
+
+      - name: Persist test failure screengrabs as artifacts
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: TestFailScreengrabs
+          path: helper/failscreengrabs/*.png
+
+      - name: Persist always screengrabs as artifacts
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Screengrabs
+          path: helper/alwaysscreengrabs/*.png
