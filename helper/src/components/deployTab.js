@@ -112,6 +112,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.acrPrivatePool && defaults.net.acrAgentPoolSubnetAddressPrefix !== net.acrAgentPoolSubnetAddressPrefix && {acrAgentPoolSubnetAddressPrefix: net.acrAgentPoolSubnetAddressPrefix})
       })
     }),
+    ...(defaults.addons.kedaAddon !== addons.kedaAddon && {kedaAddon: addons.kedaAddon }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
   }
 
