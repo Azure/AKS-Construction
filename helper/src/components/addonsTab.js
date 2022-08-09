@@ -353,6 +353,16 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
+                    KEDA : Enable Kubernetes Event-driven Autoscaling (KEDA) on the AKS Cluster
+                    (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/keda-about">docs</a>)
+                </Label>
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} checked={addons.kedaAddon} onChange={(ev, v) => updateFn("kedaAddon", v)} label="Install the KEDA AddOn" />
+            </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
                     Open Service Mesh : Enable Open Service Mesh on the AKS Cluster
                     (<a target="_new" href="https://docs.microsoft.com/azure/aks/open-service-mesh-about">docs</a>)
                 </Label>
