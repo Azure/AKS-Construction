@@ -243,7 +243,7 @@ output keyVaultId string = keyVaultCreate ? kv.outputs.keyVaultId : ''
 param keyVaultKmsCreate bool = false
 param keyVaultKmsOfficerRolePrincipalId string = ''
 
-var kmsRbacWaitSeconds=0
+var kmsRbacWaitSeconds=60
 var keyVaultKmsPrereqs = !empty(keyVaultKmsOfficerRolePrincipalId)
 
 module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate) {
@@ -788,6 +788,9 @@ param omsagent bool = false
 @description('Enable RBAC using AAD')
 param enableAzureRBAC bool = false
 
+@description('Enables Kubernetes Event-driven Autoscaling (KEDA)')
+param kedaAddon bool = false
+
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false
 
@@ -1113,6 +1116,11 @@ var aksProperties = {
     enablePrivateClusterPublicFQDN: enablePrivateCluster && privateClusterDnsMethod=='none'
   }
   agentPoolProfiles: agentPoolProfiles
+  workloadAutoScalerProfile: {
+    keda: {
+        enabled: kedaAddon
+    }
+  }
   networkProfile: {
     loadBalancerSku: 'standard'
     networkPlugin: networkPlugin

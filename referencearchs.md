@@ -8,7 +8,7 @@ The [Deployment Helper Wizard](https://azure.github.io/AKS-Construction/?default
 
 ## Enterprise-Scale for AKS
 
-This is the [parent project](https://github.com/Azure/Enterprise-Scale-for-AKS) that our work belongs to. The reference implementations in this repository are all focussed on guiding the creation of Landing Zones for AKS within an Enterprise Scale framework. They typically include deployments of Hub/Spoke infrastructure and development vm's, and includes a Terraform implementation.
+This is the [parent project](https://github.com/Azure/AKS-Landing-Zone-Accelerator/) that our work belongs to. The reference implementations in this repository are all focussed on guiding the creation of Landing Zones for AKS within an Enterprise Scale framework. They typically include deployments of Hub/Spoke infrastructure and development vm's, and includes a Terraform implementation.
 
 ## The AKS Baseline
 

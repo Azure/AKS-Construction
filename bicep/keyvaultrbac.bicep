@@ -45,7 +45,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
   name: keyVaultName
 }
 
-resource rbacSecretUserSp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacSecretUserSps : if(!empty(rbacSp)) {
+resource rbacSecretUserSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacSecretUserSps : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultSecretsUserRole)
   properties: {
@@ -55,7 +55,7 @@ resource rbacSecretUserSp 'Microsoft.Authorization/roleAssignments@2021-04-01-pr
   }
 }]
 
-resource rbacSecretOfficerSp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacSecretOfficerSps : if(!empty(rbacSp)) {
+resource rbacSecretOfficerSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacSecretOfficerSps : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultSecretsOfficerRole)
   properties: {
@@ -65,7 +65,7 @@ resource rbacSecretOfficerSp 'Microsoft.Authorization/roleAssignments@2021-04-01
   }
 }]
 
-resource rbacCertsOfficerSp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacCertOfficerSps : if(!empty(rbacSp)) {
+resource rbacCertsOfficerSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacCertOfficerSps : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultCertsOfficerRole)
   properties: {
@@ -75,7 +75,7 @@ resource rbacCertsOfficerSp 'Microsoft.Authorization/roleAssignments@2021-04-01-
   }
 }]
 
-resource rbacCryptoUserSp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacCryptoUserSps : if(!empty(rbacSp)) {
+resource rbacCryptoUserSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacCryptoUserSps : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultCryptoUserRole)
   properties: {
@@ -85,7 +85,7 @@ resource rbacCryptoUserSp 'Microsoft.Authorization/roleAssignments@2021-04-01-pr
   }
 }]
 
-resource rbacCryptoServiceEncryptionSp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacCryptoServiceEncryptSps : if(!empty(rbacSp)) {
+resource rbacCryptoServiceEncryptionSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacCryptoServiceEncryptSps : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultCryptoServiceEncrpytionRole)
   properties: {
@@ -96,7 +96,7 @@ resource rbacCryptoServiceEncryptionSp 'Microsoft.Authorization/roleAssignments@
 }]
 
 
-resource rbacKvContributorSp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacKvContributorSps : if(!empty(rbacSp)) {
+resource rbacKvContributorSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacKvContributorSps : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultContributorRole)
   properties: {
@@ -106,7 +106,7 @@ resource rbacKvContributorSp 'Microsoft.Authorization/roleAssignments@2021-04-01
   }
 }]
 
-resource rbacCryptoOfficerSp 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacCryptoOfficerSps : if(!empty(rbacSp)) {
+resource rbacCryptoOfficerSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacCryptoOfficerSps : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultCryptoUserRole)
   properties: {
@@ -116,7 +116,7 @@ resource rbacCryptoOfficerSp 'Microsoft.Authorization/roleAssignments@2021-04-01
   }
 }]
 
-resource rbacCryptoOfficerUser 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacCryptoOfficerUsers : if(!empty(rbacSp)) {
+resource rbacCryptoOfficerUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacCryptoOfficerUsers : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultCryptoUserRole)
   properties: {
@@ -126,7 +126,7 @@ resource rbacCryptoOfficerUser 'Microsoft.Authorization/roleAssignments@2021-04-
   }
 }]
 
-resource rbacSecretOfficerUser 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacSecretOfficerUsers : if(!empty(rbacSp)) {
+resource rbacSecretOfficerUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacSecretOfficerUsers : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultSecretsOfficerRole)
   properties: {
@@ -136,7 +136,7 @@ resource rbacSecretOfficerUser 'Microsoft.Authorization/roleAssignments@2021-04-
   }
 }]
 
-resource rbacCertsOfficerUser 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = [for rbacSp in rbacCertOfficerUsers : if(!empty(rbacSp)) {
+resource rbacCertsOfficerUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacCertOfficerUsers : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultCertsOfficerRole)
   properties: {
