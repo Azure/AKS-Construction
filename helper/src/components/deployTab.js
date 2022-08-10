@@ -390,7 +390,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             </Stack.Item>
           </Stack>
 
-          <CodeBlock lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
+          <CodeBlock lang="shell"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
@@ -416,7 +416,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
               </Stack.Item>
             </Stack>
 
-            <CodeBlock key="github-auth" lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
+            <CodeBlock key="github-auth" lang="shell"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
 az group create -l WestEurope -n ${deploy.rg}
 
 app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | tr ' ' "\\n"))
@@ -438,7 +438,7 @@ gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 
             <Label>To run te Github reusable workflow</Label>
             <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos <code>.github/workflows</code> folder to call the AKS-Construction reusable workflow (this example creates a manually triggered Action)</Text>
-            <CodeBlock  lang="github actions"  deploycmd={`name: Deploy AKS-Construction
+            <CodeBlock  lang="yaml"  deploycmd={`name: Deploy AKS-Construction
 
 on:
   workflow_dispatch:
@@ -467,7 +467,7 @@ jobs:
             <Separator styles={{root: {marginTop: '20px'}}} ><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Cleanup / Reruns</b></div> </Separator>
 
             <Label>The Create Service Principal script is not re-runnable, so to clean up the Service Principal and federated identity credential, run the following</Label>
-            <CodeBlock  lang="github actions"  deploycmd={`rmId=($(az ad app list --display-name ${ghRepo} --query '[[0].appId,[0].id]' -o tsv))
+            <CodeBlock  lang="yaml"  deploycmd={`rmId=($(az ad app list --display-name ${ghRepo} --query '[[0].appId,[0].id]' -o tsv))
 az rest -m DELETE  -u "https://graph.microsoft.com/beta/applications/\${rmId[1]}/federatedIdentityCredentials/$(az rest -m GET -u https://graph.microsoft.com/beta/applications/\${rmId[1]}/federatedIdentityCredentials --query value[0].id -o tsv)"
 az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
 `}/>
@@ -496,19 +496,17 @@ az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
             </Stack.Item>
           </Stack>
 
-          <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="bash"/>
-          <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'} lang="terraform" filename="providers.tf" />
-          <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'} lang="terraform" filename="main.tf" />
-          <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'} lang="terraform" filename="variables.tf" />
-          <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'} lang="terraform" filename="outputs.tf" />
+          <CodeBlock deploycmd={deployTfcmd} testId={'deploy-deployTfcmd'} lang="shell"/>
+          <CodeBlock deploycmd={deployTfProviders} testId={'deploy-deployTfProviders'} lang="tcl" filename="providers.tf" />
+          <CodeBlock deploycmd={deployTfMain} testId={'deploy-deployTfMain'} lang="tcl" filename="main.tf" />
+          <CodeBlock deploycmd={deployTfVar} testId={'deploy-deployTfVar'} lang="tcl" filename="variables.tf" />
+          <CodeBlock deploycmd={deployTfOutput} testId={'deploy-deployTfOut'} lang="tcl" filename="outputs.tf" />
 
         </PivotItem>
 
         <PivotItem headerText="Raw Parameters File" itemKey="params"  itemIcon="FileSymlink">
 
-          <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
-          </TextField>
-
+        <CodeBlock deploycmd={param_file} testId={'deploy-deployTfOut'} lang="json" />
         </PivotItem>
 
 
