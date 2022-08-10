@@ -17,7 +17,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = 
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
 
-resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = {
+resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: acr // Use when specifying a scope that is different than the deployment scope
   name: guid(aks.id, 'Acr' , AcrPullRole)
   properties: {
