@@ -13,6 +13,10 @@ resource kvKmsKey 'Microsoft.KeyVault/vaults/keys@2021-11-01-preview' = {
     keyOps: [
       'wrapKey'
       'unwrapKey'
+      'decrypt'
+      'encrypt'
+      'verify'
+      'sign'
     ]
   }
 }

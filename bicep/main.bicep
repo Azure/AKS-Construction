@@ -243,11 +243,11 @@ output keyVaultId string = keyVaultCreate ? kv.outputs.keyVaultId : ''
 param keyVaultKmsCreate bool = false
 param keyVaultKmsOfficerRolePrincipalId string = ''
 
-var kmsRbacWaitSeconds=60
+var kmsRbacWaitSeconds=30
 var keyVaultKmsPrereqs = !empty(keyVaultKmsOfficerRolePrincipalId)
 
 module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate) {
-  name: 'keyvaultKms'
+  name: 'keyvaultKms-${resourceName}'
   params: {
     resourceName: 'kms${resourceName}'
     keyVaultPurgeProtection: keyVaultPurgeProtection
@@ -259,14 +259,11 @@ module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate) {
 }
 
 module kvKmsRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreate) {
-  name: 'keyvaultKmsRbac'
+  name: 'keyvaultKmsRbacs-${resourceName}'
   params: {
     keyVaultName: keyVaultKmsCreate ? kvKms.outputs.keyVaultName : ''
     rbacKvContributorSps : [
-      createAksUai ? aksUai.properties.principalId : ''
-    ]
-    rbacCryptoServiceEncryptSps: [
-      createAksUai ? aksUai.properties.principalId : ''
+      createAksUai && privateLinks ? aksUai.properties.principalId : ''
     ]
     rbacCryptoUserSps: [
       createAksUai ? aksUai.properties.principalId : ''
@@ -281,7 +278,7 @@ module kvKmsRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreate) {
 }
 
 module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKmsPrereqs && kmsRbacWaitSeconds>0) {
-  name: 'keyvaultKmsRbac-wait'
+  name: 'keyvaultKmsRbac-waits-${resourceName}'
   params: {
     waitSeconds: kmsRbacWaitSeconds
     location: location
@@ -292,7 +289,7 @@ module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKms
 }
 
 module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreate && keyVaultKmsPrereqs) {
-  name: 'keyvaultKmsKey'
+  name: 'keyvaultKmsKeys-${resourceName}'
   params: {
     keyVaultName: kvKms.outputs.keyVaultName
   }

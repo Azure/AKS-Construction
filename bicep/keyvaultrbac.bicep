@@ -23,6 +23,9 @@ param rbacCryptoServiceEncryptSps array = []
 @description('An array of Service Principal IDs')
 param rbacKvContributorSps array = []
 
+@description('An array of Service Principal IDs')
+param rbacAdminSps array = []
+
 @description('An array of User IDs')
 param rbacCryptoOfficerUsers array = []
 
@@ -33,6 +36,10 @@ param rbacSecretOfficerUsers array = []
 @description('An array of User IDs')
 param rbacCertOfficerUsers array = []
 
+@description('An array of User IDs')
+param rbacAdminUsers array = []
+
+var keyVaultAdministratorRole = resourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
 var keyVaultContributorRole = resourceId('Microsoft.Authorization/roleDefinitions', 'f25e0fa2-a7c8-4377-a976-54943a77a395')
 var keyVaultSecretsUserRole = resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
 var keyVaultSecretsOfficerRole = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
@@ -116,6 +123,17 @@ resource rbacCryptoOfficerSp 'Microsoft.Authorization/roleAssignments@2022-04-01
   }
 }]
 
+resource rbacAdminSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacAdminSps : if(!empty(rbacSp)) {
+  scope: kv
+  name: guid(kv.id, rbacSp, keyVaultAdministratorRole)
+  properties: {
+    roleDefinitionId: keyVaultAdministratorRole
+    principalType: 'ServicePrincipal'
+    principalId: rbacSp
+  }
+}]
+
+
 resource rbacCryptoOfficerUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacCryptoOfficerUsers : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultCryptoUserRole)
@@ -146,4 +164,13 @@ resource rbacCertsOfficerUser 'Microsoft.Authorization/roleAssignments@2022-04-0
   }
 }]
 
+resource rbacAdminUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacAdminUsers : if(!empty(rbacSp)) {
+  scope: kv
+  name: guid(kv.id, rbacSp, keyVaultAdministratorRole)
+  properties: {
+    roleDefinitionId: keyVaultAdministratorRole
+    principalType: 'User'
+    principalId: rbacSp
+  }
+}]
 
