@@ -95,7 +95,7 @@ param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
 @description('The address range for Azure Firewall in your custom vnet')
 param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 
-@description('Enable support for private links')
+@description('Enable support for private links (required custom_vnet)')
 param privateLinks bool = false
 
 @description('Enable support for ACR private pool')
@@ -288,7 +288,8 @@ module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKms
   ]
 }
 
-module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreate && keyVaultKmsPrereqs) {
+@description('Adding a key to the keyvault... We cant do this if privatelinks are enforced')
+module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreate && keyVaultKmsPrereqs && !privateLinks) {
   name: 'keyvaultKmsKeys-${resourceName}'
   params: {
     keyVaultName: kvKms.outputs.keyVaultName
