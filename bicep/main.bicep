@@ -1183,6 +1183,30 @@ resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-prev
 }
 output fluxReleaseNamespace string = fluxGitOpsAddon ? fluxAddon.properties.scope.cluster.releaseNamespace : ''
 
+param daprAddon bool = false
+param daprAddon_enableHighAvailability bool = false
+
+resource daprExtension 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-preview' = if(daprAddon) {
+    name: 'dapr'
+    scope: aks
+    properties: {
+        extensionType: 'Microsoft.Dapr'
+        autoUpgradeMinorVersion: true
+        releaseTrain: 'Stable'
+        configurationSettings: {
+            'global.ha.enabled': daprAddon_enableHighAvailability ? 'true' : 'false'
+        }
+        scope: {
+          cluster: {
+            releaseNamespace: 'dapr-system'
+          }
+        }
+        configurationProtectedSettings: {}
+    }
+}
+
+output daprReleaseNamespace string = daprAddon ? daprExtension.properties.scope.cluster.releaseNamespace : ''
+
 
 /*__  ___.   ______   .__   __.  __  .___________.  ______   .______       __  .__   __.   _______
 |   \/   |  /  __  \  |  \ |  | |  | |           | /  __  \  |   _  \     |  | |  \ |  |  /  _____|

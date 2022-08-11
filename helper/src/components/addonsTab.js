@@ -384,8 +384,32 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             </Stack.Item>
 
-        </Stack >
+            <Separator className="notopmargin" />
 
-
-    )
+            <Stack.Item align="start">
+                <Label required={true}>
+                    dapr (Distributed Application Runtime)
+                    (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/dapr">docs</a>)
+                </Label>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: "10px" } }}>
+                    Enabling this option installs dapr, but doesn't apply configuration
+                </MessageBar>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-dapr-checkbox" }}
+                    checked={addons.daprAddon}
+                    onChange={(ev, v) => updateFn("daprAddon", v)}
+                    label="Install the Dapr AddOn"
+                />
+                <Checkbox
+                    disabled={!addons.daprAddon}
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-dapr-ha-checkbox" }}
+                    checked={addons.daprAddon_enableHighAvailability}
+                    onChange={(ev, v) => updateFn("daprAddon_enableHighAvailability", v)}
+                    label="Enable high availability mode"
+                />
+            </Stack.Item>
+        </Stack>
+    );
 }
