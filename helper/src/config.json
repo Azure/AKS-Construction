@@ -50,6 +50,8 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "daprAddon": false,
+            "daprAddonHA": false,
             "fluxGitOpsAddon": false,
             "networkPolicy": "none",
             "kedaAddon": false,

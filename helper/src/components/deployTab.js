@@ -88,7 +88,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.csisecret !== "none" && { keyVaultAksCSI: true }),
     ...(addons.csisecret === 'akvNew' && { keyVaultCreate: true, ...(deploy.kvCertSecretRole && { keyVaultOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
     ...(addons.csisecret !== "none" && addons.keyVaultAksCSIPollInterval !== defaults.addons.keyVaultAksCSIPollInterval  && { keyVaultAksCSIPollInterval: addons.keyVaultAksCSIPollInterval }),
-    ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon})
+    ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon}),
+    ...(addons.daprAddon !== defaults.addons.daprAddon && { daprAddon: addons.daprAddon }),
+    ...(addons.daprAddonHA !== defaults.addons.daprAddonHA && { daprAddonHA: addons.daprAddonHA }),
   }
 
   const preview_params = {
