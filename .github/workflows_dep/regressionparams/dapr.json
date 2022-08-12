@@ -8,7 +8,10 @@
         "agentVMSize": {
             "value": "Standard_DS3_v2"
         },
-        "fluxGitOpsAddon": {
+        "daprAddon": {
+            "value": true
+        },
+        "daprAddonHA": {
             "value": true
         }
     }

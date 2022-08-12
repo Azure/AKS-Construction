@@ -405,8 +405,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     disabled={!addons.daprAddon}
                     styles={{ root: { marginLeft: "50px" } }}
                     inputProps={{ "data-testid": "addons-dapr-ha-checkbox" }}
-                    checked={addons.daprAddon_enableHighAvailability}
-                    onChange={(ev, v) => updateFn("daprAddon_enableHighAvailability", v)}
+                    checked={addons.daprAddonHA}
+                    onChange={(ev, v) => updateFn("daprAddonHA", v)}
                     label="Enable high availability mode"
                 />
             </Stack.Item>

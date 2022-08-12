@@ -1183,8 +1183,10 @@ resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-prev
 }
 output fluxReleaseNamespace string = fluxGitOpsAddon ? fluxAddon.properties.scope.cluster.releaseNamespace : ''
 
+@description('Add the Dapr extension')
 param daprAddon bool = false
-param daprAddon_enableHighAvailability bool = false
+@description('Enable high availability (HA) mode for the Dapr control plane')
+param daprAddonHA bool = false
 
 resource daprExtension 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-preview' = if(daprAddon) {
     name: 'dapr'
@@ -1194,7 +1196,7 @@ resource daprExtension 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-
         autoUpgradeMinorVersion: true
         releaseTrain: 'Stable'
         configurationSettings: {
-            'global.ha.enabled': daprAddon_enableHighAvailability ? 'true' : 'false'
+            'global.ha.enabled': '${daprAddonHA}'
         }
         scope: {
           cluster: {

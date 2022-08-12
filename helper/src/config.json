@@ -51,7 +51,7 @@
         },
         "addons": {
             "daprAddon": false,
-            "daprAddon_enableHighAvailability": false,
+            "daprAddonHA": false,
             "fluxGitOpsAddon": false,
             "networkPolicy": "none",
             "kedaAddon": false,
