@@ -5,10 +5,7 @@ Building a complete Kubernetes operational environment is hard work! __AKS Accel
 
 # Quick Start
 
-What you'll need (not much)
-
-* Access to a Azure subscription
-* A browser
+All you need is access to an `Azure subscription` & a browser
 
 #### **Step 1**
 
@@ -20,7 +17,7 @@ What you'll need (not much)
 
 ![](docs/images/helper-presets.jpg)
 
->if following Azure's **Enterprise Scale** methodology, select  `Enterprise Scale` and select your environment type)
+>If following Azure's **Enterprise Scale** methodology, select  `Enterprise Scale` and select your environment type)
 
 #### **Step 3** Fine tune (optional)
 
