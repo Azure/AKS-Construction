@@ -13,7 +13,7 @@ All you need is access to an `Azure subscription` & a browser
 
 #### **Step 2** Select your Requirements (optional)
 
-<img align="right" width="250"  src="docs/images/helper-presets.jpg">
+<img align="right" width="450"  src="docs/images/helper-presets.jpg">
 
 
 &nbsp;&nbsp;&nbsp;Select your base `Operational` and `Security` Requirements using the presets that have been designed from field experiance
@@ -23,7 +23,7 @@ All you need is access to an `Azure subscription` & a browser
 
 #### **Step 3** Fine tune (optional)
 
-<img align="right" width="200"  src="docs/images/helper-tabs.jpg">
+<img align="right" width="350"  src="docs/images/helper-tabs.jpg">
 
 &nbsp;&nbsp;&nbsp;Use the tabs to fine tune your cluster requirements
 
@@ -31,7 +31,7 @@ All you need is access to an `Azure subscription` & a browser
 
 #### **Step 4** Deploy
 
-<img align="right" width="100"  src="docs/images/helper-deploy.jpg">
+<img align="right" width="200"  src="docs/images/helper-deploy.jpg">
 
 
 &nbsp;&nbsp;&nbsp;In the `Deploy` tab, choose how you will deploy your new cluster, and follow the insturctions
