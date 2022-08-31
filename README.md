@@ -1,6 +1,33 @@
-# AKS Bicep Accelerator
+# AKS Accelerator
 
-Building Kubernetes clusters can be hard work! The AKS Bicep Accelerator focuses on expediting customers onboarding of Azure Kubernetes Service workloads using best practices and a flexible templating approach to suit differing requirements.
+Building a complete Kubernetes operational environment is hard work! __AKS Accelerator__ dramatically accelerates this work by providing the templates and deployment scripts to quicky create a  __fully configured__, Kubernetes environment, taylored to meet your operational and security needs, ready to run your workloads in production.
+
+
+# Getting Started
+
+What you'll need
+
+Access to a Azure subscription and a browser
+
+Step 1
+
+Navigate to the [AKS Construction initializr](https://azure.github.io/AKS-Construction/)
+
+Step 2
+
+Select your base Security and Operational Requirements (if following Azures Enterprise Scale, select your Ent Scale environment)
+
+Step 3
+
+Use the tabs to fine tune your cluster requirements
+
+Step 4
+
+Select how you will deploy your new cluster
+
+
+
+## Background
 
 This project unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Well Architected Framework](https://docs.microsoft.com/en-us/azure/architecture/framework/), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
 
