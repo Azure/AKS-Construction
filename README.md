@@ -16,7 +16,7 @@ All you need is access to an `Azure subscription` & a browser
 <img align="right" width="450"  src="docs/images/helper-presets.jpg">
 
 
-&nbsp;&nbsp;&nbsp;Select your base `Operational` and `Security` Requirements using the presets that have been designed from field experiance
+&nbsp;&nbsp;&nbsp;Select your base `Operational` and `Security` Principles using the presets that have been designed from field experiance
 
 
 >If following Azure's **Enterprise Scale** methodology, select  `Enterprise Scale` and select your environment type)
