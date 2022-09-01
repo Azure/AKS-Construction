@@ -34,7 +34,7 @@ All you need is access to an `Azure subscription` & a browser
 <img align="right" width="200"  src="docs/images/helper-deploy.jpg">
 
 
-&nbsp;&nbsp;&nbsp;In the `Deploy` tab, choose how you will deploy your new cluster, and follow the insturctions
+&nbsp;&nbsp;&nbsp;In the `Deploy` tab, choose how you will deploy your new cluster, and follow the instructions
 
 
 
