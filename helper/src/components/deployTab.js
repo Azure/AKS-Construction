@@ -400,21 +400,18 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
         </PivotItem>
 
         <PivotItem headerText="Github Actions" itemKey="github" itemIcon="GitGraph">
-            <Stack horizontal>
+            <Stack horizontal childrenGap={50}>
               <Stack.Item>
                 <Stack>
 
-                <Label key="post-label" style={{marginTop: '10px'}}>Create an Azure AD Service Principal that GitHub will use to deploy to Azure</Label>
-                <Text>Run this code block to create the Service Principal, provide it the permissions needed to run the deployment, then it will create the secrets in your application repository</Text>
-                <Separator></Separator>
-                <Text>
-                  * Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell (where it is pre-installed)</Link>.
-                </Text>
+                <Label key="post-label" style={{marginTop: '10px'}}>Call the AKS Construction <a href="https://docs.github.com/en/actions/using-workflows/reusing-workflows" target="_other">Reusable Workflow</a> from your <b>Workload or Infra Repo</b> to automate the deployment of your cluster </Label>
+                <Text>Enter your Repo URL then run this code block.  This will create a Service Principal for deployment, provide it the permissions needed, then create the secrets in your application repository</Text>
+
                 </Stack>
               </Stack.Item>
               <Stack.Item>
-                 <TextField label="Application GitHub Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
-                 <TextField label="Application branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
+                 <TextField label="Workload or Infra GitHub Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
+                 <TextField label="Repo Branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
               </Stack.Item>
             </Stack>
 
@@ -437,9 +434,10 @@ gh secret set --repo ${deploy.githubrepo} AZURE_TENANT_ID -b $(az account show -
 gh secret set --repo ${deploy.githubrepo} AZURE_SUBSCRIPTION_ID -b $subId
 gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 `}/>
+<Text>* Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell (where it is pre-installed)</Link>.</Text>
+<Separator></Separator>
 
-            <Label>To run te Github reusable workflow</Label>
-            <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos <code>.github/workflows</code> folder to call the AKS-Construction reusable workflow (this example creates a manually triggered Action)</Text>
+            <Text style={{marginTop: '20px'}}>Add the following code to a new file in your repos <code>.github/workflows</code> folder, this will call the AKS-Construction reusable workflow.  NOTE: This example creates a manually triggered Action</Text>
             <CodeBlock  lang="github actions"  deploycmd={`name: Deploy AKS-Construction
 
 on:
