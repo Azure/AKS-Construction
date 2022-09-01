@@ -378,7 +378,7 @@ export default function PortalNav({ config }) {
 
           <Presets sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
 
-          <Separator styles={SeparatorStyle}><span style={{"color": "rgb(0, 103, 184)"}}>Customized to your liking & Deploy</span></Separator>
+          <Separator styles={SeparatorStyle}><span style={{"color": "rgb(0, 103, 184)"}}>Fine tune & Deploy</span></Separator>
 
           <Pivot selectedKey={pivotkey} onLinkClick={_handleLinkClick} focusZoneProps={{ 'data-testid': `portalnav-Pivot` }}>
             <PivotItem headerText={tabLabels.deploy} itemKey="deploy" onRenderItemLink={(a, b) => _customRenderer('deploy', a, b)}>
