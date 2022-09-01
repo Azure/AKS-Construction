@@ -811,7 +811,7 @@ param AksPaidSkuForSLA bool = false
 @minLength(9)
 @maxLength(18)
 @description('The address range to use for pods')
-param podCidr string = '10.240.100.0/24'
+param podCidr string = '10.240.100.0/22'
 
 @minLength(9)
 @maxLength(18)
