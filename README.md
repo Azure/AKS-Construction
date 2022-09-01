@@ -7,34 +7,26 @@ Building a complete Kubernetes operational environment is hard work! __AKS Accel
 
 All you need is access to an `Azure subscription` & a browser
 
-#### **Step 1**
+* #### **Step 1**
+  Navigate to the AKS Construction [**initializr**](https://azure.github.io/AKS-Construction/)
 
-&nbsp;&nbsp;&nbsp;Navigate to the AKS Construction [initializr](https://azure.github.io/AKS-Construction/)
+* #### **Step 2** Select your Requirements (optional)
+  Select your base `Operational` and `Security` Principles using the presets that have been designed from our field experience
+  
+  ![](docs/images/helper-presets.jpg)  
+  <br/>
+  > **Note**
+  > If following Azure's **Enterprise Scale** methodology, select `Enterprise Scale` from the dropdown, then select your environment type
 
-#### **Step 2** Select your Requirements (optional)
-
-<img align="right" width="450"  src="docs/images/helper-presets.jpg">
-
-
-&nbsp;&nbsp;&nbsp;Select your base `Operational` and `Security` Principles using the presets that have been designed from field experience
-
-
->If following Azure's **Enterprise Scale** methodology, select  `Enterprise Scale` and select your environment type)
-
-#### **Step 3** Fine tune (optional)
-
-<img align="right" width="350"  src="docs/images/helper-tabs.jpg">
-
-&nbsp;&nbsp;&nbsp;Use the tabs to fine tune your cluster requirements
-
-
-
-#### **Step 4** Deploy
-
-<img align="right" width="200"  src="docs/images/helper-deploy.jpg">
-
-
-&nbsp;&nbsp;&nbsp;In the `Deploy` tab, choose how you will deploy your new cluster, and follow the instructions
+* #### **Step 3** Fine tune (optional)
+  Use the tabs to fine tune your cluster requirements
+  
+  ![](docs/images/helper-tabs.jpg)
+* #### **Step 4** Deploy
+  In the `Deploy` tab, choose how you will deploy your new cluster, and follow the instructions
+  
+  ![](docs/images/helper-deploy.jpg)
+  
 
 
 
