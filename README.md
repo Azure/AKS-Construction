@@ -1,6 +1,6 @@
 # AKS Accelerator
 
-Building a complete Kubernetes operational environment is hard work! __AKS Accelerator__ dramatically accelerates this work by providing the templates and deployment scripts to quicky create a  __fully configured__, Kubernetes environment, taylored to meet your operational and security needs, ready to run your workloads in production.
+Building a complete Kubernetes operational environment is hard work! __AKS Accelerator__ dramatically speeds up this work by providing the templates and deployment scripts to quickly create a  __fully configured__, Kubernetes environment, tailored to meet your operational and security needs, ready to run your workloads in production.
 
 
 # Quick Start
@@ -16,7 +16,7 @@ All you need is access to an `Azure subscription` & a browser
 <img align="right" width="450"  src="docs/images/helper-presets.jpg">
 
 
-&nbsp;&nbsp;&nbsp;Select your base `Operational` and `Security` Principles using the presets that have been designed from field experiance
+&nbsp;&nbsp;&nbsp;Select your base `Operational` and `Security` Principles using the presets that have been designed from field experience
 
 
 >If following Azure's **Enterprise Scale** methodology, select  `Enterprise Scale` and select your environment type)
