@@ -699,7 +699,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.22.11'
+param kubernetesVersion string = '1.23.8'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false

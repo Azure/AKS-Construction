@@ -84,14 +84,14 @@ output name string = sql.name
 
 //---------Kubernetes Construction---------
 //ref: https://github.com/Azure/AKS-Construction
-param k8sVersion string = '1.22.6'
+//param k8sVersion string = '1.22.6'
 
 module aksconst '../bicep/main.bicep' = {
   name: 'aksconstruction'
   params: {
     location : location
     resourceName: fullnameseed
-    kubernetesVersion: k8sVersion
+    //kubernetesVersion: k8sVersion
     enablePrivateCluster :  environmentConfigurationMap[environmentScale].aks.privateCluster
     agentCount: environmentConfigurationMap[environmentScale].aks.agentCount
     agentVMSize: environmentConfigurationMap[environmentScale].aks.agentVMSize
