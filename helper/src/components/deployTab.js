@@ -400,17 +400,15 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
         </PivotItem>
 
         <PivotItem headerText="Github Actions" itemKey="github" itemIcon="GitGraph">
-            <Stack horizontal childrenGap={50}>
-              <Stack.Item>
-                <Stack>
-
-                <Label key="post-label" style={{marginTop: '10px'}}>Call the AKS Construction <a href="https://docs.github.com/en/actions/using-workflows/reusing-workflows" target="_other">Reusable Workflow</a> from your <b>Workload or Infra Repo</b> to automate the deployment of your cluster </Label>
-                <Text>Enter your Repo URL then run this code block.  This will create a Service Principal for deployment, provide it the permissions needed, then create the secrets in your application repository</Text>
-
+            <Stack horizontal tokens={{childrenGap: 30}}>
+              <Stack.Item styles={{root: {width: "60%"}}}>
+                <Stack tokens={{childrenGap: 20}}>
+                  <Label key="post-label" style={{marginTop: '10px'}}>Call the AKS Construction <a href="https://docs.github.com/en/actions/using-workflows/reusing-workflows" target="_other">Reusable Workflow</a> from your <b>Workload/Infra Repo</b> to automate the deployment of your cluster </Label>
+                  <Text>Enter your Repo URL then run this code block.  This will create a Service Principal for deployment, provide it the permissions needed, then create the secrets in your application repository</Text>
                 </Stack>
               </Stack.Item>
-              <Stack.Item>
-                 <TextField label="Workload or Infra GitHub Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
+              <Stack.Item styles={{root: {width: "40%"}}} >
+                 <TextField label="Workload/Infra GitHub Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
                  <TextField label="Repo Branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
               </Stack.Item>
             </Stack>

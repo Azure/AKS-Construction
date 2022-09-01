@@ -350,7 +350,7 @@ export default function PortalNav({ config }) {
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7, 'Enter an IP/CIDR, or disable API Security in \'Cluster Details\' tab')
   invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19, 'Enter valid cluster name')
 
-  invalidFn('deploy', 'githubrepo', deploy.deployItemKey === 'github' && (!deploy.githubrepo || !deploy.githubrepo.match('https://github.com/[^/ ]+/[^/ ]+$')), 'Please enter your application GitHub repo URL (https://github.com/org/repo)')
+  invalidFn('deploy', 'githubrepo', deploy.deployItemKey === 'github' && (!deploy.githubrepo || !deploy.githubrepo.match('https://github.com/[^/ ]+/[^/ ]+$')), 'enter repo URL. eg: https://github.com/org/repo')
   invalidFn('deploy', 'githubrepobranch', deploy.deployItemKey === 'github' && !deploy.githubrepobranch, 'Please enter your application GitHub repo branch the can run the workflow')
   invalidFn('deploy', 'selectedTemplate', !deploy.templateVersions.find(t => t.key === deploy.selectedTemplate), `Invalid release name: ${deploy.selectedTemplate}, ensure all assests are attached`)
 
