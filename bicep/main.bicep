@@ -1025,7 +1025,7 @@ var aks_identity = {
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
 output aksPrivateDnsZone string = aksPrivateDnsZone
 
-var aksProperties = {
+var aksProperties1 = {
   kubernetesVersion: kubernetesVersion
   enableRBAC: true
   dnsPrefix: dnsPrefix
@@ -1052,17 +1052,11 @@ var aksProperties = {
     networkPlugin: networkPlugin
     #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
     networkPolicy: networkPolicy
-    podCidr: podCidr
+    podCidr: networkPlugin=='kubenet' ? podCidr : json('null')
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
     outboundType: aksOutboundTrafficType
-    natGatewayProfile: aksOutboundTrafficType == 'managedNATGateway' ? {
-      managedOutboundIPProfile: {
-        count: natGwIpCount
-      }
-      idleTimeoutInMinutes: natGwIdleTimeout
-    } : {}
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
   autoUpgradeProfile: !empty(upgradeChannel) ? {
@@ -1072,6 +1066,16 @@ var aksProperties = {
   autoScalerProfile: autoScale ? AutoscaleProfile : {}
   oidcIssuerProfile: {
     enabled: oidcIssuer
+  }
+}
+
+@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS-Construction/issues/344')
+var managedNATGatewayProfile =  {
+  natGatewayProfile : {
+    managedOutboundIPProfile: {
+      count: natGwIpCount
+    }
+    idleTimeoutInMinutes: natGwIdleTimeout
   }
 }
 
@@ -1087,10 +1091,13 @@ var azureDefenderSecurityProfile = {
   }
 }
 
+var aksProperties2 = aksOutboundTrafficType == 'managedNATGateway' ? union(aksProperties1, managedNATGatewayProfile) : aksProperties1
+var aksProperties3 = defenderForContainers && createLaw ? union(aksProperties2, azureDefenderSecurityProfile) : aksProperties2
+
 resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
-  properties: defenderForContainers && createLaw ? union(aksProperties,azureDefenderSecurityProfile) : aksProperties
+  properties: aksProperties3
   identity: createAksUai ? aks_identity : {
     type: 'SystemAssigned'
   }
