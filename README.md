@@ -45,7 +45,8 @@ For a more in depth look at the GitHub Actions used in this project, which steps
 If this is the first time you're using the project, follow these steps.
 
 1. Use the [Deployment Helper](https://azure.github.io/AKS-Construction/) to guide your AKS configuration.
-1. Run the commands in the *Command Line* tab to create your AKS Environment in your Azure subscription
+1. Run the commands in the *Provision Environment* tab to create your AKS Environment in your Azure subscription
+1. Run the commands in the *Post Configuration* tab to complete your implementation
 1. [Connect to your AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster), and deploy your applications as you see fit.
 
 ### Mature
