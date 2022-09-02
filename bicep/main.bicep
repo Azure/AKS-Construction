@@ -1025,7 +1025,30 @@ var aks_identity = {
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
 output aksPrivateDnsZone string = aksPrivateDnsZone
 
-var aksProperties1 = {
+
+@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS-Construction/issues/344')
+var managedNATGatewayProfile =  {
+  natGatewayProfile : {
+    managedOutboundIPProfile: {
+      count: natGwIpCount
+    }
+    idleTimeoutInMinutes: natGwIdleTimeout
+  }
+}
+
+@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
+var azureDefenderSecurityProfile = {
+  securityProfile : {
+    defender: {
+      logAnalyticsWorkspaceResourceId: createLaw ? aks_law.id : null
+      securityMonitoring: {
+        enabled: defenderForContainers
+      }
+    }
+  }
+}
+
+var aksProperties = union({
   kubernetesVersion: kubernetesVersion
   enableRBAC: true
   dnsPrefix: dnsPrefix
@@ -1067,37 +1090,15 @@ var aksProperties1 = {
   oidcIssuerProfile: {
     enabled: oidcIssuer
   }
-}
-
-@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS-Construction/issues/344')
-var managedNATGatewayProfile =  {
-  natGatewayProfile : {
-    managedOutboundIPProfile: {
-      count: natGwIpCount
-    }
-    idleTimeoutInMinutes: natGwIdleTimeout
-  }
-}
-
-@description('Needing to seperately declare and union this because of https://github.com/Azure/AKS/issues/2774')
-var azureDefenderSecurityProfile = {
-  securityProfile : {
-    defender: {
-      logAnalyticsWorkspaceResourceId: createLaw ? aks_law.id : null
-      securityMonitoring: {
-        enabled: defenderForContainers
-      }
-    }
-  }
-}
-
-var aksProperties2 = aksOutboundTrafficType == 'managedNATGateway' ? union(aksProperties1, managedNATGatewayProfile) : aksProperties1
-var aksProperties3 = defenderForContainers && createLaw ? union(aksProperties2, azureDefenderSecurityProfile) : aksProperties2
+},
+aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
+defenderForContainers && createLaw ? azureDefenderSecurityProfile : {}
+)
 
 resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
-  properties: aksProperties3
+  properties: aksProperties
   identity: createAksUai ? aks_identity : {
     type: 'SystemAssigned'
   }
