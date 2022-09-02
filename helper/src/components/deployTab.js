@@ -392,7 +392,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             </Stack.Item>
           </Stack>
 
-          <CodeBlock lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
+          <CodeBlock hideSave={true} lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
@@ -413,7 +413,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
               </Stack.Item>
             </Stack>
 
-            <CodeBlock key="github-auth" lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
+            <CodeBlock key="github-auth" lang="shell script" hideSave={true} error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
 az group create -l WestEurope -n ${deploy.rg}
 
 app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | tr ' ' "\\n"))
@@ -502,11 +502,9 @@ az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
 
         </PivotItem>
 
-        <PivotItem headerText="Raw Parameters File" itemKey="params"  itemIcon="FileSymlink">
-
-          <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
-          </TextField>
-
+        <PivotItem headerText="Parameters File" itemKey="params"  itemIcon="FileSymlink">
+          <Label>Can be used for source control</Label>
+          <CodeBlock  lang="json"  deploycmd={param_file} label="Parameter file" />
         </PivotItem>
 
 

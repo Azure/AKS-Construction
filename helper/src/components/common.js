@@ -21,7 +21,7 @@ export function getError(array, field) {
 export const adv_stackstyle = { root: { border: "1px solid", margin: "10px 0", padding: "15px" } }
 
 
-export function CodeBlock({deploycmd, testId, lang, filename, error}) {
+export function CodeBlock({deploycmd, testId, lang, filename, error, hideSave}) {
     const [ copied, setCopied ] = useState(false)
 
     function copyIt() {
@@ -39,6 +39,7 @@ export function CodeBlock({deploycmd, testId, lang, filename, error}) {
         <div key="code-header" className="codeHeader" style={{...(error && {borderColor: 'darkred'})}}>
             <span className="language">{lang}</span>
             { error && <div  className="error">{error}</div> }
+            { !hideSave &&
             <CommandBarButton
               disabled={error}
               className="action position-relative"
@@ -47,6 +48,7 @@ export function CodeBlock({deploycmd, testId, lang, filename, error}) {
               text={!error ? "Save" : ""}
               primaryActionButtonProps={{download: filename}}
               onClick={downloadIt}/>
+            }
             <CommandBarButton
                     disabled={copied || error}
                     className="action position-relative"
@@ -57,7 +59,7 @@ export function CodeBlock({deploycmd, testId, lang, filename, error}) {
         </div>,
 
         <pre key="code-pre" className="has-inner-focus"  style={{...(error && {borderColor: 'darkred'})}}>
-            <code className={"lang-" + lang}><span data-lang={lang} data-testid={testId || 'none'} style={{...(error && {color: 'lightgrey'})}}>{deploycmd}</span></code>
+            <code className={"lang-" + lang}><span data-lang={lang} data-testid={testId || 'none'} style={{...(error && {color: 'grey'})}}>{deploycmd}</span></code>
         </pre>
     ]
 }

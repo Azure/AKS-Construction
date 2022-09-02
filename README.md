@@ -2,10 +2,7 @@
 
 Building a complete Kubernetes operational environment is hard work! __AKS Accelerator__ dramatically speeds up this work by providing the templates and deployment scripts to quickly create a  __fully configured__, Kubernetes environment, tailored to meet your operational and security needs, ready to run your workloads in production.
 
-
-# Quick Start
-
-All you need is access to an `Azure subscription` & a browser
+## Quick Start
 
 * #### **Step 1**
   Navigate to the AKS Construction [**helper**](https://azure.github.io/AKS-Construction/)
@@ -16,7 +13,7 @@ All you need is access to an `Azure subscription` & a browser
   ![](docs/images/helper-presets.jpg)
   <br/>
   > **Note**
-  > If following Azure's **Enterprise Scale** methodology, select `Enterprise Scale` from the dropdown, then select your environment type
+  > If following Azure's **Landing Zone** methodology, select `Enterprise Scale` from the dropdown, then select your environment type
 
 * #### **Step 3** Fine tune (optional)
   Use the tabs to fine tune your cluster requirements
@@ -27,12 +24,7 @@ All you need is access to an `Azure subscription` & a browser
 
   ![](docs/images/helper-deploy.jpg)
 
-
-
-
-
-## Advanced Usage
-
+## Project components
 
 ### IaC - Bicep code files
 
@@ -53,14 +45,11 @@ CI Name | Actions Workflow | Parameter file | CI Status | Notes
 
 For a more in depth look at the GitHub Actions used in this project, which steps are performed and the different CI practices they demonstrate, please refer to [this page](docs/GhActions.md).
 
-
-
 ## Background
 
 This project unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Well Architected Framework](https://docs.microsoft.com/en-us/azure/architecture/framework/), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
 
-The AKS Bicep Accelerator is part of the official [AKS Landing Zone Accelerator (Enterprise Scale)](https://github.com/Azure/AKS-Landing-Zone-Accelerator) architectural approach. To read more about this project and how the AKS Bicep Accelerator fits with Enterprise Scale and the AKS Secure Baseline, look [here](referencearchs.md).
-
+This project is part of the official [AKS Landing Zone Accelerator (Enterprise Scale)](https://github.com/Azure/AKS-Landing-Zone-Accelerator) architectural approach. To read more about this project and how the it fits with Enterprise Scale and the AKS Secure Baseline, look [here](referencearchs.md).
 
 ## Project Principals
 
