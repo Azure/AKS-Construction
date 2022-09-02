@@ -45,7 +45,7 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
           <Link className="navbar-brand no-outline" >
             <Image src="aks.svg" height="33px" />
           </Link>
-          <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{"color": "red"}}>initializr</span></Text>
+          <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{"color": "red"}}>helper</span></Text>
           <Text className={titleClass} style={{"marginTop": "6px", "marginLeft": "20px"}}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
         </div>
         <div style={{ display: "inline-block", float: "right" }}>
@@ -76,7 +76,7 @@ function Header2({ presets, setPresets, selectedPreset, featureFlag }) {
     <Stack horizontal tokens={{ childrenGap: 10 }}>
       <img id="aksLogo" src="aks.svg" alt="Kubernetes Service" style={{  }}></img>
       <Stack tokens={{ padding: 10, maxWidth: 700 }} className="intro">
-        <Text variant="xLarge">AKS Construction initializr</Text>
+        <Text variant="xLarge">AKS Construction helper</Text>
         <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance.</Text>
         <Text variant="medium" >Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
