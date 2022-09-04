@@ -107,7 +107,7 @@ module gridAks '../../bicep/main.bicep' = {
     osDiskType: 'Managed'
     enable_aad: true
     enableAzureRBAC : true
-    registries_sku: 'Premium'
+    acrCreateNewSku: 'Premium'
     omsagent: true
     retentionInDays: 30
     azurepolicy: 'audit'
@@ -132,7 +132,7 @@ module appAks '../../bicep/main.bicep' = {
     osDiskType: 'Managed'
     enable_aad: true
     enableAzureRBAC : true
-    registries_sku: 'Premium'
+    acrCreateNewSku: 'Premium'
     omsagent: true
     retentionInDays: 30
     azurepolicy: 'audit'

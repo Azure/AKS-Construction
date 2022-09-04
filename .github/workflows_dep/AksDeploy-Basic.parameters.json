@@ -35,7 +35,7 @@
         "retentionInDays": {
             "value": 30
         },
-        "registries_sku": {
+        "acrCreateNewSku": {
             "value": "Standard"
         },
         "aksOutboundTrafficType" : {

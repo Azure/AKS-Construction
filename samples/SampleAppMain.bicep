@@ -98,7 +98,7 @@ module aksconst '../bicep/main.bicep' = {
     agentCountMax: environmentConfigurationMap[environmentScale].aks.agentCountMax
     enable_aad: true
     enableAzureRBAC : true
-    registries_sku: 'Premium'
+    acrCreateNewSku: 'Premium'
     omsagent: true
     retentionInDays: 30
     networkPolicy: environmentConfigurationMap[environmentScale].aks.networkPolicy

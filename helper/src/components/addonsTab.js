@@ -21,7 +21,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         { key: 'none', text: 'No, my application images will be on DockerHub or another registry' },
                         { key: 'Basic', text: 'Yes, setup Azure Container Registry "Basic" tier & authorise aks to pull images' },
                         { key: 'Standard', text: 'Yes, setup Azure Container Registry "Standard" tier (minimum recommended for production)' },
-                        { key: 'Premium', text: 'Yes, setup Azure Container Registry "Premium" tier (required for Private Link)' }
+                        { key: 'Premium', text: 'Yes, setup Azure Container Registry "Premium" tier (required for Private Link)' },
+                        { key: 'byo', text: 'Bring your own. Grant AKS Pull permissions on existing Azure Container Registry' }
                     ]}
                     onChange={(ev, { key }) => updateFn("registry", key)}
                 />
@@ -30,6 +31,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 }
 
             </Stack.Item>
+
+            {addons.registry === 'byo' &&
+                <Stack.Item align="center" styles={{ root: { minWidth: '700px' } }} >
+                    <TextField styles={{ root: { marginBottom: '20px' } }} value={addons.acrByoName} onChange={(ev, v) => updateFn("acrByoName", v)} /*errorMessage={getError(invalidArray, 'kvId')}*/ required placeholder="ACR name" label={<Text style={{ fontWeight: 600 }}>Enter your Existing Azure Container Registry Name</Text>} />
+                </Stack.Item>
+            }
 
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
                 <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label={<Text>Create ACR Private Agent Pool (private link only) (preview limited regions <a target="_new" href="https://docs.microsoft.com/azure/container-registry/tasks-agent-pools">docs</a>)</Text>} />

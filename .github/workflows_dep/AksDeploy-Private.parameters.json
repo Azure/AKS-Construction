@@ -29,7 +29,7 @@
           "enableAzureRBAC": {
             "value": true
           },
-          "registries_sku": {
+          "acrCreateNewSku": {
             "value": "Premium"
           },
           "acrPrivatePool": {

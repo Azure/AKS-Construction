@@ -124,7 +124,7 @@ module network './network.bicep' = if (custom_vnet) {
     vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
     privateLinks: privateLinks
     privateLinkSubnetAddressPrefix: privateLinkSubnetAddressPrefix
-    privateLinkAcrId: privateLinks && !empty(registries_sku) ? acr.id : ''
+    privateLinkAcrId: privateLinks && !empty(acrCreateNewSku) ? acr.id : ''
     privateLinkAkvId: privateLinks && keyVaultCreate ? kv.outputs.keyVaultId : ''
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
@@ -250,14 +250,14 @@ output keyVaultId string = keyVaultCreate ? kv.outputs.keyVaultId : ''
   'Premium'
 ])
 @description('The SKU to use for the Container Registry')
-param registries_sku string = ''
+param acrCreateNewSku string = ''
 
 @description('Enable the ACR Content Trust Policy, SKU must be set to Premium')
 param enableACRTrustPolicy bool = false
-var acrContentTrustEnabled = enableACRTrustPolicy && registries_sku == 'Premium' ? 'enabled' : 'disabled'
+var acrContentTrustEnabled = enableACRTrustPolicy && acrCreateNewSku == 'Premium' ? 'enabled' : 'disabled'
 
 //param enableACRZoneRedundancy bool = true
-var acrZoneRedundancyEnabled = !empty(availabilityZones) && registries_sku == 'Premium' ? 'Enabled' : 'Disabled'
+var acrZoneRedundancyEnabled = !empty(availabilityZones) && acrCreateNewSku == 'Premium' ? 'Enabled' : 'Disabled'
 
 @description('Enable removing of untagged manifests from ACR')
 param acrUntaggedRetentionPolicyEnabled bool = false
@@ -265,14 +265,14 @@ param acrUntaggedRetentionPolicyEnabled bool = false
 @description('The number of days to retain untagged manifests for')
 param acrUntaggedRetentionPolicy int = 30
 
-var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
+var acrName = 'cr${replace(resourceName, '-', '')}'
 
-resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!empty(registries_sku)) {
+resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!empty(acrCreateNewSku)) {
   name: acrName
   location: location
   sku: {
     #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no ACR required.
-    name: registries_sku
+    name: acrCreateNewSku
   }
   properties: {
     policies: {
@@ -302,11 +302,11 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
     */
   }
 }
-output containerRegistryName string = !empty(registries_sku) ? acr.name : ''
-output containerRegistryId string = !empty(registries_sku) ? acr.id : ''
+output containerRegistryName string = !empty(acrCreateNewSku) ? acr.name : (!empty(acrByoName) ? byo_acr.name : '')
+output containerRegistryId string = !empty(acrCreateNewSku) ? acr.id : (!empty(acrByoName) ? byo_acr.id : '')
 
 
-resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && !empty(registries_sku)) {
+resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (createLaw && !empty(acrCreateNewSku)) {
   name: 'acrDiags'
   scope: acr
   properties: {
@@ -331,8 +331,8 @@ resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = i
   }
 }
 
-//resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
-module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
+//resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(acrCreateNewSku)) && privateLinks && acrPrivatePool) {
+module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(acrCreateNewSku)) && privateLinks && acrPrivatePool) {
   name: 'acrprivatepool'
   params: {
     acrName: acr.name
@@ -344,8 +344,13 @@ module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)
 var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
 
-resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(registries_sku)) {
-  scope: acr // Use when specifying a scope that is different than the deployment scope
+param acrByoName string
+resource byo_acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' existing = if (!empty(acrByoName)) {
+  name: acrByoName
+}
+
+resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(acrCreateNewSku) || !empty(acrByoName)) {
+  scope: !empty(acrCreateNewSku) ? acr : byo_acr// Use when specifying a scope that is different than the deployment scope
   name: guid(aks.id, 'Acr' , AcrPullRole)
   properties: {
     roleDefinitionId: AcrPullRole
@@ -359,8 +364,8 @@ var AcrPushRole = resourceId('Microsoft.Authorization/roleDefinitions', '8311e38
 @description('The principal ID of the service principal to assign the push role to the ACR')
 param acrPushRolePrincipalId string = ''
 
-resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(registries_sku) && !empty(acrPushRolePrincipalId)) {
-  scope: acr // Use when specifying a scope that is different than the deployment scope
+resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2022-04-01' = if ((!empty(acrCreateNewSku) || !empty(acrByoName)) && !empty(acrPushRolePrincipalId)) {
+  scope: !empty(acrCreateNewSku) ? acr : byo_acr // Use when specifying a scope that is different than the deployment scope
   name: guid(aks.id, 'Acr' , AcrPushRole)
   properties: {
     roleDefinitionId: AcrPushRole
@@ -372,10 +377,10 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2022-04-01' = if 
 
 param imageNames array = []
 
-module acrImport 'br/public:deployment-scripts/import-acr:2.0.1' = if (!empty(registries_sku) && !empty(imageNames)) {
+module acrImport 'br/public:deployment-scripts/import-acr:2.0.1' = if (!empty(acrCreateNewSku) && !empty(imageNames)) {
   name: 'testAcrImportMulti'
   params: {
-    acrName: acr.name
+    acrName: !empty(acrCreateNewSku) ? acr.name : byo_acr.name
     location: location
     images: imageNames
   }
