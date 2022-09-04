@@ -34,7 +34,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             {addons.registry === 'byo' &&
                 <Stack.Item align="center" styles={{ root: { minWidth: '700px' } }} >
-                    <TextField styles={{ root: { marginBottom: '20px' } }} value={addons.acrByoName} onChange={(ev, v) => updateFn("acrByoName", v)} /*errorMessage={getError(invalidArray, 'kvId')}*/ required placeholder="ACR name" label={<Text style={{ fontWeight: 600 }}>Enter your Existing Azure Container Registry Name</Text>} />
+                    <TextField styles={{ root: { marginBottom: '20px' } }} value={addons.acrByoName} onChange={(ev, v) => updateFn("acrByoName", v)} errorMessage={getError(invalidArray, 'acrByoName')} required placeholder="ACR name" label={<Text style={{ fontWeight: 600 }}>Enter your Existing Azure Container Registry Name</Text>} />
                 </Stack.Item>
             }
 
