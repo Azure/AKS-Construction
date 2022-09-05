@@ -7,6 +7,7 @@ import { adv_stackstyle, hasError, getError } from './common'
 export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { addons, net } = tabValues
     const osmFeatureFlag = featureFlag.includes('osm')
+    const wiFeatureFlag = featureFlag.includes('workloadId')
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -368,6 +369,20 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 </Label>
                 <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-osm-Checkbox"}} checked={addons.openServiceMeshAddon} onChange={(ev, v) => updateFn("openServiceMeshAddon", v)} label="Install the Open Service Mesh AddOn" />
             </Stack.Item>
+
+            { wiFeatureFlag &&
+            <>
+                <Separator className="notopmargin" />
+
+                <Stack.Item align="start">
+                    <Label required={true}>
+                        Workload Identity : Enable Azure Workload Identity on the AKS Cluster
+                        (<a target="_new" href="https://github.com/Azure/azure-workload-identity">docs</a>)
+                    </Label>
+                    <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-workloadIdentity-Checkbox"}} checked={addons.workloadIdentity} onChange={(ev, v) => updateFn("workloadIdentity", v)} label="Install Workload Identity" />
+                </Stack.Item>
+            )
+            </>}
 
             <Separator className="notopmargin" />
 
