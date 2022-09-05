@@ -5,23 +5,81 @@ name: Broken Link Checker
 on:
   schedule:
     - cron: 0 0 1 * * # run monthly
-  repository_dispatch: # run manually
-    types: [check-link]
+
+  workflow_dispatch: # run manually
 
 jobs:
-  check:
-    name: Broken Link Check
+  repoLinkChecker:
     runs-on: ubuntu-latest
     steps:
-      - name: Repo - Broken Link Check
-        uses: technote-space/broken-link-checker-action@v2
-      - name: Helper - Broken Link Check
-        uses: technote-space/broken-link-checker-action@v2
-        with: 
-          TARGET: https://azure.github.io/AKS-Construction/
-          RECURSIVE: false
-      - name: Helper (preview) - Broken Link Check
-        uses: technote-space/broken-link-checker-action@v2
-        with: 
-          TARGET: https://azure.github.io/AKS-Construction/?feature=defender
-          RECURSIVE: false
+      - uses: actions/checkout@v3
+
+      - name: Link Checker
+        id: lychee
+        uses: lycheeverse/lychee-action@v1.5.1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          # Check all markdown and html files in repo (default)
+          args: './**/*.md'
+
+      - name: Create Issue From File
+        if: steps.lychee.outputs.exit_code != 0
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: Link Checker Report
+          content-filepath: ./lychee/out.md
+          labels: report, automated issue
+
+  helperLinkChecker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Playwright - Install w/ OS dependencies
+        run: |
+          cd helper
+          npx playwright install #https://github.com/microsoft/playwright/issues/4033
+          npx playwright install-deps chromium
+          npm i -D playwright-expect
+
+      - name: Test web server is up
+        run: curl http://localhost:3000/AKS-Construction
+
+      - name: Verifying Playwright install
+        run: |
+          cd helper
+
+          echo "Looking for playwright"
+          ls node_modules | grep playwright
+
+          echo "Playwright version"
+          npx playwright -V
+
+      - name: File system prep
+        run: |
+          mkdir failscreengrabs
+          mkdir alwaysscreengrabs
+
+      - name: Playwright - Grab html
+        env:
+          filenamewordmatch: 'helper-export'
+        run: |
+          cd helper
+          npx playwright test --browser chromium .playwrighttests/helper-export-html-site.spec --reporter list
+
+      - name: Link Checker
+        id: lychee
+        uses: lycheeverse/lychee-action@v1.5.1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          args: 'https://azure.github.io/AKS-Construction?feature=defender'
+
+      - name: Create Issue From File
+        if: steps.lychee.outputs.exit_code != 0
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: Link Checker Report
+          content-filepath: ./lychee/out.md
+          labels: report, automated issue
