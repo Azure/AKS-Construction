@@ -377,11 +377,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Stack.Item align="start">
                     <Label required={true}>
                         Workload Identity : Enable Azure Workload Identity on the AKS Cluster
-                        (<a target="_new" href="https://github.com/Azure/azure-workload-identity">docs</a>)
+                        (<a target="_new" href="https://github.com/Azure/azure-workload-identity">project</a>)
                     </Label>
                     <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-workloadIdentity-Checkbox"}} checked={addons.workloadIdentity} onChange={(ev, v) => updateFn("workloadIdentity", v)} label="Install Workload Identity" />
                 </Stack.Item>
-            )
             </>}
 
             <Separator className="notopmargin" />
