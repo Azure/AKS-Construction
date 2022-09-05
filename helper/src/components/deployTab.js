@@ -115,6 +115,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       })
     }),
     ...(defaults.addons.kedaAddon !== addons.kedaAddon && {kedaAddon: addons.kedaAddon }),
+    ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {workloadIdentity: addons.workloadIdentity }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
   }
 

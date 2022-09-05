@@ -890,6 +890,9 @@ param natGwIdleTimeout int = 30
 @description('Configures the cluster as an OIDC issuer for use with Workload Identity')
 param oidcIssuer bool = false
 
+@description('Installs Azure Workload Identity into the cluster')
+param workloadIdentity bool = false
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   CostOptimised : {
@@ -1089,6 +1092,11 @@ var aksProperties = union({
   autoScalerProfile: autoScale ? AutoscaleProfile : {}
   oidcIssuerProfile: {
     enabled: oidcIssuer
+  }
+  securityProfile: {
+    workloadIdentity: {
+      enabled: workloadIdentity
+    }
   }
 },
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
