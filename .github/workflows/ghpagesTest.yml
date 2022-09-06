@@ -103,7 +103,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          args: 'helper/localsite.html -n'
+          args: "helper/localsite.html --exclude './*.svg' './*.png' -n"
           # Fail action on broken links
           fail: true
 
