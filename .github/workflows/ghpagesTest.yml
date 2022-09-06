@@ -105,14 +105,6 @@ jobs:
         with:
           args: 'helper/.localsite.html'
 
-      - name: Html Broken Link Checker - Create Issue
-        if: steps.lychee.outputs.exit_code != 0
-        uses: peter-evans/create-issue-from-file@v4
-        with:
-          title: Link Checker Report
-          content-filepath: ./lychee/out.md
-          labels: report, automated issue
-
       - name: Persist exported Az Commands for visibility
         if: ${{ github.event.pull_request.head.repo.fork }}
         uses: actions/upload-artifact@v2
