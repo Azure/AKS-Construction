@@ -2,7 +2,12 @@
 
 Building a complete Kubernetes operational environment is hard work! __AKS Accelerator__ dramatically speeds up this work by providing the templates and deployment scripts to quickly create a  __fully configured__, Kubernetes environment, tailored to meet your operational and security needs, ready to run your workloads in production.
 
-## Quick Start
+### The Helper
+
+Central to the AKS Construction experience is the Helper. The Helper enables a user friendly view of the IaC capabilities in this repo.
+![animated preview of AKS Construction Helper](docs/images/animgif.gif)
+
+## QuickStart
 
 * #### **Step 1**
   Navigate to the AKS Construction [**helper**](https://azure.github.io/AKS-Construction/)
