@@ -621,7 +621,7 @@ resource appgw 'Microsoft.Network/applicationGateways@2021-02-01' = if (deployAp
 }
 
 // DEPLOY_APPGW_ADDON This is a curcuit breaker to NOT deploy the appgw addon for BYO subnet, due to the error: IngressApplicationGateway addon cannot find Application Gateway
-var DEPLOY_APPGW_ADDON = ingressApplicationGateway && empty(byoAGWSubnetId)
+var DEPLOY_APPGW_ADDON = ingressApplicationGateway // && empty(byoAGWSubnetId)
 var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
 // https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
 // AGIC's identity requires "Contributor" permission over Application Gateway.
