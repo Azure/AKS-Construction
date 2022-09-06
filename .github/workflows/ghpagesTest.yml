@@ -103,7 +103,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          args: 'helper/.localsite.html'
+          args: 'helper/.localsite.html -n'
+          # Fail action on broken links
+          fail: true
 
       - name: Persist exported Az Commands for visibility
         if: ${{ github.event.pull_request.head.repo.fork }}

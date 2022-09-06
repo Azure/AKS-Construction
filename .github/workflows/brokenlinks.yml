@@ -27,9 +27,9 @@ jobs:
         if: steps.lychee.outputs.exit_code != 0
         uses: peter-evans/create-issue-from-file@v4
         with:
-          title: Link Checker Report
+          title: 'Bot: Broken Links Detected in Repo'
           content-filepath: ./lychee/out.md
-          labels: report, automated issue
+          labels: automated issue
 
   helperLinkChecker:
     runs-on: ubuntu-latest
@@ -43,9 +43,6 @@ jobs:
           npx playwright install-deps chromium
           npm i -D playwright-expect
 
-      - name: Test web server is up
-        run: curl http://localhost:3000/AKS-Construction
-
       - name: Verifying Playwright install
         run: |
           cd helper
@@ -55,11 +52,6 @@ jobs:
 
           echo "Playwright version"
           npx playwright -V
-
-      - name: File system prep
-        run: |
-          mkdir failscreengrabs
-          mkdir alwaysscreengrabs
 
       - name: Playwright - Grab html
         env:
@@ -74,12 +66,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          args: 'https://azure.github.io/AKS-Construction?feature=defender'
+          args: "'prodsite.html' --format detailed --exclude './*.svg' './*.png' -n -v"
+          format: detailed
 
       - name: Create Issue From File
         if: steps.lychee.outputs.exit_code != 0
         uses: peter-evans/create-issue-from-file@v4
         with:
-          title: Link Checker Report
+          title: 'Bot: Broken Links Detected in AKS Helper'
           content-filepath: ./lychee/out.md
-          labels: report, automated issue
+          labels: automated issue
