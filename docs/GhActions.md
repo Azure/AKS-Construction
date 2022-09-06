@@ -30,7 +30,7 @@ Here's a sample of one of the workflows used in this project. We have multiple s
 
 It's important to note that deploying applications from an infrastructure pipeline is an anti-pattern, and the applications that are being deployed in this workflow are serving as `smoke tests` of the infrastructure.
 
-![sample workflow](docs/images/ghactionworkflow.jpg)
+![sample workflow](images/ghactionworkflow.jpg)
 
 ### Pre-deploy Validation
 
