@@ -73,6 +73,6 @@ jobs:
         if: steps.lychee.outputs.exit_code != 0
         uses: peter-evans/create-issue-from-file@v4
         with:
-          title: 'Bot: Broken Links Detected in AKS Helper'
+          title: 'Bot: Broken Links Detected in AKSC Helper'
           content-filepath: ./lychee/out.md
           labels: automated issue
