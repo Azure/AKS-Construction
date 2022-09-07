@@ -54,7 +54,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         { key: 'none', text: 'No, I do not need a Layer7 proxy, or I will configure my own solution' },
                         { key: 'appgw', text: 'Yes, I want a Azure Managed Application Gateway with WAF protection' },
                         { key: 'contour', text: 'Yes, deploy contour in the cluster to expose my apps to the internet (https://projectcontour.io/)' },
-                        { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' }
+                        { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' },
+                        { key: 'warNginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (AKS Web App Routing nginx ingress controller) (*preview)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("ingress", key)}
@@ -153,7 +154,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             </>)
                     }
 
-                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") &&
+                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "warNginx") &&
                         <>
                             <Checkbox inputProps={{ "data-testid": "addons-dns"}} checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
                                 <Text>Create FQDN URLs for your applications using
@@ -164,7 +165,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                 <>
                                     <MessageBar messageBarType={MessageBarType.warning}>If using a Public DNS Zone, you need to own a custom domain, you can easily purchase a custom domain through Azure <Link target="_t1" href="https://docs.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain"> <b>details here</b></Link></MessageBar>
                                     <TextField value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Public or Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
-
 
                                     <Checkbox inputProps={{ "data-testid": "addons-certMan"}} disabled={hasError(invalidArray, 'dnsZoneId')} checked={addons.certMan} onChange={(ev, v) => updateFn("certMan", v)} label="Automatically Issue Certificates for HTTPS using cert-manager (with Lets Encrypt - requires email" />
                                     {addons.certMan &&
@@ -200,12 +200,11 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 />
             </Stack.Item>
 
-            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") && addons.dns && addons.certMan &&
+            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "warNginx") && addons.dns && addons.certMan &&
                 <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
                     <MessageBar messageBarType={MessageBarType.warning}>This will expose your your grafana dashboards to the internet, please login and change the default credentials asap (admin/prom-operator)</MessageBar>
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableMonitorIngress} onChange={(ev, v) => updateFn("enableMonitorIngress", v)} label={`Enable Public Ingress for Grafana (https://grafana.${addons.dnsZoneId && addons.dnsZoneId.split('/')[8]})`} />
                 </Stack.Item>
-
             }
 
             { addons.monitor === "aci" &&
