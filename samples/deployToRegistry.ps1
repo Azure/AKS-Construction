@@ -8,6 +8,6 @@ $ACRNAME=yourAcrName
 $ACRENDPOINT=az acr show -g $RG -n $ACRNAME --query loginServer -o tsv
 echo $ACRENDPOINT
 
-#Publish the AKS Bicep
+# Publish the AKS Bicep
 az bicep publish -f ../bicep/main.bicep -t br:$ACRENDPOINT/bicep/modules/aksc:0.8.9
 az bicep publish -f ../bicep/main.bicep -t br:$ACRENDPOINT/bicep/modules/aksc:latest
