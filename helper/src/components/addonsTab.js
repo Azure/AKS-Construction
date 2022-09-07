@@ -154,7 +154,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             </>)
                     }
 
-                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "warNginx") &&
+                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") &&
                         <>
                             <Checkbox inputProps={{ "data-testid": "addons-dns"}} checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
                                 <Text>Create FQDN URLs for your applications using
