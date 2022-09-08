@@ -53,10 +53,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     options={[
                         { key: 'none', text: 'No, I do not need a Layer7 proxy, or I will configure my own solution' },
                         { key: 'appgw', text: 'Yes, I want a Azure Managed Application Gateway with WAF protection' },
+                        { key: 'warNginx', text: 'Yes, use AKS Web App Routing to deploy a simple nginx controller into the cluster to expose my apps to the internet (*preview)' },
                         { key: 'contour', text: 'Yes, deploy contour in the cluster to expose my apps to the internet (https://projectcontour.io/)' },
-                        { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' },
-                        { key: 'warNginx', text: 'Yes, use AKS Web App Routing to deploy a simple nginx controller into the cluster to expose my apps to the internet (*preview)' }
-
+                        { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' }
                     ]}
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
@@ -200,7 +199,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 />
             </Stack.Item>
 
-            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "warNginx") && addons.dns && addons.certMan &&
+            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") && addons.dns && addons.certMan &&
                 <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
                     <MessageBar messageBarType={MessageBarType.warning}>This will expose your your grafana dashboards to the internet, please login and change the default credentials asap (admin/prom-operator)</MessageBar>
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableMonitorIngress} onChange={(ev, v) => updateFn("enableMonitorIngress", v)} label={`Enable Public Ingress for Grafana (https://grafana.${addons.dnsZoneId && addons.dnsZoneId.split('/')[8]})`} />
