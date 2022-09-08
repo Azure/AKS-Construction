@@ -45,17 +45,17 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Securely Expose your applications via Layer 7 HTTP(S) proxies (Ingress Controller)
+                    Ingress Controllers: Securely expose your applications via Layer 7 HTTP(S) proxies
                 </Label>
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.ingress}
                     options={[
-                        { key: 'none', text: 'No, I do not need a Layer7 proxy, or I will configure my own solution' },
-                        { key: 'appgw', text: 'Yes, I want a Azure Managed Application Gateway with WAF protection' },
-                        { key: 'warNginx', text: 'Yes, use AKS Web App Routing to deploy a simple nginx controller into the cluster to expose my apps to the internet (*preview)' },
-                        { key: 'contour', text: 'Yes, deploy contour in the cluster to expose my apps to the internet (https://projectcontour.io/)' },
-                        { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' }
+                        { key: 'none', text: 'Not required' },
+                        { key: 'appgw', text: 'Azure Application Gateway Ingress Controller add-on (https://azure.github.io/application-gateway-kubernetes-ingress)' },
+                        { key: 'warNginx', text: 'AKS Web App Routing Solution, simple Nginx Ingress Controller (https://docs.microsoft.com/en-us/azure/aks/web-app-routing *preview)' },
+                        { key: 'contour', text: 'Contour (https://projectcontour.io/)' },
+                        { key: 'nginx', text: 'Nginx ingress controller' }
                     ]}
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
