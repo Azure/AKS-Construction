@@ -32,6 +32,10 @@ The QuickStart provides a nice easy way of creating your AKS Environment, once y
 
 ## Project components
 
+### Helper
+
+The Helper is a website that provides a guided experience to creating your AKS environment. It dynamically changes the parameters to call the bicep code, and facilitates the Azure CLI, GitHub actions and Terraform deployments.
+
 ### IaC - Bicep code files
 
 IaC (Infrastructure as Code) code files have been modularised into their component areas. [Main.bicep](bicep/main.bicep) references them and they are expected to be present in the same directory. The Deployment Helper leverages an Arm json compiled version of all the bicep files.
