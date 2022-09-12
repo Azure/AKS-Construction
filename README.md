@@ -79,6 +79,13 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+## FAQ / Troubleshooting
+
+### Subscription is not registered to use namespace Microsoft.OperationsManagement
+
+Azure Subscriptions use resource providers to be able to create Azure Services. Sometimes it can be the case that core RP's are not properly registered in your subscription. Take time to read the error message, and follow the steps to resolve. [https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli](https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli)
+
+
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
