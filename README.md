@@ -26,6 +26,10 @@ Building a complete Kubernetes operational environment is hard work! __AKS Accel
 
   ![](docs/images/helper-deploy.jpg)
 
+## Advanced Scenarios
+
+The QuickStart provides a nice easy way of creating your AKS Environment, once you've done this it's likely you'll want to consume AKS Construction in a more [advanced scenario](docs/AdvancedUsage.md).
+
 ## Project components
 
 ### IaC - Bicep code files
