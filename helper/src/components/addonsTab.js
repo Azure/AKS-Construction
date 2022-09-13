@@ -422,6 +422,22 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     label="Enable high availability mode"
                 />
             </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Azure Blob storage CSI (Container Storage Interface - preview): Enable blob access from the cluster using BlobFuse or Network File System (NFS) version 3.0 protocol
+                    (<a target="_new" href="https://docs.microsoft.com/en-gb/azure/aks/azure-blob-csi">docs</a>)
+                </Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-blob-csi-checkbox" }}
+                    checked={addons.blobCSIAddon}
+                    onChange={(ev, v) => updateFn("blobCSIAddon", v)}
+                    label="Install the Azure Blob CSI AddOn"
+                />
+            </Stack.Item>
         </Stack>
     );
 }
