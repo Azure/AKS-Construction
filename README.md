@@ -34,7 +34,7 @@ The QuickStart provides a nice easy way of creating your AKS Environment, once y
 
 ### Helper
 
-The Helper is a website that provides a guided experience to creating your AKS environment. It dynamically changes the parameters to call the bicep code, and facilitates the Azure CLI, GitHub actions and Terraform deployments.
+The Helper is a website that provides a guided experience to creating your AKS environment. It dynamically changes the parameters to call the IaC, and provides deployment options using the Azure CLI, GitHub Actions or Terraform.
 
 ### IaC - Bicep code files
 
