@@ -890,6 +890,8 @@ param oidcIssuer bool = false
 @description('Installs Azure Workload Identity into the cluster')
 param workloadIdentity bool = false
 
+param warIngressNginx bool = false
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   CostOptimised : {
@@ -1091,6 +1093,11 @@ var aksProperties = union({
   securityProfile: {
     workloadIdentity: {
       enabled: workloadIdentity
+    }
+  }
+  ingressProfile: {
+    webAppRouting: {
+      enabled: warIngressNginx
     }
   }
 },
