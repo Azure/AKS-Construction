@@ -4,7 +4,7 @@
 
 Enterprise Scale provides prescriptive guidance based on authoritative design for the Azure platform as a whole.
 
-The [Deployment Helper Wizard](https://azure.github.io/AKS-Construction/?default=es) has an Enterprise-Scale lens, with preset configurations for each landing zone area.
+The [AKS Construction helper](https://azure.github.io/AKS-Construction/?default=es) has an Enterprise-Scale lens, with preset configurations for each landing zone area.
 
 ## Enterprise-Scale for AKS
 

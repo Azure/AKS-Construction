@@ -8,7 +8,7 @@
     },
     "defaults": {
         "deploy": {
-            "kubernetesVersion": "1.22.11",
+            "kubernetesVersion": "1.23.8",
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
@@ -50,12 +50,14 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "warIngressNginx": false,
             "daprAddon": false,
             "daprAddonHA": false,
             "fluxGitOpsAddon": false,
             "networkPolicy": "none",
             "kedaAddon": false,
             "openServiceMeshAddon": false,
+            "workloadIdentity": false,
             "denydefaultNetworkPolicy": false,
             "azurepolicy": "none",
             "azurePolicyInitiative": "Baseline",
@@ -104,7 +106,7 @@
             "bastionSubnetAddressPrefix": "10.240.4.128/26",
             "privateLinkSubnetAddressPrefix": "10.240.4.192/26",
             "vnetFirewallSubnetAddressPrefix": "10.240.50.0/24",
-            "podCidr": "10.240.100.0/24",
+            "podCidr": "10.240.100.0/22",
             "serviceCidr": "172.10.0.0/16",
             "dnsServiceIP": "172.10.0.10",
             "createNatGateway": false,

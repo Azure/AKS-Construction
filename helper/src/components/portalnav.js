@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { ThemeProvider, Link, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text, ChoiceGroup } from '@fluentui/react';
+import { CommandBarButton, Image, ThemeProvider, Link, Toggle, TooltipHost, Pivot, PivotItem, Icon, Separator, Stack, Text, ChoiceGroup } from '@fluentui/react';
 import { AzureThemeLight, AzureThemeDark } from '@fluentui/azure-themes';
+import { mergeStyles, mergeStyleSets } from '@fluentui/merge-styles';
 
-import Presents from './presets'
+import {Presets, SeparatorStyle} from './presets'
 
 import NetworkTab from './networkTab'
 import AddonsTab from './addonsTab'
@@ -31,12 +32,51 @@ function useAITracking(componentName, key) {
 
 }
 
+const titleClass = mergeStyleSets({ "display": "inline-block", "marginLeft": "10px", "verticalAlign": "top" })
 function Header({ presets, setPresets, selectedPreset, featureFlag }) {
+
+
+  return (
+    <nav  role="menubar">
+
+      <div style={{ width: "100%" }}>
+
+        <div style={{display: "inline-block", padding: "11px 12px 0px"}}>
+          <Link className="navbar-brand no-outline" >
+            <Image src="aks.svg" height="33px" />
+          </Link>
+          <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{"color": "red"}}>helper</span></Text>
+          <Text className={titleClass} style={{"marginTop": "6px", "marginLeft": "20px"}}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
+        </div>
+        <div style={{ display: "inline-block", float: "right" }}>
+
+          <CommandBarButton iconProps={{ iconName: presets[selectedPreset].icon }} menuProps={{
+            items: Object.keys(presets).map(p => {
+              return {
+                key: p,
+                text: presets[p].title,
+                disabled: presets[p].disabled,
+                iconProps: { iconName: presets[p].icon },
+                onClick: () => setPresets(p)
+              } })
+
+          }} text={presets[selectedPreset].title} disabled={false} checked={true}
+            styles={{ root: { "vertical-align": "top", padding: "11px 12px 13px", border: "2px solid transparent", background: "transparent" }, label: { color: "#0067b8", fontWeight: "600", fontSize: "15px", lineHeight: "1.3" } }} />
+
+
+        </div>
+
+      </div>
+    </nav>
+  )
+}
+
+function Header2({ presets, setPresets, selectedPreset, featureFlag }) {
   return (
     <Stack horizontal tokens={{ childrenGap: 10 }}>
       <img id="aksLogo" src="aks.svg" alt="Kubernetes Service" style={{  }}></img>
       <Stack tokens={{ padding: 10, maxWidth: 700 }} className="intro">
-        <Text variant="xLarge">AKS Deploy helper</Text>
+        <Text variant="xLarge">AKS Construction helper</Text>
         <Text variant="large" styles={{ root: { marginBottom: '6px'} }}>Generate Azure deployment assets by providing your requirements to quickly create a full operational environment from best practice guidance.</Text>
         <Text variant="medium" >Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
       </Stack>
@@ -310,7 +350,7 @@ export default function PortalNav({ config }) {
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7, 'Enter an IP/CIDR, or disable API Security in \'Cluster Details\' tab')
   invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19, 'Enter valid cluster name')
 
-  invalidFn('deploy', 'githubrepo', deploy.deployItemKey === 'github' && (!deploy.githubrepo || !deploy.githubrepo.match('https://github.com/[^/ ]+/[^/ ]+$')), 'Please enter your application GitHub repo URL (https://github.com/org/repo)')
+  invalidFn('deploy', 'githubrepo', deploy.deployItemKey === 'github' && (!deploy.githubrepo || !deploy.githubrepo.match('https://github.com/[^/ ]+/[^/ ]+$')), 'enter repo URL. eg: https://github.com/org/repo')
   invalidFn('deploy', 'githubrepobranch', deploy.deployItemKey === 'github' && !deploy.githubrepobranch, 'Please enter your application GitHub repo branch the can run the workflow')
   invalidFn('deploy', 'selectedTemplate', !deploy.templateVersions.find(t => t.key === deploy.selectedTemplate), `Invalid release name: ${deploy.selectedTemplate}, ensure all assests are attached`)
 
@@ -336,9 +376,9 @@ export default function PortalNav({ config }) {
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
-          <Presents sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
+          <Presets sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
 
-          <Separator styles={{ root: { marginTop: "55px !important", marginBottom: "5px" } }}><b>Deploy</b> (optionally use 'Details' tabs for additional configuration)</Separator>
+          <Separator styles={SeparatorStyle}><span style={{"color": "rgb(0, 103, 184)"}}>Fine tune & Deploy</span></Separator>
 
           <Pivot selectedKey={pivotkey} onLinkClick={_handleLinkClick} focusZoneProps={{ 'data-testid': `portalnav-Pivot` }}>
             <PivotItem headerText={tabLabels.deploy} itemKey="deploy" onRenderItemLink={(a, b) => _customRenderer('deploy', a, b)}>

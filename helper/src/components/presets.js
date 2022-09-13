@@ -8,13 +8,26 @@ const iconClass = mergeStyles({
     margin: '0 80px'
 });
 
+export const SeparatorStyle = {
+    root: [{
+      marginTop: "15px !important",
+      marginBottom: "15px",
+      fontSize: "15px",
+      fontWeight: "600",
+      selectors: {
+        '::before': {
+          background: "rgb(0, 103, 184)",
+        },
+      }
+    }]
+  };
 
-export default function ({ sections, selectedValues, updateSelected, featureFlag }) {
+export function Presets({ sections, selectedValues, updateSelected, featureFlag }) {
 
     const bodyBackground = useTheme().semanticColors.bodyBackground;
 
     return sections.map(s => [
-        <Separator key={`sep${s.key}`} styles={{ root: { marginTop: "15px !important", marginBottom: "15px" } }}><b>{s.sectionTitle}</b></Separator>,
+        <Separator key={`sep${s.key}`} styles={SeparatorStyle}><span style={{"color": "rgb(0, 103, 184)"}}>{s.sectionTitle}</span></Separator>,
 
         <Stack  key={`st${s.key}`} horizontal tokens={{ childrenGap: 10 }}>
             <Text variant="mediumPlus" styles={{ root: { marginBottom: "15px" } }} >{s.sectionDescription}</Text>

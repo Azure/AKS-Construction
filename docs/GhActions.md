@@ -30,7 +30,7 @@ Here's a sample of one of the workflows used in this project. We have multiple s
 
 It's important to note that deploying applications from an infrastructure pipeline is an anti-pattern, and the applications that are being deployed in this workflow are serving as `smoke tests` of the infrastructure.
 
-![sample workflow](docs/images/ghactionworkflow.jpg)
+![sample workflow](images/ghactionworkflow.jpg)
 
 ### Pre-deploy Validation
 
@@ -42,7 +42,7 @@ Whenever code files in the bicep directory are changed on a push, the bicep buil
 
 Running a bicep build initiates the [linter](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/linter), which will create warnings where best practices are not followed. Any errors that are encountered will fail the pipeline.
 
-Warnings do not form part of the pass/fail of the action step, however you can use [linter configuration](https://github.com/Azure/bicep/blob/main/docs/linter.md#configuration) to achieve this.
+Warnings do not form part of the pass/fail of the action step, however you can use [linter configuration](https://docs.microsoft.com/azure/azure-resource-manager/bicep/bicep-config-linter) to achieve this.
 
 #### PSRule for Azure
 

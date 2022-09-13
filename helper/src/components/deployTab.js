@@ -85,6 +85,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
       })
     }),
+    ...(net.vnet_opt === "byo" && {
+      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
+    }),
     ...(addons.csisecret !== "none" && { keyVaultAksCSI: true }),
     ...(addons.csisecret === 'akvNew' && { keyVaultCreate: true, ...(deploy.kvCertSecretRole && { keyVaultOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
     ...(addons.csisecret !== "none" && addons.keyVaultAksCSIPollInterval !== defaults.addons.keyVaultAksCSIPollInterval  && { keyVaultAksCSIPollInterval: addons.keyVaultAksCSIPollInterval }),
@@ -105,16 +108,17 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
       ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
     }),
-    ...(net.vnet_opt === "byo" && {
-      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
-    }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
       ...(addons.registry !== "none" && {
         ...(addons.acrPrivatePool !== defaults.addons.acrPrivatePool && {acrPrivatePool: addons.acrPrivatePool}),
         ...(addons.acrPrivatePool && defaults.net.acrAgentPoolSubnetAddressPrefix !== net.acrAgentPoolSubnetAddressPrefix && {acrAgentPoolSubnetAddressPrefix: net.acrAgentPoolSubnetAddressPrefix})
       })
     }),
+    ...(addons.ingress === "warNginx" && {
+      ...(addons.ingress !== defaults.addons.ingress && {warIngressNginx: true})
+    }),
     ...(defaults.addons.kedaAddon !== addons.kedaAddon && {kedaAddon: addons.kedaAddon }),
+    ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {workloadIdentity: addons.workloadIdentity }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
   }
 
@@ -141,7 +145,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(addons.monitor === "oss" && {
       monitor: addons.monitor,
-      ...(addons.ingress !== "none" && {
+      ...(addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" && {
         ingress: addons.ingress,
         ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
       })
@@ -358,7 +362,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
       {Object.keys(preview_params).length > 0 &&
         <MessageBar messageBarType={MessageBarType.warning}>
-          <Text >Your deployment contains Preview features: <b>{Object.keys(preview_params).join(', ')}</b>, Ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b>  before running the script, <Link target="_pv" href="https://github.com/Azure/AKS/blob/master/previews.md">see here</Link>, or disable preview features here</Text>
+          <Text >Your deployment contains Preview features: <b>{Object.keys(preview_params).join(', ')}</b>, Ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b>  before running the script, <Link target="_pv" href="https://aka.ms/aks/previews">see here</Link>, or disable preview features here</Text>
           <Toggle styles={{ root: { marginTop: "10px" } }} onText='preview enabled' offText="preview disabled" checked={!deploy.disablePreviews} onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
         </MessageBar>
 
@@ -392,7 +396,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             </Stack.Item>
           </Stack>
 
-          <CodeBlock lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
+          <CodeBlock hideSave={true} lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
@@ -400,25 +404,20 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
         </PivotItem>
 
         <PivotItem headerText="Github Actions" itemKey="github" itemIcon="GitGraph">
-            <Stack horizontal>
-              <Stack.Item>
-                <Stack>
-
-                <Label key="post-label" style={{marginTop: '10px'}}>Create an Azure AD Service Principal that GitHub will use to deploy to Azure</Label>
-                <Text>Run this code block to create the Service Principal, provide it the permissions needed to run the deployment, then it will create the secrets in your application repository</Text>
-                <Separator></Separator>
-                <Text>
-                  * Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell (where it is pre-installed)</Link>.
-                </Text>
+            <Stack horizontal tokens={{childrenGap: 30}}>
+              <Stack.Item styles={{root: {width: "60%"}}}>
+                <Stack tokens={{childrenGap: 20}}>
+                  <Label key="post-label" style={{marginTop: '10px'}}>Call the AKS Construction <a href="https://docs.github.com/en/actions/using-workflows/reusing-workflows" target="_other">Reusable Workflow</a> from your <b>Workload/Infra Repo</b> to automate the deployment of your cluster </Label>
+                  <Text>Enter your Repo URL then run this code block.  This will create a Service Principal for deployment, provide it the permissions needed, then create the secrets in your application repository</Text>
                 </Stack>
               </Stack.Item>
-              <Stack.Item>
-                 <TextField label="Application GitHub Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
-                 <TextField label="Application branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
+              <Stack.Item styles={{root: {width: "40%"}}} >
+                 <TextField label="Workload/Infra GitHub Repo URL" onChange={(ev, val) => updateFn('githubrepo', val)} required errorMessage={getError(invalidArray, 'githubrepo')} value={deploy.githubrepo} />
+                 <TextField label="Repo Branch" onChange={(ev, val) => updateFn('githubrepobranch', val)} required errorMessage={getError(invalidArray, 'githubrepobranch')} value={deploy.githubrepobranch} />
               </Stack.Item>
             </Stack>
 
-            <CodeBlock key="github-auth" lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
+            <CodeBlock key="github-auth" lang="shell script" hideSave={true} error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
 az group create -l WestEurope -n ${deploy.rg}
 
 app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | tr ' ' "\\n"))
@@ -437,9 +436,10 @@ gh secret set --repo ${deploy.githubrepo} AZURE_TENANT_ID -b $(az account show -
 gh secret set --repo ${deploy.githubrepo} AZURE_SUBSCRIPTION_ID -b $subId
 gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 `}/>
+<Text>* Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell (where it is pre-installed)</Link>.</Text>
+<Separator></Separator>
 
-            <Label>To run te Github reusable workflow</Label>
-            <Text style={{marginTop: '20px'}}>Add the following content to a file in your repos <code>.github/workflows</code> folder to call the AKS-Construction reusable workflow (this example creates a manually triggered Action)</Text>
+            <Text style={{marginTop: '20px'}}>Add the following code to a new file in your repos <code>.github/workflows</code> folder, this will call the AKS-Construction reusable workflow.  NOTE: This example creates a manually triggered Action</Text>
             <CodeBlock  lang="github actions"  deploycmd={`name: Deploy AKS-Construction
 
 on:
@@ -506,11 +506,9 @@ az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
 
         </PivotItem>
 
-        <PivotItem headerText="Raw Parameters File" itemKey="params"  itemIcon="FileSymlink">
-
-          <TextField value={param_file} rows={param_file.split(/\r\n|\r|\n/).length + 1} readOnly={true} label="Parameter file" styles={{ root: { fontFamily: 'SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace!important' }, field: { backgroundColor: 'lightgrey', lineHeight: '21px' } }} multiline  >
-          </TextField>
-
+        <PivotItem headerText="Parameters File" itemKey="params"  itemIcon="FileSymlink">
+          <Label>Can be used for source control</Label>
+          <CodeBlock  lang="json"  deploycmd={param_file} label="Parameter file" />
         </PivotItem>
 
 

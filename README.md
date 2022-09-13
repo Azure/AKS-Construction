@@ -1,23 +1,40 @@
-# AKS Bicep Accelerator
+# AKS Accelerator
 
-Building Kubernetes clusters can be hard work! The AKS Bicep Accelerator focuses on expediting customers onboarding of Azure Kubernetes Service workloads using best practices and a flexible templating approach to suit differing requirements.
+Building a complete Kubernetes operational environment is hard work! __AKS Accelerator__ dramatically speeds up this work by providing the templates and deployment scripts to quickly create a  __fully configured__, Kubernetes environment, tailored to meet your operational and security needs, ready to run your workloads in production.
 
-This project unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Well Architected Framework](https://docs.microsoft.com/en-us/azure/architecture/framework/), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
+![animated preview of AKS Construction Helper](docs/images/animgif.gif)
 
-The AKS Bicep Accelerator is part of the official [AKS Landing Zone Accelerator (Enterprise Scale)](https://github.com/Azure/AKS-Landing-Zone-Accelerator) architectural approach. To read more about this project and how the AKS Bicep Accelerator fits with Enterprise Scale and the AKS Secure Baseline, look [here](referencearchs.md).
+## QuickStart
 
-## The 3 Components
+* #### **Step 1**
+  Navigate to the AKS Construction [**helper**](https://azure.github.io/AKS-Construction/)
 
-This projects focus is split equally over 3 areas, configuration, modular templating and CI implementation.
+* #### **Step 2** Select your Requirements (optional)
+  Select your base `Operational` and `Security` Principles using the presets that have been designed from our field experience
 
-![project component areas](docs/images/AKSBicepComponents.png)
+  ![](docs/images/helper-presets.jpg)
+  <br/>
+  > **Note**
+  > If following Azure's **Landing Zone** methodology, select `Enterprise Scale` from the dropdown, then select your environment type
 
-### Wizard experience
+* #### **Step 3** Fine tune (optional)
+  Use the tabs to fine tune your cluster requirements
 
-To help guide your AKS configuration, use the [Deployment Helper](https://azure.github.io/AKS-Construction/), which will provide a set of parameters and scripts to make deployment simple. It uses several preset configurations to guide configuration decisions.
-The deployment helper provides links to the official Microsoft documentation to help provide additional context for each feature.
+  ![](docs/images/helper-tabs.jpg)
+* #### **Step 4** Deploy
+  In the `Deploy` tab, choose how you will deploy your new cluster, and follow the instructions
 
-[![preview screenshot of the helper wizard](docs/images/helper_preview_es.png)](https://azure.github.io/AKS-Construction/)
+  ![](docs/images/helper-deploy.jpg)
+
+## Advanced Scenarios
+
+The QuickStart provides a nice easy way of creating your AKS Environment, once you've done this it's likely you'll want to consume AKS Construction in a more [advanced scenario](docs/AdvancedUsage.md).
+
+## Project components
+
+### Helper
+
+The Helper is a website that provides a guided experience to creating your AKS environment. It dynamically generates the parameters to call the IaC, and provides deployment options using the Azure CLI, GitHub Actions or Terraform.
 
 ### IaC - Bicep code files
 
@@ -38,28 +55,11 @@ CI Name | Actions Workflow | Parameter file | CI Status | Notes
 
 For a more in depth look at the GitHub Actions used in this project, which steps are performed and the different CI practices they demonstrate, please refer to [this page](docs/GhActions.md).
 
-## Getting Started
+## Background
 
-### Basic
+This project unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Well Architected Framework](https://docs.microsoft.com/azure/architecture/framework/), [Cloud Adoption Framework](https://azure.microsoft.com/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
 
-If this is the first time you're using the project, follow these steps.
-
-1. Use the [Deployment Helper](https://azure.github.io/AKS-Construction/) to guide your AKS configuration.
-1. Run the commands in the *Provision Environment* tab to create your AKS Environment in your Azure subscription
-1. Run the commands in the *Post Configuration* tab to complete your implementation
-1. [Connect to your AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster), and deploy your applications as you see fit.
-
-### Mature
-
-If you're looking to use this project as part of your deployments, follow these steps.
-
-1. Use the [Deployment Helper](https://azure.github.io/AKS-Construction/) to guide your AKS configuration.
-1. Capture the parameters on the *Template Parameters File* tab to a file - this is your configuration
-1. Check the *Post Configuration* tab for any commands and save them to a file
-1. Grab the [latest release](https://github.com/Azure/AKS-Construction/releases) of the bicep code
-1. (optionally) Author an Application Main bicep to represent *your application* (see [here](https://github.com/Azure/AKS-Construction/blob/main/samples/SampleAppMain.bicep) for an example)
-1. In your CI/CD system, either using one of the GitHub Action Workflow files as a base, or by coding it yourself - initiate a deployment of the bicep code, using your parameter file
-1. In your CI/CD system, deploy your application(s) to the AKS cluster
+This project is part of the official [AKS Landing Zone Accelerator (Enterprise Scale)](https://github.com/Azure/AKS-Landing-Zone-Accelerator) architectural approach. To read more about this project and how the it fits with Enterprise Scale and the AKS Secure Baseline, look [here](referencearchs.md).
 
 ## Project Principals
 
@@ -86,6 +86,13 @@ provided by the bot. You will only need to do this once across all repos using o
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+## FAQ / Troubleshooting
+
+### Subscription is not registered to use namespace Microsoft.OperationsManagement
+
+Azure Subscriptions use resource providers to be able to create Azure Services. Sometimes it can be the case that core RP's are not properly registered in your subscription. Take time to read the error message, and follow the steps to resolve. [https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli](https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli)
+
 
 ## Trademarks
 
