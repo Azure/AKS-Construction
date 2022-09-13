@@ -244,9 +244,14 @@ param keyVaultKmsCreate bool = false
 param keyVaultKmsOfficerRolePrincipalId string = ''
 
 var kmsRbacWaitSeconds=30
+
+@description('This indicates if the deploying user has provided their PrincipalId in order for the key to be created')
 var keyVaultKmsPrereqs = !empty(keyVaultKmsOfficerRolePrincipalId)
 
-module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate) {
+@description('Indicates if the user has supplied all parameters to use Kms')
+output kmsPrerequisitesMet bool =  keyVaultKmsPrereqs
+
+module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate && keyVaultKmsPrereqs) {
   name: 'keyvaultKms-${resourceName}'
   params: {
     resourceName: 'kms${resourceName}'
