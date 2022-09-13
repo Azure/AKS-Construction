@@ -1174,7 +1174,7 @@ var aksProperties = union({
   }
 },
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
-defenderForContainers && createLaw ? azureDefenderSecurityProfile : {}
+defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
 keyVaultKmsCreate && keyVaultKmsPrereqs ? azureKeyVaultKms : {}
 )
 

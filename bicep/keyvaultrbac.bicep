@@ -102,7 +102,6 @@ resource rbacCryptoServiceEncryptionSp 'Microsoft.Authorization/roleAssignments@
   }
 }]
 
-
 resource rbacKvContributorSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacKvContributorSps : if(!empty(rbacSp)) {
   scope: kv
   name: guid(kv.id, rbacSp, keyVaultContributorRole)
@@ -133,10 +132,9 @@ resource rbacAdminSp 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for
   }
 }]
 
-
 resource rbacCryptoOfficerUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for rbacSp in rbacCryptoOfficerUsers : if(!empty(rbacSp)) {
   scope: kv
-  name: guid(kv.id, rbacSp, keyVaultCryptoUserRole)
+  name: guid(kv.id, rbacSp, keyVaultCryptoOfficerRole)
   properties: {
     roleDefinitionId: keyVaultCryptoOfficerRole
     principalType: 'User'
@@ -173,4 +171,3 @@ resource rbacAdminUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = [f
     principalId: rbacSp
   }
 }]
-
