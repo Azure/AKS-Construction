@@ -50,6 +50,7 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "warIngressNginx": false,
             "daprAddon": false,
             "daprAddonHA": false,
             "fluxGitOpsAddon": false,

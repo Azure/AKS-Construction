@@ -718,7 +718,6 @@ param kedaAddon bool = false
 param openServiceMeshAddon bool = false
 
 @allowed([
-  ''
   'none'
   'patch'
   'stable'
@@ -726,7 +725,7 @@ param openServiceMeshAddon bool = false
   'node-image'
 ])
 @description('AKS upgrade channel')
-param upgradeChannel string = ''
+param upgradeChannel string = 'none'
 
 @allowed([
   'Ephemeral'
@@ -890,6 +889,8 @@ param oidcIssuer bool = false
 
 @description('Installs Azure Workload Identity into the cluster')
 param workloadIdentity bool = false
+
+param warIngressNginx bool = false
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
@@ -1083,9 +1084,7 @@ var aksProperties = union({
     outboundType: aksOutboundTrafficType
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
-  autoUpgradeProfile: !empty(upgradeChannel) ? {
-    upgradeChannel: upgradeChannel
-  } : {}
+  autoUpgradeProfile: {upgradeChannel: upgradeChannel}
   addonProfiles: !empty(aks_addons1) ? aks_addons1 : aks_addons
   autoScalerProfile: autoScale ? AutoscaleProfile : {}
   oidcIssuerProfile: {
@@ -1094,6 +1093,11 @@ var aksProperties = union({
   securityProfile: {
     workloadIdentity: {
       enabled: workloadIdentity
+    }
+  }
+  ingressProfile: {
+    webAppRouting: {
+      enabled: warIngressNginx
     }
   }
 },
@@ -1194,6 +1198,7 @@ resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-prev
     }
     configurationProtectedSettings: {}
   }
+  dependsOn: [daprExtension] //Chaining dependencies because of: https://github.com/Azure/AKS-Construction/issues/385
 }
 output fluxReleaseNamespace string = fluxGitOpsAddon ? fluxAddon.properties.scope.cluster.releaseNamespace : ''
 
