@@ -427,7 +427,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Azure Blob storage CSI (Container Storage Interface - preview): Enable blob access from the cluster using BlobFuse or Network File System (NFS) version 3.0 protocol
+                    Azure Blob storage CSI driver: Enable BlobFuse or NFS v3 access to Azure Blob
                     (<a target="_new" href="https://docs.microsoft.com/en-gb/azure/aks/azure-blob-csi">docs</a>)
                 </Label>
                 <Checkbox
