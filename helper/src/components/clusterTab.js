@@ -339,6 +339,27 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 />
             </Stack.Item>
 
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Key Management Service (KMS) etcd Encryption (*preview)
+                </Label>
+                <MessageBar messageBarType={MessageBarType.warning}>KMS requires the customer to be responsible for key management (to include rotation).
+                <br />
+                Mismanagement can cause the secrets to be unrecoverable in the cluster. <Link target='_' href='https://docs.microsoft.com/azure/aks/use-kms-etcd-encryption'>docs</Link></MessageBar>
+                <ChoiceGroup
+                    selectedKey={cluster.keyVaultKms}
+                    styles={{ root: { marginLeft: '50px' } }}
+                    options={[
+                        { key: 'none', text: 'No encryption of etcd required' },
+                        { key: 'public', text: 'Create a new Key Vault with least privileged access and generated the key' }
+                        //{ key: 'private', text: 'Use an existing private link connected Key Vault', disabled: true }
+                    ]}
+                    onChange={(ev, { key }) => updateFn("keyVaultKms", key)}
+                />
+            </Stack.Item>
+
             <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
                 <Label style={{ marginBottom: "0px" }}>Private dns zone mode for private cluster.</Label>
                 <Stack tokens={{ childrenGap: 15 }}>

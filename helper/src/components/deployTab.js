@@ -114,6 +114,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.acrPrivatePool && defaults.net.acrAgentPoolSubnetAddressPrefix !== net.acrAgentPoolSubnetAddressPrefix && {acrAgentPoolSubnetAddressPrefix: net.acrAgentPoolSubnetAddressPrefix})
       })
     }),
+    ...(cluster.keyVaultKms !== defaults.cluster.keyVaultKms && {
+      ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"})
+    }),
     ...(addons.ingress === "warNginx" && {
       ...(addons.ingress !== defaults.addons.ingress && {warIngressNginx: true})
     }),

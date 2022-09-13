@@ -28,6 +28,7 @@
             "deployItemKey": "deployArmCli"
         },
         "cluster": {
+            "keyVaultKms": "none",
             "AksPaidSkuForSLA": false,
             "apisecurity": "none",
             "privateClusterDnsMethod": "system",
