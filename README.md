@@ -26,7 +26,15 @@ Building a complete Kubernetes operational environment is hard work! __AKS Accel
 
   ![](docs/images/helper-deploy.jpg)
 
+## Advanced Scenarios
+
+The QuickStart provides a nice easy way of creating your AKS Environment, once you've done this it's likely you'll want to consume AKS Construction in a more [advanced scenario](docs/AdvancedUsage.md).
+
 ## Project components
+
+### Helper
+
+The Helper is a website that provides a guided experience to creating your AKS environment. It dynamically generates the parameters to call the IaC, and provides deployment options using the Azure CLI, GitHub Actions or Terraform.
 
 ### IaC - Bicep code files
 
@@ -78,6 +86,13 @@ provided by the bot. You will only need to do this once across all repos using o
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+## FAQ / Troubleshooting
+
+### Subscription is not registered to use namespace Microsoft.OperationsManagement
+
+Azure Subscriptions use resource providers to be able to create Azure Services. Sometimes it can be the case that core RP's are not properly registered in your subscription. Take time to read the error message, and follow the steps to resolve. [https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli](https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli)
+
 
 ## Trademarks
 
