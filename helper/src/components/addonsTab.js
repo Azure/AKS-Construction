@@ -428,7 +428,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             <Stack.Item align="start">
                 <Label required={true}>
                     Azure Blob storage CSI driver: Enable BlobFuse or NFS v3 access to Azure Blob
-                    (<a target="_new" href="https://docs.microsoft.com/en-gb/azure/aks/azure-blob-csi">docs</a>)
+                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/azure-blob-csi">docs</a>)
                 </Label>
                 <Checkbox
                     styles={{ root: { marginLeft: "50px" } }}
