@@ -30,9 +30,19 @@ resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' exist
   scope: resourceGroup(user_identity_rg)
 }
 
-resource existing_vnet_cont 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name:  guid(user_identity_principalId, networkContributorRole, rbacAssignmentScope=='subnet' ? existingAksSubnetName : existingAksVnetName)
-  scope: rbacAssignmentScope=='subnet' ? existingAksSubnet : existingvnet
+resource subnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (rbacAssignmentScope == 'subnet') {
+  name:  guid(user_identity_principalId, networkContributorRole, existingAksSubnetName)
+  scope: existingAksSubnet
+  properties: {
+    roleDefinitionId: networkContributorRole
+    principalId: uai.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource existingVnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (rbacAssignmentScope != 'subnet') {
+  name:  guid(user_identity_principalId, networkContributorRole, existingAksVnetName)
+  scope: existingvnet
   properties: {
     roleDefinitionId: networkContributorRole
     principalId: uai.properties.principalId
