@@ -6,10 +6,11 @@
 # https://github.com/actions/labeler
 
 name: Labeler
-on: [pull_request_target]
+on: [pull_request]
 
 jobs:
   label:
+    if: ${{ !github.event.pull_request.head.repo.fork }}
 
     runs-on: ubuntu-latest
     permissions:
