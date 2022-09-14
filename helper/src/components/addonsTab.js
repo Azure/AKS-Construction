@@ -348,6 +348,20 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 </Stack.Item>
             }
 
+            <Stack.Item align="start">
+                <Label required={true}>
+                    CSI Blob storage: Enable BlobFuse or NFS v3 access to Azure Blob Storage
+                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/azure-blob-csi">docs</a>)
+                </Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-blob-csi-checkbox" }}
+                    checked={addons.blobCSIAddon}
+                    onChange={(ev, v) => updateFn("blobCSIAddon", v)}
+                    label="Install the Azure Blob CSI AddOn"
+                />
+            </Stack.Item>
+
             <Separator className="notopmargin" />
 
             <Stack.Item align="start">
@@ -422,6 +436,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     label="Enable high availability mode"
                 />
             </Stack.Item>
+
         </Stack>
     );
 }
