@@ -58,6 +58,7 @@
             "networkPolicy": "none",
             "kedaAddon": false,
             "openServiceMeshAddon": false,
+            "blobCSIAddon": false,
             "workloadIdentity": false,
             "denydefaultNetworkPolicy": false,
             "azurepolicy": "none",

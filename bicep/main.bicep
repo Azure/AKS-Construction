@@ -795,6 +795,9 @@ param kedaAddon bool = false
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false
 
+@description('Enables the Blob CSI extension')
+param blobCSIAddon bool = false
+
 @allowed([
   'none'
   'patch'
@@ -1177,6 +1180,11 @@ var aksProperties = union({
       enabled: warIngressNginx
     }
   }
+  storageProfile: {
+    blobCSIDriver: {
+      enabled: blobCSIAddon
+    }
+  }
 },
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
@@ -1306,7 +1314,6 @@ resource daprExtension 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-
 }
 
 output daprReleaseNamespace string = daprAddon ? daprExtension.properties.scope.cluster.releaseNamespace : ''
-
 
 /*__  ___.   ______   .__   __.  __  .___________.  ______   .______       __  .__   __.   _______
 |   \/   |  /  __  \  |  \ |  | |  | |           | /  __  \  |   _  \     |  | |  \ |  |  /  _____|
