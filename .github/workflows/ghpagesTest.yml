@@ -90,12 +90,22 @@ jobs:
           cd helper
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --grep-invert '${{ env.filenamewordexclude }}' --reporter list
 
-      - name: Playwright - Grab Az Commands
+      - name: Playwright - Grab html and Az Commands
         env:
           filenamewordmatch: 'helper-export'
         run: |
           cd helper
           npx playwright test --browser chromium .playwrighttests/ -g '${{ env.filenamewordmatch }}' --reporter list
+
+      - name: Html Broken Link Checker
+        id: lychee
+        uses: lycheeverse/lychee-action@v1.5.1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          args: "helper/localsite.html --exclude './*.svg' './*.png' -n"
+          # Fail action on broken links
+          fail: true
 
       - name: Persist exported Az Commands for visibility
         if: ${{ github.event.pull_request.head.repo.fork }}

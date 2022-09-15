@@ -50,12 +50,15 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "warIngressNginx": false,
             "daprAddon": false,
             "daprAddonHA": false,
             "fluxGitOpsAddon": false,
             "networkPolicy": "none",
             "kedaAddon": false,
             "openServiceMeshAddon": false,
+            "blobCSIAddon": false,
+            "workloadIdentity": false,
             "denydefaultNetworkPolicy": false,
             "azurepolicy": "none",
             "azurePolicyInitiative": "Baseline",

@@ -7,6 +7,7 @@ import { adv_stackstyle, hasError, getError } from './common'
 export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { addons, net } = tabValues
     const osmFeatureFlag = featureFlag.includes('osm')
+    const wiFeatureFlag = featureFlag.includes('workloadId')
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -51,17 +52,17 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Securely Expose your applications via Layer 7 HTTP(S) proxies (Ingress Controller)
+                    Ingress Controllers: Securely expose your applications via Layer 7 HTTP(S) proxies
                 </Label>
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.ingress}
                     options={[
-                        { key: 'none', text: 'No, I do not need a Layer7 proxy, or I will configure my own solution' },
-                        { key: 'appgw', text: 'Yes, I want a Azure Managed Application Gateway with WAF protection' },
-                        { key: 'contour', text: 'Yes, deploy contour in the cluster to expose my apps to the internet (https://projectcontour.io/)' },
-                        { key: 'nginx', text: 'Yes, deploy nginx in the cluster to expose my apps to the internet (nginx ingress controller)' }
-
+                        { key: 'none', text: 'Not required' },
+                        { key: 'appgw', text: 'Azure Application Gateway Ingress Controller add-on (https://azure.github.io/application-gateway-kubernetes-ingress)' },
+                        { key: 'warNginx', text: 'AKS Web App Routing Solution, simple Nginx Ingress Controller (https://docs.microsoft.com/en-us/azure/aks/web-app-routing *preview)' },
+                        { key: 'contour', text: 'Contour (https://projectcontour.io/)' },
+                        { key: 'nginx', text: 'Nginx ingress controller' }
                     ]}
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
@@ -171,7 +172,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                     <MessageBar messageBarType={MessageBarType.warning}>If using a Public DNS Zone, you need to own a custom domain, you can easily purchase a custom domain through Azure <Link target="_t1" href="https://docs.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain"> <b>details here</b></Link></MessageBar>
                                     <TextField value={addons.dnsZoneId} onChange={(ev, v) => updateFn("dnsZoneId", v)} errorMessage={getError(invalidArray, 'dnsZoneId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your Public or Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FdnsZones">find it here</Link></Text>} />
 
-
                                     <Checkbox inputProps={{ "data-testid": "addons-certMan"}} disabled={hasError(invalidArray, 'dnsZoneId')} checked={addons.certMan} onChange={(ev, v) => updateFn("certMan", v)} label="Automatically Issue Certificates for HTTPS using cert-manager (with Lets Encrypt - requires email" />
                                     {addons.certMan &&
                                         <TextField value={addons.certEmail} onChange={(ev, v) => updateFn("certEmail", v)} errorMessage={getError(invalidArray, 'certEmail') ? "Enter valid email" : ''} label="Enter mail address for certificate notification:" required />
@@ -211,7 +211,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <MessageBar messageBarType={MessageBarType.warning}>This will expose your your grafana dashboards to the internet, please login and change the default credentials asap (admin/prom-operator)</MessageBar>
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableMonitorIngress} onChange={(ev, v) => updateFn("enableMonitorIngress", v)} label={`Enable Public Ingress for Grafana (https://grafana.${addons.dnsZoneId && addons.dnsZoneId.split('/')[8]})`} />
                 </Stack.Item>
-
             }
 
             { addons.monitor === "aci" &&
@@ -356,6 +355,20 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 </Stack.Item>
             }
 
+            <Stack.Item align="start">
+                <Label required={true}>
+                    CSI Blob storage: Enable BlobFuse or NFS v3 access to Azure Blob Storage
+                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/azure-blob-csi">docs</a>)
+                </Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-blob-csi-checkbox" }}
+                    checked={addons.blobCSIAddon}
+                    onChange={(ev, v) => updateFn("blobCSIAddon", v)}
+                    label="Install the Azure Blob CSI AddOn"
+                />
+            </Stack.Item>
+
             <Separator className="notopmargin" />
 
             <Stack.Item align="start">
@@ -375,6 +388,19 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 </Label>
                 <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-osm-Checkbox"}} checked={addons.openServiceMeshAddon} onChange={(ev, v) => updateFn("openServiceMeshAddon", v)} label="Install the Open Service Mesh AddOn" />
             </Stack.Item>
+
+            { wiFeatureFlag &&
+            <>
+                <Separator className="notopmargin" />
+
+                <Stack.Item align="start">
+                    <Label required={true}>
+                        Workload Identity : Enable Azure Workload Identity on the AKS Cluster
+                        (<a target="_new" href="https://github.com/Azure/azure-workload-identity">project</a>)
+                    </Label>
+                    <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-workloadIdentity-Checkbox"}} checked={addons.workloadIdentity} onChange={(ev, v) => updateFn("workloadIdentity", v)} label="Install Workload Identity" />
+                </Stack.Item>
+            </>}
 
             <Separator className="notopmargin" />
 
@@ -417,6 +443,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     label="Enable high availability mode"
                 />
             </Stack.Item>
+
         </Stack>
     );
 }

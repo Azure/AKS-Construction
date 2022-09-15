@@ -2,7 +2,9 @@
 
 Building a complete Kubernetes operational environment is hard work! __AKS Accelerator__ dramatically speeds up this work by providing the templates and deployment scripts to quickly create a  __fully configured__, Kubernetes environment, tailored to meet your operational and security needs, ready to run your workloads in production.
 
-## Quick Start
+![animated preview of AKS Construction Helper](docs/images/animgif.gif)
+
+## QuickStart
 
 * #### **Step 1**
   Navigate to the AKS Construction [**helper**](https://azure.github.io/AKS-Construction/)
@@ -24,7 +26,15 @@ Building a complete Kubernetes operational environment is hard work! __AKS Accel
 
   ![](docs/images/helper-deploy.jpg)
 
+## Advanced Scenarios
+
+The QuickStart provides a nice easy way of creating your AKS Environment, once you've done this it's likely you'll want to consume AKS Construction in a more [advanced scenario](docs/AdvancedUsage.md).
+
 ## Project components
+
+### Helper
+
+The Helper is a website that provides a guided experience to creating your AKS environment. It dynamically generates the parameters to call the IaC, and provides deployment options using the Azure CLI, GitHub Actions or Terraform.
 
 ### IaC - Bicep code files
 
@@ -47,7 +57,7 @@ For a more in depth look at the GitHub Actions used in this project, which steps
 
 ## Background
 
-This project unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Well Architected Framework](https://docs.microsoft.com/en-us/azure/architecture/framework/), [Cloud Adoption Framework](https://azure.microsoft.com/en-gb/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
+This project unifies guidance provided by the [AKS Secure Baseline](https://docs.microsoft.com/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks), [Well Architected Framework](https://docs.microsoft.com/azure/architecture/framework/), [Cloud Adoption Framework](https://azure.microsoft.com/cloud-adoption-framework/) and [Enterprise-Scale](https://github.com/Azure/Enterprise-Scale) by providing tangible artifacts to deploy Azure resources from CLI or CI/CD systems.
 
 This project is part of the official [AKS Landing Zone Accelerator (Enterprise Scale)](https://github.com/Azure/AKS-Landing-Zone-Accelerator) architectural approach. To read more about this project and how the it fits with Enterprise Scale and the AKS Secure Baseline, look [here](referencearchs.md).
 
@@ -76,6 +86,13 @@ provided by the bot. You will only need to do this once across all repos using o
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+## FAQ / Troubleshooting
+
+### Subscription is not registered to use namespace Microsoft.OperationsManagement
+
+Azure Subscriptions use resource providers to be able to create Azure Services. Sometimes it can be the case that core RP's are not properly registered in your subscription. Take time to read the error message, and follow the steps to resolve. [https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli](https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli)
+
 
 ## Trademarks
 
