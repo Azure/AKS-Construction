@@ -45,7 +45,7 @@ Releases are used to version the bicep code files, they can be leveraged directl
 ### DevOps - GitHub Actions
 
 A number of [GitHub actions](https://github.com/Azure/AKS-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. A robust deployment pipeline is essential when coordinating the deployment of multiple Azure services that work together, additionally there is configuration that cannot be set in the template and that needs to be automated (and tested) consistently.
-![preview screenshot of the helper wizard](docs/images/ghactionworkflow.jpg)
+![preview screenshot of the helper app](docs/images/ghactionworkflow.jpg)
 
 CI Name | Actions Workflow | Parameter file | CI Status | Notes
 |--------|--------|--------|-----------|------|
@@ -73,7 +73,12 @@ The guiding principal we have with this project is to focus on the the *downstre
 
 ## Contributing
 
-If you're interested in contributing, please refer to the [contribution guide](CONTRIBUTING.md)
+If you're interested in contributing, we have two contribution guides in the repo which you should read first.
+
+Guide | Description
+----- | -----------
+[Generic Contribution Guide](CONTRIBUTING.md) | Talks about the branching strategy, using CodeSpaces and general guidance
+[Helper Contribtion Guide](https://github.com/Azure/AKS-Construction/blob/main/docs/ContributingHelper.md) | Talks about the structure of the app and walks through a sample change of adding a new feature to the UI and Bicep
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
