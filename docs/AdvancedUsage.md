@@ -1,6 +1,6 @@
 # Advanced Usage
 
-The [QuickStart](https://github.com/Azure/AKS-Construction#quickstart) provides a nice easy way of using the Azure CLI to create your AKS Environment. However once you've done this, and are more familiar with the tool, then you'll want to initiate AKS Construction is a sligtly more mature way.
+The [QuickStart](https://github.com/Azure/AKS-Construction#quickstart) provides a nice easy way of using the Azure CLI to create your AKS Environment. However once you've done this, and are more familiar with the tool, then you'll want to initiate AKS Construction is a slightly more mature way.
 
 ## Level One - Download and your own Bicep file
 
