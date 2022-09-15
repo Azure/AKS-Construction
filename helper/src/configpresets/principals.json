@@ -21,13 +21,13 @@
                             "cluster": {
                                 "SystemPoolType": "none",
                                 "autoscale": false,
-                                "upgradeChannel": "none",
-                                "DefenderForContainers": false
+                                "AksPaidSkuForSLA": false,
+                                "availabilityZones": []
                             },
                             "addons": {
-                                "registry": "none",
-                                "ingress": "none",
-                                "monitor": "none"
+                                "appGWsku": "Standard_v2",
+                                "retentionInDays": 30,
+                                "azurepolicy" : "audit"
                             }
                         }
                     },
@@ -42,14 +42,16 @@
 
                         "values": {
                             "cluster": {
-                                "SystemPoolType": "CostOptimised",
+                                "SystemPoolType": "Standard",
                                 "autoscale": false,
-                                "upgradeChannel": "none"
+                                "AksPaidSkuForSLA": true,
+                                "availabilityZones": [1,2,3]
                             },
                             "addons": {
-                                "registry": "none",
-                                "ingress": "contour",
-                                "monitor": "oss"
+                                "appGWsku": "WAF_v2",
+                                "appGWcount": 2,
+                                "retentionInDays": 180,
+                                "azurepolicy" : "deny"
                             }
                         }
                     }
