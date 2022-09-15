@@ -1,6 +1,6 @@
-# Wizard
+# Helper
 
-This guide shows how Wizard Web UI is structured, and walks through the approach for making changes.
+This guide shows how Helper Web App is structured, and walks through the approach for making changes.
 
 ## Overview
 
@@ -26,7 +26,7 @@ Whilst not being a teaching resource, adding validation, **concise** UI hints, a
 
 ## Design/Dev Process
 
-Adding a new parameter to the main.bicep file will require that a corresponding control/parameter are added to the UI. This allows the property to be easily configured by users of the Wizard Web UI, and not just available for users of the bicep file.
+Adding a new parameter to the main.bicep file will require that a corresponding control/parameter are added to the UI. This allows the property to be easily configured by users of the Helper, and not just available for users of the bicep file.
 
 ## 1. Which tab
 
