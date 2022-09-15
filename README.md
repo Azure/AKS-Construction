@@ -73,7 +73,12 @@ The guiding principal we have with this project is to focus on the the *downstre
 
 ## Contributing
 
-If you're interested in contributing, please refer to the [contribution guide](CONTRIBUTING.md)
+If you're interested in contributing, we have two contribution guides in the repo which you should read first.
+
+Guide | Description
+----- | -----------
+[Generic Contribution Guide](CONTRIBUTING.md) | Talks about the branching strategy, using CodeSpaces and general guidance
+[Helper Contribtion Guide](https://github.com/Azure/AKS-Construction/blob/main/docs/ContributingHelper.md) | Talks about the structure of the app and walks through a sample change of adding a new feature to the UI and Bicep
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
