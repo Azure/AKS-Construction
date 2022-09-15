@@ -5,6 +5,57 @@
         "icon": "Group",
         "sections": [
             {
+                "key": "env",
+                "sectionTitle": "Environment Type",
+                "cards": [
+                    {
+                        "key": "npnprod",
+                        "title": "Non-Production",
+                        "default": true,
+                        "description": {
+                            "title": "Cost Optimised, no SLA",
+                            "bulets": []
+                        },
+
+                        "values": {
+                            "cluster": {
+                                "SystemPoolType": "none",
+                                "autoscale": false,
+                                "upgradeChannel": "none",
+                                "DefenderForContainers": false
+                            },
+                            "addons": {
+                                "registry": "none",
+                                "ingress": "none",
+                                "monitor": "none"
+                            }
+                        }
+                    },
+                    {
+                        "key": "prod",
+                        "title": "Production",
+                        "description": {
+                            "title": "Production grade environment using Well Architected framework",
+                            "bulets": [
+                            ]
+                        },
+
+                        "values": {
+                            "cluster": {
+                                "SystemPoolType": "CostOptimised",
+                                "autoscale": false,
+                                "upgradeChannel": "none"
+                            },
+                            "addons": {
+                                "registry": "none",
+                                "ingress": "contour",
+                                "monitor": "oss"
+                            }
+                        }
+                    }
+                ]
+            },
+            {
                 "key": "ops",
                 "sectionTitle": "Operations Principles",
                 "cards": [
@@ -280,7 +331,7 @@
                         "key": "private",
                         "title": "Private cluster with isolating networking controls",
                         "description": {
-                            "title": "Best option for highly secure, regulated environments or sensitive data requirements.",
+                            "title": "Best option for high-secure, regulated environments or sensitive data requirements.",
                             "titleWarning": {
                                 "description": "WARNING: most complex environment option to operate",
                                 "MessageBarType": 5
