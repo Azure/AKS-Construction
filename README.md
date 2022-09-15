@@ -45,7 +45,7 @@ Releases are used to version the bicep code files, they can be leveraged directl
 ### DevOps - GitHub Actions
 
 A number of [GitHub actions](https://github.com/Azure/AKS-Construction/tree/main/.github/workflows) are used in the repo that run on push/pr/schedules. These can be copied into your own repo and customised for your CI/CD pipeline. A robust deployment pipeline is essential when coordinating the deployment of multiple Azure services that work together, additionally there is configuration that cannot be set in the template and that needs to be automated (and tested) consistently.
-![preview screenshot of the helper wizard](docs/images/ghactionworkflow.jpg)
+![preview screenshot of the helper app](docs/images/ghactionworkflow.jpg)
 
 CI Name | Actions Workflow | Parameter file | CI Status | Notes
 |--------|--------|--------|-----------|------|
