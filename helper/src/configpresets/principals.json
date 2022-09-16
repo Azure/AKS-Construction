@@ -20,7 +20,6 @@
                         "values": {
                             "cluster": {
                                 "SystemPoolType": "none",
-                                "autoscale": false,
                                 "AksPaidSkuForSLA": false,
                                 "availabilityZones": []
                             },
@@ -37,13 +36,15 @@
                         "description": {
                             "title": "Production grade environment using Well Architected framework",
                             "bulets": [
+                                {
+                                    "description": "Availability Zones"
+                                }
                             ]
                         },
 
                         "values": {
                             "cluster": {
                                 "SystemPoolType": "Standard",
-                                "autoscale": false,
                                 "AksPaidSkuForSLA": true,
                                 "availabilityZones": [1,2,3]
                             },
@@ -51,7 +52,9 @@
                                 "appGWsku": "WAF_v2",
                                 "appGWcount": 2,
                                 "retentionInDays": 180,
-                                "azurepolicy" : "deny"
+                                "azurepolicy" : "deny",
+                                "registry" : "premium",
+                                "enableACRTrustPolicy": true
                             }
                         }
                     }

@@ -50,6 +50,7 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "enableACRTrustPolicy": false,
             "warIngressNginx": false,
             "daprAddon": false,
             "daprAddonHA": false,
