@@ -40,6 +40,19 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
+                <Checkbox disabled={addons.registry !== "Premium"} checked={addons.acrUntaggedRetentionPolicyEnabled} onChange={(ev, v) => updateFn("acrUntaggedRetentionPolicyEnabled", v)} label={<Text>Create untagged image retention policy (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>) (*preview)</Text>} />
+                <MessageBar styles={{ root: { width: '700px' } }} messageBarType={MessageBarType.warning}>Deleting untagged images will remove them from your ACR after a defined period (<a target="_new" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy">docs</a>)</MessageBar>
+
+                {addons.acrUntaggedRetentionPolicyEnabled && (
+                    <Stack.Item style={{ marginLeft: "20px"}}>
+                        <Slider label="Days to retain untagged images for" min={0} max={365} step={1} defaultValue={addons.acrUntaggedRetentionPolicy} showValue={true}
+                            onChange={(v) => updateFn("acrUntaggedRetentionPolicy", v)}
+                            snapToStep />
+                    </Stack.Item>
+                )}
+            </Stack.Item>
+
+            <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
                 <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label={<Text>Create ACR Private Agent Pool (private link only) (preview limited regions <a target="_new" href="https://docs.microsoft.com/azure/container-registry/tasks-agent-pools">docs</a>)</Text>} />
                 <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
                     <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>

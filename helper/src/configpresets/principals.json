@@ -54,7 +54,8 @@
                                 "retentionInDays": 180,
                                 "azurepolicy" : "deny",
                                 "registry" : "premium",
-                                "enableACRTrustPolicy": true
+                                "enableACRTrustPolicy": true,
+                                "acrUntaggedRetentionPolicy" : 90
                             }
                         }
                     }
