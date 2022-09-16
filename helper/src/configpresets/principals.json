@@ -36,9 +36,6 @@
                         "description": {
                             "title": "Production grade environment using Well Architected framework",
                             "bulets": [
-                                {
-                                    "description": "Availability Zones"
-                                }
                             ]
                         },
 
