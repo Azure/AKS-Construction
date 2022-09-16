@@ -343,21 +343,32 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Key Management Service (KMS) etcd Encryption (*preview)
+                    Key Management Service (KMS) etcd Encryption
                 </Label>
-                <MessageBar messageBarType={MessageBarType.warning}>KMS requires the customer to be responsible for key management (to include rotation).
-                <br />
-                Mismanagement can cause the secrets to be unrecoverable in the cluster. <Link target='_' href='https://docs.microsoft.com/azure/aks/use-kms-etcd-encryption'>docs</Link></MessageBar>
+                <MessageBar messageBarType={MessageBarType.warning} styles={{ root: { display: (cluster.keyVaultKms !== "none" ? "block" : "none") } }}>
+                    KMS requires the customer to be responsible for key management (to include rotation).
+                    <br />
+                    Mismanagement can cause the secrets to be unrecoverable in the cluster. <Link target='_' href='https://docs.microsoft.com/azure/aks/use-kms-etcd-encryption'>docs</Link>
+                </MessageBar>
+                <MessageBar messageBarType={MessageBarType.info}>
+                    Using the CSI Secrets Add-On, with volume mounted secrets is the recommended approach for secrets management. <Link target='_' href='https://docs.microsoft.com/azure/aks/csi-secrets-store-driver'>docs</Link>
+                </MessageBar>
                 <ChoiceGroup
                     selectedKey={cluster.keyVaultKms}
                     styles={{ root: { marginLeft: '50px' } }}
                     options={[
                         { key: 'none', text: 'No encryption of etcd required' },
-                        { key: 'public', text: 'Create a new Key Vault with least privileged access and generated the key' }
-                        //{ key: 'private', text: 'Use an existing private link connected Key Vault', disabled: true }
+                        { key: 'public', text: 'Create a new Key Vault with least privileged access and generated the key' },
+                        { key: 'byoprivate', text: 'Use an existing Key Vault Key.' }
                     ]}
                     onChange={(ev, { key }) => updateFn("keyVaultKms", key)}
                 />
+
+                <Stack.Item align="center" styles={{ root: { marginLeft:'100px', maxWidth: '700px', display: (cluster.keyVaultKms === "byoprivate" ? "block" : "none") } }} >
+                    <TextField label="Existing KeyId" onChange={(ev, val) => updateFn("keyVaultKmsByoKeyId", val)} value={cluster.keyVaultKmsByoKeyId} />
+                    <MessageBar messageBarType={MessageBarType.warning}>The deploying user must have RBAC permission (Owner) on the existing vault to create new RBAC permissions for the AKS cluster to access the key and create the network privatelink</MessageBar>
+                </Stack.Item>
+
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
