@@ -365,7 +365,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 />
 
                 <Stack.Item align="center" styles={{ root: { marginLeft:'100px', maxWidth: '700px', display: (cluster.keyVaultKms === "byoprivate" ? "block" : "none") } }} >
-                    <TextField label="Existing KeyId" onChange={(ev, val) => updateFn("keyVaultKmsByoKeyId", val)} value={cluster.keyVaultKmsByoKeyId} errorMessage={getError(invalidArray, 'keyVaultKmsByoKeyId')}  />
+                    <TextField label="Existing Key Identifier" onChange={(ev, val) => updateFn("keyVaultKmsByoKeyId", val)} value={cluster.keyVaultKmsByoKeyId} errorMessage={getError(invalidArray, 'keyVaultKmsByoKeyId')}  />
 
                     <MessageBar messageBarType={MessageBarType.warning}>The deploying user must have RBAC permission (Owner) on the existing vault to create new RBAC permissions for the AKS cluster to access the key and create the network privatelink</MessageBar>
                 </Stack.Item>
