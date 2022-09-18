@@ -245,20 +245,21 @@ param keyVaultKmsCreate bool = false
 @description('Bring an existing Key from an existing Key Vault')
 param keyVaultKmsByoKeyId string = ''
 
-var keyVaultKmsByoName = !empty(keyVaultKmsByoKeyId) ? split(split(keyVaultKmsByoKeyId,'/')[2],'.')[0] : ''
-
-@description('The name of the Kms Key Vault')
-output keyVaultKmsName string = keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : !empty(keyVaultKmsByoKeyId) ? keyVaultKmsByoName : ''
-
+@description('The PrincipalId of the deploying user, which is necessary when creating a Kms Key')
 param keyVaultKmsOfficerRolePrincipalId string = ''
 
+@description('The extracted name of the existing Key Vault')
+var keyVaultKmsByoName = !empty(keyVaultKmsByoKeyId) ? split(split(keyVaultKmsByoKeyId,'/')[2],'.')[0] : ''
+
+@description('The deployment delay to introduce when creating a new keyvault for kms key')
 var kmsRbacWaitSeconds=30
 
 @description('This indicates if the deploying user has provided their PrincipalId in order for the key to be created')
 var keyVaultKmsCreateAndPrereqs = keyVaultKmsCreate && !empty(keyVaultKmsOfficerRolePrincipalId) && privateLinks == false
 
-@description('Indicates if the user has supplied all the correct parameter to use a AKSC Created KMS')
-output kmsCreatePrerequisitesMet bool =  keyVaultKmsCreateAndPrereqs
+resource kvKmsByo 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = if(!empty(keyVaultKmsByoName)) {
+  name: keyVaultKmsByoName
+}
 
 @description('Creates a new Key vault for a new KMS Key')
 module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
@@ -271,10 +272,6 @@ module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
     privateLinks: privateLinks
     //aksUaiObjectId: aksUai.properties.principalId
   }
-}
-
-resource kvKmsByo 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = if(!empty(keyVaultKmsByoName)) {
-  name: keyVaultKmsByoName
 }
 
 module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
@@ -347,6 +344,11 @@ var azureKeyVaultKms = {
   }
 }
 
+@description('The name of the Kms Key Vault')
+output keyVaultKmsName string = keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : !empty(keyVaultKmsByoKeyId) ? keyVaultKmsByoName : ''
+
+@description('Indicates if the user has supplied all the correct parameter to use a AKSC Created KMS')
+output kmsCreatePrerequisitesMet bool =  keyVaultKmsCreateAndPrereqs
 
 /*   ___           ______     .______
     /   \         /      |    |   _  \
