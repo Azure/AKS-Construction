@@ -245,6 +245,9 @@ param keyVaultKmsCreate bool = false
 @description('Bring an existing Key from an existing Key Vault')
 param keyVaultKmsByoKeyId string = ''
 
+@description('Bring an existing Key from an existing Key Vault')
+param keyVaultKmsByoRG string = resourceGroup().name
+
 @description('The PrincipalId of the deploying user, which is necessary when creating a Kms Key')
 param keyVaultKmsOfficerRolePrincipalId string = ''
 
@@ -259,6 +262,7 @@ var keyVaultKmsCreateAndPrereqs = keyVaultKmsCreate && !empty(keyVaultKmsOfficer
 
 resource kvKmsByo 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = if(!empty(keyVaultKmsByoName)) {
   name: keyVaultKmsByoName
+  scope: resourceGroup(keyVaultKmsByoRG)
 }
 
 @description('Creates a new Key vault for a new KMS Key')
@@ -299,6 +303,7 @@ module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
 
 module kvKmsByoRbac 'keyvaultrbac.bicep' = if(!empty(keyVaultKmsByoKeyId)) {
   name: 'keyvaultKmsByoRbacs-${resourceName}'
+  scope: resourceGroup(keyVaultKmsByoRG)
   params: {
     keyVaultName: kvKmsByo.name
     //Contribuor allows AKS to create the private link
