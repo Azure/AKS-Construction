@@ -38,7 +38,7 @@ param byoAKSSubnetId string = ''
 param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
-var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreate
+var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs
 resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
@@ -245,20 +245,23 @@ param keyVaultKmsCreate bool = false
 @description('Bring an existing Key from an existing Key Vault')
 param keyVaultKmsByoKeyId string = ''
 
+var keyVaultKmsByoName = split(split(keyVaultKmsByoKeyId,'/')[2],'.')[0]
+
+@description('The name of the Kms Key Vault')
+output keyVaultKmsName string = keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : !empty(keyVaultKmsByoKeyId) ? keyVaultKmsByoName : ''
+
 param keyVaultKmsOfficerRolePrincipalId string = ''
 
 var kmsRbacWaitSeconds=30
 
 @description('This indicates if the deploying user has provided their PrincipalId in order for the key to be created')
-var keyVaultKmsPrereqs = !empty(keyVaultKmsOfficerRolePrincipalId)
+var keyVaultKmsCreateAndPrereqs = keyVaultKmsCreate && !empty(keyVaultKmsOfficerRolePrincipalId) && privateLinks == false
 
-@description('Indicates if the user has supplied all parameters to use Kms')
-output kmsPrerequisitesMet bool =  keyVaultKmsPrereqs
-
-var createNewKeyAndKv = keyVaultKmsCreate && keyVaultKmsPrereqs && empty(keyVaultKmsByoKeyId)
+@description('Indicates if the user has supplied all the correct parameter to use a AKSC Created KMS')
+output kmsCreatePrerequisitesMet bool =  keyVaultKmsCreateAndPrereqs
 
 @description('Creates a new Key vault for a new KMS Key')
-module kvKms 'keyvault.bicep' = if(createNewKeyAndKv) {
+module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
   name: 'keyvaultKms-${resourceName}'
   params: {
     resourceName: 'kms${resourceName}'
@@ -270,38 +273,62 @@ module kvKms 'keyvault.bicep' = if(createNewKeyAndKv) {
   }
 }
 
-module kvKmsRbac 'keyvaultrbac.bicep' = if(createNewKeyAndKv) {
+resource kvKmsByo 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = if(!empty(keyVaultKmsByoName)) {
+  name: keyVaultKmsByoName
+}
+
+module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
   name: 'keyvaultKmsRbacs-${resourceName}'
   params: {
     keyVaultName: keyVaultKmsCreate ? kvKms.outputs.keyVaultName : ''
-    rbacKvContributorSps : [
-      createAksUai && privateLinks ? aksUai.properties.principalId : ''
-    ]
+    //We can't create a kms kv and key and do privatelink. Private Link is a BYO scenario
+    // rbacKvContributorSps : [
+    //   createAksUai && privateLinks ? aksUai.properties.principalId : ''
+    // ]
+    //This allows the Aks Cluster to access the key vault key
     rbacCryptoUserSps: [
       createAksUai ? aksUai.properties.principalId : ''
     ]
+    //This allows the Deploying user to create the key vault key
     rbacCryptoOfficerUsers: [
       !empty(keyVaultKmsOfficerRolePrincipalId) && !automatedDeployment ? keyVaultKmsOfficerRolePrincipalId : ''
     ]
+    //This allows the Deploying sp to create the key vault key
     rbacCryptoOfficerSps: [
       !empty(keyVaultKmsOfficerRolePrincipalId) && automatedDeployment ? keyVaultKmsOfficerRolePrincipalId : ''
     ]
   }
 }
 
-module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(createNewKeyAndKv && kmsRbacWaitSeconds>0) {
+module kvKmsByoRbac 'keyvaultrbac.bicep' = if(!empty(keyVaultKmsByoKeyId)) {
+  name: 'keyvaultKmsByoRbacs-${resourceName}'
+  params: {
+    keyVaultName: kvKmsByo.name
+    //Contribuor allows AKS to create the private link
+    rbacKvContributorSps : [
+      createAksUai && privateLinks ? aksUai.properties.principalId : ''
+    ]
+    //This allows the Aks Cluster to access the key vault key
+    rbacCryptoUserSps: [
+      createAksUai ? aksUai.properties.principalId : ''
+    ]
+  }
+}
+
+@description('It can take time for the RBAC to propagate, this delays the deployment to avoid this problem')
+module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKmsCreateAndPrereqs && kmsRbacWaitSeconds>0) {
   name: 'keyvaultKmsRbac-waits-${resourceName}'
   params: {
     waitSeconds: kmsRbacWaitSeconds
     location: location
   }
   dependsOn: [
-    kvKmsRbac
+    kvKmsCreatedRbac
   ]
 }
 
-@description('Adding a key to the keyvault... We cant do this if privatelinks are enforced')
-module kvKmsKey 'keyvaultkey.bicep' = if(createNewKeyAndKv) {
+@description('Adding a key to the keyvault... We can only do this for public key vaults')
+module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreateAndPrereqs) {
   name: 'keyvaultKmsKeys-${resourceName}'
   params: {
     keyVaultName: kvKms.outputs.keyVaultName
@@ -312,10 +339,10 @@ module kvKmsKey 'keyvaultkey.bicep' = if(createNewKeyAndKv) {
 var azureKeyVaultKms = {
   securityProfile : {
     azureKeyVaultKms : {
-      enabled: (keyVaultKmsCreate && keyVaultKmsPrereqs)
-      keyId: (keyVaultKmsCreate && keyVaultKmsPrereqs) ? kvKmsKey.outputs.keyVaultKmsKeyUri : ''
+      enabled: keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
+      keyId: keyVaultKmsCreateAndPrereqs ? kvKmsKey.outputs.keyVaultKmsKeyUri : !empty(keyVaultKmsByoKeyId) ? keyVaultKmsByoKeyId : ''
       keyVaultNetworkAccess: privateLinks ? 'private' : 'public'
-      keyVaultResourceId:  (keyVaultKmsCreate && keyVaultKmsPrereqs && privateLinks) ? kvKms.outputs.keyVaultId : ''
+      keyVaultResourceId:  privateLinks && !empty(keyVaultKmsByoKeyId) ? kvKmsByo.id : ''
     }
   }
 }
@@ -1195,7 +1222,7 @@ var aksProperties = union({
 },
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
-keyVaultKmsCreate && keyVaultKmsPrereqs ? azureKeyVaultKms : {}
+keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {}
 )
 
 resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
