@@ -245,7 +245,7 @@ param keyVaultKmsCreate bool = false
 @description('Bring an existing Key from an existing Key Vault')
 param keyVaultKmsByoKeyId string = ''
 
-@description('Bring an existing Key from an existing Key Vault')
+@description('The resource group for the existing KMS Key Vault')
 param keyVaultKmsByoRG string = resourceGroup().name
 
 @description('The PrincipalId of the deploying user, which is necessary when creating a Kms Key')
