@@ -88,6 +88,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnet_opt === "byo" && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
     }),
+    ...(cluster.keyVaultKms !== defaults.cluster.keyVaultKms && {
+      ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"})
+    }),
     ...(addons.csisecret !== "none" && { keyVaultAksCSI: true }),
     ...(addons.csisecret === 'akvNew' && { keyVaultCreate: true, ...(deploy.kvCertSecretRole && { keyVaultOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
     ...(addons.csisecret !== "none" && addons.keyVaultAksCSIPollInterval !== defaults.addons.keyVaultAksCSIPollInterval  && { keyVaultAksCSIPollInterval: addons.keyVaultAksCSIPollInterval }),
@@ -113,9 +116,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.acrPrivatePool !== defaults.addons.acrPrivatePool && {acrPrivatePool: addons.acrPrivatePool}),
         ...(addons.acrPrivatePool && defaults.net.acrAgentPoolSubnetAddressPrefix !== net.acrAgentPoolSubnetAddressPrefix && {acrAgentPoolSubnetAddressPrefix: net.acrAgentPoolSubnetAddressPrefix})
       })
-    }),
-    ...(cluster.keyVaultKms !== defaults.cluster.keyVaultKms && {
-      ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"})
     }),
     ...(addons.ingress === "warNginx" && {
       ...(addons.ingress !== defaults.addons.ingress && {warIngressNginx: true})
