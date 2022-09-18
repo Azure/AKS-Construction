@@ -241,6 +241,10 @@ output keyVaultId string = keyVaultCreate ? kv.outputs.keyVaultId : ''
 
 @description('Enable encryption at rest for Kubernetes etcd data')
 param keyVaultKmsCreate bool = false
+
+@description('Bring an existing Key from an existing Key Vault')
+param keyVaultKmsByoKeyId string = ''
+
 param keyVaultKmsOfficerRolePrincipalId string = ''
 
 var kmsRbacWaitSeconds=30
@@ -251,7 +255,10 @@ var keyVaultKmsPrereqs = !empty(keyVaultKmsOfficerRolePrincipalId)
 @description('Indicates if the user has supplied all parameters to use Kms')
 output kmsPrerequisitesMet bool =  keyVaultKmsPrereqs
 
-module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate && keyVaultKmsPrereqs) {
+var createNewKeyAndKv = keyVaultKmsCreate && keyVaultKmsPrereqs && empty(keyVaultKmsByoKeyId)
+
+@description('Creates a new Key vault for a new KMS Key')
+module kvKms 'keyvault.bicep' = if(createNewKeyAndKv) {
   name: 'keyvaultKms-${resourceName}'
   params: {
     resourceName: 'kms${resourceName}'
@@ -263,7 +270,7 @@ module kvKms 'keyvault.bicep' = if(keyVaultKmsCreate && keyVaultKmsPrereqs) {
   }
 }
 
-module kvKmsRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreate) {
+module kvKmsRbac 'keyvaultrbac.bicep' = if(createNewKeyAndKv) {
   name: 'keyvaultKmsRbacs-${resourceName}'
   params: {
     keyVaultName: keyVaultKmsCreate ? kvKms.outputs.keyVaultName : ''
@@ -282,7 +289,7 @@ module kvKmsRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreate) {
   }
 }
 
-module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKmsPrereqs && kmsRbacWaitSeconds>0) {
+module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(createNewKeyAndKv && kmsRbacWaitSeconds>0) {
   name: 'keyvaultKmsRbac-waits-${resourceName}'
   params: {
     waitSeconds: kmsRbacWaitSeconds
@@ -294,7 +301,7 @@ module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKms
 }
 
 @description('Adding a key to the keyvault... We cant do this if privatelinks are enforced')
-module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreate && keyVaultKmsPrereqs && !privateLinks) {
+module kvKmsKey 'keyvaultkey.bicep' = if(createNewKeyAndKv) {
   name: 'keyvaultKmsKeys-${resourceName}'
   params: {
     keyVaultName: kvKms.outputs.keyVaultName
