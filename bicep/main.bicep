@@ -245,7 +245,7 @@ param keyVaultKmsCreate bool = false
 @description('Bring an existing Key from an existing Key Vault')
 param keyVaultKmsByoKeyId string = ''
 
-var keyVaultKmsByoName = split(split(keyVaultKmsByoKeyId,'/')[2],'.')[0]
+var keyVaultKmsByoName = !empty(keyVaultKmsByoKeyId) ? split(split(keyVaultKmsByoKeyId,'/')[2],'.')[0] : ''
 
 @description('The name of the Kms Key Vault')
 output keyVaultKmsName string = keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : !empty(keyVaultKmsByoKeyId) ? keyVaultKmsByoName : ''

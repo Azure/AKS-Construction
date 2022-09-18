@@ -361,7 +361,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     styles={{ root: { marginLeft: '50px' } }}
                     options={[
                         { key: 'none', text: 'No encryption of etcd required' },
-                        { key: 'public', text: 'Create a new Key Vault with least privileged access and generated the key', disabled: net.vnetprivateend },
+                        { key: 'public', text: 'Create a new Key Vault with least privileged access and generate the key', disabled: net.vnetprivateend },
                         { key: 'byoprivate', text: 'Use an existing Key Vault Key.' }
                     ]}
                     onChange={(ev, { key }) => updateFn("keyVaultKms", key)}
