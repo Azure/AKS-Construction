@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
       "resourceName": {
-        "value": "az-k8s-7zw4"
+        "value": "az-k8s-kmsbyopl"
       },
       "agentVMSize": {
         "value": "Standard_DS3_v2"
@@ -11,15 +11,26 @@
       "JustUseSystemPool": {
         "value": true
       },
-      "keyVaultKmsCreate": {
+      "custom_vnet": {
         "value": true
       },
       "privateLinks": {
         "value": true
       },
-      "custom_vnet": {
+      "bastion": {
         "value": true
+      },
+      "registries_sku": {
+        "value": "Premium"
+      },
+      "keyVaultKmsCreate": {
+        "value": false
+      },
+      "keyVaultKmsByoRG": {
+        "value": "replaceme"
+      },
+      "keyVaultKmsByoKeyId": {
+        "value": "replaceme"
       }
-
     }
   }

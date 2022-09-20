@@ -38,7 +38,7 @@ param byoAKSSubnetId string = ''
 param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
-var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs
+var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
 resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
@@ -333,7 +333,7 @@ module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKms
 module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreateAndPrereqs) {
   name: 'keyvaultKmsKeys-${resourceName}'
   params: {
-    keyVaultName: kvKms.outputs.keyVaultName
+    keyVaultName: keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : ''
   }
   dependsOn: [waitForKmsRbac]
 }
@@ -354,6 +354,7 @@ output keyVaultKmsName string = keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyV
 
 @description('Indicates if the user has supplied all the correct parameter to use a AKSC Created KMS')
 output kmsCreatePrerequisitesMet bool =  keyVaultKmsCreateAndPrereqs
+
 
 /*   ___           ______     .______
     /   \         /      |    |   _  \

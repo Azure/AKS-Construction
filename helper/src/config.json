@@ -28,6 +28,7 @@
             "deployItemKey": "deployArmCli"
         },
         "cluster": {
+            "keyVaultKmsByoRG": "",
             "keyVaultKmsByoKeyId": "",
             "keyVaultKms": "none",
             "AksPaidSkuForSLA": false,

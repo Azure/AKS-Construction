@@ -362,14 +362,14 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     options={[
                         { key: 'none', text: 'No encryption of etcd required' },
                         { key: 'public', text: 'Create a new Key Vault with least privileged access and generate the key', disabled: net.vnetprivateend },
-                        { key: 'byoprivate', text: 'Use an existing Key Vault Key in the same subscription.' }
+                        { key: 'byoprivate', text: 'Use an existing Key Vault Key.' }
                     ]}
                     onChange={(ev, { key }) => updateFn("keyVaultKms", key)}
                 />
 
                 <Stack.Item align="center" styles={{ root: { marginLeft:'100px', maxWidth: '700px', display: (cluster.keyVaultKms === "byoprivate" ? "block" : "none") } }} >
                     <TextField label="Existing Key Identifier" onChange={(ev, val) => updateFn("keyVaultKmsByoKeyId", val)} value={cluster.keyVaultKmsByoKeyId} errorMessage={getError(invalidArray, 'keyVaultKmsByoKeyId')}  />
-                    <TextField label="Key Vault Resource Group Name" onChange={(ev, val) => updateFn("keyVaultKmsByoRG", val)} value={cluster.keyVaultKmsByoRG} required />
+                    <TextField label="Key Vault Resource Group Name" onChange={(ev, val) => updateFn("keyVaultKmsByoRG", val)} value={cluster.keyVaultKmsByoRG} required errorMessage={getError(invalidArray, 'keyVaultKmsByoRG')} />
                     <MessageBar messageBarType={MessageBarType.warning}>The deploying user must have RBAC permission (Owner) on the existing vault to create new RBAC permissions for the AKS cluster to access the key and (if configured) create the network private link</MessageBar>
                 </Stack.Item>
 

@@ -89,7 +89,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
     }),
     ...(cluster.keyVaultKms !== defaults.cluster.keyVaultKms && {
-      ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"})
+      ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
+      ...(cluster.keyVaultKms === "byoprivate" && cluster.keyVaultKmsByoKeyId !== '' &&  cluster.keyVaultKmsByoRG !== '' && {keyVaultKmsByoKeyId: cluster.keyVaultKmsByoKeyId, keyVaultKmsByoRG: cluster.keyVaultKmsByoRG}),
     }),
     ...(addons.csisecret !== "none" && { keyVaultAksCSI: true }),
     ...(addons.csisecret === 'akvNew' && { keyVaultCreate: true, ...(deploy.kvCertSecretRole && { keyVaultOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
