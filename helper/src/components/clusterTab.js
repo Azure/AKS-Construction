@@ -10,7 +10,7 @@ const optionRootClass = mergeStyles({
 
 export const VMs = [
     { key: 'b', text: 'Burstable (dev/test)', itemType: DropdownMenuItemType.Header },
-    { key: 'Standard_B2s', text: '2 vCPU,  4 GiB RAM,   8GiB SSD, 40%	-> 200% CPU', eph: true },
+    { key: 'Standard_B2s', text: '2 vCPU,  4 GiB RAM,   8GiB SSD, 40%	-> 200% CPU', eph: false },
     { key: 'dv2', text: 'General purpose V2', itemType: DropdownMenuItemType.Header },
     { key: 'default', text: '2 vCPU,  7 GiB RAM,  14GiB SSD,  86 GiB cache (8000 IOPS)', eph: false },
     { key: 'Standard_DS3_v2', text: '4 vCPU, 14 GiB RAM,  28GiB SSD, 172 GiB cache (16000 IOPS)', eph: true },
