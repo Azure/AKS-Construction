@@ -27,7 +27,7 @@
         "value": false
       },
       "keyVaultKmsByoRG": {
-        "value": "replaceme"
+        "value": "Automation-Actions-AksDeployCI"
       },
       "keyVaultKmsByoKeyId": {
         "value": "https://YOURVAULTNAME.vault.azure.net/keys/YOURKEYNAME/KEYVERSIONSTRING"
