@@ -193,6 +193,15 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                 />
                             }
 
+                            <Stack.Item>
+                                <Slider
+                                    buttonProps={{ "data-testid": "cluster-maxpods-slider"}}
+                                    styles={{ root: { width: 450 } }}
+                                    label={'Pods per node'} min={10}  max={250} step={1}
+                                    value={cluster.maxpods} showValue={true}
+                                    onChange={(val, range) => updateFn("maxpods", val)}
+                                />
+                            </Stack.Item>
                         </Stack>
                     </Stack.Item>
                 </Stack>

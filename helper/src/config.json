@@ -28,6 +28,7 @@
             "deployItemKey": "deployArmCli"
         },
         "cluster": {
+            "maxpods": 30,
             "keyVaultKmsByoRG": "",
             "keyVaultKmsByoKeyId": "",
             "keyVaultKms": "none",

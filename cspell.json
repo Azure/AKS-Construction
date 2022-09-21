@@ -84,6 +84,7 @@
         "localaccounts",
         "managedclusters",
         "MAXCOUNT",
+        "maxpods",
         "messg",
         "Microservices",
         "middleeast",

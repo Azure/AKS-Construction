@@ -120,6 +120,25 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
             <Separator className="notopmargin" />
 
             <Stack.Item>
+                <Label>CNI Enhancements (Custom VNet & BYO Only)</Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
+                    disabled={net.vnet_opt === 'default'}
+                    checked={net.cniDynamicIpAllocation}
+                    onChange={(ev, v) => updateFn("cniDynamicIpAllocation", v)}
+                    label="Implement Dynamic Allocation of IPs" />
+
+                <Checkbox
+                    styles={{ root: { marginLeft: '50px', marginTop: '20 !important' } }}
+                    disabled={net.vnet_opt === 'default'}
+                    checked={net.networkPluginMode}
+                    onChange={(ev, v) => updateFn("networkPluginMode", v)}
+                    label="CNI Overlay Network (*preview)" />
+            </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item>
                 <Stack horizontal>
                     <Stack.Item>
                         <Label>Default or Custom VNET</Label>
@@ -245,7 +264,7 @@ function PodServiceNetwork({ net, updateFn }) {
         <Stack {...columnProps}>
             <Label>Kubernetes Networking Configuration</Label>
             <Stack.Item styles={{root: {width: '380px'}}} align="start">
-                <TextField  prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet'} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' ? net.podCidr : "Using CNI, POD IPs from subnet"} />
+                <TextField  prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet' && !net.cniDynamicIpAllocation} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' ? net.podCidr : (net.cniDynamicIpAllocation ? net.podCidr : "Using CNI, POD IPs from subnet")} />
             </Stack.Item>
             <Stack.Item styles={{root: {width: '380px'}}} align="start">
                 <TextField prefix="Cidr" label="Service Network" onChange={(ev, val) => updateFn("serviceCidr", val)} value={net.serviceCidr} />

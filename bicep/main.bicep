@@ -870,6 +870,11 @@ param agentCount int = 3
 param agentCountMax int = 0
 var autoScale = agentCountMax > agentCount
 
+@description('Allocate pod ips dynamically')
+param cniDynamicIpAllocation bool = false
+
+@minValue(10)
+@maxValue(250)
 @description('The maximum number of pods per node.')
 param maxPods int = 30
 
@@ -879,6 +884,13 @@ param maxPods int = 30
 ])
 @description('The network plugin type')
 param networkPlugin string = 'azure'
+
+@allowed([
+  ''
+  'Overlay'
+])
+@description('The network plugin type')
+param networkPluginMode string = ''
 
 @allowed([
   ''
@@ -1199,6 +1211,7 @@ var aksProperties = union({
     networkPlugin: networkPlugin
     #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
     networkPolicy: networkPolicy
+    networkPluginMode: networkPlugin=='azure' ? networkPluginMode : ''
     podCidr: networkPlugin=='kubenet' ? podCidr : json('null')
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
