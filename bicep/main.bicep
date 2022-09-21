@@ -38,7 +38,7 @@ param byoAKSSubnetId string = ''
 param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
-var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId)
+var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
 resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
@@ -95,7 +95,7 @@ param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
 @description('The address range for Azure Firewall in your custom vnet')
 param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 
-@description('Enable support for private links')
+@description('Enable support for private links (required custom_vnet)')
 param privateLinks bool = false
 
 @description('Enable support for ACR private pool')
@@ -194,8 +194,9 @@ param keyVaultAksCSI bool = false
 @description('Rotation poll interval for the AKS KV CSI provider')
 param keyVaultAksCSIPollInterval string = '2m'
 
+@description('Creates a KeyVault for application secrets (eg. CSI)')
 module kv 'keyvault.bicep' = if(keyVaultCreate) {
-  name: 'keyvault'
+  name: 'keyvaultApps'
   params: {
     resourceName: resourceName
     keyVaultPurgeProtection: keyVaultPurgeProtection
@@ -217,7 +218,7 @@ var rbacSecretUserSps = union([deployAppGw && appgwKVIntegration ? appGwIdentity
 
 @description('A seperate module is used for RBAC to avoid delaying the KeyVault creation and causing a circular reference.')
 module kvRbac 'keyvaultrbac.bicep' = if (keyVaultCreate) {
-  name: 'KeyVaultRbac'
+  name: 'KeyVaultAppsRbac'
   params: {
     keyVaultName: keyVaultCreate ? kv.outputs.keyVaultName : ''
 
@@ -234,6 +235,125 @@ module kvRbac 'keyvaultrbac.bicep' = if (keyVaultCreate) {
 
 output keyVaultName string = keyVaultCreate ? kv.outputs.keyVaultName : ''
 output keyVaultId string = keyVaultCreate ? kv.outputs.keyVaultId : ''
+
+
+/* KeyVault for KMS Etcd*/
+
+@description('Enable encryption at rest for Kubernetes etcd data')
+param keyVaultKmsCreate bool = false
+
+@description('Bring an existing Key from an existing Key Vault')
+param keyVaultKmsByoKeyId string = ''
+
+@description('The resource group for the existing KMS Key Vault')
+param keyVaultKmsByoRG string = resourceGroup().name
+
+@description('The PrincipalId of the deploying user, which is necessary when creating a Kms Key')
+param keyVaultKmsOfficerRolePrincipalId string = ''
+
+@description('The extracted name of the existing Key Vault')
+var keyVaultKmsByoName = !empty(keyVaultKmsByoKeyId) ? split(split(keyVaultKmsByoKeyId,'/')[2],'.')[0] : ''
+
+@description('The deployment delay to introduce when creating a new keyvault for kms key')
+var kmsRbacWaitSeconds=30
+
+@description('This indicates if the deploying user has provided their PrincipalId in order for the key to be created')
+var keyVaultKmsCreateAndPrereqs = keyVaultKmsCreate && !empty(keyVaultKmsOfficerRolePrincipalId) && privateLinks == false
+
+resource kvKmsByo 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = if(!empty(keyVaultKmsByoName)) {
+  name: keyVaultKmsByoName
+  scope: resourceGroup(keyVaultKmsByoRG)
+}
+
+@description('Creates a new Key vault for a new KMS Key')
+module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
+  name: 'keyvaultKms-${resourceName}'
+  params: {
+    resourceName: 'kms${resourceName}'
+    keyVaultPurgeProtection: keyVaultPurgeProtection
+    keyVaultSoftDelete: keyVaultSoftDelete
+    location: location
+    privateLinks: privateLinks
+    //aksUaiObjectId: aksUai.properties.principalId
+  }
+}
+
+module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
+  name: 'keyvaultKmsRbacs-${resourceName}'
+  params: {
+    keyVaultName: keyVaultKmsCreate ? kvKms.outputs.keyVaultName : ''
+    //We can't create a kms kv and key and do privatelink. Private Link is a BYO scenario
+    // rbacKvContributorSps : [
+    //   createAksUai && privateLinks ? aksUai.properties.principalId : ''
+    // ]
+    //This allows the Aks Cluster to access the key vault key
+    rbacCryptoUserSps: [
+      createAksUai ? aksUai.properties.principalId : ''
+    ]
+    //This allows the Deploying user to create the key vault key
+    rbacCryptoOfficerUsers: [
+      !empty(keyVaultKmsOfficerRolePrincipalId) && !automatedDeployment ? keyVaultKmsOfficerRolePrincipalId : ''
+    ]
+    //This allows the Deploying sp to create the key vault key
+    rbacCryptoOfficerSps: [
+      !empty(keyVaultKmsOfficerRolePrincipalId) && automatedDeployment ? keyVaultKmsOfficerRolePrincipalId : ''
+    ]
+  }
+}
+
+module kvKmsByoRbac 'keyvaultrbac.bicep' = if(!empty(keyVaultKmsByoKeyId)) {
+  name: 'keyvaultKmsByoRbacs-${resourceName}'
+  scope: resourceGroup(keyVaultKmsByoRG)
+  params: {
+    keyVaultName: kvKmsByo.name
+    //Contribuor allows AKS to create the private link
+    rbacKvContributorSps : [
+      createAksUai && privateLinks ? aksUai.properties.principalId : ''
+    ]
+    //This allows the Aks Cluster to access the key vault key
+    rbacCryptoUserSps: [
+      createAksUai ? aksUai.properties.principalId : ''
+    ]
+  }
+}
+
+@description('It can take time for the RBAC to propagate, this delays the deployment to avoid this problem')
+module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKmsCreateAndPrereqs && kmsRbacWaitSeconds>0) {
+  name: 'keyvaultKmsRbac-waits-${resourceName}'
+  params: {
+    waitSeconds: kmsRbacWaitSeconds
+    location: location
+  }
+  dependsOn: [
+    kvKmsCreatedRbac
+  ]
+}
+
+@description('Adding a key to the keyvault... We can only do this for public key vaults')
+module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreateAndPrereqs) {
+  name: 'keyvaultKmsKeys-${resourceName}'
+  params: {
+    keyVaultName: keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : ''
+  }
+  dependsOn: [waitForKmsRbac]
+}
+
+var azureKeyVaultKms = {
+  securityProfile : {
+    azureKeyVaultKms : {
+      enabled: keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
+      keyId: keyVaultKmsCreateAndPrereqs ? kvKmsKey.outputs.keyVaultKmsKeyUri : !empty(keyVaultKmsByoKeyId) ? keyVaultKmsByoKeyId : ''
+      keyVaultNetworkAccess: privateLinks ? 'private' : 'public'
+      keyVaultResourceId:  privateLinks && !empty(keyVaultKmsByoKeyId) ? kvKmsByo.id : ''
+    }
+  }
+}
+
+@description('The name of the Kms Key Vault')
+output keyVaultKmsName string = keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : !empty(keyVaultKmsByoKeyId) ? keyVaultKmsByoName : ''
+
+@description('Indicates if the user has supplied all the correct parameter to use a AKSC Created KMS')
+output kmsCreatePrerequisitesMet bool =  keyVaultKmsCreateAndPrereqs
 
 
 /*   ___           ______     .______
@@ -973,7 +1093,6 @@ var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPool
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
-
 var aks_addons = union({
   azurepolicy: {
     config: {
@@ -1110,7 +1229,8 @@ var aksProperties = union({
   }
 },
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
-defenderForContainers && createLaw ? azureDefenderSecurityProfile : {}
+defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
+keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {}
 )
 
 resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
@@ -1126,6 +1246,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
   }
   dependsOn: [
     privateDnsZoneRbac
+    waitForKmsRbac
   ]
 }
 output aksClusterName string = aks.name

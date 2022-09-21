@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "resourceName": {
+        "value": "az-k8s-kmspp1"
+      },
+      "agentVMSize": {
+        "value": "Standard_DS3_v2"
+      },
+      "JustUseSystemPool": {
+        "value": true
+      },
+      "keyVaultKmsCreate": {
+        "value": true
+      },
+      "keyVaultKmsOfficerRolePrincipalId": {
+        "value": "Make sure to override this value"
+      }
+    }
+  }

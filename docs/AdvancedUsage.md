@@ -40,4 +40,4 @@ Sample Repo | Description
 1. In your repo, create a new file in your `.github/workflows` folder, pasting in the yaml from the GitHub Actions script box
 1. Commit the file to your main branch
 1. In your repo, navigate to the actions tab and initiate the new workflow
-1. Inspect the created resources in your Azure Subscription 
+1. Inspect the created resources in your Azure Subscription

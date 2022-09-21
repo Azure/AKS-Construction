@@ -99,7 +99,7 @@ jobs:
             }
           }
 
-      - name: Replace subnet and dnszone param values from secret
+      - name: Replace subnet, dnszone and kv param values from secret
         shell: pwsh
         run: |
           $paramFilePath="${{ env.ParamDir }}${{ matrix.files }}"
@@ -113,6 +113,9 @@ jobs:
           }
           if($params.parameters.byoAGWSubnetId.value -ne $null) {
             $params.parameters.byoAGWSubnetId.value = "${{ secrets.ByoAgwSubnetId }}"
+          }
+          if($params.parameters.keyVaultKmsByoKeyId.value -ne $null) {
+            $params.parameters.keyVaultKmsByoKeyId.value = "${{ secrets.ByoKmsKeyId }}"
           }
 
           $params | ConvertTo-Json -Depth 4 | Out-File "${{ env.ParamDir }}${{ matrix.files }}"

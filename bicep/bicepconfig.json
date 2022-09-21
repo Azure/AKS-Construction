@@ -45,6 +45,9 @@
             },
             "use-stable-vm-image": {
                 "level": "warning"
+            },
+            "secure-secrets-in-params" : {
+                "level": "error"
             }
         }
       }
