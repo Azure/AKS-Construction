@@ -28,7 +28,6 @@
             "deployItemKey": "deployArmCli"
         },
         "cluster": {
-            "maxpods": 30,
             "keyVaultKmsByoRG": "",
             "keyVaultKmsByoKeyId": "",
             "keyVaultKms": "none",
@@ -95,6 +94,7 @@
             "gitops": "none"
         },
         "net": {
+            "maxpods": 30,
             "networkPlugin": "azure",
             "afw": false,
             "bastion": false,

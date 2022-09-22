@@ -9,12 +9,24 @@ const columnProps = {
 }
 
 
-export default function NetworkTab ({ tabValues, updateFn, invalidArray, featureFlag }) {
+export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArray, featureFlag }) {
 
     const [callout1, setCallout1] = useState(false)
 
     const { net, addons } = tabValues
     var _calloutTarget1 = React.createRef()
+
+
+    function UpdateDynamicIpAllocation(v) {
+        //update the Dynamic IP Allocation property, where this fn was called from
+        updateFn("cniDynamicIpAllocation", v)
+
+        //update max pods to 250 if dynamic IP allocation is enabled
+        v==true ? updateFn("maxpods", 250) : updateFn("maxpods", defaults.net.maxpods)
+
+        //update pod cidr
+        v==true ? updateFn("podCidr", defaults.net.podCidr.replace("/22","/24")) : updateFn("podCidr", defaults.net.podCidr)
+    }
 
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
@@ -56,7 +68,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
 
                 <Stack horizontal tokens={{ childrenGap: 50 }}>
                     <Stack.Item>
-                        <MessageBar messageBarType={MessageBarType.warning}>Nat Gateway for AKS egress is currently a preview feature <a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
+                        <MessageBar messageBarType={MessageBarType.info}>NAT Gateway allows more traffic flows than a Load Balancer.<a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
                         {hasError(invalidArray, 'aksOutboundTrafficType') &&
                             <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'aksOutboundTrafficType')}</MessageBar>
                         }
@@ -125,7 +137,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                     styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
                     disabled={net.vnet_opt === 'default'}
                     checked={net.cniDynamicIpAllocation}
-                    onChange={(ev, v) => updateFn("cniDynamicIpAllocation", v)}
+                    onChange={(ev, v) => UpdateDynamicIpAllocation(v)}
                     label="Implement Dynamic Allocation of IPs" />
 
                 <Checkbox
@@ -134,6 +146,20 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                     checked={net.networkPluginMode}
                     onChange={(ev, v) => updateFn("networkPluginMode", v)}
                     label="CNI Overlay Network (*preview)" />
+            </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item>
+                <Label>Pods per node</Label>
+                <MessageBar messageBarType={MessageBarType.info}>When using Azure CNI with Dynamic IP allocation also allows customers to set up clusters that consume fewer IPs. <br/ >This means Pods per Node can be maximised which simplifies sizing the cluster.</MessageBar>
+                <Slider
+                    buttonProps={{ "data-testid": "network-maxpods-slider"}}
+                    styles={{ root: { width: 450 } }}
+                    label={'Pods per node'} min={10}  max={250} step={1}
+                    value={net.maxpods} showValue={true}
+                    onChange={(val, range) => updateFn("maxpods", val)}
+                />
             </Stack.Item>
 
             <Separator className="notopmargin" />
