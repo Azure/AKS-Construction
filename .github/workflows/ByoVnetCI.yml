@@ -603,8 +603,8 @@ jobs:
       #HELMAPPURI: "helm/openjdk-demo-3.6.0.tgz"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
-      DNSDOMAIN: azdemo.co.uk
-      DNSRG: domainssl
+      DNSDOMAIN: aksc.msftcsu.net
+      DNSRG: aksbicepacc-ci-deployvnet
       DNSRECORDNAME: openjdk-demo
       AKVNAME: ${{ needs.Deploy.outputs.AKVNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
@@ -622,8 +622,8 @@ jobs:
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
-      DNSDOMAIN: azdemo.co.uk
-      DNSRG: domainssl
+      DNSDOMAIN: aksc.msftcsu.net
+      DNSRG: aksbicepacc-ci-deployvnet
       DNSRECORDNAME: openjdk-kvssl
       AKVNAME: ${{ needs.Deploy.outputs.AKVNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
