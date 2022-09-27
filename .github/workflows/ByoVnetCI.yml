@@ -551,6 +551,7 @@ jobs:
 
   ReusableWF:
     runs-on: ubuntu-latest
+    needs: [Validation]
     env:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     outputs:
@@ -570,8 +571,8 @@ jobs:
     with:
       RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
-      DNSDOMAIN: azdemo.co.uk
-      DNSRG: domainssl
+      DNSDOMAIN: aksc.msftcsu.net
+      DNSRG: aksbicepacc-ci-deployvnet
       CERTMANAGEREMAIL: "gdogg@microsoft.com"
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
