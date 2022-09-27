@@ -79,8 +79,13 @@ You need to create the RBAC for the service principal on the resource groups.
 > *** Error: list: failed to list: secrets is forbidden: User \"REDACTED\" cannot list resource \"secrets\" in API group \"\" in the namespace \"default\": User does not have access to the resource in Azure. Update role assignment to allow access.\n", "provisioningState": "Succeeded", "reason": null, 
 
 
+### AutoUpgradePreview NOT registered
 
+> Error AutoUpgradePreview NOT registered
 
+```bash
+az feature register -n AutoUpgradePreview --namespace Microsoft.ContainerService
+```
 
 
 
