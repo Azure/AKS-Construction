@@ -568,10 +568,10 @@ jobs:
           echo $RG
 
   Post-Deploy:
-    needs: [Deploy, ReusableWF]
+    needs: [Validation, Deploy, ReusableWF]
     uses: ./.github/workflows/PostDeploy.yml
     with:
-      RG: ${{ needs.ReusableWF.outputs.RG }}
+      RG: ${{needs.ReusableWF.outputs.RG}}
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: aksc.msftcsu.net
       DNSRG: aksbicepacc-ci-deployvnet
@@ -636,7 +636,7 @@ jobs:
 
   DeployVerify:
     runs-on: ubuntu-latest
-    needs: [Deploy]
+    needs: [Validation, Deploy]
     env:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     steps:
