@@ -34,7 +34,7 @@ on:
         type: string
         required: false
       region:
-        description: 'Resource Deployment Region'
+        description: 'Region (needs to be same as byo vnet location)'
         default: 'southcentralus'
         type: text
         required: false
