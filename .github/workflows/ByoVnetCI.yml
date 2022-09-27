@@ -23,6 +23,16 @@ on:
 
   workflow_dispatch:
     inputs:
+      ResourceGroup:
+        description: 'Which Resource Group to deploy to'
+        default: 'AksBicepAcc-Ci-ByoDeploy'
+        type: string
+        required: false
+      region:
+        description: 'Resource Deployment Region'
+        default: 'southcentralus'
+        type: text
+        required: false
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
         default: false
@@ -53,7 +63,6 @@ concurrency: ci-${{ github.ref }}
 
 env:
   AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
-  RG: "Automation-Actions-AksDeployCI"
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "Byov"
   DEPNAME: "Dep${{ github.run_number }}"
@@ -90,7 +99,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: azurecirgs
     if: ${{ !github.event.pull_request.head.repo.fork }}
-
+    outputs:
+      RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
+      REGION: ${{ steps.params.outputs.REGION}}
+      RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
+      
     steps:
       - uses: actions/checkout@v2
 
@@ -129,6 +142,32 @@ jobs:
             $params=$paramFileContent|ConvertFrom-Json
             Write-Output $params.parameters.ingressApplicationGateway.value
           }
+          
+      - name: Parameter Value Augmentation
+        id: params
+        run: |
+            if [ -z "${{ github.event.inputs.region }}" ]
+            then
+              echo "Region parameter not available through GitHub event data, setting default"
+              REGION="EastUs"
+            else
+              echo "Region parameter found in GitHub event (${{ github.event.inputs.region }})"
+              REGION="${{ github.event.inputs.region }}"
+            fi
+            echo $REGION
+            echo "::set-output name=REGION::$REGION"
+            if [ -z "${{ github.event.inputs.ResourceGroup }}" ]
+            then
+              echo "ResourceGroup parameter not available through GitHub event data, setting to default"
+              echo $RG
+              echo "::set-output name=RESOURCEGROUP::$RG"
+            else
+              echo "Resource Group parameter found in GitHub event (${{ github.event.inputs.ResourceGroup }})"
+              echo "::set-output name=RESOURCEGROUP::${{ github.event.inputs.ResourceGroup }}"
+            fi
+            NEWRESNAME="$RESNAME${REGION:0:3}"
+            echo "Setting new Resource Name $NEWRESNAME"
+            echo "::set-output name=NEWRESNAME::$NEWRESNAME"
 
       - name: Azure Login
         uses: Azure/login@v1
@@ -382,8 +421,7 @@ jobs:
         if: github.event.inputs.doDebugSteps == 'true'
         run: |
           RG='${{ env.RG }}'
-          echo "RG is: $RG"
-
+          echo "RG is: ${{ needs.Validation.outputs.RESOURCEGROUP }}"
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
@@ -518,6 +556,8 @@ jobs:
 
   ReusableWF:
     runs-on: ubuntu-latest
+    env:
+      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     outputs:
       RG: ${{ env.RG }}
       Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
