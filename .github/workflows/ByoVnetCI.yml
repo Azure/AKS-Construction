@@ -23,6 +23,11 @@ on:
 
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Which environment to deploy to'
+        required: true
+        default: "csu"
+        type: environment
       ResourceGroup:
         description: 'Which Resource Group to deploy to'
         default: 'AksBicepAcc-Ci-ByoDeploy'
@@ -97,7 +102,7 @@ jobs:
   #Pre deployment validation of the parameters + bicep code
   Validation:
     runs-on: ubuntu-latest
-    environment: azurecirgs
+    environment: ${{ github.event.inputs.environment }}
     if: ${{ !github.event.pull_request.head.repo.fork }}
     outputs:
       RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
@@ -110,9 +115,6 @@ jobs:
       - name: Job parameter check
         if: github.event.inputs.doDebugSteps == 'true'
         run: |
-          RG='${{ env.RG }}'
-          echo "RG is: $RG"
-
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -186,6 +188,8 @@ jobs:
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         id: activedeps
         if: github.event.inputs.doVerifySteps == 'true'
+        env:
+          RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         uses: Azure/cli@1.0.4
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -193,7 +197,6 @@ jobs:
             echo "AZ CLI version"
             az version
 
-            RG='${{ env.RG }}'
             RUNCOUNT=$(az deployment group list -g $RG --query "[?properties.provisioningState=='Running'].[properties.provisioningState, name] | length(@)" -o tsv)
             echo "Active deployments : $RUNCOUNT"
 
@@ -257,20 +260,22 @@ jobs:
       - name: Create Parameter file imperative override string
         uses: Azure/cli@1.0.4
         id: imperitiveparams
+        env:
+          RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
             PARAMOVERRIDES="resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
             echo $PARAMOVERRIDES
             echo "::set-output name=PARAMOVERRIDES::$PARAMOVERRIDES"
 
       - name: Validate Infrastructure deployment
         uses: Azure/cli@1.0.4
+        env:
+          RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}'
@@ -282,11 +287,12 @@ jobs:
       - name: What If (GA edge Az cli version) (has issues)
         uses: Azure/cli@1.0.4
         id: edgeWhatIf
+        env:
+          RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         continue-on-error: true #Setting to true due to bug in the AzureCLI https://github.com/Azure/azure-cli/issues/19850
         with:
           azcliversion: ${{ env.AZCLIVERSION }} #latest
           inlineScript: |
-            RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
@@ -309,10 +315,11 @@ jobs:
         uses: Azure/cli@1.0.4
         continue-on-error: true #Setting to true due to bug in the AzureCLI https://github.com/Azure/azure-cli/issues/19850
         if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
+        env:
+          RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         with:
           azcliversion: 2.26.0
           inlineScript: |
-            RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
@@ -404,7 +411,11 @@ jobs:
   Deploy:
     runs-on: ubuntu-latest
     needs: [Validation]
-    environment: azurecirgs
+    environment: csu
+    env:
+      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
+      REGION: ${{ needs.Validation.outputs.REGION }}
+      RESNAME: ${{ needs.Validation.outputs.RESNAME }}
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME}}
       LANAME : ${{ steps.deployAks.outputs.LANAME}}
@@ -420,8 +431,7 @@ jobs:
       - name: Job parameter check
         if: github.event.inputs.doDebugSteps == 'true'
         run: |
-          RG='${{ env.RG }}'
-          echo "RG is: ${{ needs.Validation.outputs.RESOURCEGROUP }}"
+          echo "RG is: ${{ env.RG }}"
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}
           echo "Deployment name is ${{ env.DEPNAME }}
@@ -453,7 +463,6 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
             PARAMS="resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
@@ -489,7 +498,6 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            RG='${{ env.RG }}'
             AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
             AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
 
@@ -510,7 +518,6 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
-            $RG='${{ env.RG }}'
             $AKSNAME='${{ steps.deployAks.outputs.AKSNAME}}'
             $AGNAME='${{ steps.deployAks.outputs.AGNAME}}'
 
@@ -639,15 +646,15 @@ jobs:
   DeployVerify:
     runs-on: ubuntu-latest
     needs: [Deploy]
+    env:
+      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     steps:
       - uses: actions/checkout@v2
 
       - name: Param check
         if: github.event.inputs.doDebugSteps == 'true'
         run: |
-          RG='${{ env.RG }}'
-          echo "RG is: $RG"
-
+          echo "RG is $RG"
           echo "Param file path is: ${{ env.ParamFilePath }}"
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
@@ -711,6 +718,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
     needs: [Validation, Deploy, Troubleshoot, DeployVerify, SmokeTest_SimpleApp, Well_Architected]
+    env:
+      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     steps:
       - name: Azure Login
         uses: Azure/login@v1
