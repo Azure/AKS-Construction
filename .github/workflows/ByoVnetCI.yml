@@ -240,7 +240,7 @@ jobs:
             $featureCsi.properties.state
 
             if ($featureCsi.properties.state -ne 'Registered') {
-              Write-Ouput $featureCsi
+              Write-Output $featureCsi
               Write-Error "$feature NOT registered"
             } else { Write-Output "-- Looks like $feature is registered properly" }
           }
@@ -252,7 +252,7 @@ jobs:
             $featureCsi.properties.state
 
             if ($featureCsi.properties.state -ne 'Registered') {
-              Write-Ouput $featureCsi
+              Write-Output $featureCsi
               Write-Error "$feature NOT registered"
             } else { Write-Output "-- Looks like $feature is registered properly" }
           }
