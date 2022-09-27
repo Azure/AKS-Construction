@@ -63,8 +63,7 @@ The Byo workflow has expectations of existing resource being in the Azure Subscr
 1. Subnet for App GW
 1. Nat Gateway (assigned to Aks subnet)
 1. Public IP Address (assigned to Nat Gateway for outbound)
-1. KeyVault with KMS key
-1. DNS Zone
+1. Public DNS Zone (used by External DNS in the smoke tests)
 
 GitHub secrets are used to store the resourceIds/names of these existing resources.
 When re-homing to a new target subscription, these resource should be created.
