@@ -253,7 +253,7 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            PARAMOVERRIDES="resourceName=$RESNAME location=${{ steps.params.outputs.REGION}} byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
+            PARAMOVERRIDES="resourceName=$RESNAME location=${{ steps.params.outputs.REGION}} byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.BYODNSZONEID }}"
             echo $PARAMOVERRIDES
             echo "::set-output name=PARAMOVERRIDES::$PARAMOVERRIDES"
 
