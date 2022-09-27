@@ -106,7 +106,7 @@ jobs:
           $params = Get-Content $paramFilePath | ConvertFrom-Json
 
           if($params.parameters.dnsZoneId.value -ne $null) {
-            $params.parameters.dnsZoneId.value = "${{ secrets.DnsIdAzdemocouk }}"
+            $params.parameters.dnsZoneId.value = "${{ secrets.BYODNSZONEID }}"
           }
           if($params.parameters.byoAKSSubnetId.value -ne $null) {
             $params.parameters.byoAKSSubnetId.value = "${{ secrets.ByoAksSubnetId }}"
