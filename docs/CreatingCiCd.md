@@ -61,6 +61,7 @@ The Byo workflow has expectations of existing resource being in the Azure Subscr
 1. Subnet for AKS
 1. Subnet for App GW
 1. Nat Gateway (assigned to Aks subnet)
+1. Public IP Address (assigned to Nat Gateway for outbound)
 1. KeyVault with KMS key
 1. DNS Zone
 
@@ -90,6 +91,16 @@ You need to create the RBAC for the service principal on the resource groups.
 az feature register -n AutoUpgradePreview --namespace Microsoft.ContainerService
 ```
 
+### SubnetNotAssociatedWithNATGateway
 
+> SubnetNotAssociatedWithNATGateway. Subnet '***' must have a NAT gateway associated for outbound connection
+
+AKS is configured to use Nat Gatway for egress. It needs to be created and associated to the subnet.
+
+### Nat Gateway Public IP
+
+> NAT gateway '/subscriptions/***/resourceGroups/AksBicepAcc-Ci-DeployVnet/providers/Microsoft.Network/natGateways/ngw-AksBicepAcc-Ci-Byo' must have at least one public IP or IP prefix associated for outbound connection.
+
+A Public IP address needs to be allocated to the Nat Gateway resource.
 
 
