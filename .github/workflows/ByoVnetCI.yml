@@ -233,18 +233,6 @@ jobs:
           $paramFileContent=Get-Content $paramFilePath
           $params=$paramFileContent|ConvertFrom-Json
 
-          if($params.parameters.upgradeChannel.value -ne $null) {
-            $feature='AutoUpgradePreview'
-            write-output "-- $feature"
-            $featureCsi = $aksfeatures |  Where-Object {$_.name -like "*$feature"}
-            $featureCsi.properties.state
-
-            if ($featureCsi.properties.state -ne 'Registered') {
-              Write-Output $featureCsi
-              Write-Error "$feature NOT registered"
-            } else { Write-Output "-- Looks like $feature is registered properly" }
-          }
-
           if($params.parameters.keyVaultAksCSI.value -eq $true) {
             $feature='AKS-AzureKeyVaultSecretsProvider'
             write-output "-- $feature"
