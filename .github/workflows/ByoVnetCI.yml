@@ -453,7 +453,7 @@ jobs:
           inlineScript: |
             RESNAME='${{ env.RESNAME }}'
             DEPNAME='Dep${{ github.run_number }}'
-            PARAMS="resourceName=$RESNAME byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
+            PARAMS="resourceName=$RESNAME location=$REGION byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.DnsIdAzdemocouk }}"
 
             az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS --name $DEPNAME --verbose
 
