@@ -49,6 +49,7 @@ The Service Principal created in the first step will need to be assigned specifi
 ```bash
 assigneeObjectId=$(az ad sp show --id "REDACTED-CLIENTID" --query id -o tsv)
 az role assignment create --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/$SUBID/resourcegroups/AksBicepAcc-Ci-PrivateCluster" --assignee-object-id $assigneeObjectId --assignee-principal-type ServicePrincipal
+az role assignment create --role "Key Vault Certificates Officer" --scope "/subscriptions/$SUBID/resourcegroups/AksBicepAcc-Ci-PrivateCluster" --assignee-object-id $assigneeObjectId --assignee-principal-type ServicePrincipal
 ```
 
 ### Starter & Private CiCd workflows
@@ -82,6 +83,12 @@ You need to create the RBAC for the service principal on the resource groups.
 
 > *** Error: list: failed to list: secrets is forbidden: User \"REDACTED\" cannot list resource \"secrets\" in API group \"\" in the namespace \"default\": User does not have access to the resource in Azure. Update role assignment to allow access.\n", "provisioningState": "Succeeded", "reason": null, 
 
+### Key Vault Certificate problem
+
+> creating akv cert openjdk-demo
+> ERROR: Caller is not authorized to perform action on resource.
+
+You need to create the RBAC for the service principal on the resource groups.
 
 ### AutoUpgradePreview NOT registered
 
