@@ -555,7 +555,7 @@ jobs:
     env:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     outputs:
-      RG: ${{ env.RG }}
+      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
       Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
     steps:
       - name: Dummy step
@@ -563,7 +563,9 @@ jobs:
       - name: Explain more
         run: echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
       - name: Job parameter inspection
-        run: echo ${{ github.event.inputs.doSmokeTestUninstall }}
+        run: |
+          echo ${{ github.event.inputs.doSmokeTestUninstall }}
+          echo $RG
 
   Post-Deploy:
     needs: [Deploy, ReusableWF]
