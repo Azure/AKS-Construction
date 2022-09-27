@@ -1,6 +1,7 @@
 # Creating CI
 
 This document walks through the setup of the Azure resources needed to create the 3 core CI/CD workflows that run in this repo.
+
 The intended audience is maintainers of this repository.
 
 1. Starter cluster workflow
@@ -57,10 +58,11 @@ az role assignment create --role "Azure Kubernetes Service RBAC Cluster Admin" -
 The Byo workflow has expectations of existing resource being in the Azure Subscription.
 
 1. Virtual Network
-2. Subnet for AKS
-3. Subnet for App GW
-4. KeyVault with KMS key
-5. DNS Zone
+1. Subnet for AKS
+1. Subnet for App GW
+1. Nat Gateway (assigned to Aks subnet)
+1. KeyVault with KMS key
+1. DNS Zone
 
 GitHub secrets are used to store the resourceIds/names of these existing resources.
 When re-homing to a new target subscription, these resource should be created.
