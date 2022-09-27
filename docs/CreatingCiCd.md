@@ -1,6 +1,7 @@
 # Creating CI
 
 This document walks through the setup of the Azure resources needed to create the 3 core CI/CD workflows that run in this repo.
+The intended audience is maintainers of this repository.
 
 1. Starter cluster workflow
 2. Private cluster workflow
