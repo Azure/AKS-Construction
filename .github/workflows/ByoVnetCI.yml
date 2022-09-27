@@ -147,11 +147,13 @@ jobs:
           
       - name: Parameter Value Augmentation
         id: params
+        env:
+          DEFAULTRGNAME: AksBicepAcc-Ci-ByoDeploy
         run: |
             if [ -z "${{ github.event.inputs.region }}" ]
             then
               echo "Region parameter not available through GitHub event data, setting default"
-              REGION="EastUs"
+              REGION="southcentralus"
             else
               echo "Region parameter found in GitHub event (${{ github.event.inputs.region }})"
               REGION="${{ github.event.inputs.region }}"
@@ -161,8 +163,8 @@ jobs:
             if [ -z "${{ github.event.inputs.ResourceGroup }}" ]
             then
               echo "ResourceGroup parameter not available through GitHub event data, setting to default"
-              echo $RG
-              echo "::set-output name=RESOURCEGROUP::$RG"
+              echo $DEFAULTRGNAME
+              echo "::set-output name=RESOURCEGROUP::$DEFAULTRGNAME"
             else
               echo "Resource Group parameter found in GitHub event (${{ github.event.inputs.ResourceGroup }})"
               echo "::set-output name=RESOURCEGROUP::${{ github.event.inputs.ResourceGroup }}"
