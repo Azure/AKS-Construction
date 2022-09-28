@@ -375,12 +375,14 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             </Stack.Item>
 
-            <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
+            <Stack.Item align="start" styles={{ root: { maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
                 <Label style={{ marginBottom: "0px" }}>Private dns zone mode for private cluster.</Label>
                 <Stack tokens={{ childrenGap: 15 }}>
                     {cluster.apisecurity === "private" &&
                     <>
-                        <ChoiceGroup selectedKey={cluster.privateClusterDnsMethod} onChange={(ev, { key }) => updateFn("privateClusterDnsMethod", key)}
+                        <ChoiceGroup selectedKey={cluster.privateClusterDnsMethod}
+                        onChange={(ev, { key }) => updateFn("privateClusterDnsMethod", key)}
+                        styles={{ root: { marginLeft: '50px' } }}
                             options={[
                                 {
                                     key: 'none',
