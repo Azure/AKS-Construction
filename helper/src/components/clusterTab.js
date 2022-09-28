@@ -240,11 +240,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             <Separator className="notopmargin" />
 
             <Stack horizontal tokens={{ childrenGap: 142 }} styles={{ root: { marginTop: 10 } }}>
-                <Stack.Item>
+                <Stack.Item align="start">
+                    <Label>Cluster User Authentication <Link target="_" href="https://docs.microsoft.com/azure/aks/managed-aad">docs</Link></Label>
+
                     <ChoiceGroup
                         id='cluster-userauth-ChoiceGroup'
                         styles={{ root: { marginLeft: '50px' } }}
-                        label={<Label>Cluster User Authentication <Link target="_" href="https://docs.microsoft.com/azure/aks/managed-aad">docs</Link></Label>}
                         selectedKey={cluster.enable_aad}
                         onChange={(ev, { key }) => updateFn("enable_aad", key)}
                         options={[
@@ -338,6 +339,42 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     onChange={(ev, { key }) => updateFn("apisecurity", key)}
                 />
             </Stack.Item>
+            <Stack.Item align="start" styles={{ root: { marginLeft: '100px',maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
+                <Label style={{ marginBottom: "0px" }}>Private dns zone mode for private cluster.</Label>
+                <Stack tokens={{ childrenGap: 15 }}>
+                    {cluster.apisecurity === "private" &&
+                    <>
+                        <ChoiceGroup selectedKey={cluster.privateClusterDnsMethod} onChange={(ev, { key }) => updateFn("privateClusterDnsMethod", key)}
+                            options={[
+                                {
+                                    key: 'none',
+                                    text: 'None: Defaults to public DNS (AKS will not create a Private DNS Zone)'
+                                }, {
+                                    key: 'system',
+                                    text: 'System: AKS will create a Private DNS Zone in the Managed AKS Resource Group'
+                                }, {
+                                    key: 'privateDnsZone',
+                                    text: 'Custom: BYO Private DNS Zone (provide ResourceId)'
+                                }
+                            ]} />
+                            {cluster.privateClusterDnsMethod==='privateDnsZone' &&
+                                <>
+                                    <MessageBar messageBarType={MessageBarType.info}>Custom Private DNS Zones are useful for having more control on zone naming or for shared zones in other resource groups, in most cases System created DNS should be sufficient</MessageBar>
+                                    <TextField
+                                       value={cluster.dnsApiPrivateZoneId}
+                                       onChange={(ev, v) => updateFn("dnsApiPrivateZoneId", v)}
+                                       errorMessage={getError(invalidArray, 'dnsApiPrivateZoneId')}
+                                       required
+                                       placeholder="Resource Id"
+                                       label={<Text style={{ fontWeight: 600 }}>Enter your Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FprivateDnsZones">find it here</Link></Text>}
+                                       />
+                                    <MessageBar messageBarType={MessageBarType.warning}>Private DNS Zone for the Cluster API Server must be in the format: privatelink.*region*.azmk8s.io or *subzone*.privatelink.*region*.azmk8s.io<a target="_target" href="https://docs.microsoft.com/azure/aks/private-clusters#configure-private-dns-zone">docs</a></MessageBar>
+                                </>
+                            }
+                        </>
+                    }
+                </Stack>
+            </Stack.Item>
 
             <Separator className="notopmargin" />
 
@@ -375,44 +412,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             </Stack.Item>
 
-            <Stack.Item align="start" styles={{ root: { maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
-                <Label style={{ marginBottom: "0px" }}>Private dns zone mode for private cluster.</Label>
-                <Stack tokens={{ childrenGap: 15 }}>
-                    {cluster.apisecurity === "private" &&
-                    <>
-                        <ChoiceGroup selectedKey={cluster.privateClusterDnsMethod}
-                        onChange={(ev, { key }) => updateFn("privateClusterDnsMethod", key)}
-                        styles={{ root: { marginLeft: '50px' } }}
-                            options={[
-                                {
-                                    key: 'none',
-                                    text: 'None: Defaults to public DNS (AKS will not create a Private DNS Zone)'
-                                }, {
-                                    key: 'system',
-                                    text: 'System: AKS will create a Private DNS Zone in the Managed AKS Resource Group'
-                                }, {
-                                    key: 'privateDnsZone',
-                                    text: 'Custom: BYO Private DNS Zone (provide ResourceId)'
-                                }
-                            ]} />
-                            {cluster.privateClusterDnsMethod==='privateDnsZone' &&
-                                <>
-                                    <MessageBar messageBarType={MessageBarType.info}>Custom Private DNS Zones are useful for having more control on zone naming or for shared zones in other resource groups, in most cases System created DNS should be sufficient</MessageBar>
-                                    <TextField
-                                       value={cluster.dnsApiPrivateZoneId}
-                                       onChange={(ev, v) => updateFn("dnsApiPrivateZoneId", v)}
-                                       errorMessage={getError(invalidArray, 'dnsApiPrivateZoneId')}
-                                       required
-                                       placeholder="Resource Id"
-                                       label={<Text style={{ fontWeight: 600 }}>Enter your Private Azure DNS Zone ResourceId <Link target="_t2" href="https://ms.portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.Network%2FprivateDnsZones">find it here</Link></Text>}
-                                       />
-                                    <MessageBar messageBarType={MessageBarType.warning}>Private DNS Zone for the Cluster API Server must be in the format: privatelink.*region*.azmk8s.io or *subzone*.privatelink.*region*.azmk8s.io<a target="_target" href="https://docs.microsoft.com/azure/aks/private-clusters#configure-private-dns-zone">docs</a></MessageBar>
-                                </>
-                            }
-                        </>
-                    }
-                </Stack>
-            </Stack.Item>
 
             { defenderFeatureFlag &&
             <>
