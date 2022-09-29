@@ -602,6 +602,7 @@ jobs:
     needs: [Deploy, ReusableWF, Post-Deploy]
     uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.2
     with:
+      REPOREF: "0.9.2"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
@@ -620,6 +621,7 @@ jobs:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr]
     uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.2
     with:
+      REPOREF: "0.9.2"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
