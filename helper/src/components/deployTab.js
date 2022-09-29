@@ -301,7 +301,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
     <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
       {!allok &&
-        <MessageBar messageBarType={MessageBarType.severeWarning}>
+        <MessageBar messageBarType={MessageBarType.error}>
           <Text >Configuration not complete, please correct the tabs with the warning symbol <b>({invalidTabs.join(' & ')})</b> before deploying</Text>
         </MessageBar>
       }
@@ -370,9 +370,9 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
       <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Deploy Cluster</b><Image src="./bicep.png" alt="Built with bicep" /> <p style={{ marginLeft: '10px' }}>powered by Bicep</p></div> </Separator>
 
       {Object.keys(preview_params).length > 0 &&
-        <MessageBar messageBarType={MessageBarType.warning}>
-          <Text >Your deployment contains Preview features: <b>{Object.keys(preview_params).join(', ')}</b>, Ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b>  before running the script, <Link target="_pv" href="https://aka.ms/aks/previews">see here</Link>, or disable preview features here</Text>
-          <Toggle styles={{ root: { marginTop: "10px" } }} onText='preview enabled' offText="preview disabled" checked={!deploy.disablePreviews} onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
+        <MessageBar messageBarType={MessageBarType.severeWarning}>
+          <Text variant={'mediumPlus'} >Your deployment contains <b>Preview Features</b> which may require subscription registration and have Azure Region limitations. Please ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b> before running the relevant scripts.<br />Preview Features you have selected: <b>{Object.keys(preview_params).join(', ')}</b>.</Text>
+          <Toggle styles={{ root: { marginTop: "10px" } }} onText='previews enabled' offText="previews disabled" checked={!deploy.disablePreviews} onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
         </MessageBar>
 
       }
