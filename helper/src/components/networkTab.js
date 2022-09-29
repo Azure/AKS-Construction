@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Image, ImageFit, Link, Separator, TextField, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, Dropdown, Slider } from '@fluentui/react';
+import { Image, ImageFit, Link, Separator, TextField, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, Slider } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 
 const columnProps = {
@@ -22,10 +22,10 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
         updateFn("cniDynamicIpAllocation", v)
 
         //update max pods to 250 if dynamic IP allocation is enabled
-        v==true ? updateFn("maxpods", 250) : updateFn("maxpods", defaults.net.maxpods)
+        v===true ? updateFn("maxpods", 250) : updateFn("maxpods", defaults.net.maxpods)
 
         //update pod cidr
-        v==true ? updateFn("podCidr", defaults.net.podCidr.replace("/22","/24")) : updateFn("podCidr", defaults.net.podCidr)
+        v===true ? updateFn("podCidr", defaults.net.podCidr.replace("/22","/24")) : updateFn("podCidr", defaults.net.podCidr)
     }
 
     return (
@@ -135,14 +135,14 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                 <Label>CNI Enhancements (Custom VNet & BYO Only)</Label>
                 <Checkbox
                     styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
-                    disabled={net.vnet_opt === 'default'}
+                    disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure'}
                     checked={net.cniDynamicIpAllocation}
                     onChange={(ev, v) => UpdateDynamicIpAllocation(v)}
                     label="Implement Dynamic Allocation of IPs" />
 
                 <Checkbox
                     styles={{ root: { marginLeft: '50px', marginTop: '20 !important' } }}
-                    disabled={net.vnet_opt === 'default'}
+                    disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure'}
                     checked={net.networkPluginMode}
                     onChange={(ev, v) => updateFn("networkPluginMode", v)}
                     label="CNI Overlay Network (*preview)" />
@@ -189,7 +189,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                                         key: 'byo',
                                         disabled: false,
                                         iconProps: { iconName: 'WebAppBuilderFragment' }, // SplitObject
-                                        text: 'BYO VNET (TBC)'
+                                        text: 'BYO VNET'
                                     }
                                 ]}
                             />
