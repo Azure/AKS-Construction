@@ -79,7 +79,7 @@ Capture the subnet id and save into the appropriate GitHub secret.
 
 You need to create the RBAC for the service principal on the resource groups.
 
-> *** Error: list: failed to list: secrets is forbidden: User \"REDACTED\" cannot list resource \"secrets\" in API group \"\" in the namespace \"default\": User does not have access to the resource in Azure. Update role assignment to allow access.\n", "provisioningState": "Succeeded", "reason": null, 
+> *** Error: list: failed to list: secrets is forbidden: User \"REDACTED\" cannot list resource \"secrets\" in API group \"\" in the namespace \"default\": User does not have access to the resource in Azure. Update role assignment to allow access.\n", "provisioningState": "Succeeded", "reason": null,
 
 ### Key Vault Certificate problem
 
@@ -100,7 +100,7 @@ az feature register -n AutoUpgradePreview --namespace Microsoft.ContainerService
 
 > SubnetNotAssociatedWithNATGateway. Subnet '***' must have a NAT gateway associated for outbound connection
 
-AKS is configured to use Nat Gatway for egress. It needs to be created and associated to the subnet.
+AKS is configured to use Nat Gateway for egress. It needs to be created and associated to the subnet.
 
 ### Nat Gateway Public IP
 
