@@ -2,7 +2,7 @@
     "baselineRI": {
         "title": "AKS Baseline",
         "icon": "Dictionary",
-        "disabled" : true,
+        "disabled" : false,
         "sections": [
             {
                 "key": "baselineRI",
@@ -17,7 +17,7 @@
                         "title": "Standard",
                         "linksrc" : "https://github.com/mspnp/aks-baseline",
                         "description": {
-                            "title": "Standard Workload",
+                            "title": "Standard Workload V2",
                             "bulets": [
                                 {
                                     "description": "Cluster auto-scaler (2-4 nodes)",
@@ -48,12 +48,12 @@
                                 "apisecurity": "none",
                                 "autoscale": true,
                                 "agentCount": 2,
-                                "maxCount": 4,
+                                "maxCount": 10,
                                 "upgradeChannel": "none",
                                 "DefenderForContainers": true
                             },
                             "addons": {
-                                "networkPolicy": "none",
+                                "networkPolicy": "azure",
                                 "registry": "Basic",
                                 "azurepolicy": "audit",
                                 "ingress": "none",
@@ -64,7 +64,7 @@
                             "net": {
                                 "vnetprivateend": false,
                                 "vnet_opt": "default",
-                                "afw": false
+                                "afw": true
                             }
                         }
                     },
