@@ -5,9 +5,6 @@
         "template": "bicep/main.bicep"
     },
     "parameters": {
-        "location" : {
-            "value": "westeurope"
-        },
         "resourceName": {
             "value": "byo"
         },
