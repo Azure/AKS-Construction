@@ -140,12 +140,14 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     onChange={(ev, v) => UpdateDynamicIpAllocation(v)}
                     label="Implement Dynamic Allocation of IPs" />
 
+
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginLeft: '50px', marginTop: '15px !important' } }}>Overlay is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters">preview feature</a>. See if it's right for you:<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay">docs</a> </MessageBar>
                 <Checkbox
                     styles={{ root: { marginLeft: '50px', marginTop: '20 !important' } }}
                     disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure'}
                     checked={net.networkPluginMode}
                     onChange={(ev, v) => updateFn("networkPluginMode", v)}
-                    label="CNI Overlay Network (*preview)" />
+                    label="CNI Overlay Network" />
             </Stack.Item>
 
             <Separator className="notopmargin" />
