@@ -22,7 +22,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
         updateFn("cniDynamicIpAllocation", v)
 
         //update max pods to 250 if dynamic IP allocation is enabled
-        v===true ? updateFn("maxpods", 250) : updateFn("maxpods", defaults.net.maxpods)
+        v===true ? updateFn("maxPods", 250) : updateFn("maxPods", defaults.net.maxPods)
 
         //update pod cidr
         v===true ? updateFn("podCidr", defaults.net.podCidr.replace("/22","/24")) : updateFn("podCidr", defaults.net.podCidr)
@@ -133,13 +133,13 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
             <Stack.Item>
                 <Label>CNI Enhancements (Custom VNet & BYO Only)</Label>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginLeft: '50px', marginTop: '15px !important' } }}>Dynamic IP allocation separates node IP's and Pod IP's by subnet allowing dynamic allocation of Pod IPs <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/configure-azure-cni#dynamic-allocation-of-ips-and-enhanced-subnet-support">docs</a> </MessageBar>
                 <Checkbox
                     styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
                     disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure'}
                     checked={net.cniDynamicIpAllocation}
                     onChange={(ev, v) => UpdateDynamicIpAllocation(v)}
                     label="Implement Dynamic Allocation of IPs" />
-
 
                 <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginLeft: '50px', marginTop: '15px !important' } }}>Overlay is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters">preview feature</a>. See if it's right for you:<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay">docs</a> </MessageBar>
                 <Checkbox
@@ -159,8 +159,8 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     buttonProps={{ "data-testid": "network-maxpods-slider"}}
                     styles={{ root: { width: 450 } }}
                     label={'Pods per node'} min={10}  max={250} step={1}
-                    value={net.maxpods} showValue={true}
-                    onChange={(val, range) => updateFn("maxpods", val)}
+                    value={net.maxPods} showValue={true}
+                    onChange={(val, range) => updateFn("maxPods", val)}
                 />
             </Stack.Item>
 

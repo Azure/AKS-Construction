@@ -94,7 +94,7 @@
             "gitops": "none"
         },
         "net": {
-            "maxpods": 30,
+            "maxPods": 30,
             "networkPlugin": "azure",
             "afw": false,
             "bastion": false,
