@@ -626,10 +626,10 @@ jobs:
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
       DNSRG: ${{needs.ReusableWF.outputs.ExistingDnsDomainRg}}
-      DNSRECORDNAME: openjdk-kvssl
+      DNSRECORDNAME: openjdk-keyvssl
       AKVNAME: ${{ needs.Deploy.outputs.AKVNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
-      APPNAME: openjdk-kvssl
+      APPNAME: openjdk-keyvssl
       FRONTENDCERTTYPE: appgw-selfsigned
       FORCEHELMCLEANINSTALL: true
       UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
