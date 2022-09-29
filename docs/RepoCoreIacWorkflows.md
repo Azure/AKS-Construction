@@ -1,8 +1,8 @@
-# Creating CI
+# Repository Core IaC Workflows
 
 This document walks through the setup of the Azure resources needed to create the 3 core CI/CD workflows that run in this repo.
 
-The intended audience is maintainers of this repository.
+The intended audience is maintainers of this repository, in the scenario where we need to reimplement the dependencies for the workflows.
 
 1. Starter cluster workflow
 2. Private cluster workflow
@@ -13,7 +13,6 @@ The intended audience is maintainers of this repository.
 Create a service principal using the Azure CLI
 
 ```bash
-#SUBID=""
 SUBID=$(az account show --query id -o tsv)
 
 az ad sp create-for-rbac --name "AksBicepAcc-CI" --role owner \
@@ -108,5 +107,3 @@ AKS is configured to use Nat Gatway for egress. It needs to be created and assoc
 > NAT gateway '/subscriptions/***/resourceGroups/AksBicepAcc-Ci-DeployVnet/providers/Microsoft.Network/natGateways/ngw-AksBicepAcc-Ci-Byo' must have at least one public IP or IP prefix associated for outbound connection.
 
 A Public IP address needs to be allocated to the Nat Gateway resource.
-
-
