@@ -168,7 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     needs: [Validation, Deploy, SmokeTest_SimpleApp]
-    if: github.event_name == 'schedule'
+    if: github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
         uses: Azure/login@v1.4.3
