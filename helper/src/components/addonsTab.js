@@ -369,7 +369,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     KEDA : Enable Kubernetes Event-driven Autoscaling (KEDA) on the AKS Cluster (<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/keda-deploy-add-on-arm#prerequisites">*preview</a>)
                     (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/keda-about">docs</a>)
                 </Label>
-                <Checkbox styles={{ root: { marginLeft: '50px' } }} checked={addons.kedaAddon} onChange={(ev, v) => updateFn("kedaAddon", v)} label="Install the KEDA AddOn" />
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} checked={addons.kedaAddon} onChange={(ev, v) => updateFn("kedaAddon", v, 'https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites')} label="Install the KEDA AddOn" />
             </Stack.Item>
 
             <Separator className="notopmargin" />

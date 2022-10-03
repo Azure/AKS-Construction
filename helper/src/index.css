@@ -82,3 +82,13 @@ code {
     height: 60px;
     margin-top: 20px
 }
+
+.previewFeatureModal .ms-Modal-scrollableContent {
+    /* display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch; */
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
