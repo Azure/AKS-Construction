@@ -225,10 +225,10 @@ get_image_property_awk () {
 #fi
 
 ingress_controller_kind="deployment"
-ingress_externalTrafficPolicy="cluster"
+ingress_externalTrafficPolicy="Cluster"
 if [ "$ingressEveryNode" ]; then
     ingress_controller_kind="daemonset"
-    ingress_externalTrafficPolicy="local"
+    ingress_externalTrafficPolicy="Local"
 fi
 ingress_metrics_enabled=false
 if [ "$monitor" = "oss" ]; then
