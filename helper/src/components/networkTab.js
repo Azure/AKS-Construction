@@ -28,6 +28,14 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
         v===true ? updateFn("podCidr", defaults.net.podCidr.replace("/22","/24")) : updateFn("podCidr", defaults.net.podCidr)
     }
 
+    function UpdateCniOverlay(v) {
+        //update the networkPluginMode property, where this fn was called from
+        updateFn("networkPluginMode", v)
+
+        //update node subnet to a nice small /24 if overlay is enabled, otherwise use the default
+        v===true ? updateFn("vnetAksSubnetAddressPrefix", "10.240.0.0/24") : updateFn("vnetAksSubnetAddressPrefix", defaults.net.vnetAksSubnetAddressPrefix)
+    }
+
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -146,7 +154,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     styles={{ root: { marginLeft: '50px', marginTop: '20 !important' } }}
                     disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure'}
                     checked={net.networkPluginMode}
-                    onChange={(ev, v) => updateFn("networkPluginMode", v)}
+                    onChange={(ev, v) => UpdateCniOverlay(v)}
                     label="CNI Overlay Network" />
             </Stack.Item>
 

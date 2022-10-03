@@ -95,6 +95,8 @@
         },
         "net": {
             "maxPods": 30,
+            "cniDynamicIpAllocation": false,
+            "networkPluginMode": false,
             "networkPlugin": "azure",
             "afw": false,
             "bastion": false,
