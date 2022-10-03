@@ -1212,7 +1212,7 @@ var aksProperties = union({
     #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
     networkPolicy: networkPolicy
     networkPluginMode: networkPlugin=='azure' ? networkPluginMode : ''
-    podCidr: networkPlugin=='kubenet' ? podCidr : json('null')
+    podCidr: networkPlugin=='kubenet' || cniDynamicIpAllocation ? podCidr : json('null')
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
@@ -1264,6 +1264,14 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
 }
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+
+@description('This output can be directly leveraged when creating a ManagedId Federated Identity')
+output aksOidcFedIdentityProperties object = {
+  issuer: oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+  audiences: ['api://AzureADTokenExchange']
+  subject: 'system:serviceaccount:ns:svcaccount'
+}
+
 output aksNodeResourceGroup string = aks.properties.nodeResourceGroup
 //output aksNodePools array = [for nodepool in agentPoolProfiles: name]
 
