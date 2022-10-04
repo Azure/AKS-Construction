@@ -26,7 +26,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
         //update pod cidr
         v===true ? updateFn("podCidr", defaults.net.podCidr.replace("/22","/24")) : updateFn("podCidr", defaults.net.podCidr)
-    }
+}
 
     function UpdateCniOverlay(v) {
         //update the networkPluginMode property, where this fn was called from
@@ -34,6 +34,8 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
         //update node subnet to a nice small /24 if overlay is enabled, otherwise use the default
         v===true ? updateFn("vnetAksSubnetAddressPrefix", "10.240.0.0/24") : updateFn("vnetAksSubnetAddressPrefix", defaults.net.vnetAksSubnetAddressPrefix)
+
+        v===true ? updateFn("podCidr", '10.244.0.0/16') : updateFn("podCidr", defaults.net.podCidr)
     }
 
     return (
@@ -144,15 +146,15 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                 <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginLeft: '50px', marginTop: '15px !important' } }}>Dynamic IP allocation separates node IP's and Pod IP's by subnet allowing dynamic allocation of Pod IPs <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/configure-azure-cni#dynamic-allocation-of-ips-and-enhanced-subnet-support">docs</a> </MessageBar>
                 <Checkbox
                     styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
-                    disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure'}
+                    disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure' || net.networkPluginMode}
                     checked={net.cniDynamicIpAllocation}
                     onChange={(ev, v) => UpdateDynamicIpAllocation(v)}
                     label="Implement Dynamic Allocation of IPs" />
 
-                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginLeft: '50px', marginTop: '15px !important' } }}>Overlay is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters">preview feature</a>. See if it's right for you:<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay">docs</a> </MessageBar>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginLeft: '50px', marginTop: '15px !important' } }}>Overlay is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters">preview feature</a> that leverages a private CIDR for Pod IP's. See if it's right for you:<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay">docs</a> </MessageBar>
                 <Checkbox
                     styles={{ root: { marginLeft: '50px', marginTop: '20 !important' } }}
-                    disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure'}
+                    disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure' || net.cniDynamicIpAllocation}
                     checked={net.networkPluginMode}
                     onChange={(ev, v) => UpdateCniOverlay(v)}
                     label="CNI Overlay Network" />
@@ -300,7 +302,7 @@ function PodServiceNetwork({ net, updateFn }) {
         <Stack {...columnProps}>
             <Label>Kubernetes Networking Configuration</Label>
             <Stack.Item styles={{root: {width: '380px'}}} align="start">
-                <TextField  prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet' && !net.cniDynamicIpAllocation} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' ? net.podCidr : (net.cniDynamicIpAllocation ? net.podCidr : "Using CNI, POD IPs from subnet")} />
+                <TextField  prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet' && !net.cniDynamicIpAllocation && !net.networkPluginMode} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' || net.cniDynamicIpAllocation || net.networkPluginMode ? net.podCidr : "Using CNI, POD IPs from subnet"} />
             </Stack.Item>
             <Stack.Item styles={{root: {width: '380px'}}} align="start">
                 <TextField prefix="Cidr" label="Service Network" onChange={(ev, val) => updateFn("serviceCidr", val)} value={net.serviceCidr} />
