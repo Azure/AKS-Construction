@@ -26,7 +26,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
         //update pod cidr
         v===true ? updateFn("podCidr", defaults.net.podCidr.replace("/22","/24")) : updateFn("podCidr", defaults.net.podCidr)
-}
+    }
 
     function UpdateCniOverlay(v) {
         //update the networkPluginMode property, where this fn was called from
