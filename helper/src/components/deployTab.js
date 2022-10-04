@@ -372,7 +372,11 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
       {Object.keys(preview_params).length > 0 &&
         <MessageBar messageBarType={MessageBarType.severeWarning}>
           <Text variant={'mediumPlus'} >Your deployment contains <b>Preview Features</b> which may require subscription registration and have Azure Region limitations. Please ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b> before running the relevant scripts.<br />Preview Features you have selected: <b>{Object.keys(preview_params).join(', ')}</b>.</Text>
-          <Toggle styles={{ root: { marginTop: "10px" } }} onText='Exclude preview features from deployment' offText="Include preview features in deployment" checked={!deploy.disablePreviews} onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
+          <Checkbox
+            styles={{ root: { marginTop: "10px" } }}
+            label='Include preview features in deployment'
+            checked={!deploy.disablePreviews}
+            onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
         </MessageBar>
 
       }
