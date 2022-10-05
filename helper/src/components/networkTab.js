@@ -117,7 +117,7 @@ export default function NetworkTab ({ tabValues, updateFn, invalidArray, feature
                     label="Implement Azure Firewall & UDR next hop" />
 
                 {net.azureFirewallsSku=='Basic' &&
-                    <MessageBar styles={{ root: { marginLeft: '50px', width:'500px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Basic SKU is currently a preview service <Link href="https://learn.microsoft.com/en-gb/azure/firewall/deploy-firewall-basic-portal-policy#prerequisites">(*preview))</Link></MessageBar>
+                    <MessageBar styles={{ root: { marginLeft: '50px', width:'500px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Basic SKU is currently a preview service <Link href="https://learn.microsoft.com/en-gb/azure/firewall/deploy-firewall-basic-portal-policy#prerequisites">(*preview)</Link></MessageBar>
                 }
                 <Dropdown
                     styles={{ root: { marginLeft: '50px', width: '200px', marginTop: '10 !important' } }}
