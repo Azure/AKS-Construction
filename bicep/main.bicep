@@ -100,7 +100,6 @@ param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 @description('The address range for Azure Firewall Management in your custom vnet')
 param vnetFirewallManagementSubnetAddressPrefix string = '10.240.51.0/26'
 
-
 @description('Enable support for private links (required custom_vnet)')
 param privateLinks bool = false
 
@@ -532,6 +531,13 @@ param certManagerFW bool = false
 // @description('Allow Http traffic (80/443) into AKS from specific sources')
 // param inboundHttpFW string = ''
 
+@allowed([
+  'Basic'
+  'Premium'
+  'Standard'
+])
+param azureFirewallSku string = 'Standard'
+
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
   params: {
@@ -539,8 +545,8 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     location: location
     workspaceDiagsId: createLaw ? aks_law.id : ''
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
-    fwSku: 'Basic'
-    fwManagementSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwMgmtSubnetId : ''
+    fwSku: azureFirewallSku
+    fwManagementSubnetId: azureFirewalls && custom_vnet && azureFirewallSku=='Basic' ? network.outputs.fwMgmtSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     certManagerFW: certManagerFW
     appDnsZoneName: !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''
