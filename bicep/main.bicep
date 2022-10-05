@@ -95,6 +95,12 @@ param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
 @description('The address range for Azure Firewall in your custom vnet')
 param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 
+@minLength(9)
+@maxLength(18)
+@description('The address range for Azure Firewall Management in your custom vnet')
+param vnetFirewallManagementSubnetAddressPrefix string = '10.240.51.0/26'
+
+
 @description('Enable support for private links (required custom_vnet)')
 param privateLinks bool = false
 
@@ -122,6 +128,7 @@ module network './network.bicep' = if (custom_vnet) {
     vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
     azureFirewalls: azureFirewalls
     vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
+    vnetFirewallManagementSubnetAddressPrefix: vnetFirewallManagementSubnetAddressPrefix
     privateLinks: privateLinks
     privateLinkSubnetAddressPrefix: privateLinkSubnetAddressPrefix
     privateLinkAcrId: privateLinks && !empty(registries_sku) ? acr.id : ''
@@ -532,6 +539,8 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     location: location
     workspaceDiagsId: createLaw ? aks_law.id : ''
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
+    fwSku: 'Basic'
+    fwManagementSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwMgmtSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     certManagerFW: certManagerFW
     appDnsZoneName: !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''

@@ -13,7 +13,10 @@ param networkSecurityGroups bool = true
 
 //Firewall
 param azureFirewalls bool = false
+param azureFirewallsSku string = 'Basic'
+param azureFirewallsManagementSeperation bool = azureFirewallsSku=='Basic'
 param vnetFirewallSubnetAddressPrefix string = ''
+param vnetFirewallManagementSubnetAddressPrefix string = ''
 
 //Ingress
 param ingressApplicationGateway bool = false
@@ -98,6 +101,15 @@ module calcAzFwIp './calcAzFwIp.bicep' = if (azureFirewalls) {
   }
 }
 
+var fwmgmt_subnet_name = 'AzureFirewallManagementSubnet' // Required by FW
+var fwmgmt_subnet = {
+  name: fwmgmt_subnet_name
+  properties: {
+    addressPrefix: vnetFirewallManagementSubnetAddressPrefix
+  }
+}
+
+
 var routeFwTableName = 'rt-afw-${resourceName}'
 resource vnet_udr 'Microsoft.Network/routeTables@2021-02-01' = if (azureFirewalls) {
   name: routeFwTableName
@@ -134,14 +146,19 @@ var aks_baseSubnet =  {
       }
     }: {})
 }
+
 var aks_subnet = networkSecurityGroups ? union(aks_baseSubnet, nsgAks.outputs.nsgSubnetObj) : aks_baseSubnet
 
-var subnets_1 = azureFirewalls ? concat(array(aks_subnet), array(fw_subnet)) : array(aks_subnet)
-var subnets_2 = privateLinks ? concat(array(subnets_1), array(private_link_subnet)) : array(subnets_1)
-var subnets_3 = acrPrivatePool ? concat(array(subnets_2), array(acrpool_subnet)) : array(subnets_2)
-var subnets_4 = bastion ? concat(array(subnets_3), array(bastion_subnet)) : array(subnets_3)
-
-var final_subnets = ingressApplicationGateway ? concat(array(subnets_4), array(appgw_subnet)) : array(subnets_4)
+var subnets = union(
+  array(aks_subnet),
+  azureFirewalls ? array(fw_subnet) : [],
+  privateLinks ? array(private_link_subnet) : [],
+  acrPrivatePool ? array(acrpool_subnet) : [],
+  bastion ? array(bastion_subnet) : [],
+  ingressApplicationGateway ? array(appgw_subnet) : [],
+  azureFirewallsManagementSeperation ? array(fwmgmt_subnet) : []
+)
+output debugSubnets array = subnets
 
 var vnetName = 'vnet-${resourceName}'
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
@@ -153,13 +170,14 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
         vnetAddressPrefix
       ]
     }
-    subnets: final_subnets
+    subnets: subnets
   }
 }
 output vnetId string = vnet.id
 output vnetName string = vnet.name
 output aksSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, aks_subnet_name)
 output fwSubnetId string = azureFirewalls ? '${vnet.id}/subnets/${fw_subnet_name}' : ''
+output fwMgmtSubnetId string = azureFirewalls ? '${vnet.id}/subnets/${fwmgmt_subnet_name}' : ''
 output acrPoolSubnetId string = acrPrivatePool ? '${vnet.id}/subnets/${acrpool_subnet_name}' : ''
 output appGwSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, appgw_subnet_name)
 output privateLinkSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, private_link_subnet_name)
