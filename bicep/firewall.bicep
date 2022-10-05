@@ -8,13 +8,7 @@ param certManagerFW bool = false
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 param availabilityZones array = []
-
-@allowed([
-  'Basic'
-  'Premium'
-  'Standard'
-])
-param fwSku string = 'Basic'
+param fwSku string
 
 var firewallPublicIpName = 'pip-afw-${resourceName}'
 var firewallManagementPublicIpName = 'pip-mgmt-afw-${resourceName}'
