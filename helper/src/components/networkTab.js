@@ -91,7 +91,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                         <MessageBar messageBarType={MessageBarType.info}>Overlay is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters">preview feature</a> that leverages a private CIDR for Pod IP's. See if it's right for you:<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay">docs</a> </MessageBar>
                         <Checkbox
                             styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
-                            disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure' || net.cniDynamicIpAllocation}
+                            disabled={net.networkPlugin!=='azure' || net.cniDynamicIpAllocation}
                             checked={net.networkPluginMode}
                             onChange={(ev, v) => UpdateCniOverlay(v)}
                             label="CNI Overlay Network" />
