@@ -22,10 +22,18 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
         updateFn("cniDynamicIpAllocation", v)
 
         //update max pods to 250 if dynamic IP allocation is enabled
-        v===true ? updateFn("maxPods", 250) : updateFn("maxPods", defaults.net.maxPods)
+        if (v) {
+            updateFn("maxPods", 250)
+         } else {
+            updateFn("maxPods", defaults.net.maxPods)
+         }
 
         //update pod cidr
-        v===true ? updateFn("podCidr", defaults.net.podCidr.replace("/22","/24")) : updateFn("podCidr", defaults.net.podCidr)
+        if (v) {
+            updateFn("podCidr", defaults.net.podCidr.replace("/22","/24"))
+         } else {
+            updateFn("podCidr", defaults.net.podCidr)
+         }
     }
 
     function UpdateCniOverlay(v) {
@@ -33,9 +41,17 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
         updateFn("networkPluginMode", v)
 
         //update node subnet to a nice small /24 if overlay is enabled, otherwise use the default
-        v===true ? updateFn("vnetAksSubnetAddressPrefix", "10.240.0.0/24") : updateFn("vnetAksSubnetAddressPrefix", defaults.net.vnetAksSubnetAddressPrefix)
+        if (v) {
+            updateFn("vnetAksSubnetAddressPrefix", "10.240.0.0/24")
+         } else {
+            updateFn("vnetAksSubnetAddressPrefix", defaults.net.vnetAksSubnetAddressPrefix)
+         }
 
-        v===true ? updateFn("podCidr", '10.244.0.0/16') : updateFn("podCidr", defaults.net.podCidr)
+        if (v) {
+            updateFn("podCidr", '10.244.0.0/16')
+        } else {
+            updateFn("podCidr", defaults.net.podCidr)
+        }
     }
 
     return (
@@ -54,6 +70,46 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPlugin", key)}
+                />
+            </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item>
+                <Label>CNI Features</Label>
+                <Stack horizontal tokens={{ childrenGap: 15 }} >
+                    <Stack.Item>
+                        <MessageBar messageBarType={MessageBarType.info}>Dynamic IP allocation separates node IP's and Pod IP's by subnet allowing dynamic allocation of Pod IPs <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/configure-azure-cni#dynamic-allocation-of-ips-and-enhanced-subnet-support">docs</a> </MessageBar>
+                        <Checkbox
+                            styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
+                            disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure' || net.networkPluginMode}
+                            checked={net.cniDynamicIpAllocation}
+                            onChange={(ev, v) => UpdateDynamicIpAllocation(v)}
+                            label="Implement Dynamic Allocation of IPs" />
+                    </Stack.Item>
+                    <Stack.Item>
+                        <MessageBar messageBarType={MessageBarType.info}>Overlay is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters">preview feature</a> that leverages a private CIDR for Pod IP's. See if it's right for you:<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay">docs</a> </MessageBar>
+                        <Checkbox
+                            styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
+                            disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure' || net.cniDynamicIpAllocation}
+                            checked={net.networkPluginMode}
+                            onChange={(ev, v) => UpdateCniOverlay(v)}
+                            label="CNI Overlay Network" />
+                    </Stack.Item>
+                </Stack>
+            </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item>
+            <Label>Pods</Label>
+                <MessageBar messageBarType={MessageBarType.info}>When using Azure CNI with Dynamic IP allocation also allows customers to set up clusters that consume fewer IPs. <br/ >This means Pods per Node can be maximised which simplifies sizing the cluster.</MessageBar>
+                <Slider
+                    buttonProps={{ "data-testid": "network-maxpods-slider"}}
+                    styles={{ root: { marginLeft: '50px', width: 450 } }}
+                    label={'Maximum Pods per node'} min={10}  max={250} step={1}
+                    value={net.maxPods} showValue={true}
+                    onChange={(val, range) => updateFn("maxPods", val)}
                 />
             </Stack.Item>
 
@@ -137,48 +193,6 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     checked={net.afw}
                     onChange={(ev, v) => updateFn("afw", v)}
                     label="Implement Azure Firewall & UDR next hop" />
-            </Stack.Item>
-
-            <Separator className="notopmargin" />
-
-            <Stack.Item>
-                <Label>CNI Enhancements (Custom VNet & BYO Only)</Label>
-                <Stack horizontal tokens={{ childrenGap: 15 }} >
-                    <Stack.Item>
-                        <MessageBar messageBarType={MessageBarType.info}>Dynamic IP allocation separates node IP's and Pod IP's by subnet allowing dynamic allocation of Pod IPs <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/configure-azure-cni#dynamic-allocation-of-ips-and-enhanced-subnet-support">docs</a> </MessageBar>
-                        <Checkbox
-                            styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
-                            disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure' || net.networkPluginMode}
-                            checked={net.cniDynamicIpAllocation}
-                            onChange={(ev, v) => UpdateDynamicIpAllocation(v)}
-                            label="Implement Dynamic Allocation of IPs" />
-                    </Stack.Item>
-                    <Stack.Item>
-                        <MessageBar messageBarType={MessageBarType.info}>Overlay is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters">preview feature</a> that leverages a private CIDR for Pod IP's. See if it's right for you:<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay">docs</a> </MessageBar>
-                        <Checkbox
-                            styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
-                            disabled={net.vnet_opt === 'default' || net.networkPlugin!=='azure' || net.cniDynamicIpAllocation}
-                            checked={net.networkPluginMode}
-                            onChange={(ev, v) => UpdateCniOverlay(v)}
-                            label="CNI Overlay Network" />
-                    </Stack.Item>
-                </Stack>
-            </Stack.Item>
-
-            <Separator className="notopmargin" />
-
-            <Stack.Item>
-            <Label>Pods</Label>
-
-
-                <MessageBar messageBarType={MessageBarType.info}>When using Azure CNI with Dynamic IP allocation also allows customers to set up clusters that consume fewer IPs. <br/ >This means Pods per Node can be maximised which simplifies sizing the cluster.</MessageBar>
-                <Slider
-                    buttonProps={{ "data-testid": "network-maxpods-slider"}}
-                    styles={{ root: { marginLeft: '50px', width: 450 } }}
-                    label={'Maximum Pods per node'} min={10}  max={250} step={1}
-                    value={net.maxPods} showValue={true}
-                    onChange={(val, range) => updateFn("maxPods", val)}
-                />
             </Stack.Item>
 
             <Separator className="notopmargin" />
