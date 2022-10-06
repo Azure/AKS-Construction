@@ -108,7 +108,7 @@ jobs:
       RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
       REGION: ${{ steps.params.outputs.REGION}}
       RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
-      
+
     steps:
       - uses: actions/checkout@v2
 
@@ -144,7 +144,7 @@ jobs:
             $params=$paramFileContent|ConvertFrom-Json
             Write-Output $params.parameters.ingressApplicationGateway.value
           }
-          
+
       - name: Parameter Value Augmentation
         id: params
         env:
@@ -691,6 +691,20 @@ jobs:
               Write-Error "CSI Secrets driver not set properly"}
           }
           #grep KeyvaultSecretsProvider
+
+        #Sometimes cluster config works for deployment, but misconfig can
+        #Prevent the cluster from scaling... So lets make sure it can.
+      - name: Scale the cluster up by 1 node
+        shell: pwsh
+        run: |
+          $RG='${{ env.RG }}'
+          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME }}'
+
+          $manualScalePools = az aks show -n $AKSNAME -g $RG --query "agentPoolProfiles[?maxCount==null].{name:name, count:count}" -o json | ConvertFrom-Json
+          $manualScalePools | % { echo "scaling $($_.name)"; az aks scale --resource-group $RG --name $AKSNAME --node-count $($_.pool + 1) --nodepool-name $_.name }
+
+          $autoScalePools = az aks show -n $AKSNAME -g $RG --query "agentPoolProfiles[?maxCount!=null].{name:name, minCount:minCount, maxCount:maxCount}" -o json | ConvertFrom-Json
+          $autoScalePools | % { echo "scaling $($_.name)"; az aks nodepool update -g $RG -n $AKSNAME --name $_.name --min-count $($_.minCount + 1) --maxCount $($_.maxCount + 1)
 
   Troubleshoot:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr, SmokeTest_JavaApp-appgw]
