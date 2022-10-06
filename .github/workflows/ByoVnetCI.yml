@@ -84,7 +84,7 @@ jobs:
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
       - name: PSRule for Azure - Well Architected
-        uses: Microsoft/ps-rule@main
+        uses: microsoft/ps-rule@v2.3.2
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.Azure'
