@@ -36,7 +36,7 @@ on:
       region:
         description: 'Region (needs to be same as byo vnet location)'
         default: 'southcentralus'
-        type: text
+        type: string
         required: false
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
