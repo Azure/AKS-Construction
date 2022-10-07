@@ -39,7 +39,7 @@
             "value": true
           },
           "azureFirewallSku": {
-            "value": "Standard"
+            "value": "Basic"
           },
           "privateLinks": {
             "value": true
