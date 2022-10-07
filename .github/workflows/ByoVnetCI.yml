@@ -36,7 +36,7 @@ on:
       region:
         description: 'Region (needs to be same as byo vnet location)'
         default: 'southcentralus'
-        type: text
+        type: string
         required: false
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
@@ -84,7 +84,7 @@ jobs:
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
       - name: PSRule for Azure - Well Architected
-        uses: Microsoft/ps-rule@main
+        uses: microsoft/ps-rule@v2.3.2
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.Azure'
@@ -108,7 +108,7 @@ jobs:
       RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
       REGION: ${{ steps.params.outputs.REGION}}
       RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
-      
+
     steps:
       - uses: actions/checkout@v2
 
@@ -144,7 +144,7 @@ jobs:
             $params=$paramFileContent|ConvertFrom-Json
             Write-Output $params.parameters.ingressApplicationGateway.value
           }
-          
+
       - name: Parameter Value Augmentation
         id: params
         env:
@@ -691,6 +691,23 @@ jobs:
               Write-Error "CSI Secrets driver not set properly"}
           }
           #grep KeyvaultSecretsProvider
+
+        #Sometimes cluster config works for deployment, but misconfig can
+        #Prevent the cluster from scaling... So lets make sure it can.
+      - name: Scale the cluster up by 1 node
+        shell: pwsh
+        run: |
+          $RG='${{ env.RG }}'
+          $AKSNAME='${{ needs.Deploy.outputs.AKSNAME }}'
+
+          Write-Output "Scaling $AKSNAME in $RG"
+
+          $manualScalePools = az aks show -n $AKSNAME -g $RG --query "agentPoolProfiles[?maxCount==null].{name:name, count:count}" -o json | ConvertFrom-Json
+          $manualScalePools | ForEach-Object { Write-Output "scaling [m] pool $($_.name)"; az aks scale -g $RG -n $AKSNAME --node-count $($_.pool + 1) --nodepool-name $_.name }
+
+          $autoScalePools = az aks show -n $AKSNAME -g $RG --query "agentPoolProfiles[?maxCount!=null].{name:name, minCount:minCount, maxCount:maxCount}" -o json | ConvertFrom-Json
+          $autoScalePools | ForEach-Object { Write-Output "scaling [a] pool $($_.name)"; az aks nodepool update --update-cluster-autoscaler -g $RG --cluster-name $AKSNAME --name $_.name --min-count $($_.minCount + 1) --max-count $($_.maxCount + 1)  }
+
 
   Troubleshoot:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr, SmokeTest_JavaApp-appgw]

@@ -56,7 +56,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     }
 
 
-
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -81,7 +80,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <Stack.Item>
                         <Label >System Pool Type <Link target='_' href='https://docs.microsoft.com/azure/aks/use-system-pools#system-and-user-node-pools'>docs</Link></Label>
                         <ChoiceGroup
-
                             selectedKey={cluster.SystemPoolType}
                             options={[
                                 { "data-testid":'cluster-systempool-none', key: 'none', text: 'No separate system pool: Use a single pool for System and User workloads' },
@@ -112,7 +110,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             ]} />
                     </Stack.Item>
                     <Stack.Item>
-                        <Slider buttonProps={{ "data-testid": "cluster-agentCount-slider"}} styles={{ root: { width: 450 } }} ranged={cluster.autoscale}  lowerValue={cluster.agentCount}
+                        <Slider
+                        buttonProps={{ "data-testid": "cluster-agentCount-slider"}}
+                        styles={{ root: { width: 450 } }}
+                        ranged={cluster.autoscale}  lowerValue={cluster.agentCount}
                         label={`Node count range ${cluster.autoscale ? 'range' : ''}`} min={0}  max={100} step={1}
                         value={cluster.autoscale? cluster.maxCount : cluster.agentCount} showValue={true}
                         onChange={(val, range) => sliderUpdateFn(cluster.autoscale ? {agentCount: range[0], maxCount: range[1]} : {agentCount: val})} />
