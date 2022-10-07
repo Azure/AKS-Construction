@@ -885,6 +885,11 @@ param agentCount int = 3
 param agentCountMax int = 0
 var autoScale = agentCountMax > agentCount
 
+@description('Allocate pod ips dynamically')
+param cniDynamicIpAllocation bool = false
+
+@minValue(10)
+@maxValue(250)
 @description('The maximum number of pods per node.')
 param maxPods int = 30
 
@@ -894,6 +899,13 @@ param maxPods int = 30
 ])
 @description('The network plugin type')
 param networkPlugin string = 'azure'
+
+@allowed([
+  ''
+  'Overlay'
+])
+@description('The network plugin type')
+param networkPluginMode string = ''
 
 @allowed([
   ''
@@ -1214,7 +1226,8 @@ var aksProperties = union({
     networkPlugin: networkPlugin
     #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
     networkPolicy: networkPolicy
-    podCidr: networkPlugin=='kubenet' ? podCidr : json('null')
+    networkPluginMode: networkPlugin=='azure' ? networkPluginMode : ''
+    podCidr: networkPlugin=='kubenet' || cniDynamicIpAllocation ? podCidr : json('null')
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
@@ -1266,6 +1279,14 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
 }
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+
+@description('This output can be directly leveraged when creating a ManagedId Federated Identity')
+output aksOidcFedIdentityProperties object = {
+  issuer: oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+  audiences: ['api://AzureADTokenExchange']
+  subject: 'system:serviceaccount:ns:svcaccount'
+}
+
 output aksNodeResourceGroup string = aks.properties.nodeResourceGroup
 //output aksNodePools array = [for nodepool in agentPoolProfiles: name]
 

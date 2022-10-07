@@ -70,8 +70,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.azurepolicy !== "none" && addons.azurePolicyInitiative !== defaults.addons.azurePolicyInitiative && { azurePolicyInitiative: addons.azurePolicyInitiative }),
     ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}),
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
+    ...((net.vnet_opt === "custom" || net.vnet_opt === "byo") && defaults.net.cniDynamicIpAllocation !== net.cniDynamicIpAllocation && { cniDynamicIpAllocation: true }),
+    ...(net.vnet_opt === "custom" && net.cniDynamicIpAllocation && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
+    ...(defaults.net.maxPods !== net.maxPods && { maxPods: net.maxPods }),
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
     ...(cluster.apisecurity === "private" && cluster.apisecurity === "private" && defaults.cluster.privateClusterDnsMethod !== cluster.privateClusterDnsMethod && { privateClusterDnsMethod: cluster.privateClusterDnsMethod }),
     ...(cluster.apisecurity === "private" && cluster.apisecurity === "private" && cluster.privateClusterDnsMethod === 'privateDnsZone' && { dnsApiPrivateZoneId: cluster.dnsApiPrivateZoneId }),
@@ -126,6 +129,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(defaults.addons.kedaAddon !== addons.kedaAddon && {kedaAddon: addons.kedaAddon }),
     ...(defaults.addons.blobCSIAddon !== addons.blobCSIAddon && {blobCSIAddon: addons.blobCSIAddon }),
     ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {workloadIdentity: addons.workloadIdentity }),
+    ...(net.networkPlugin === 'azure' && net.networkPluginMode && {networkPluginMode: 'Overlay'}),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
   }
 
@@ -299,7 +303,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
     <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
       {!allok &&
-        <MessageBar messageBarType={MessageBarType.severeWarning}>
+        <MessageBar messageBarType={MessageBarType.error}>
           <Text >Configuration not complete, please correct the tabs with the warning symbol <b>({invalidTabs.join(' & ')})</b> before deploying</Text>
         </MessageBar>
       }
@@ -368,9 +372,13 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
       <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Deploy Cluster</b><Image src="./bicep.png" alt="Built with bicep" /> <p style={{ marginLeft: '10px' }}>powered by Bicep</p></div> </Separator>
 
       {Object.keys(preview_params).length > 0 &&
-        <MessageBar messageBarType={MessageBarType.warning}>
-          <Text >Your deployment contains Preview features: <b>{Object.keys(preview_params).join(', ')}</b>, Ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b>  before running the script, <Link target="_pv" href="https://aka.ms/aks/previews">see here</Link>, or disable preview features here</Text>
-          <Toggle styles={{ root: { marginTop: "10px" } }} onText='preview enabled' offText="preview disabled" checked={!deploy.disablePreviews} onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
+        <MessageBar messageBarType={MessageBarType.severeWarning}>
+          <Text variant={'mediumPlus'} >Your deployment contains <b>Preview Features</b> which may require subscription registration and have Azure Region limitations. Please ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b> before running the relevant scripts.<br />Preview Features you have selected: <b>{Object.keys(preview_params).join(', ')}</b>.</Text>
+          <Checkbox
+            styles={{ root: { marginTop: "10px" } }}
+            label='Include preview features in deployment'
+            checked={!deploy.disablePreviews}
+            onChange={(ev, checked) => updateFn("disablePreviews", !checked)} />
         </MessageBar>
 
       }
@@ -454,7 +462,7 @@ on:
 
 jobs:
   reusable_workflow_job:
-    uses: Azure/AKS-Construction/.github/workflows/AKSC_Deploy.yml@main
+    uses: Azure/AKS-Construction/.github/workflows/AKSC_Deploy.yml@${deploy.selectedTemplate}
     with:` + (deploy.selectedTemplate !== 'local' ? `
       templateVersion: ${deploy.selectedTemplate}` : '') + `
       rg: ${deploy.rg}
