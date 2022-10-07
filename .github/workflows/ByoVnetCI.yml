@@ -706,7 +706,7 @@ jobs:
           $manualScalePools | ForEach-Object { Write-Output "scaling [m] pool $($_.name)"; az aks scale -g $RG -n $AKSNAME --node-count $($_.pool + 1) --nodepool-name $_.name }
 
           $autoScalePools = az aks show -n $AKSNAME -g $RG --query "agentPoolProfiles[?maxCount!=null].{name:name, minCount:minCount, maxCount:maxCount}" -o json | ConvertFrom-Json
-          $autoScalePools | ForEach-Object { Write-Output "scaling [a] pool $($_.name)"; az aks nodepool update -g $RG --cluster-name $AKSNAME --name $_.name --min-count $($_.minCount + 1) --max-Count $($_.maxCount + 1) }
+          $autoScalePools | ForEach-Object { Write-Output "scaling [a] pool $($_.name)"; az aks nodepool update -g $RG --cluster-name $AKSNAME --name $_.name --min-count $($_.minCount + 1) --max-Count $($_.maxCount + 1) --update-cluster-autoscaler }
 
 
   Troubleshoot:
