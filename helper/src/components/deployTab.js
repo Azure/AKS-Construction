@@ -460,7 +460,7 @@ on:
 
 jobs:
   reusable_workflow_job:
-    uses: Azure/AKS-Construction/.github/workflows/AKSC_Deploy.yml@main
+    uses: Azure/AKS-Construction/.github/workflows/AKSC_Deploy.yml@${deploy.selectedTemplate}
     with:` + (deploy.selectedTemplate !== 'local' ? `
       templateVersion: ${deploy.selectedTemplate}` : '') + `
       rg: ${deploy.rg}
