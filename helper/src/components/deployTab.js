@@ -198,6 +198,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const deployRelease = deploy.templateVersions.find(t => t.key === deploy.selectedTemplate) || {}
 
+
+  //Bash Post Deployment
   const post_deploycmd =  `\n\n# Deploy charts into cluster\n` +
   (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.post_url}  | bash -s -- `) +
   (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
@@ -218,6 +220,29 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     post_deploycmd.replaceAll('"', '\\"') +
     `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
 
+  //PowerShell Post Deployment
+  const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
+  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.post_url}  | bash -s -- `) +
+  (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
+  Object.keys(post_params).map(k => {
+    const val = post_params[k]
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+    return ` \`\n\t-p ${k}=${targetVal}`
+  }).join('')
+
+  const post_deployPSstr = cluster.apisecurity !== "private" ?
+    '# Get credentials for your new AKS cluster & login (interactive)\n' +
+    `Install-AzAksKubectl \n` +
+    `Import-AzAksCredential -ResourceGroupName ${deploy.rg} -Name ${aks}\n` +
+    'kubectl get nodes' +
+    post_deployPScmd
+    :
+    '# Private cluster, so use command invoke\n' +
+    `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` +
+    post_deployPScmd.replaceAll('"', '\`\"') +
+    `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
+
+
   const deploycmd =
     `# Create Resource Group\n` +
     `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` +
@@ -229,6 +254,27 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       return ` \\\n\t${k}=${targetVal}`
     }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deploystr : '')
 
+  const deployPScmd =
+    `# Create Resource Group\n` +
+    `New-AzResourceGroup -Name ${deploy.rg} -Location ${deploy.location} \n\n` +
+    `# Get Current User ID\n` +
+    `$token = Get-AzAccessToken -Resource "https://graph.microsoft.com/"\n` +
+    `$headers = @{ Authorization = "Bearer $($token.Token)"} \n` +
+    `$user=Invoke-RestMethod https://graph.microsoft.com/v1.0/me -Headers $headers\n` +
+    `$userID=$user.id\n\n` +
+    `# Deploy template with in-line parameters\n` +
+    `New-AzResourceGroupDeployment -ResourceGroupName ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '-TemplateFile  ./bicep/main.bicep' : `-TemplateUri  ${deployRelease.main_url}` }` +
+    Object.keys(finalParams).map(k => {
+      const val = finalParams[k]
+      var targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val.toString()
+      targetVal = (targetVal === "true" || targetVal === "false") ? "$" + targetVal : targetVal //set boolean to correct string for PowerShell
+      //PowerShell doesn't require '[\"' or '\"]' in the string
+      if (k === "authorizedIPRanges" || k === "keyVaultIPAllowlist" ) {
+        targetVal = targetVal.replace(/[()\\[\]" ]+/g, "")
+      }
+      targetVal = targetVal.replace("$(az ad signed-in-user show --query id --out tsv)", "$userID") //Remove AZ command to make fully PowerShell
+      return ` \`\n\t\-${k} ${targetVal}`
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deployPSstr : '')
 
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
 
@@ -384,11 +430,11 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
       <Pivot selectedKey={deploy.deployItemKey}  onLinkClick={({props}) => updateFn('deployItemKey', props.itemKey)}>
 
-        <PivotItem headerText="Command Line" itemKey="deployArmCli" itemIcon="PasteAsCode" >
+        <PivotItem headerText="Bash" itemKey="deployArmCli" itemIcon="PasteAsCode" >
 
           <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
             <Stack.Item>
-              <Label >Commands to deploy your fully operational environment</Label>
+              <Label >Bash commands to deploy your fully operational environment</Label>
               <Text>
                 Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
               </Text>
@@ -415,6 +461,38 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
           }
         </PivotItem>
+
+        <PivotItem headerText="PowerShell" itemKey="deployPSArmCli" itemIcon="PasteAsCode" >
+
+          <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
+            <Stack.Item>
+              <Label >Powershell commands to deploy your fully operational environment</Label>
+              <Text>
+                Requires <Link target="_bl" href="https://learn.microsoft.com/en-us/powershell/azure/install-az-ps?view=azps-8.3.0">AZ CLI PowerShell Module </Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+              </Text>
+            </Stack.Item>
+
+            <Stack.Item  align="end">
+              <Stack horizontal tokens={{childrenGap: 5}}>
+              <Dropdown
+                errorMessage={getError(invalidArray, 'selectedTemplate')}
+                label='Template Version'
+                disabled={process.env.REACT_APP_TEMPLATERELEASE !== undefined}
+                selectedKey={deploy.selectedTemplate}
+                onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
+                options={deploy.templateVersions}
+                styles={{ dropdown: { width: 200 } }}
+              />
+              </Stack>
+            </Stack.Item>
+          </Stack>
+
+          <CodeBlock hideSave={true} lang="PowerShell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployPScmd} testId={'deploy-deploycmd'}/>
+
+          { urlParams.toString() !== "" &&
+            <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
+          }
+          </PivotItem>
 
         <PivotItem headerText="Github Actions" itemKey="github" itemIcon="GitGraph">
             <Stack horizontal tokens={{childrenGap: 30}}>
