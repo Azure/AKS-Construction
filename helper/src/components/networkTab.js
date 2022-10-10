@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Image, ImageFit, Link, Separator, TextField, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, Slider } from '@fluentui/react';
+import { Image, ImageFit, Link, Separator, TextField, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, Slider, Dropdown } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 
 const columnProps = {
@@ -193,6 +193,21 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     checked={net.afw}
                     onChange={(ev, v) => updateFn("afw", v)}
                     label="Implement Azure Firewall & UDR next hop" />
+
+                {net.azureFirewallsSku=='Basic' &&
+                    <MessageBar styles={{ root: { marginLeft: '50px', width:'500px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Basic SKU is currently a preview service <Link href="https://learn.microsoft.com/en-gb/azure/firewall/deploy-firewall-basic-portal-policy#prerequisites">(*preview)</Link></MessageBar>
+                }
+                <Dropdown
+                    styles={{ root: { marginLeft: '50px', width: '200px', marginTop: '10 !important' } }}
+                    disabled={!net.afw}
+                    label="Firewall SKU"
+                    onChange={(ev, { key }) => updateFn("azureFirewallsSku", key)} selectedKey={net.azureFirewallsSku}
+                    options={[
+                        { key: 'Basic', text: 'Basic' },
+                        { key: 'Standard', text: 'Standard' },
+                        { key: 'Premium', text: 'Premium' }
+                    ]}
+                />
             </Stack.Item>
 
             <Separator className="notopmargin" />
@@ -381,6 +396,10 @@ function CustomVNET({ net, addons, updateFn }) {
                 */}
                     <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" disabled={!net.afw} label="Azure Firewall subnet" onChange={(ev, val) => updateFn("vnetFirewallSubnetAddressPrefix", val)} value={net.afw ? net.vnetFirewallSubnetAddressPrefix : "No Firewall requested"} />
+                    </Stack.Item>
+
+                    <Stack.Item style={{ marginLeft: "20px"}}>
+                        <TextField prefix="Cidr" disabled={!net.afw || net.azureFirewallsSku!=='Basic'} label="Azure Firewall management subnet" onChange={(ev, val) => updateFn("vnetFirewallManagementSubnetAddressPrefix", val)} value={net.afw ? (net.azureFirewallsSku=='Basic' ? net.vnetFirewallManagementSubnetAddressPrefix : 'Management subnet for Basic SKU') : "No Firewall requested"} />
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
