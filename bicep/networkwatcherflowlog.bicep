@@ -12,6 +12,11 @@ param workspaceId string = ''
 param workspaceResourceId string = ''
 param workspaceRegion string = resourceGroup().location
 
+resource networkWatcher 'Microsoft.Network/networkWatchers@2022-01-01' = {
+  name: 'NetworkWatcher_${location}'
+  location: location
+  properties: {}
+}
 
 resource nsgFlowLogs 'Microsoft.Network/networkWatchers/flowLogs@2021-05-01' = {
   name: 'NetworkWatcher_${location}/${name}'
@@ -38,4 +43,7 @@ resource nsgFlowLogs 'Microsoft.Network/networkWatchers/flowLogs@2021-05-01' = {
       }
     }
   }
+  dependsOn: [
+    networkWatcher
+  ]
 }

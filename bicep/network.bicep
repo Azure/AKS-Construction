@@ -339,6 +339,7 @@ resource log 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = if
 }
 
 param CreateNsgFlowLogs bool = false
+
 var flowLogStorageRawName = replace(toLower('stflow${resourceName}${uniqueString(resourceGroup().id, resourceName)}'),'-','')
 var flowLogStorageName = length(flowLogStorageRawName) > 24 ? substring(flowLogStorageRawName, 0, 24) : flowLogStorageRawName
 resource flowLogStor 'Microsoft.Storage/storageAccounts@2021-08-01' = if(CreateNsgFlowLogs && networkSecurityGroups) {
