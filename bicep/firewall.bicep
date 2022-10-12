@@ -2,16 +2,44 @@ param resourceName string
 param location string = resourceGroup().location
 param workspaceDiagsId string = ''
 param fwSubnetId string
+param fwManagementSubnetId string = ''
 param vnetAksSubnetAddressPrefix string
 param certManagerFW bool = false
 param acrPrivatePool bool = false
 param acrAgentPoolSubnetAddressPrefix string = ''
 param availabilityZones array = []
+param fwSku string
 
 var firewallPublicIpName = 'pip-afw-${resourceName}'
+var firewallManagementPublicIpName = 'pip-mgmt-afw-${resourceName}'
+
+var managementIpConfig = {
+  name: 'MgmtIpConf'
+  properties: {
+    publicIPAddress: {
+      id: !empty(fwManagementSubnetId) ? fwManagementIp_pip.id : null
+    }
+    subnet:{
+      id: !empty(fwManagementSubnetId) ? fwManagementSubnetId : null
+    }
+  }
+}
 
 resource fw_pip 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
   name: firewallPublicIpName
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  zones: !empty(availabilityZones) ? availabilityZones : []
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    publicIPAddressVersion: 'IPv4'
+  }
+}
+
+resource fwManagementIp_pip 'Microsoft.Network/publicIPAddresses@2021-03-01' = if(fwSku=='Basic') {
+  name: firewallManagementPublicIpName
   location: location
   sku: {
     name: 'Standard'
@@ -63,11 +91,14 @@ resource fwDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
 param appDnsZoneName string = ''
 
 var fw_name = 'afw-${resourceName}'
-resource fw 'Microsoft.Network/azureFirewalls@2021-03-01' = {
+resource fw 'Microsoft.Network/azureFirewalls@2022-01-01' = {
   name: fw_name
   location: location
   zones: !empty(availabilityZones) ? availabilityZones : []
   properties: {
+    sku: {
+      tier: fwSku
+    }
     ipConfigurations: [
       {
         name: 'IpConf1'
@@ -81,22 +112,22 @@ resource fw 'Microsoft.Network/azureFirewalls@2021-03-01' = {
         }
       }
     ]
+    managementIpConfiguration: !empty(fwManagementSubnetId) ? managementIpConfig : null
     threatIntelMode: 'Alert'
     firewallPolicy: {
       id: fwPolicy.id
-
     }
     applicationRuleCollections: []
     networkRuleCollections: []
   }
 }
 
-resource fwPolicy 'Microsoft.Network/firewallPolicies@2020-11-01' = {
+resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
   name: 'afwp-${resourceName}'
   location: location
   properties: {
     sku: {
-      tier: 'Standard'
+      tier: fwSku
     }
     threatIntelMode: 'Alert'
     threatIntelWhitelist: {
@@ -106,7 +137,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2020-11-01' = {
   }
 }
 
-resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
+resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
   parent: fwPolicy
   name: 'AKSConstructionRuleGroup'
   properties: {
