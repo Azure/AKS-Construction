@@ -43,4 +43,7 @@ resource nsgFlowLogs 'Microsoft.Network/networkWatchers/flowLogs@2021-05-01' = {
       }
     }
   }
+  dependsOn: [
+    networkWatcher
+  ]
 }
