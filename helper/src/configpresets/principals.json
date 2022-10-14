@@ -48,7 +48,7 @@
                                 },
                                 {
                                     "description": "Prometheus/Grafana Monitoring",
-                                    "linksrc": "https://coreos.com/operators/prometheus/docs/latest/user-guides/getting-started.html"
+                                    "linksrc": "https://prometheus-operator.dev/docs/user-guides/getting-started/"
                                 },
                                 {
                                     "description": "DockerHub container registry"
