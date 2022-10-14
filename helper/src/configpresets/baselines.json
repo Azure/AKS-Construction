@@ -2,7 +2,7 @@
     "baselineRI": {
         "title": "AKS Baseline",
         "icon": "Dictionary",
-        "disabled" : false,
+        "disabled" : true,
         "sections": [
             {
                 "key": "baselineRI",

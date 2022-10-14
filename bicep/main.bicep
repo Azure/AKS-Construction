@@ -95,6 +95,11 @@ param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
 @description('The address range for Azure Firewall in your custom vnet')
 param vnetFirewallSubnetAddressPrefix string = '10.240.50.0/24'
 
+@minLength(9)
+@maxLength(18)
+@description('The address range for Azure Firewall Management in your custom vnet')
+param vnetFirewallManagementSubnetAddressPrefix string = '10.240.51.0/26'
+
 @description('Enable support for private links (required custom_vnet)')
 param privateLinks bool = false
 
@@ -122,6 +127,7 @@ module network './network.bicep' = if (custom_vnet) {
     vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
     azureFirewalls: azureFirewalls
     vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
+    vnetFirewallManagementSubnetAddressPrefix: vnetFirewallManagementSubnetAddressPrefix
     privateLinks: privateLinks
     privateLinkSubnetAddressPrefix: privateLinkSubnetAddressPrefix
     privateLinkAcrId: privateLinks && !empty(registries_sku) ? acr.id : ''
@@ -525,6 +531,13 @@ param certManagerFW bool = false
 // @description('Allow Http traffic (80/443) into AKS from specific sources')
 // param inboundHttpFW string = ''
 
+@allowed([
+  'Basic'
+  'Premium'
+  'Standard'
+])
+param azureFirewallSku string = 'Standard'
+
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   name: 'firewall'
   params: {
@@ -532,6 +545,8 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
     location: location
     workspaceDiagsId: createLaw ? aks_law.id : ''
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
+    fwSku: azureFirewallSku
+    fwManagementSubnetId: azureFirewalls && custom_vnet && azureFirewallSku=='Basic' ? network.outputs.fwMgmtSubnetId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     certManagerFW: certManagerFW
     appDnsZoneName: !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''
@@ -870,6 +885,11 @@ param agentCount int = 3
 param agentCountMax int = 0
 var autoScale = agentCountMax > agentCount
 
+@description('Allocate pod ips dynamically')
+param cniDynamicIpAllocation bool = false
+
+@minValue(10)
+@maxValue(250)
 @description('The maximum number of pods per node.')
 param maxPods int = 30
 
@@ -879,6 +899,13 @@ param maxPods int = 30
 ])
 @description('The network plugin type')
 param networkPlugin string = 'azure'
+
+@allowed([
+  ''
+  'Overlay'
+])
+@description('The network plugin type')
+param networkPluginMode string = ''
 
 @allowed([
   ''
@@ -1199,7 +1226,8 @@ var aksProperties = union({
     networkPlugin: networkPlugin
     #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
     networkPolicy: networkPolicy
-    podCidr: networkPlugin=='kubenet' ? podCidr : json('null')
+    networkPluginMode: networkPlugin=='azure' ? networkPluginMode : ''
+    podCidr: networkPlugin=='kubenet' || cniDynamicIpAllocation ? podCidr : json('null')
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
@@ -1251,6 +1279,14 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
 }
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+
+@description('This output can be directly leveraged when creating a ManagedId Federated Identity')
+output aksOidcFedIdentityProperties object = {
+  issuer: oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+  audiences: ['api://AzureADTokenExchange']
+  subject: 'system:serviceaccount:ns:svcaccount'
+}
+
 output aksNodeResourceGroup string = aks.properties.nodeResourceGroup
 //output aksNodePools array = [for nodepool in agentPoolProfiles: name]
 

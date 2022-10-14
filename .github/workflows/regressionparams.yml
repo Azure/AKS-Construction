@@ -23,7 +23,7 @@ on:
     - cron: "0 23 * * 4"
 
 env:
-  RG: "Automation-Actions-AksPureValidation" #The resource group we're deploying to.
+  RG: "AksBicepAcc-Ci-HelperValidate" #The resource group we're deploying to.
   ParamDir: ".github/workflows_dep/regressionparams/" #Path to parameter file
   AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
 
@@ -106,7 +106,7 @@ jobs:
           $params = Get-Content $paramFilePath | ConvertFrom-Json
 
           if($params.parameters.dnsZoneId.value -ne $null) {
-            $params.parameters.dnsZoneId.value = "${{ secrets.DnsIdAzdemocouk }}"
+            $params.parameters.dnsZoneId.value = "${{ secrets.BYODNSZONEID }}"
           }
           if($params.parameters.byoAKSSubnetId.value -ne $null) {
             $params.parameters.byoAKSSubnetId.value = "${{ secrets.ByoAksSubnetId }}"
