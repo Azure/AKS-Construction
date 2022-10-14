@@ -19,7 +19,7 @@ resource networkWatcher 'Microsoft.Network/networkWatchers@2022-01-01' = {
 }
 
 resource nsgFlowLogs 'Microsoft.Network/networkWatchers/flowLogs@2021-05-01' = {
-  name: 'NetworkWatcher_${location}/${name}'
+  name: '${networkWatcher.name}/${name}'
   location: location
   properties: {
     targetResourceId: nsgId
@@ -43,7 +43,4 @@ resource nsgFlowLogs 'Microsoft.Network/networkWatchers/flowLogs@2021-05-01' = {
       }
     }
   }
-  dependsOn: [
-    networkWatcher
-  ]
 }
