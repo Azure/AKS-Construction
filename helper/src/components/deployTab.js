@@ -221,8 +221,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
 
   const networkWatcher = net.nsg && net.nsgFlowLogs !== defaults.net.nsgFlowLogs ?
-    `# Create Network Watcher Resource Group If It Doesn't Exist\n ` +
-    `if [ $(az group exists --name NetworkWatcherRG) = false ]; then az group create -l ${deploy.location} -n NetworkWatcherRG; fi\n\n` : ''
+    `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
+  `if [ $(az group exists --name NetworkWatcherRG) = false ]; then az group create -l ${deploy.location} -n NetworkWatcherRG; fi\n\n` : ''
 
   const deploycmd =
     `# Create Resource Group\n` +
