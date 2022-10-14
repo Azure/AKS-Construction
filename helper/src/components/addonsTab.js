@@ -155,6 +155,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
                     {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") &&
                         <>
+                            <MessageBar messageBarType={MessageBarType.warning}>Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configuration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule to Azure Firewall </Link></MessageBar>
                             <Checkbox inputProps={{ "data-testid": "addons-dns"}} checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
                                 <Text>Create FQDN URLs for your applications using
                                     <Link target="_t1" href="https://github.com/kubernetes-sigs/external-dns"> <b>external-dns</b> </Link>
