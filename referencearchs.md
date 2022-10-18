@@ -1,12 +1,12 @@
 # Referenced Projects
 
-## Enterprise Scale
+## Enterprise Scale (Azure Landing Zones)
 
 Enterprise Scale provides prescriptive guidance based on authoritative design for the Azure platform as a whole.
 
 The [AKS Construction helper](https://azure.github.io/AKS-Construction/?default=es) has an Enterprise-Scale lens, with preset configurations for each landing zone area.
 
-## Enterprise-Scale for AKS
+## AKS Landing Zone Accelerator
 
 This is the [parent project](https://github.com/Azure/AKS-Landing-Zone-Accelerator/) that our work belongs to. The reference implementations in this repository are all focussed on guiding the creation of Landing Zones for AKS within an Enterprise Scale framework. They typically include deployments of Hub/Spoke infrastructure and development vm's, and includes a Terraform implementation.
 
