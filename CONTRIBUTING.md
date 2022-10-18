@@ -111,7 +111,7 @@ Assert-PSRule -Module 'PSRule.Rules.Azure' -InputPath $paramPath -Format File -o
 
 The [configuration experience](https://azure.github.io/AKS-Construction/) is hosted in GitHub pages. It's a static web app, written in NodeJS using [FluentUI](https://developer.microsoft.com/en-us/fluentui).
 
-For a deep dive into contributing to the Wizard Web App, please see this [document](docs/ContributingWizard.md).
+For a deep dive into contributing to the Wizard Web App, please see this [document](docs/ContributingHelper.md).
 
 #### Playwright tests
 
