@@ -79,8 +79,8 @@ if [ "$denydefaultNetworkPolicy" ] && [[ ! $denydefaultNetworkPolicy = "true" ]]
  show_usage=true
 fi
 
-if [ "$ingress" ] && [[ ! $ingress =~ (appgw|contour|nginx) ]]; then
- echo "supported ingress paramter values (appgw|contour|nginx)"
+if [ "$ingress" ] && [[ ! $ingress =~ (appgw|contour|nginx|traefik) ]]; then
+ echo "supported ingress paramter values (appgw|contour|nginx|traefik)"
  show_usage=true
 fi
 
@@ -280,6 +280,26 @@ if [ "$ingress" = "nginx" ]; then
         --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \
         --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \
         --namespace ${nginx_namespace}
+fi
+
+if [ "$ingress" = "traefik" ]; then
+
+    traefik_namespace="ingress-basic"
+    traefik_helm_release_name="traefik"
+
+    echo "# ------------------------------------------------"
+    echo "#                 Install Traefik Ingress Controller"
+    kubectl create namespace ${traefik_namespace} --dry-run=client -o yaml | kubectl apply -f -
+    helm repo add traefik https://helm.traefik.io/traefik
+    helm upgrade --install ${traefik_helm_release_name} traefik/traefik \
+        --set controller.publishService.enabled=true \
+        --set controller.kind=${ingress_controller_kind} \
+        --set controller.service.externalTrafficPolicy=${ingress_externalTrafficPolicy} \
+        --set controller.metrics.enabled=${ingress_metrics_enabled} \
+        --set controller.metrics.serviceMonitor.enabled=${ingress_metrics_enabled} \
+        --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \
+        --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \
+        --namespace ${traefik_namespace}
 fi
 
 
