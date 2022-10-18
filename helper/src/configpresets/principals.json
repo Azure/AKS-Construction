@@ -7,6 +7,7 @@
             {
                 "key": "ops",
                 "sectionTitle": "Operations Principles",
+                "sectionDescription" : "The principles driven approach provides flexibility, allowing the user to pick from various options of presets, before fine tuning for their specific needs. Pick an Operations Principle, then pick a Security Principle. Fine tune your deployment using the various tabs in the 'Fine tune & Deploy' section, then return to the 'Deploy' tab and pick your deployment option at the bottom to deploy your resources. If you would like to save your selections for use in the future, click on the link at the bottom of the page to get a custom URL for easy reuse.",
                 "cards": [
                     {
                         "key": "none",

@@ -46,8 +46,8 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
           <Link className="navbar-brand no-outline" >
             <Image src="aks.svg" height="33px" />
           </Link>
-          <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{"color": "red"}}>helper</span></Text>
-          <Text className={titleClass} style={{"marginTop": "6px", "marginLeft": "20px"}}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a></Text>
+          <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{"color": "red"}}>Helper</span></Text>
+          <Text className={titleClass} style={{"marginTop": "6px", "marginLeft": "20px"}}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at the <a href="https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a> docs</Text>
         </div>
         <div style={{ display: "inline-block", float: "right" }}>
 

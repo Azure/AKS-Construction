@@ -418,7 +418,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           <CodeBlock hideSave={true} lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
           { urlParams.toString() !== "" &&
-            <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
+            <Text variant="medium">Not ready to deploy? Bookmark your configuration by copying <a href={"?" + urlParams.toString()}>this link</a></Text>
           }
         </PivotItem>
 
