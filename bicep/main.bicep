@@ -17,6 +17,7 @@ Resource sections
 6. Application Gateway
 7. AKS
 8. Monitoring / Log Analytics
+9. Deployment for telemetry
 */
 
 
@@ -1536,5 +1537,29 @@ resource eventGridDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
   }
 }
 
+@description('Enable usage and telemetry feedback to Microsoft.')
+param enableTelemetry bool = true
+
+var telemetryId = '3c1e2fc6-1c4b-44f9-8694-25d00ae30a3a-${location}'
+
+/*.___________. _______  __       _______ .___  ___.  _______ .___________..______     ____    ____     _______   _______ .______    __        ______   ____    ____ .___  ___.  _______ .__   __. .___________.
+|           ||   ____||  |     |   ____||   \/   | |   ____||           ||   _  \    \   \  /   /    |       \ |   ____||   _  \  |  |      /  __  \  \   \  /   / |   \/   | |   ____||  \ |  | |           |
+`---|  |----`|  |__   |  |     |  |__   |  \  /  | |  |__   `---|  |----`|  |_)  |    \   \/   /     |  .--.  ||  |__   |  |_)  | |  |     |  |  |  |  \   \/   /  |  \  /  | |  |__   |   \|  | `---|  |----`
+    |  |     |   __|  |  |     |   __|  |  |\/|  | |   __|      |  |     |      /      \_    _/      |  |  |  ||   __|  |   ___/  |  |     |  |  |  |   \_    _/   |  |\/|  | |   __|  |  . `  |     |  |
+    |  |     |  |____ |  `----.|  |____ |  |  |  | |  |____     |  |     |  |\  \----.   |  |        |  '--'  ||  |____ |  |      |  `----.|  `--'  |     |  |     |  |  |  | |  |____ |  |\   |     |  |
+    |__|     |_______||_______||_______||__|  |__| |_______|    |__|     | _| `._____|   |__|        |_______/ |_______|| _|      |_______| \______/      |__|     |__|  |__| |_______||__| \__|     |__|     */
+
+//  Telemetry Deployment
+resource telemetrydeployment 'Microsoft.Resources/deployments@2021-04-01' = if (enableTelemetry) {
+  name: telemetryId
+  properties: {
+    mode: 'Incremental'
+    template: {
+      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
+      contentVersion: '1.0.0.0'
+      resources: {}
+    }
+  }
+}
 
 //ACSCII Art link : https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=Star%20Wars&text=changeme
