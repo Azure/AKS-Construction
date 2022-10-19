@@ -294,6 +294,7 @@ if [ "$ingress" = "traefik" ]; then
     helm show values traefik/traefik > values.yaml
     if [ "$ingressEveryNode" ]; then
     sed -i "/^\([[:space:]]*kind: \).*/s//\1DaemonSet/" values.yaml
+    sed -i "/^\([[:space:]]*spec: \).*/s//\1{ externalTrafficPolicy: Local}/" values.yaml
     fi
     helm upgrade --install ${traefik_helm_release_name} traefik/traefik \
         --values values.yaml \
