@@ -33,7 +33,7 @@ while getopts "p:g:n:r:" opt; do
                 echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
                 declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
             else
-                echo "Unknown paramter $i"
+                echo "Unknown parameter $i"
                 show_usage=true
                 break
             fi
@@ -58,7 +58,7 @@ if [ "$dnsZoneId" ]; then
         dnsZoneId_type=${BASH_REMATCH[3]}
         dnsZoneId_domain=${BASH_REMATCH[4]}
     else
-        echo "dnsZoneId paramter needs to be a resourceId format for Azure DNS Zone"
+        echo "dnsZoneId parameter needs to be a resourceId format for Azure DNS Zone"
         show_usage=true
     fi
 
@@ -70,22 +70,22 @@ if [ "$dnsZoneId" ]; then
 fi
 
 if [ "$ingressEveryNode" ] && [[ ! $ingressEveryNode = "true" ]]; then
- echo "supported ingressEveryNode paramter values (true)"
+ echo "supported ingressEveryNode parameter values (true)"
  show_usage=true
 fi
 
 if [ "$denydefaultNetworkPolicy" ] && [[ ! $denydefaultNetworkPolicy = "true" ]]; then
- echo "supported denydefaultNetworkPolicy paramter values (true)"
+ echo "supported denydefaultNetworkPolicy parameter values (true)"
  show_usage=true
 fi
 
 if [ "$ingress" ] && [[ ! $ingress =~ (appgw|contour|nginx|traefik) ]]; then
- echo "supported ingress paramter values (appgw|contour|nginx|traefik)"
+ echo "supported ingress parameter values (appgw|contour|nginx|traefik)"
  show_usage=true
 fi
 
 if [ "$ingressEveryNode" ] && [[ $ingress = "appgw" ]]; then
- echo "ingressEveryNode only supported if ingress paramter is (nginx|contour)"
+ echo "ingressEveryNode only supported if ingress parameter is (nginx|contour)"
  show_usage=true
 fi
 
@@ -291,14 +291,12 @@ if [ "$ingress" = "traefik" ]; then
     echo "#                 Install Traefik Ingress Controller"
     kubectl create namespace ${traefik_namespace} --dry-run=client -o yaml | kubectl apply -f -
     helm repo add traefik https://helm.traefik.io/traefik
+    helm show values traefik/traefik > values.yaml
+    if [ "$ingressEveryNode" ]; then
+    sed -i "/^\([[:space:]]*kind: \).*/s//\1DaemonSet/" values.yaml
+    fi
     helm upgrade --install ${traefik_helm_release_name} traefik/traefik \
-        --set controller.publishService.enabled=true \
-        --set controller.kind=${ingress_controller_kind} \
-        --set controller.service.externalTrafficPolicy=${ingress_externalTrafficPolicy} \
-        --set controller.metrics.enabled=${ingress_metrics_enabled} \
-        --set controller.metrics.serviceMonitor.enabled=${ingress_metrics_enabled} \
-        --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \
-        --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \
+        --values values.yaml \
         --namespace ${traefik_namespace}
 fi
 
