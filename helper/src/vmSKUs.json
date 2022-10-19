@@ -1,0 +1,13 @@
+[
+    { "key": "b", "text": "Burstable (dev/test)", "itemType": "DropdownMenuItemType.Header", "location": "global"},
+    { "key": "Standard_B2s", "text": "2 vCPU,  4 GiB RAM,   8GiB SSD, 40% -> 200% CPU", "eph": false, "location": "global"},
+    { "key": "dv2", "text": "General purpose V2", "itemType": "DropdownMenuItemType.Header", "location": "global"  },
+    { "key": "default", "text": "2 vCPU,  7 GiB RAM,  14GiB SSD,  86 GiB cache (8000 IOPS)", "eph": false, "location": "global"},
+    { "key": "Standard_DS3_v2", "text": "4 vCPU, 14 GiB RAM,  28GiB SSD, 172 GiB cache (16000 IOPS)", "eph": true, "location": "global"},
+    { "key": "dv4", "text": "General purpose V4", "itemType": "DropdownMenuItemType.Header", "location": "global"},
+    { "key": "Standard_D2ds_v4", "text": "2 vCPU,  8 GiB RAM,  75GiB SSD,               (19000 IOPS)", "eph": false, "location": "global"},
+    { "key": "Standard_D4ds_v4", "text": "4 vCPU, 16 GiB RAM, 150GiB SSD, 100 GiB cache (38500 IOPS)", "eph": false, "location": "global"},
+    { "key": "Standard_D8ds_v4", "text": "8 vCPU, 32 GiB RAM, 300GiB SSD,               (77000 IOPS)", "eph": true, "location": "global"},
+    { "key": "fv2", "text": "Compute optimized", "itemType": "DropdownMenuItemType.Header", "location": "global"},
+    { "key": "Standard_F2s_v2", "text": "2 vCPU,  4 GiB RAM,  16GiB SSD,               (3200 IOPS)", "eph": false, "location": "global"}
+]
