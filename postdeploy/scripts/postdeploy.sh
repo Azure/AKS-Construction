@@ -85,7 +85,7 @@ if [ "$ingress" ] && [[ ! $ingress =~ (appgw|contour|nginx|traefik) ]]; then
 fi
 
 if [ "$ingressEveryNode" ] && [[ $ingress = "appgw" ]]; then
- echo "ingressEveryNode only supported if ingress parameter is (nginx|contour)"
+ echo "ingressEveryNode only supported if ingress parameter is (nginx|contour|traefik)"
  show_usage=true
 fi
 
