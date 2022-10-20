@@ -1288,7 +1288,12 @@ output aksOidcFedIdentityProperties object = {
   subject: 'system:serviceaccount:ns:svcaccount'
 }
 
+@description('The name of the managed resource group AKS uses')
 output aksNodeResourceGroup string = aks.properties.nodeResourceGroup
+
+@description('The Azure resource id for the AKS cluster')
+output aksResourceId string = aks.id
+
 //output aksNodePools array = [for nodepool in agentPoolProfiles: name]
 
 @description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
