@@ -9,7 +9,7 @@
     "defaults": {
         "deploy": {
             "enableTelemetry": true,
-            "kubernetesVersion": "1.23.8",
+            "kubernetesVersion": "1.23.12",
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
