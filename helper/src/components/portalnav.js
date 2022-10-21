@@ -207,7 +207,7 @@ export default function PortalNav({ config }) {
     setSelected({ preset: selected.preset, values: { ...selected.values, [sectionKey]: cardKey } })
     setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, sectionKey, cardKey))
 
-    //window.history.replaceState(null, null, "?"+urlParams.toString())
+    window.history.replaceState(null, null, "?"+urlParams.toString())
   }
 
 

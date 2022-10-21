@@ -1,6 +1,6 @@
-# AKS Accelerator
+# AKS Construction
 
-Building a complete Kubernetes operational environment is hard work! __AKS Accelerator__ dramatically speeds up this work by providing the templates and deployment scripts to quickly create a  __fully configured__, Kubernetes environment, tailored to meet your operational and security needs, ready to run your workloads in production.
+Building a complete Kubernetes operational environment is hard work! __AKS Construction__ dramatically accelerates this work by providing the templates and deployment scripts to quickly create a  __fully configured__, Kubernetes environment, tailored to meet your operational and security needs, ready to run your workloads in production.
 
 ![animated preview of AKS Construction Helper](docs/images/animgif.gif)
 
@@ -12,7 +12,7 @@ Building a complete Kubernetes operational environment is hard work! __AKS Accel
 * #### **Step 2** Select your Requirements (optional)
   Select your base `Operational` and `Security` Principles using the presets that have been designed from our field experience
 
-  ![](docs/images/helper-presets.jpg)
+  ![presets](docs/images/helper-presets.jpg)
   <br/>
   > **Note**
   > If following Azure's **Landing Zone** methodology, select `Enterprise Scale` from the dropdown, then select your environment type
@@ -20,11 +20,11 @@ Building a complete Kubernetes operational environment is hard work! __AKS Accel
 * #### **Step 3** Fine tune (optional)
   Use the tabs to fine tune your cluster requirements
 
-  ![](docs/images/helper-tabs.jpg)
+  ![fine tune](docs/images/helper-tabs.jpg)
 * #### **Step 4** Deploy
   In the `Deploy` tab, choose how you will deploy your new cluster, and follow the instructions
 
-  ![](docs/images/helper-deploy.jpg)
+  ![deploy](docs/images/helper-deploy.jpg)
 
 ## Advanced Scenarios
 
