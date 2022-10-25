@@ -295,7 +295,6 @@ if [ "$ingress" = "traefik" ]; then
         --set deployment.kind="${ingress_controller_kind}" \
         --set service.spec.externalTrafficPolicy=${ingress_externalTrafficPolicy} \
         --set metrics.prometheus.enabled=true \
-        --set metrics.prometheus.buckets=0.1,0.3,1.2,5.0 \
         --namespace ${traefik_namespace}
 fi
 
