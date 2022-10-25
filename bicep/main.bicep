@@ -17,6 +17,7 @@ Resource sections
 6. Application Gateway
 7. AKS
 8. Monitoring / Log Analytics
+9. Deployment for telemetry
 */
 
 
@@ -832,7 +833,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.23.8'
+param kubernetesVersion string = '1.23.12'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -1159,11 +1160,10 @@ var aks_addons1 = ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
     enabled: true
     config: {
       applicationGatewayName: appgwName
-      subnetCIDR: '10.2.0.0/16'
+      subnetCIDR: '10.225.0.0/16'
     }
   }
 }) : aks_addons
-
 
 var aks_identity = {
   type: 'UserAssigned'
@@ -1175,7 +1175,6 @@ var aks_identity = {
 @description('Sets the private dns zone id if provided')
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
 output aksPrivateDnsZone string = aksPrivateDnsZone
-
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS-Construction/issues/344')
 var managedNATGatewayProfile =  {
@@ -1287,7 +1286,12 @@ output aksOidcFedIdentityProperties object = {
   subject: 'system:serviceaccount:ns:svcaccount'
 }
 
+@description('The name of the managed resource group AKS uses')
 output aksNodeResourceGroup string = aks.properties.nodeResourceGroup
+
+@description('The Azure resource id for the AKS cluster')
+output aksResourceId string = aks.id
+
 //output aksNodePools array = [for nodepool in agentPoolProfiles: name]
 
 @description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
@@ -1536,5 +1540,29 @@ resource eventGridDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
   }
 }
 
+@description('Enable usage and telemetry feedback to Microsoft.')
+param enableTelemetry bool = true
+
+var telemetryId = '3c1e2fc6-1c4b-44f9-8694-25d00ae30a3a-${location}'
+
+/*.___________. _______  __       _______ .___  ___.  _______ .___________..______     ____    ____     _______   _______ .______    __        ______   ____    ____ .___  ___.  _______ .__   __. .___________.
+|           ||   ____||  |     |   ____||   \/   | |   ____||           ||   _  \    \   \  /   /    |       \ |   ____||   _  \  |  |      /  __  \  \   \  /   / |   \/   | |   ____||  \ |  | |           |
+`---|  |----`|  |__   |  |     |  |__   |  \  /  | |  |__   `---|  |----`|  |_)  |    \   \/   /     |  .--.  ||  |__   |  |_)  | |  |     |  |  |  |  \   \/   /  |  \  /  | |  |__   |   \|  | `---|  |----`
+    |  |     |   __|  |  |     |   __|  |  |\/|  | |   __|      |  |     |      /      \_    _/      |  |  |  ||   __|  |   ___/  |  |     |  |  |  |   \_    _/   |  |\/|  | |   __|  |  . `  |     |  |
+    |  |     |  |____ |  `----.|  |____ |  |  |  | |  |____     |  |     |  |\  \----.   |  |        |  '--'  ||  |____ |  |      |  `----.|  `--'  |     |  |     |  |  |  | |  |____ |  |\   |     |  |
+    |__|     |_______||_______||_______||__|  |__| |_______|    |__|     | _| `._____|   |__|        |_______/ |_______|| _|      |_______| \______/      |__|     |__|  |__| |_______||__| \__|     |__|     */
+
+//  Telemetry Deployment
+resource telemetrydeployment 'Microsoft.Resources/deployments@2021-04-01' = if (enableTelemetry) {
+  name: telemetryId
+  properties: {
+    mode: 'Incremental'
+    template: {
+      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
+      contentVersion: '1.0.0.0'
+      resources: {}
+    }
+  }
+}
 
 //ACSCII Art link : https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=Star%20Wars&text=changeme

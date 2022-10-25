@@ -63,6 +63,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.csisecret === 'akvNew' && deploy.keyVaultIPAllowlist  && apiips_array.length > 0 && {keyVaultIPAllowlist: apiips_array }),
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
+    ...(deploy.enableTelemetry !== defaults.deploy.enableTelemetry && {enableTelemetry: deploy.enableTelemetry }),
     ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(defaults.addons.openServiceMeshAddon !== addons.openServiceMeshAddon && {openServiceMeshAddon: addons.openServiceMeshAddon }),
@@ -128,7 +129,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(defaults.addons.kedaAddon !== addons.kedaAddon && {kedaAddon: addons.kedaAddon }),
     ...(defaults.addons.blobCSIAddon !== addons.blobCSIAddon && {blobCSIAddon: addons.blobCSIAddon }),
-    ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {workloadIdentity: addons.workloadIdentity }),
+    ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {oidcIssuer: true, workloadIdentity: addons.workloadIdentity }),
     ...(net.networkPlugin === 'azure' && net.networkPluginMode && {networkPluginMode: 'Overlay'}),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
   }
@@ -351,7 +352,6 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
           <TextField label="Current IP Address" prefix="IP or Cidr , separated" errorMessage={getError(invalidArray, 'apiips')} onChange={(ev, val) => updateFn("apiips", val)} value={deploy.apiips || ''} required={cluster.apisecurity === "whitelist"} />
 
-
             <Label>Grant AKS Cluster Admin Role <a target="_target" href="https://docs.microsoft.com/en-gb/azure/aks/manage-azure-rbac#create-role-assignments-for-users-to-access-cluster">docs</a></Label>
             <Stack.Item>
               <Checkbox disabled={cluster.enable_aad === false || cluster.enableAzureRBAC === false} checked={deploy.clusterAdminRole} onChange={(ev, v) => updateFn("clusterAdminRole", v)} label="Assign deployment user 'ClusterAdmin'" />
@@ -364,11 +364,14 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
             <Label>Grant Key Vault Certificate and Secret Officer role <a target="_target" href="https://docs.microsoft.com/azure/key-vault/general/rbac-guide?tabs=azure-cli#azure-built-in-roles-for-key-vault-data-plane-operations">docs</a></Label>
             <Stack.Item>
-            <Checkbox disabled={addons.csisecret !== 'akvNew'} checked={deploy.kvCertSecretRole} onChange={(ev, v) => updateFn("kvCertSecretRole", v)} label="Assign deployment user Certificate and Secret Officer" />
-            <Checkbox disabled={addons.csisecret !== 'akvNew' || !net.vnetprivateend} checked={deploy.keyVaultIPAllowlist} onChange={(ev, v) => updateFn("keyVaultIPAllowlist", v)} label="Add current IP to KeyVault firewall (applicable to private link)" />
+              <Checkbox disabled={addons.csisecret !== 'akvNew'} checked={deploy.kvCertSecretRole} onChange={(ev, v) => updateFn("kvCertSecretRole", v)} label="Assign deployment user Certificate and Secret Officer" />
+              <Checkbox disabled={addons.csisecret !== 'akvNew' || !net.vnetprivateend} checked={deploy.keyVaultIPAllowlist} onChange={(ev, v) => updateFn("keyVaultIPAllowlist", v)} label="Add current IP to KeyVault firewall (applicable to private link)" />
             </Stack.Item>
             { deploy.keyVaultIPAllowlist && net.vnetprivateend && <MessageBar messageBarType={MessageBarType.info}> <Text >"Add current IP to KeyVault firewall" will enable KeyVaults  PublicNetworkAccess property</Text></MessageBar> }
 
+            <Stack.Item>
+              <Checkbox checked={deploy.enableTelemetry} onChange={(ev, v) => updateFn("enableTelemetry", v)} label="Enable telemetry feedback to Microsoft" />
+            </Stack.Item>
         </Stack>
 
       </Stack>
@@ -418,7 +421,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           <CodeBlock hideSave={true} lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
           { urlParams.toString() !== "" &&
-            <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
+            <Text variant="medium">Not ready to deploy? Bookmark your configuration by copying <a href={"?" + urlParams.toString()}>this link</a></Text>
           }
         </PivotItem>
 
