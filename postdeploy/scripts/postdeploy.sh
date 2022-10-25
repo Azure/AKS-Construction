@@ -224,10 +224,10 @@ get_image_property_awk () {
 #        fi
 #fi
 
-ingress_controller_kind="deployment"
+ingress_controller_kind="Deployment"
 ingress_externalTrafficPolicy="Cluster"
 if [ "$ingressEveryNode" ]; then
-    ingress_controller_kind="daemonset"
+    ingress_controller_kind="DaemonSet"
     ingress_externalTrafficPolicy="Local"
 fi
 ingress_metrics_enabled=false
@@ -291,13 +291,11 @@ if [ "$ingress" = "traefik" ]; then
     echo "#                 Install Traefik Ingress Controller"
     kubectl create namespace ${traefik_namespace} --dry-run=client -o yaml | kubectl apply -f -
     helm repo add traefik https://helm.traefik.io/traefik
-    helm show values traefik/traefik > values.yaml
-    if [ "$ingressEveryNode" ]; then
-    sed -i "/^\([[:space:]]*kind: \).*/s//\1DaemonSet/" values.yaml
-    sed -i "/^\([[:space:]]*spec: \).*/s//\1{ externalTrafficPolicy: Local}/" values.yaml
-    fi
     helm upgrade --install ${traefik_helm_release_name} traefik/traefik \
-        --values values.yaml \
+        --set deployment.kind="${ingress_controller_kind}" \
+        --set service.spec.externalTrafficPolicy=${ingress_externalTrafficPolicy} \
+        --set metrics.prometheus.enabled=true \
+        --set metrics.prometheus.buckets=0.1,0.3,1.2,5.0 \
         --namespace ${traefik_namespace}
 fi
 
