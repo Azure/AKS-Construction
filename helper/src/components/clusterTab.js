@@ -15,10 +15,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { net, addons, cluster, deploy } = tabValues
     const defenderFeatureFlag = featureFlag.includes('defender')
 
-    VMs = vmSKUs.filter(l => {return l.location.toLowerCase().match(deploy.location.toLowerCase()) || l.location.toLowerCase().match("global")}) //Filter VM Sku list based on location
-
-
     function sliderUpdateFn(updates) {
+
+        VMs = vmSKUs.filter(l => {return l.location.toLowerCase() === (deploy.location.toLowerCase()) && l.computeType.toLowerCase() === cluster.computeType.toLowerCase()}) //Filter VM Sku list based on location
 
         updateFn ((p) => {
             let newp = {...p, ...updates}
@@ -41,6 +40,13 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             } else if (newp.agentCount > AGENT_COUNT_MAX) {
                 updatevals = {...updatevals, agentCount: AGENT_COUNT_MAX }
             }
+
+            //Default to first VM in list when computeType changes
+            if (newp.computeType)
+            {
+               updatevals = {...updatevals, vmSize: VMs[1].key}
+            }
+
 
             return updatevals
         })
@@ -115,8 +121,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <Stack.Item>
                         <Label >Compute Type</Label>
                         <ChoiceGroup
-
-                            selectedKey="gp"
+                            onChange={(ev, { key }) => {  sliderUpdateFn({computeType: key}) }}
+                            selectedKey={cluster.computeType}
                             options={[
                                 {
                                     key: 'gp',
@@ -127,20 +133,19 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                     key: 'iops',
                                     iconProps: { iconName: 'OfflineStorageSolid' },
                                     text: 'IO Optimised',
-                                    disabled: true
                                 },
                                 {
                                     key: 'gpu',
                                     iconProps: { iconName: 'Game' },
                                     text: 'GPU Workloads',
-                                    disabled: true
                                 }
-                            ]} />
+                            ]}
+                            />
                     </Stack.Item>
 
                     <Stack.Item>
                         <Label >Node Size</Label>
-                        <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: 450 } }}>
+                        <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: 500 } }}>
                             <Dropdown
 
                                 selectedKey={cluster.vmSize}

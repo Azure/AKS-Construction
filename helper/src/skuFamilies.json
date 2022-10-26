@@ -1,0 +1,5 @@
+[
+    {"key": "standardDSv2Family", "text": "General Purpose V2", "computeType": "gpu"},
+    {"key": "standardDDSv4Family", "text": "General Purpose V4", "computeType": "gp"},
+    {"key": "standardFSv2Family", "text": "Compute Optimized","computeType": "iops"}
+]

@@ -42,6 +42,7 @@
             "agentCount": 3,
             "maxCount": 20,
             "vmSize": "Standard_DS3_v2",
+            "computeType": "gp",
             "osDiskSizeGB": 0,
             "osDiskType": "Ephemeral",
             "enable_aad": true,
