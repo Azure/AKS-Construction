@@ -5,84 +5,84 @@
     "itemType": 2,
     "eph": false,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "WestEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -90,84 +90,84 @@
     "itemType": 2,
     "eph": false,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "NorthEurope",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -175,84 +175,84 @@
     "itemType": 2,
     "eph": false,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "UKSouth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -260,84 +260,84 @@
     "itemType": 2,
     "eph": false,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "UKWest",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -345,84 +345,84 @@
     "itemType": 2,
     "eph": false,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "UAENorth",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -430,84 +430,84 @@
     "itemType": 2,
     "eph": false,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "CentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -515,84 +515,84 @@
     "itemType": 2,
     "eph": false,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "EastUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -600,84 +600,84 @@
     "itemType": 2,
     "eph": false,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "EastUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -685,84 +685,84 @@
     "itemType": 2,
     "eph": false,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "WestUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -770,84 +770,84 @@
     "itemType": 2,
     "eph": false,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "WestUS2",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDSv2Family",
@@ -855,84 +855,84 @@
     "itemType": 2,
     "eph": false,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11-1_v2",
     "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS11_v2",
     "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
     "eph": false,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-1_v2",
     "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12-2_v2",
     "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS12_v2",
     "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
     "eph": true,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-2_v2",
     "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13-4_v2",
     "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS13_v2",
     "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
     "eph": true,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS2_v2",
     "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
     "eph": false,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS3_v2",
     "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
     "eph": true,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "Standard_DS4_v2",
     "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
     "eph": true,
     "location": "WestCentralUS",
-    "computeType": "gpu"
+    "computeType": "gp"
   },
   {
     "key": "standardDDSv4Family",
@@ -1255,7 +1255,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "WestEurope",
@@ -1284,7 +1284,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "NorthEurope",
@@ -1313,7 +1313,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "UKSouth",
@@ -1342,7 +1342,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "UKWest",
@@ -1371,7 +1371,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "UAENorth",
@@ -1400,7 +1400,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "CentralUS",
@@ -1429,7 +1429,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "EastUS",
@@ -1458,7 +1458,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "EastUS2",
@@ -1487,7 +1487,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "WestUS",
@@ -1516,7 +1516,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "WestUS2",
@@ -1545,7 +1545,7 @@
   },
   {
     "key": "standardFSv2Family",
-    "text": "Compute Optimized",
+    "text": "IO Optimized Compute",
     "itemType": 2,
     "eph": false,
     "location": "WestCentralUS",
@@ -1571,5 +1571,191 @@
     "eph": false,
     "location": "WestCentralUS",
     "computeType": "iops"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "WestEurope",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC4as_T4_v3",
+    "text": "[Standard_NC4as_T4_v3]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "WestEurope",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC8as_T4_v3",
+    "text": "[Standard_NC8as_T4_v3]: 8 vCPU, 56 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "WestEurope",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "NorthEurope",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC4as_T4_v3",
+    "text": "[Standard_NC4as_T4_v3]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "NorthEurope",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC8as_T4_v3",
+    "text": "[Standard_NC8as_T4_v3]: 8 vCPU, 56 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "NorthEurope",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "UKSouth",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC4as_T4_v3",
+    "text": "[Standard_NC4as_T4_v3]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "UKSouth",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC8as_T4_v3",
+    "text": "[Standard_NC8as_T4_v3]: 8 vCPU, 56 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "UKSouth",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "UKWest",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "UAENorth",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "CentralUS",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "EastUS",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC4as_T4_v3",
+    "text": "[Standard_NC4as_T4_v3]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "EastUS",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC8as_T4_v3",
+    "text": "[Standard_NC8as_T4_v3]: 8 vCPU, 56 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "EastUS",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "EastUS2",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC4as_T4_v3",
+    "text": "[Standard_NC4as_T4_v3]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "EastUS2",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC8as_T4_v3",
+    "text": "[Standard_NC8as_T4_v3]: 8 vCPU, 56 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "EastUS2",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "WestUS",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC4as_T4_v3",
+    "text": "[Standard_NC4as_T4_v3]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "WestUS",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC8as_T4_v3",
+    "text": "[Standard_NC8as_T4_v3]: 8 vCPU, 56 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "WestUS",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "WestUS2",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC4as_T4_v3",
+    "text": "[Standard_NC4as_T4_v3]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "WestUS2",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard_NC8as_T4_v3",
+    "text": "[Standard_NC8as_T4_v3]: 8 vCPU, 56 RAM, 1023 SSD , 144 cache (16320 IOPS)",
+    "eph": true,
+    "location": "WestUS2",
+    "computeType": "gpu"
+  },
+  {
+    "key": "Standard%20NCASv3_T4%20Family",
+    "text": "GPU Optimized Compute",
+    "itemType": 2,
+    "eph": false,
+    "location": "WestCentralUS",
+    "computeType": "gpu"
   }
 ]

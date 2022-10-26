@@ -15,9 +15,11 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { net, addons, cluster, deploy } = tabValues
     const defenderFeatureFlag = featureFlag.includes('defender')
 
-    function sliderUpdateFn(updates) {
+    //Initial filter on load
+    VMs = vmSKUs.filter(l => {return l.location.toLowerCase() === (deploy.location.toLowerCase()) && l.computeType.toLowerCase() === cluster.computeType.toLowerCase()}) //Filter VM Sku list based on location
+    console.log("TEST")
 
-        VMs = vmSKUs.filter(l => {return l.location.toLowerCase() === (deploy.location.toLowerCase()) && l.computeType.toLowerCase() === cluster.computeType.toLowerCase()}) //Filter VM Sku list based on location
+    function sliderUpdateFn(updates) {
 
         updateFn ((p) => {
             let newp = {...p, ...updates}
@@ -41,10 +43,11 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 updatevals = {...updatevals, agentCount: AGENT_COUNT_MAX }
             }
 
-            //Default to first VM in list when computeType changes
+            //clear when changing computeType
             if (newp.computeType)
             {
-               updatevals = {...updatevals, vmSize: VMs[1].key}
+               updatevals = {...updatevals, vmSize: null}
+
             }
 
 

@@ -1,5 +1,6 @@
 [
-    {"key": "standardDSv2Family", "text": "General Purpose V2", "computeType": "gpu"},
+    {"key": "standardDSv2Family", "text": "General Purpose V2", "computeType": "gp"},
     {"key": "standardDDSv4Family", "text": "General Purpose V4", "computeType": "gp"},
-    {"key": "standardFSv2Family", "text": "Compute Optimized","computeType": "iops"}
+    {"key": "standardFSv2Family", "text": "IO Optimized Compute","computeType": "iops"},
+    {"key": "Standard%20NCASv3_T4%20Family", "text": "GPU Optimized Compute","computeType": "gpu"}
 ]
