@@ -224,12 +224,12 @@ get_image_property_awk () {
 #        fi
 #fi
 
-ingress_controller_kind="Deployment"
-ingress_externalTrafficPolicy="Cluster"
-if [ "$ingressEveryNode" ]; then
-    ingress_controller_kind="DaemonSet"
-    ingress_externalTrafficPolicy="Local"
-fi
+# ingress_controller_kind="Deployment"
+# ingress_externalTrafficPolicy="Cluster"
+# if [ "$ingressEveryNode" ]; then
+#     ingress_controller_kind="DaemonSet"
+#     ingress_externalTrafficPolicy="Local"
+# fi
 ingress_metrics_enabled=false
 if [ "$monitor" = "oss" ]; then
     ingress_metrics_enabled=true
@@ -264,6 +264,12 @@ fi
 
 if [ "$ingress" = "nginx" ]; then
 
+    ingress_controller_kind="Deployment"
+    ingress_externalTrafficPolicy="Cluster"
+    if [ "$ingressEveryNode" ]; then
+    ingress_controller_kind="DaemonSet"
+    ingress_externalTrafficPolicy="Local"
+    fi
     nginx_namespace="ingress-basic"
     nginx_helm_release_name="nginx-ingress"
 
@@ -284,6 +290,13 @@ fi
 
 if [ "$ingress" = "traefik" ]; then
 
+    ingress_controller_kind="Deployment"
+    ingress_externalTrafficPolicy="Cluster"
+    if [ "$ingressEveryNode" ]; then
+    ingress_controller_kind="DaemonSet"
+    ingress_externalTrafficPolicy="Local"
+    fi
+
     traefik_namespace="ingress-basic"
     traefik_helm_release_name="traefik"
 
@@ -300,6 +313,13 @@ fi
 
 
 if [ "$ingress" = "contour" ]; then
+
+    ingress_controller_kind="deployment"
+    ingress_externalTrafficPolicy="Cluster"
+    if [ "$ingressEveryNode" ]; then
+    ingress_controller_kind="daemonset"
+    ingress_externalTrafficPolicy="Local"
+    fi
 
     contour_namespace="ingress-basic"
     contour_helm_release_name="contour-ingress"
