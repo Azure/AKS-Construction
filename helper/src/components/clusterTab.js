@@ -158,10 +158,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                 options={VMs}
                                 styles={{ dropdown: { width: "100%" } }}
                             />
-
                             {hasError(invalidArray, 'osDiskType') &&
                                 <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'osDiskType')}</MessageBar>
                             }
+                            <TextField label="Custom Node Size" onChange={(ev, val) => updateFn('vmSize', val)} required errorMessage={getError(invalidArray, 'vmSize')} value={cluster.vmSize} />
                             <ChoiceGroup
                                 onChange={(ev, { key }) => updateFn("osDiskType", key)}
                                 selectedKey={cluster.osDiskType}
