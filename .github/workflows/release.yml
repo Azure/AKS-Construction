@@ -50,7 +50,7 @@ jobs:
       - name: Build VM Sku json file
         run: |
           cd postdeploy/scripts
-          ./generate-vm-sku-list.sh
+          ./generate-vm-sku-list-v2.sh
 
       - name: Build node app with bicep release
         run: |
