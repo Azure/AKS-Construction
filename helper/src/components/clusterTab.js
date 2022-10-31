@@ -17,7 +17,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
     //Initial filter on load
     VMs = vmSKUs.filter(l => {return l.location.toLowerCase() === (deploy.location.toLowerCase()) && l.computeType.toLowerCase() === cluster.computeType.toLowerCase()}) //Filter VM Sku list based on location
-    console.log("TEST")
 
     function sliderUpdateFn(updates) {
 
@@ -136,11 +135,13 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                     key: 'iops',
                                     iconProps: { iconName: 'OfflineStorageSolid' },
                                     text: 'IO Optimised',
+                                    disabled: true
                                 },
                                 {
                                     key: 'gpu',
                                     iconProps: { iconName: 'Game' },
                                     text: 'GPU Workloads',
+                                    disabled: true
                                 }
                             ]}
                             />

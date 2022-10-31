@@ -47,6 +47,10 @@ jobs:
       - name: Job Parameter Checking
         run: |
           echo "GitHub Ref: ${{ github.ref }}"
+      - name: Build VM Sku json file
+        run: |
+          cd postdeploy/scripts
+          ./generate-vm-sku-list.sh
 
       - name: Build node app with bicep release
         run: |
