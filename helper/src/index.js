@@ -20,7 +20,8 @@ const configData = {
   presets: {
     ...principalConfig,
     ...entScaleConfig,
-    ...baselineConfig
+    ...baselineConfig,
+    ...gamingConfig
   }
 };
 

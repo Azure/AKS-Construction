@@ -1,5 +1,5 @@
 {
-    "entScaleOps": {
+    "gaming": {
         "title": "Gaming",
         "description": "End to end workload installation for Gaming scenarios",
         "icon": "Game",
@@ -7,26 +7,26 @@
             {
                 "key": "minecraft",
                 "sectionTitle": "Minecraft servers",
-                "sectionDescription" : "Minecraft servers",
-                "sectionMoreInfoLink" : "",
+                "sectionDescription" : "Minecraft servers allow you to play with your friends online. You can create your own world, or play with others online.",
                 "sectionWarning": "Whilst Minecraft servers are free, players using Minecraft require a licence",
+                "sectionMoreInfoLink" : "https://github.com/Gordonby/MinecraftOnAzure/blob/main/aks.md",
+
                 "cards": [
                     {
                         "key": "bedrockSmall",
                         "default": true,
-                        "title": "Bedrock Small",
+                        "title": "Bedrock Edition : Small",
                         "description": {
-                            "title": "Installs a Bedrock server on a small compute node for less than 5 players, with minimal Azure system components",
+                            "title": "Installs a Bedrock server on a small compute node for less than 5 players, with minimal Azure system components for optimization.",
                             "bulets": [
                                 {
-                                    "description": "Single node cluster",
-                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
+                                    "description": "Single node cluster"
                                 },
                                 {
-                                    "description": "No logging"
+                                    "description": "No logging/monitoring"
                                 },
                                 {
-                                    "description": "Public"
+                                    "description": "Minimal system components"
                                 },
                                 {
                                     "description": "AAD Integration for RBAC control plane",
@@ -58,8 +58,8 @@
                             },
                             "addons": {
                                 "networkPolicy": "none",
-                                "registry": "Basic",
-                                "azurepolicy": "audit",
+                                "registry": "none",
+                                "azurepolicy": "none",
                                 "ingress": "none",
                                 "appgwKVIntegration": false,
                                 "monitor": "none",
