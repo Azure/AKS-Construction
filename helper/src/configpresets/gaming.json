@@ -84,7 +84,10 @@
                             "title": "Installs a Bedrock server on a large compute node for more than 5 players, with logging and more security.",
                             "bulets": [
                                 {
-                                    "description": "Single node cluster"
+                                    "description": "Dedicated system pool (2 nodes)"
+                                },
+                                {
+                                    "description": "Dedicated user pool (1 node)"
                                 },
                                 {
                                     "description": "General purpose VM type"
@@ -122,11 +125,13 @@
                                 "autoscale": false,
                                 "agentCount": 1,
                                 "upgradeChannel": "none",
-                                "vmSize" : "Standard_B2ms"
+                                "vmSize" : "Standard_D8ds_v4",
+                                "SystemPoolType" : "CostOptimised",
+                                "AksPaidSkuForSLA" : true
                             },
                             "addons": {
                                 "networkPolicy": "none",
-                                "registry": "none",
+                                "registry": "Standard",
                                 "azurepolicy": "none",
                                 "ingress": "none",
                                 "appgwKVIntegration": false,
