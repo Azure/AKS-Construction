@@ -75,6 +75,70 @@
                                 "afw": false
                             }
                         }
+                    },
+                    {
+                        "key": "bedrockSerious",
+                        "default": false,
+                        "title": "Bedrock Edition : Serious!",
+                        "description": {
+                            "title": "Installs a Bedrock server on a large compute node for more than 5 players, with logging and more security.",
+                            "bulets": [
+                                {
+                                    "description": "Single node cluster"
+                                },
+                                {
+                                    "description": "General purpose VM type"
+                                },
+                                {
+                                    "description": "Logging & monitoring"
+                                },
+                                {
+                                    "description": "Container Registry"
+                                },
+                                {
+                                    "description": "AAD Integration for RBAC control plane",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                                }
+                            ]
+                        },
+                        "imageSrc": "./Minecraft.png",
+                        "author": {
+                            "name": "Gordon Byers",
+                            "initials": "GB",
+                            "status": "Updated Nov, 2022"
+                        },
+                        "postDeployCommands": [
+                            "#Deploy Minecraft storage",
+                            "az deployment group create -g $RESOURCEGROUP -f $URI",
+                            "",
+                            "#Install Minecraft server",
+                            "helm install"
+                        ],
+                        "values": {
+                            "cluster": {
+                                "enable_aad": true,
+                                "AksDisableLocalAccounts": true,
+                                "apisecurity": "none",
+                                "autoscale": false,
+                                "agentCount": 1,
+                                "upgradeChannel": "none",
+                                "vmSize" : "Standard_B2ms"
+                            },
+                            "addons": {
+                                "networkPolicy": "none",
+                                "registry": "none",
+                                "azurepolicy": "none",
+                                "ingress": "none",
+                                "appgwKVIntegration": false,
+                                "monitor": "none",
+                                "csisecret": "none"
+                            },
+                            "net": {
+                                "vnetprivateend": false,
+                                "vnet_opt": "default",
+                                "afw": false
+                            }
+                        }
                     }
                 ]
             }
