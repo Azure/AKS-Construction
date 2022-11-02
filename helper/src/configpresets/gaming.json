@@ -1,0 +1,79 @@
+{
+    "entScaleOps": {
+        "title": "Gaming",
+        "description": "End to end workload installation for Gaming scenarios",
+        "icon": "Game",
+        "sections": [
+            {
+                "key": "minecraft",
+                "sectionTitle": "Minecraft servers",
+                "sectionDescription" : "Minecraft servers",
+                "sectionMoreInfoLink" : "",
+                "sectionWarning": "Whilst Minecraft servers are free, players using Minecraft require a licence",
+                "cards": [
+                    {
+                        "key": "bedrockSmall",
+                        "default": true,
+                        "title": "Bedrock Small",
+                        "description": {
+                            "title": "Installs a Bedrock server on a small compute node for less than 5 players, with minimal Azure system components",
+                            "bulets": [
+                                {
+                                    "description": "Single node cluster",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
+                                },
+                                {
+                                    "description": "No logging"
+                                },
+                                {
+                                    "description": "Public"
+                                },
+                                {
+                                    "description": "AAD Integration for RBAC control plane",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                                }
+                            ]
+                        },
+                        "imageSrc": "./Minecraft.png",
+                        "author": {
+                            "name": "Gordon Byers",
+                            "initials": "GB",
+                            "status": "Updated Nov, 2022"
+                        },
+                        "postDeployCommands": [
+                            "#Deploy Minecraft storage",
+                            "az deployment group create -g $RESOURCEGROUP -f $URI",
+                            "",
+                            "#Install Minecraft server",
+                            "helm install"
+                        ],
+                        "values": {
+                            "cluster": {
+                                "enable_aad": true,
+                                "AksDisableLocalAccounts": true,
+                                "apisecurity": "none",
+                                "autoscale": false,
+                                "agentCount": 1,
+                                "upgradeChannel": "none"
+                            },
+                            "addons": {
+                                "networkPolicy": "none",
+                                "registry": "Basic",
+                                "azurepolicy": "audit",
+                                "ingress": "none",
+                                "appgwKVIntegration": false,
+                                "monitor": "none",
+                                "csisecret": "none"
+                            },
+                            "net": {
+                                "vnetprivateend": false,
+                                "vnet_opt": "default",
+                                "afw": false
+                            }
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

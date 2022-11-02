@@ -13,6 +13,7 @@ import baseConfig from "./config.json";
 import principalConfig from "./configpresets/principals.json"
 import entScaleConfig from "./configpresets/entScale.json"
 import baselineConfig from "./configpresets/baselines.json"
+import gamingConfig from "./configpresets/gaming.json"
 
 const configData = {
   ...baseConfig,
