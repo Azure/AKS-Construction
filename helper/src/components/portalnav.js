@@ -67,7 +67,6 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
 
 
         </div>
-
       </div>
     </nav>
   )
@@ -379,7 +378,6 @@ export default function PortalNav({ config }) {
         <Header presets={presets} selectedPreset={selected.preset} setPresets={presetChanged} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
-
           <Presets sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
 
           <Separator styles={SeparatorStyle}><span style={{ "color": "rgb(0, 103, 184)" }}>Fine tune & Deploy</span></Separator>

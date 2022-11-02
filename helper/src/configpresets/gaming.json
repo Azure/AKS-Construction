@@ -23,6 +23,9 @@
                                     "description": "Single node cluster"
                                 },
                                 {
+                                    "description": "Burstable VM type"
+                                },
+                                {
                                     "description": "No logging/monitoring"
                                 },
                                 {
@@ -54,7 +57,8 @@
                                 "apisecurity": "none",
                                 "autoscale": false,
                                 "agentCount": 1,
-                                "upgradeChannel": "none"
+                                "upgradeChannel": "none",
+                                "vmSize" : "Standard_B2ms"
                             },
                             "addons": {
                                 "networkPolicy": "none",

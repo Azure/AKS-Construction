@@ -4,6 +4,7 @@ import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdow
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
 import dependencies from "../dependencies.json";
+import { Presets } from './presets';
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag }) {
   const terraformFeatureFlag = featureFlag.includes('tf')
@@ -225,6 +226,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
   `if [ $(az group exists --name NetworkWatcherRG) = false ]; then az group create -l ${deploy.location} -n NetworkWatcherRG; fi\n\n` : ''
 
+  const cardSpecificPostDeploy = '\n\n'
+
   const deploycmd =
     `# Create Resource Group\n` +
     `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` + networkWatcher +
@@ -234,7 +237,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
       return ` \\\n\t${k}=${targetVal}`
-    }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deploystr : '')
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deploystr : '') +
+    cardSpecificPostDeploy
 
 
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
