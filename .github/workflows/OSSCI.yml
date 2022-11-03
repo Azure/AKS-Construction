@@ -53,7 +53,7 @@ jobs:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
-      templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true AksDisableLocalAccounts=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=/subscriptions/82e70289-bf40-45f9-8476-eab93d2031f4/resourceGroups/aksbicepacc-ci-deployvnet/providers/Microsoft.Network/dnszones/aksc.msftcsu.net keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true AksDisableLocalAccounts=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=${{ secrets.BYODNSZONEID }} keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
       postScriptParams: "ingress=contour,ingressEveryNode=true,dnsZoneId=${{ secrets.BYODNSZONEID }},certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true"
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
