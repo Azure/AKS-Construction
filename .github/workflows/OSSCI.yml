@@ -35,6 +35,7 @@ permissions:
 jobs:
   ReusableWF:
     runs-on: ubuntu-latest
+    environment:  ${{ github.event.inputs.Environment }}
     outputs:
       RG: ${{ env.RG }}
       ENVIRONMENT: ${{ github.event.inputs.Environment }}
