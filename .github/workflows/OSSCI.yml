@@ -15,12 +15,12 @@ on:
     branches: [main]
     paths:
       - "bicep/*"
-      - ".github/workflows/StandardCI.yml"
+      - ".github/workflows/OSSCI.yml"
 
   #Run on a weekly schedule
-  #schedule:
-  #  # At 11:00pm, every Tuesday week
-  #  - cron: "0 23 * * 2"
+  schedule:
+    # At 9pm, every month.
+    - cron: "0 21 1 1-12 *"
   
 env:
   RG: "AksBicepAcc-Ci-OssCluster" #The resource group we're deploying to.
@@ -45,28 +45,25 @@ jobs:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet)"
 
-  Deploy:
+  ContourDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
-    #environment: ${{ github.event.inputs.environment }}
     needs: [ReusableWF]
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
-      templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true AksDisableLocalAccounts=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=${{ secrets.BYODNSZONEID }} keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=${{ secrets.BYODNSZONEID }} keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
       postScriptParams: "ingress=contour,ingressEveryNode=true,dnsZoneId=${{ secrets.BYODNSZONEID }},certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true"
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       USER_OBJECT_ID: ${{ secrets.USER_OBJECT_ID }}
-    #outputs:
-    #  AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
 
-  SmokeTest_SimpleApp:
+  ContourDeploy_SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [Deploy]
+    needs: [ContourDeploy]
     steps:
       - uses: actions/checkout@v2
 
@@ -79,7 +76,7 @@ jobs:
 
       - name: AKS Connect
         env:
-          AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
+          AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
@@ -121,7 +118,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [Validation, Deploy, SmokeTest_SimpleApp]
+    needs: [ContourDeploy, ContourDeploy_SmokeTest_SimpleApp]
     if: github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
