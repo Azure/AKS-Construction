@@ -57,7 +57,7 @@ jobs:
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
       templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
-      postScriptParams: "ingress=contour,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true"
+      postScriptParams: "ingress=contour,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanacnt"
     secrets: 
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -129,7 +129,7 @@ jobs:
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
       templateParams: resourceName=az-nginx agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
-      postScriptParams: "ingress=nginx,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true"
+      postScriptParams: "ingress=nginx,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanangx"
     secrets: 
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
