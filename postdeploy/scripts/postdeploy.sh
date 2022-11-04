@@ -12,6 +12,7 @@ set -e
 ingress=""
 monitor=""
 enableMonitorIngress="false"
+grafanaHostname="grafana"
 ingressEveryNode=""
 dnsZoneId=""
 denydefaultNetworkPolicy=""
@@ -257,8 +258,8 @@ if [ "$monitor" = "oss" ]; then
         --set grafana.ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt-prod \
         --set grafana.ingress.annotations."ingress\.kubernetes\.io/force-ssl-redirect"=\"true\" \
         --set grafana.ingress.ingressClassName=${ingressClass} \
-        --set grafana.ingress.hosts[0]=grafana.${dnsZoneId_domain} \
-        --set grafana.ingress.tls[0].hosts[0]=grafana.${dnsZoneId_domain},grafana.ingress.tls[0].secretName=aks-grafana
+        --set grafana.ingress.hosts[0]=${grafanaHostname}.${dnsZoneId_domain} \
+        --set grafana.ingress.tls[0].hosts[0]=${grafanaHostname}.${dnsZoneId_domain},grafana.ingress.tls[0].secretName=aks-grafana
 fi
 
 
