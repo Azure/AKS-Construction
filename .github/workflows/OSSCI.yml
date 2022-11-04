@@ -38,7 +38,7 @@ jobs:
     environment:  ${{ github.event.inputs.Environment }}
     outputs:
       RG: ${{ env.RG }}
-      ENVIRONMENT: ${{ github.event.inputs.Environment != "" && github.event.inputs.Environment || "csu" }} #${{ github.event.inputs.Environment }}
+      ENVIRONMENT: ${{ github.event.inputs.Environment != '' && github.event.inputs.Environment || 'csu' }}
       RESNAME: ${{ env.RESNAME }}
       PARAMFILE: ${{ env.ParamFilePath }}
 
