@@ -35,7 +35,7 @@ resource subnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview'
   scope: existingAksSubnet
   properties: {
     roleDefinitionId: networkContributorRole
-    principalId: uai.properties.principalId
+    principalId: user_identity_principalId
     principalType: 'ServicePrincipal'
   }
 }
@@ -45,7 +45,7 @@ resource existingVnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-pr
   scope: existingvnet
   properties: {
     roleDefinitionId: networkContributorRole
-    principalId: uai.properties.principalId
+    principalId: user_identity_principalId
     principalType: 'ServicePrincipal'
   }
 }
