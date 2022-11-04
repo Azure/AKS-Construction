@@ -104,7 +104,7 @@ jobs:
             echo "Secret DNS_ZONE_ID not found in environment ${{ inputs.environment }}"
           fi
         fi
-        DeployOut=($(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
+        DeployOut=($(az deployment group create -g ${{ inputs.rg }} -n ${{ inputs.resourceName }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
 
         aksClusterName=${DeployOut[0]}
         containerRegistryName=${DeployOut[1]}
@@ -139,7 +139,7 @@ jobs:
     - name: Post Deploy
       if: inputs.postScriptParams
       env:
-        postScriptParams: "${{ inputs.templateParams}}"
+        postScriptParams: "${{ inputs.postScriptParams }}"
       run: |
         if [[ "$postScriptParams" == *"_DNS_ZONE_ID_"* ]]; then
           echo "Token _DNS_ZONE_ID_ found for secret reference replacement"
