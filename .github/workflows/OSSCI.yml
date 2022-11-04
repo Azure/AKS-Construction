@@ -141,7 +141,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     needs: [ContourDeploy, ContourDeploy_SmokeTest_SimpleApp, NginxDeploy]
-    if: github.event_name != 'workflow_dispatch'
+    if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
         uses: Azure/login@v1.4.3
