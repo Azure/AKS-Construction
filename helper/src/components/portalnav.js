@@ -127,7 +127,7 @@ export default function PortalNav({ config }) {
   })
 
   // The sections array within the selected preset, for example [{"key": "ops"...}, {"key": "secure"...}]
-  const { sections } = presets[selected.preset]
+  const { sections, description, icon } = presets[selected.preset]
 
   // The tabValues, for example { "deploy": { "clusterName": "az234"}}
   const [tabValues, setTabValues] = useState(() => {
@@ -378,7 +378,8 @@ export default function PortalNav({ config }) {
         <Header presets={presets} selectedPreset={selected.preset} setPresets={presetChanged} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
-          <Presets sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
+
+          <Presets description={description} icon={icon} sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
 
           <Separator styles={SeparatorStyle}><span style={{ "color": "rgb(0, 103, 184)" }}>Fine tune & Deploy</span></Separator>
 

@@ -6,7 +6,7 @@ import { CodeBlock, adv_stackstyle, getError } from './common'
 import dependencies from "../dependencies.json";
 import { Presets } from './presets';
 
-export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag }) {
+export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag, cardWorkloadCommands }) {
   const terraformFeatureFlag = featureFlag.includes('tf')
 
   const { net, addons, cluster, deploy } = tabValues
@@ -226,7 +226,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
   `if [ $(az group exists --name NetworkWatcherRG) = false ]; then az group create -l ${deploy.location} -n NetworkWatcherRG; fi\n\n` : ''
 
-  const cardSpecificPostDeploy = '\n\n'
+  const cardSpecificWorkloadDeployCmd = '\n\n#Workload Deployment Commands'
 
   const deploycmd =
     `# Create Resource Group\n` +
@@ -238,7 +238,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
       return ` \\\n\t${k}=${targetVal}`
     }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deploystr : '') +
-    cardSpecificPostDeploy
+    cardSpecificWorkloadDeployCmd
 
 
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`

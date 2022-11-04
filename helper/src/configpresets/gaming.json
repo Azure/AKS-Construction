@@ -1,16 +1,15 @@
 {
     "gaming": {
         "title": "Gaming",
-        "description": "End to end workload installation for Gaming scenarios",
+        "description": "Gaming Scenarios for Kubernetes that include end to end workload installation",
         "icon": "Game",
         "sections": [
             {
                 "key": "minecraft",
                 "sectionTitle": "Minecraft servers",
-                "sectionDescription" : "Minecraft servers allow you to play with your friends online. You can create your own world, or play with others online.",
+                "sectionDescription" : "Minecraft servers allow you to create your own internet accessible world to play with your friends online.",
                 "sectionWarning": "Whilst Minecraft servers are free, players using Minecraft require a licence",
                 "sectionMoreInfoLink" : "https://github.com/Gordonby/MinecraftOnAzure/blob/main/aks.md",
-
                 "cards": [
                     {
                         "key": "bedrockSmall",
@@ -43,7 +42,7 @@
                             "initials": "GB",
                             "status": "Updated Nov, 2022"
                         },
-                        "postDeployCommands": [
+                        "workloadDeployCommands": [
                             "#Deploy Minecraft storage",
                             "az deployment group create -g $RESOURCEGROUP -f $URI",
                             "",

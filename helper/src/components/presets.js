@@ -1,11 +1,25 @@
 /* eslint-disable import/no-anonymous-default-export */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
-import { useTheme, MessageBar, DefaultButton, DocumentCardImage, DocumentCardTitle, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType } from '@fluentui/react';
+import { useTheme, MessageBar, DefaultButton, DocumentCardImage, DocumentCardTitle, Text, DocumentCardPreview, mergeStyles, Separator, DocumentCard, DocumentCardDetails, Stack, Checkbox, ImageFit, MessageBarType, FontIcon } from '@fluentui/react';
 
 const iconClass = mergeStyles({
     fontSize: 80,
     margin: '0 80px'
+});
+
+const headerIconClass = mergeStyles({
+    fontSize: 50,
+    height: 50,
+    width: 50,
+    margin: '0 25px',
+});
+
+const headerText = mergeStyles({
+lineHeight: 50,
+width: 50,
+margin: '0 25px',
+verticalAlign: 'top'
 });
 
 export const SeparatorStyle = {
@@ -22,11 +36,19 @@ export const SeparatorStyle = {
     }]
   };
 
-export function Presets({ sections, selectedValues, updateSelected, featureFlag }) {
+export function Presets({ description, icon, sections, selectedValues, updateSelected, featureFlag }) {
 
     const bodyBackground = useTheme().semanticColors.bodyBackground;
 
-    return sections.map(s => [
+    return (
+    <div>
+        { description != null && description !== "" &&
+            <>
+                <FontIcon aria-label={icon} iconName={icon} className={headerIconClass} />
+                <Text variant={'large'} className={headerText} >{description}</Text>
+            </>
+        }
+      { sections.map(s => [
         <Separator key={`sep${s.key}`} styles={SeparatorStyle}><span style={{"color": "rgb(0, 103, 184)"}}>{s.sectionTitle}</span></Separator>,
 
         <Stack  key={`st${s.key}`} horizontal tokens={{ childrenGap: 10 }}>
@@ -97,4 +119,6 @@ export function Presets({ sections, selectedValues, updateSelected, featureFlag 
             )}
         </Stack>
     ])
+}
+</div>)
 }
