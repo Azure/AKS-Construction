@@ -98,7 +98,7 @@ jobs:
 
           if [ -n "${{ secrets.DNS_ZONE_ID }}" ] #Is the secret accessible?
           then
-            echo "Substitute _DNS_ZONE_ID_ placeholder value with real guid from secret"
+            echo "Substitute _DNS_ZONE_ID_ placeholder value with real value from secret"
             templateParams=${templateParams//=_DNS_ZONE_ID_/=${{ secrets.DNS_ZONE_ID }}}
           else
             echo "Secret DNS_ZONE_ID not found in environment ${{ inputs.environment }}"
@@ -138,8 +138,22 @@ jobs:
 
     - name: Post Deploy
       if: inputs.postScriptParams
+      env:
+        postScriptParams: "${{ inputs.templateParams}}"
       run: |
-        postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptParams }}"
+        if [[ "$postScriptParams" == *"_DNS_ZONE_ID_"* ]]; then
+          echo "Token _DNS_ZONE_ID_ found for secret reference replacement"
+
+          if [ -n "${{ secrets.DNS_ZONE_ID }}" ] #Is the secret accessible?
+          then
+            echo "Substitute _DNS_ZONE_ID_ placeholder value with real value from secret"
+            postScriptParams=${postScriptParams//=_DNS_ZONE_ID_/=${{ secrets.DNS_ZONE_ID }}}
+          else
+            echo "Secret DNS_ZONE_ID not found in environment ${{ inputs.environment }}"
+          fi
+        fi
+      
+        postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},$postScriptParams"
 
         if ${{ inputs.postScriptInvokeCommand}}; then
           if [ "${{ steps.deployAks.outputs.ACRNAME }}" ]; then
