@@ -41,10 +41,13 @@ jobs:
       ENVIRONMENT: ${{ github.event.inputs.Environment }}
       RESNAME: ${{ env.RESNAME }}
       PARAMFILE: ${{ env.ParamFilePath }}
+      DNSZONEID: ${{ secrets.BYODNSZONEID }}
 
     steps:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet)"
+      - name: Prepare environment config
+        run: echo "${{ secrets.BYODNSZONEID }}"
 
   ContourDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
