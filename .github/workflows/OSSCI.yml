@@ -32,7 +32,7 @@ permissions:
       id-token: write
       contents: read
 
-concurrency: "${{ github.event.inputs.Environment != '' && github.event.inputs.Environment || 'csu' }}-AksBicepAcc-Ci-OssCluster"
+concurrency: "OSSCI-${{ github.event.inputs.Environment != '' && github.event.inputs.Environment || 'csu' }}-AksBicepAcc-Ci-OssCluster"
 
 jobs:
   ReusableWF:
