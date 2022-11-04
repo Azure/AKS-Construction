@@ -63,7 +63,7 @@ permissions:
 jobs:
   Deploy-AKSC:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ inputs.environment }}
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
       ACRNAME: ${{ steps.deployAks.outputs.ACRNAME }}
