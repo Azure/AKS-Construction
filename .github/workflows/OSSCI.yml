@@ -44,7 +44,7 @@ jobs:
 
     steps:
       - name: Dummy step
-        run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet)"
+        run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet), so we need this job to proxy"
 
   ContourDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
