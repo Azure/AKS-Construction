@@ -52,8 +52,8 @@ jobs:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
-      templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=${{ secrets.BYODNSZONEID }} keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
-      postScriptParams: "ingress=contour,ingressEveryNode=true,dnsZoneId=${{ secrets.BYODNSZONEID }},certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true"
+      templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_BYODNSZONEID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      postScriptParams: "ingress=contour,ingressEveryNode=true,dnsZoneId=_BYODNSZONEID_,certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true"
     secrets: inherit
 
   ContourDeploy_SmokeTest_SimpleApp:
