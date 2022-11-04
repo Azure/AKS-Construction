@@ -47,6 +47,8 @@ on:
         required: true
       USER_OBJECT_ID:
         required: false
+      DNS_ZONE_ID:
+        required: false
     outputs:
       AKSNAME:
         description: "The AKS Cluster name"
@@ -90,6 +92,17 @@ jobs:
             templateParams=${templateParams//=_USER_OBJECT_ID_/=${{ secrets.USER_OBJECT_ID }}}
           else
             echo "Secret USER_OBJECT_ID not found in environment ${{ github.event.inputs.environment }}"
+          fi
+        fi
+        if [[ "$templateParams" == *"_DNS_ZONE_ID_"* ]]; then
+          echo "Token _DNS_ZONE_ID_ found for secret reference replacement"
+
+          if [ -n "${{ secrets.DNS_ZONE_ID }}" ] #Is the secret accessible?
+          then
+            echo "Substitute _DNS_ZONE_ID_ placeholder value with real guid from secret"
+            templateParams=${templateParams//=_DNS_ZONE_ID_/=${{ secrets.DNS_ZONE_ID }}}
+          else
+            echo "Secret DNS_ZONE_ID not found in environment ${{ github.event.inputs.environment }}"
           fi
         fi
         DeployOut=($(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
