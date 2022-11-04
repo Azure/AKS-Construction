@@ -53,7 +53,7 @@ jobs:
     needs: [ReusableWF]
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
-      templateVersion: "0.9.2"
+      templateVersion: "0.9.3-preview"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
       templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
@@ -125,7 +125,7 @@ jobs:
     needs: [ReusableWF]
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
-      templateVersion: "0.9.2"
+      templateVersion: "0.9.3-preview"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
       templateParams: resourceName=az-nginx agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
