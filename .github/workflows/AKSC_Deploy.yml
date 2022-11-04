@@ -60,6 +60,8 @@ permissions:
   id-token: write
   contents: read
 
+concurrency: "${{ inputs.environment }}-${{ inputs.rg }}"
+
 jobs:
   Deploy-AKSC:
     runs-on: ubuntu-latest
