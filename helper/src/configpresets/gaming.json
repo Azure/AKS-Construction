@@ -86,7 +86,7 @@
                                     "description": "Dedicated system pool (2 nodes)"
                                 },
                                 {
-                                    "description": "Dedicated user pool (1 node)"
+                                    "description": "Dedicated user pool (2 nodes)"
                                 },
                                 {
                                     "description": "General purpose VM type"
@@ -122,7 +122,7 @@
                                 "AksDisableLocalAccounts": true,
                                 "apisecurity": "none",
                                 "autoscale": false,
-                                "agentCount": 1,
+                                "agentCount": 2,
                                 "upgradeChannel": "none",
                                 "vmSize" : "Standard_D8ds_v4",
                                 "SystemPoolType" : "CostOptimised",
