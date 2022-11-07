@@ -69,13 +69,31 @@ jobs:
 
   ContourGrafanaVerify:
     runs-on: ubuntu-latest
+    name: Verify Grafana Dashboard
     environment: ${{ github.event.inputs.environment }}
     needs: [ContourDeploy]
+    env:
+      URL: "https://grafanacnt.aksc.msftcsu.net"
     steps:
-      - name: AKS Connect
+      - name: Curl Grafana domain (on 80)
         env:
           HOSTNAME: grafanacnt.aksc.msftcsu.net
         run: curl $HOSTNAME
+        
+      - name: Verify Grafana dashboard available TLS
+        timeout-minutes: 5
+        run: |
+          echo "curl $URL [$(date +"%T")]"
+          curlcommand="curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URL -v --trace-time"
+          echo "Running curl command $curlcommand with retry"
+          respcode=$($curlcommand || sleep 1m; $curlcommand)
+          echo $respcode
+          curl --insecure $URL
+          
+      - name: Verify Grafana Certificate
+        run: |
+          curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
+
 
   ContourDeploy_SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
@@ -133,39 +151,27 @@ jobs:
 
           curl $pubIp
 
-  ContourDeploy_Debug:
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy]
-    steps:
-      - name: AKS Connect
-        env:
-          AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
-        run: |
-          echo "AKVNAME: ${{ needs.ContourDeploy.outputs.AKVNAME }}"
-          echo "AGNAME: ${{ needs.ContourDeploy.outputs.AGNAME }}"
-
-  ContourSmokeTest_JavaApp-certmgr:
-    name: Complex App (Contour)
-    needs: [ContourDeploy, ReusableWF]
-    if: ${{ needs.ContourDeploy.outputs.AGNAME }} != '' && ${{ needs.ContourDeploy.outputs.AKVNAME }} != ''
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-fedcred
-    with:
-      REPOREF: "0.9.2"
-      RG: ${{ needs.ReusableWF.outputs.RG }}
-      AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
-      DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
-      DNSRG: ${{needs.ReusableWF.outputs.ExistingDnsDomainRg}}
-      DNSRECORDNAME: openjdk-demo-contour
-      AKVNAME: ${{ needs.ContourDeploy.outputs.AKVNAME}}
-      AGNAME: ${{ needs.ContourDeploy.outputs.AGNAME}}
-      APPNAME: openjdk-demo-contour
-      FRONTENDCERTTYPE: certmanager-staging
-      FORCEHELMCLEANINSTALL: true
-    secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  #ContourSmokeTest_JavaApp-certmgr:
+  #  name: Complex App (Contour)
+  #  needs: [ContourDeploy, ReusableWF]
+  #  if: ${{ needs.ContourDeploy.outputs.AGNAME }} != '' && ${{ needs.ContourDeploy.outputs.AKVNAME }} != ''
+  #  uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-fedcred
+  #  with:
+  #    REPOREF: "0.9.2"
+  #    RG: ${{ needs.ReusableWF.outputs.RG }}
+  #    AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
+  #    DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
+  #    DNSRG: ${{needs.ReusableWF.outputs.ExistingDnsDomainRg}}
+  #    DNSRECORDNAME: openjdk-demo-contour
+  #    AKVNAME: ${{ needs.ContourDeploy.outputs.AKVNAME}}
+  #    AGNAME: ${{ needs.ContourDeploy.outputs.AGNAME}}
+  #    APPNAME: openjdk-demo-contour
+  #    FRONTENDCERTTYPE: certmanager-staging
+  #    FORCEHELMCLEANINSTALL: true
+  #  secrets:
+  #    AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  #    AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  #    AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   NginxDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
