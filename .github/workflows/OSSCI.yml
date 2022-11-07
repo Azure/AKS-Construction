@@ -148,7 +148,7 @@ jobs:
   ContourSmokeTest_JavaApp-certmgr:
     name: Complex App (Contour)
     needs: [ContourDeploy, ReusableWF]
-    if: ${{ needs.ContourDeploy.outputs.AGNAME} != '' && ${{ needs.ContourDeploy.outputs.AKVNAME } != ''
+    if: ${{ needs.ContourDeploy.outputs.AGNAME }} != '' && ${{ needs.ContourDeploy.outputs.AKVNAME }} != ''
     uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-fedcred
     with:
       REPOREF: "0.9.2"
