@@ -11,6 +11,7 @@ ingressEveryNode=""
 dnsZoneId=""
 denydefaultNetworkPolicy=""
 certEmail=""
+certClusterIssuer="letsencrypt-prod"
 
 acrName=""
 KubeletId=""
@@ -24,7 +25,7 @@ while getopts "p:g:n:r:" opt; do
     p )
         IFS=',' read -ra params <<< "$OPTARG"
         for i in "${params[@]}"; do
-            if [[ $i =~ (ingress|monitor|enableMonitorIngress|grafanaHostname|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|acrName|KubeletId|TenantId)=([^ ]*) ]]; then
+            if [[ $i =~ (ingress|monitor|enableMonitorIngress|grafanaHostname|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|certClusterIssuer|acrName|KubeletId|TenantId)=([^ ]*) ]]; then
                 echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
                 declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
             else
@@ -89,6 +90,11 @@ if [  "$monitor" ] && [[ ! "$monitor" = "oss" ]]; then
  show_usage=true
 fi
 
+if [  "$certClusterIssuer" ] && [[ ! $certClusterIssuer =~ (letsencrypt-staging|letsencrypt-prod) ]]; then
+ echo "supported cluster issuer parameter values are (letsencrypt-staging|letsencrypt-prod)"
+ show_usage=true
+fi
+
 if [ "$show_usage" ]; then
     echo "Usage: $0"
     echo "args:"
@@ -102,6 +108,7 @@ if [ "$show_usage" ]; then
     echo "     denydefaultNetworkPolicy=<true> - Deploy deny all network police"
     echo "     dnsZoneId=<Azure DNS Zone resourceId> - Enable cluster AutoScaler with max nodes"
     echo "     certEmail=<email for certman certificates> - Enables cert-manager"
+    echo "     certClusterIssuer=<letsencrypt-staging|letsencrypt-prod> - Specifies cert-manager cluster issuer"
     echo "     KubeletId=<managed identity of Kubelet> *Require for cert-manager"
     echo "     TenantId=<AzureAD TenentId> *Require for cert-manager"
     echo "     acrName=<name of ACR> * If provided, used imported images for 3rd party charts"
