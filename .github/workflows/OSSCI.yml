@@ -21,7 +21,7 @@ on:
   schedule:
     # At 9pm, every month.
     - cron: "0 21 1 1-12 *"
-  
+
 env:
   RG: "AksBicepAcc-Ci-OssCluster" #The resource group we're deploying to.
   RESNAME: "AksOss" #Used in Azure Resource Naming, overrides the default in the parameter file
@@ -58,22 +58,22 @@ jobs:
       resourceName: azcontour
       templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
       postScriptParams: "ingress=contour,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanacnt"
-    secrets: 
+    secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       USER_OBJECT_ID: ${{ secrets.USER_OBJECT_ID }}
       DNS_ZONE_ID: ${{ secrets.BYODNSZONEID }}
-      
+
   ContourDeploy_SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     needs: [ContourDeploy]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.5.0
 
       - name: Azure Login
-        uses: Azure/login@v1.4.3
+        uses: Azure/login@v1.4.6
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -86,7 +86,7 @@ jobs:
 
       - name: Kubelogin
         env:
-          kubeloginversion: 'v0.0.13'
+          kubeloginversion: 'v0.0.20'
         run: |
           wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
           unzip kubelogin-linux-amd64.zip
@@ -130,7 +130,7 @@ jobs:
       resourceName: azcontour
       templateParams: resourceName=az-nginx agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
       postScriptParams: "ingress=nginx,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanangx"
-    secrets: 
+    secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -144,7 +144,7 @@ jobs:
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
-        uses: Azure/login@v1.4.3
+        uses: Azure/login@v1.4.6
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
