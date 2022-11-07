@@ -69,6 +69,7 @@ jobs:
 
   ContourDeploy_SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
+    name: Simple App (Countour)
     environment: ${{ github.event.inputs.environment }}
     needs: [ContourDeploy]
     steps:
@@ -123,6 +124,7 @@ jobs:
           curl $pubIp
 
   ContourSmokeTest_JavaApp-certmgr:
+    name: Complex App (Countour)
     needs: [ContourDeploy, ReusableWF]
     uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-fedcred
     with:
@@ -161,6 +163,7 @@ jobs:
 
   NginxDeploy_SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
+    name: Simple App (Nginx)
     environment: ${{ github.event.inputs.environment }}
     needs: [NginxDeploy]
     steps:
