@@ -108,7 +108,7 @@ if [ "$show_usage" ]; then
     echo "     denydefaultNetworkPolicy=<true> - Deploy deny all network police"
     echo "     dnsZoneId=<Azure DNS Zone resourceId> - Enable cluster AutoScaler with max nodes"
     echo "     certEmail=<email for certman certificates> - Enables cert-manager"
-    echo "     certClusterIssuer=<letsencrypt-staging|letsencrypt-prod> - Specifies cert-manager cluster issuer"
+    echo "     certClusterIssuer=<letsencrypt-staging|letsencrypt-prod> - Specifies cert-manager cluster issuer used by grafana"
     echo "     KubeletId=<managed identity of Kubelet> *Require for cert-manager"
     echo "     TenantId=<AzureAD TenentId> *Require for cert-manager"
     echo "     acrName=<name of ACR> * If provided, used imported images for 3rd party charts"
