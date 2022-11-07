@@ -1,10 +1,4 @@
 #!/bin/bash
-#
-#  Work In Progress - File not currently used!!
-#  Looking to remove the Post-Install scripting out of the react app, and to just call a bash file
-#  This way, the UI and the github actions can call a common script for all the cluster post-install configuration
-#
-#  Want to remove all 'az' cli commands out of here, into the bicep, so this only contains kubectl and helm (as need to run using invote command for secure clusters)
 
 # Fail if any command fails
 set -e
@@ -138,7 +132,7 @@ get_image_property () {
             ((n-=1))
             else
             if $nk; then
-                #echo "new key $n - $i"
+                #echo "testing: new key $n - $i"
                 l[$n]=$(echo $i | tr -d '"')
                 nk=false
             else
