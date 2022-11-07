@@ -257,7 +257,7 @@ if [ "$monitor" = "oss" ]; then
     kubectl create namespace ${prometheus_namespace} --dry-run=client -o yaml | kubectl apply -f -
     helm upgrade --install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace} \
         --set grafana.ingress.enabled=${enableMonitorIngress} \
-        --set grafana.ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt-prod \
+        --set grafana.ingress.annotations."cert-manager\.io/cluster-issuer"=$certClusterIssuer \
         --set grafana.ingress.annotations."ingress\.kubernetes\.io/force-ssl-redirect"=\"true\" \
         --set grafana.ingress.ingressClassName=${ingressClass} \
         --set grafana.ingress.hosts[0]=${grafanaHostname}.${dnsZoneId_domain} \
