@@ -69,7 +69,7 @@ jobs:
 
   ContourDeploy_SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
-    name: Simple App (Countour)
+    name: Simple App (Contour)
     environment: ${{ github.event.inputs.environment }}
     needs: [ContourDeploy]
     steps:
@@ -124,8 +124,9 @@ jobs:
           curl $pubIp
 
   ContourSmokeTest_JavaApp-certmgr:
-    name: Complex App (Countour)
+    name: Complex App (Contour)
     needs: [ContourDeploy, ReusableWF]
+    if: ${{ needs.ContourDeploy.outputs.AGNAME != '' }} && ${{ needs.ContourDeploy.outputs.AKVNAME != '' }}
     uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-fedcred
     with:
       REPOREF: "0.9.2"
@@ -147,6 +148,7 @@ jobs:
   NginxDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
+    if: false #The Nginx + Grafana piece has a bug resolved in Matts branch.
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       templateVersion: "0.9.3-preview3"
