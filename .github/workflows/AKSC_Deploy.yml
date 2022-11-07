@@ -87,6 +87,8 @@ jobs:
       env:
         templateParams: "${{ inputs.templateParams}}"
       run: |
+        echo "Replacing params with secrets in param string $templateParams"
+      
         if [[ "$templateParams" == *"_USER_OBJECT_ID_"* ]]; then
           echo "Token _USER_OBJECT_ID_ found for secret reference replacement"
 
@@ -110,6 +112,7 @@ jobs:
           fi
         fi
 
+        echo "Setting output param string $templateParams"
         echo "::set-output name=templateParams::$templateParams"
 
       # Deploy Bicep file
