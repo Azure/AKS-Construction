@@ -159,10 +159,65 @@ jobs:
       USER_OBJECT_ID: ${{ secrets.USER_OBJECT_ID }}
       DNS_ZONE_ID: ${{ secrets.BYODNSZONEID }}
 
+  NginxDeploy_SmokeTest_SimpleApp:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    needs: [NginxDeploy]
+    steps:
+      - uses: actions/checkout@v2.5.0
+
+      - name: Azure Login
+        uses: Azure/login@v1.4.6
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: AKS Connect
+        env:
+          AKSNAME: ${{ needs.NginxDeploy.outputs.AKSNAME}}
+        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+
+      - name: Kubelogin
+        env:
+          kubeloginversion: 'v0.0.20'
+        run: |
+          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
+          unzip kubelogin-linux-amd64.zip
+          sudo mv bin/linux_amd64/kubelogin /usr/bin
+          kubelogin convert-kubeconfig -l azurecli
+
+      - name: Deploy Simple Workload
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
+          NAMESP: "votey"
+        run: |
+            echo "Creating namespace $NAMESP"
+            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
+
+            echo $MANIFESTTESTURL
+            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
+
+      - name: Verify Simple Workload
+        id: simpleworkloadverify
+        env:
+          NAMESP: "votey"
+        run: |
+          sleep 2m #Give public ip a chance to be allocated
+
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+
+          pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+          echo $pubIp
+          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
+
+          curl $pubIp
+
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy, ContourDeploy_SmokeTest_SimpleApp, ContourSmokeTest_JavaApp-certmgr, NginxDeploy]
+    needs: [ContourDeploy, ContourDeploy_SmokeTest_SimpleApp, ContourSmokeTest_JavaApp-certmgr, NginxDeploy, NginxDeploy_SmokeTest_SimpleApp]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
