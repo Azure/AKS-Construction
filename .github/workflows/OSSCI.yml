@@ -43,7 +43,9 @@ jobs:
       ENVIRONMENT: ${{ github.event.inputs.Environment != '' && github.event.inputs.Environment || 'csu' }}
       RESNAME: ${{ env.RESNAME }}
       PARAMFILE: ${{ env.ParamFilePath }}
-
+      ExistingDnsDomainName: aksc.msftcsu.net
+      ExistingDnsDomainRg: aksbicepacc-ci-deployvnet
+      
     steps:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet), so we need this job to proxy"
@@ -120,6 +122,26 @@ jobs:
 
           curl $pubIp
 
+  ContourSmokeTest_JavaApp-certmgr:
+    needs: [ContourDeploy, ReusableWF]
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-fedcred
+    with:
+      REPOREF: "0.9.2"
+      RG: ${{ needs.ReusableWF.outputs.RG }}
+      AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
+      DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
+      DNSRG: ${{needs.ReusableWF.outputs.ExistingDnsDomainRg}}
+      DNSRECORDNAME: openjdk-demo-contour
+      AKVNAME: ${{ needs.ContourDeploy.outputs.AKVNAME}}
+      AGNAME: ${{ needs.ContourDeploy.outputs.AGNAME}}
+      APPNAME: openjdk-demo-contour
+      FRONTENDCERTTYPE: certmanager-staging
+      FORCEHELMCLEANINSTALL: true
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
   NginxDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
@@ -140,7 +162,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy, ContourDeploy_SmokeTest_SimpleApp, NginxDeploy]
+    needs: [ContourDeploy, ContourDeploy_SmokeTest_SimpleApp, ContourSmokeTest_JavaApp-certmgr, NginxDeploy]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
