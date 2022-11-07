@@ -2,8 +2,6 @@
 //name/rg required to new up an existing reference and form a dependency
 //principalid required as it needs to be used to establish a unique roleassignment name
 param byoAKSSubnetId string
-param user_identity_name string
-param user_identity_rg string
 param user_identity_principalId string
 
 @allowed([
@@ -23,11 +21,6 @@ resource existingvnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = 
 resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = {
   parent: existingvnet
   name: existingAksSubnetName
-}
-
-resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' existing = {
-  name: user_identity_name
-  scope: resourceGroup(user_identity_rg)
 }
 
 resource subnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (rbacAssignmentScope == 'subnet') {
