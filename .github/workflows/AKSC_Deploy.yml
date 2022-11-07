@@ -120,12 +120,16 @@ jobs:
 
         aksClusterName=${DeployOut[0]}
         containerRegistryName=${DeployOut[1]}
+        keyvaultName=${DeployOut[2]}
+        appGatewayName=${DeployOut[3]}
 
         echo "aksClusterName returned from az deployment = $aksClusterName"
         echo "containerRegistryName returned from az deployment = $containerRegistryName"
 
         echo "::set-output name=AKSNAME::$aksClusterName"
         echo "::set-output name=ACRNAME::$containerRegistryName"
+        echo "::set-output name=AKVNAME::$keyvaultName"
+        echo "::set-output name=AGNAME::$appGatewayName"
 
       # Re-Login to Azure if we're using the AKS RUN COMMAND
     - uses: azure/login@v1.4.6
