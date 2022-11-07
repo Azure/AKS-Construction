@@ -10,8 +10,8 @@ on:
       templateVersion:
         description: 'Template Version'
         required: false
-        type: string
         default: '0.9.2'
+        type: string
       rg:
         description: 'Resource Group name'
         required: true
