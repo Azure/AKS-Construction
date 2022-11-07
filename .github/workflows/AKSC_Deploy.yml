@@ -56,7 +56,7 @@ on:
       ACRNAME:
         description: "The Container Registry name"
         value: ${{ jobs.Deploy-AKSC.outputs.ACRNAME }}
-        
+
 permissions:
   id-token: write
   contents: read
@@ -72,7 +72,7 @@ jobs:
       ACRNAME: ${{ steps.deployAks.outputs.ACRNAME }}
     steps:
       # Login to Azure
-    - uses: azure/login@v1.4.3
+    - uses: azure/login@v1.4.6
       name: Initial Login to Azure to Deploy
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -107,9 +107,9 @@ jobs:
             echo "Secret DNS_ZONE_ID not found in environment ${{ inputs.environment }}"
           fi
         fi
-        
+
         echo "::set-output name=templateParams::$templateParams"
-        
+
       # Deploy Bicep file
     - name: Deploy Bicep
       id: deployAks
@@ -128,7 +128,7 @@ jobs:
         echo "::set-output name=ACRNAME::$containerRegistryName"
 
       # Re-Login to Azure if we're using the AKS RUN COMMAND
-    - uses: azure/login@v1.4.3
+    - uses: azure/login@v1.4.6
       name: Initial Login to Azure to Deploy
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == true
       with:
@@ -139,7 +139,7 @@ jobs:
     - name: Kubelogin
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == false
       env:
-        kubeloginversion: 'v0.0.13'
+        kubeloginversion: 'v0.0.20'
       run: |
         az aks get-credentials -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --overwrite-existing
 
@@ -164,7 +164,7 @@ jobs:
             echo "Secret DNS_ZONE_ID not found in environment ${{ inputs.environment }}"
           fi
         fi
-      
+
         postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},$postScriptParams"
 
         if ${{ inputs.postScriptInvokeCommand}}; then
