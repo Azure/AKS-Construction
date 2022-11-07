@@ -79,9 +79,9 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Deploy Bicep file
-    - name: Deploy Bicep
-      id: deployAks
+
+    - name: Prepare params (string token replacements)
+      id: paramPrep
       env:
         templateParams: "${{ inputs.templateParams}}"
       run: |
@@ -107,6 +107,15 @@ jobs:
             echo "Secret DNS_ZONE_ID not found in environment ${{ inputs.environment }}"
           fi
         fi
+        
+        echo "::set-output name=templateParams::$templateParams"
+        
+      # Deploy Bicep file
+    - name: Deploy Bicep
+      id: deployAks
+      env:
+        templateParams: ${{ steps.paramPrep.outputs.templateParams}} #"${{ inputs.templateParams}}"
+      run: |
         DeployOut=($(az deployment group create -g ${{ inputs.rg }} -n ${{ inputs.resourceName }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
 
         aksClusterName=${DeployOut[0]}
