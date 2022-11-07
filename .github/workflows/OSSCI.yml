@@ -67,6 +67,16 @@ jobs:
       USER_OBJECT_ID: ${{ secrets.USER_OBJECT_ID }}
       DNS_ZONE_ID: ${{ secrets.BYODNSZONEID }}
 
+  ContourGrafanaVerify:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    needs: [ContourDeploy]
+    steps:
+      - name: AKS Connect
+        env:
+          HOSTNAME: grafanacnt.aksc.msftcsu.net
+        run: curl $HOSTNAME
+
   ContourDeploy_SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
     name: Simple App (Contour)
@@ -234,7 +244,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy, ContourDeploy_SmokeTest_SimpleApp, ContourSmokeTest_JavaApp-certmgr, NginxDeploy, NginxDeploy_SmokeTest_SimpleApp]
+    needs: [ContourGrafanaVerify, ContourDeploy_SmokeTest_SimpleApp, ContourSmokeTest_JavaApp-certmgr, NginxDeploy_SmokeTest_SimpleApp]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
