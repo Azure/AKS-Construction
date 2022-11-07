@@ -123,6 +123,18 @@ jobs:
 
           curl $pubIp
 
+  ContourDeploy_Debug:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    needs: [ContourDeploy]
+    steps:
+      - name: AKS Connect
+        env:
+          AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
+        run: |
+          echo "AKVNAME: ${{ needs.ContourDeploy.outputs.AKVNAME }}"
+          echo "AGNAME: ${{ needs.ContourDeploy.outputs.AGNAME }}"
+
   ContourSmokeTest_JavaApp-certmgr:
     name: Complex App (Contour)
     needs: [ContourDeploy, ReusableWF]
