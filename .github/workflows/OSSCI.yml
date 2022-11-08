@@ -151,28 +151,6 @@ jobs:
 
           curl $pubIp
 
-  #ContourSmokeTest_JavaApp-certmgr:
-  #  name: Complex App (Contour)
-  #  needs: [ContourDeploy, ReusableWF]
-  #  if: ${{ needs.ContourDeploy.outputs.AGNAME }} != '' && ${{ needs.ContourDeploy.outputs.AKVNAME }} != ''
-  #  uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-fedcred
-  #  with:
-  #    REPOREF: "0.9.2"
-  #    RG: ${{ needs.ReusableWF.outputs.RG }}
-  #    AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
-  #    DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
-  #    DNSRG: ${{needs.ReusableWF.outputs.ExistingDnsDomainRg}}
-  #    DNSRECORDNAME: openjdk-demo-contour
-  #    AKVNAME: ${{ needs.ContourDeploy.outputs.AKVNAME}}
-  #    AGNAME: ${{ needs.ContourDeploy.outputs.AGNAME}}
-  #    APPNAME: openjdk-demo-contour
-  #    FRONTENDCERTTYPE: certmanager-staging
-  #    FORCEHELMCLEANINSTALL: true
-  #  secrets:
-  #    AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  #    AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  #    AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
   NginxDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
@@ -309,7 +287,7 @@ jobs:
 
       - name: AKS Connect
         env:
-          AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
+          AKSNAME: ${{ needs.TraefikDeploy.outputs.AKSNAME}}
         run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
 
       - name: Kubelogin
