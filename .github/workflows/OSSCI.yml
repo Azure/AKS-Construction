@@ -297,11 +297,11 @@ jobs:
           curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
   TraefikDeploy_SmokeTest_VoteApp:
-    needs: [TraefikDeploy]
+    needs: [TraefikDeploy, ReusableWF]
     uses: ./.github/workflows/AppDeploy_AzureVote.yml
     with:
       Environment: ${{ github.event.inputs.environment }}
-      RG: ${{ needs.ReusableWF.outputs.RG }}
+      RG: ${{ needs.ReusableWF.outputs.RG }} 
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       AGNAME: ''
       APPNAME: ingvote
@@ -367,7 +367,7 @@ jobs:
           curl $pubIp
 
   TraefikTroubleshoot:
-    needs: [TraefikDeploy, ReusableWF, TraefikGrafanaVerify]
+    needs: [TraefikDeploy, ReusableWF, TraefikGrafanaVerify, TraefikDeploy_SmokeTest_VoteApp, TraefikDeploy_SmokeTest_SimpleApp]
     name: Traefik Troubleshoot
     uses: ./.github/workflows/AksTroubleshooting.yml
     if: always()
@@ -385,7 +385,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp,ContourGrafanaVerify, NginxGrafanaVerify, TraefikGrafanaVerify, TraefikTroubleshoot]
+    needs: [ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp,ContourGrafanaVerify, NginxGrafanaVerify, TraefikGrafanaVerify, TraefikTroubleshoot, TraefikDeploy_SmokeTest_VoteApp]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
