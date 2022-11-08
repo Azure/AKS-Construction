@@ -47,6 +47,12 @@ jobs:
       - name: Job Parameter Checking
         run: |
           echo "GitHub Ref: ${{ github.ref }}"
+
+      - name: Azure Login
+        uses: Azure/login@v1.4.6
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Build VM Sku json file
         run: |
           cd postdeploy/scripts
