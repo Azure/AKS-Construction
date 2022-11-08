@@ -113,7 +113,7 @@ jobs:
         fi
 
         echo "Setting output param string $templateParams"
-        echo "::set-output name=templateParams::$templateParams"
+        echo "{templateParams}={$templateParams}" >> $GITHUB_OUTPUT
 
       # Deploy Bicep file
     - name: Deploy Bicep
@@ -132,11 +132,11 @@ jobs:
 
         echo "aksClusterName returned from az deployment = $aksClusterName"
         echo "containerRegistryName returned from az deployment = $containerRegistryName"
-
-        echo "::set-output name=AKSNAME::$aksClusterName"
-        echo "::set-output name=ACRNAME::$containerRegistryName"
-        echo "::set-output name=AKVNAME::$keyvaultName"
-        echo "::set-output name=AGNAME::$appGatewayName"
+        
+        echo "{AKSNAME}={$aksClusterName}" >> $GITHUB_OUTPUT
+        echo "{ACRNAME}={$containerRegistryName}" >> $GITHUB_OUTPUT
+        echo "{AKVNAME}={$keyvaultName}" >> $GITHUB_OUTPUT
+        echo "{AGNAME}={$appGatewayName}" >> $GITHUB_OUTPUT
 
       # Re-Login to Azure if we're using the AKS RUN COMMAND
     - uses: azure/login@v1.4.6
@@ -186,6 +186,3 @@ jobs:
         else
           eval $postcmd
         fi
-
-
-
