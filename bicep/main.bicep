@@ -54,8 +54,6 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId) && cre
   params: {
     byoAKSSubnetId: byoAKSSubnetId
     user_identity_principalId: createAksUai ? aksUai.properties.principalId : ''
-    user_identity_name: aksUai.name
-    user_identity_rg: resourceGroup().name
     rbacAssignmentScope: uaiNetworkScopeRbac
   }
 }
