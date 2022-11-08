@@ -362,6 +362,7 @@ jobs:
       Environment: ''
       RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: ${{needs.TraefikDeploy.outputs.AKSNAME}}
+      AGNAME: ''
       LANAME: ${{ needs.TraefikDeploy.outputs.LANAME}}
       LAWGUID: ${{ needs.TraefikDeploy.outputs.LAWGUID}}
       USERUNCMD: false
