@@ -833,7 +833,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.23.8'
+param kubernetesVersion string = '1.23.12'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -1160,11 +1160,10 @@ var aks_addons1 = ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
     enabled: true
     config: {
       applicationGatewayName: appgwName
-      subnetCIDR: '10.2.0.0/16'
+      subnetCIDR: '10.225.0.0/16'
     }
   }
 }) : aks_addons
-
 
 var aks_identity = {
   type: 'UserAssigned'
@@ -1176,7 +1175,6 @@ var aks_identity = {
 @description('Sets the private dns zone id if provided')
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
 output aksPrivateDnsZone string = aksPrivateDnsZone
-
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS-Construction/issues/344')
 var managedNATGatewayProfile =  {
@@ -1288,7 +1286,12 @@ output aksOidcFedIdentityProperties object = {
   subject: 'system:serviceaccount:ns:svcaccount'
 }
 
+@description('The name of the managed resource group AKS uses')
 output aksNodeResourceGroup string = aks.properties.nodeResourceGroup
+
+@description('The Azure resource id for the AKS cluster')
+output aksResourceId string = aks.id
+
 //output aksNodePools array = [for nodepool in agentPoolProfiles: name]
 
 @description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
