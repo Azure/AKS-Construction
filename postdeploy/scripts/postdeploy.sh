@@ -114,7 +114,7 @@ if [ "$show_usage" ]; then
     exit 1
 fi
 
-#  Use the dependencies file to get the helmchart image details
+#  Uses dependencies.json as a config file to retrieve Helm Chart version details
 get_image_property () {
 
     fileloc=${release_version:-./helper/src}/dependencies.json
