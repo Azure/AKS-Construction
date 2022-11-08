@@ -10,7 +10,7 @@ on:
       templateVersion:
         description: 'Template Version'
         required: false
-        default: '0.8.8'
+        default: '0.9.2'
         type: string
       rg:
         description: 'Resource Group name'
@@ -47,6 +47,8 @@ on:
         required: true
       USER_OBJECT_ID:
         required: false
+      DNS_ZONE_ID:
+        required: false
     outputs:
       AKSNAME:
         description: "The AKS Cluster name"
@@ -54,54 +56,90 @@ on:
       ACRNAME:
         description: "The Container Registry name"
         value: ${{ jobs.Deploy-AKSC.outputs.ACRNAME }}
-        
+
 permissions:
   id-token: write
   contents: read
 
+concurrency: "${{ inputs.environment }}-${{ inputs.rg }}"
+
 jobs:
   Deploy-AKSC:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ inputs.environment }}
     outputs:
       AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
       ACRNAME: ${{ steps.deployAks.outputs.ACRNAME }}
+      AKVNAME: ${{ steps.deployAks.outputs.AKVNAME }}
+      AGNAME: ${{ steps.deployAks.outputs.AGNAME }}
     steps:
       # Login to Azure
-    - uses: azure/login@v1.4.3
+    - uses: azure/login@v1.4.6
       name: Initial Login to Azure to Deploy
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+
+    - name: Prepare params (string token replacements)
+      id: paramPrep
+      env:
+        templateParams: "${{ inputs.templateParams}}"
+      run: |
+        echo "Replacing params with secrets in param string $templateParams"
+      
+        if [[ "$templateParams" == *"_USER_OBJECT_ID_"* ]]; then
+          echo "Token _USER_OBJECT_ID_ found for secret reference replacement"
+
+          if [ -n "${{ secrets.USER_OBJECT_ID }}" ] #Is the secret accessible?
+          then
+            echo "Substitute _USER_OBJECT_ID_ placeholder value with real guid from secret"
+            templateParams=${templateParams//=_USER_OBJECT_ID_/=${{ secrets.USER_OBJECT_ID }}}
+          else
+            echo "Secret USER_OBJECT_ID not found in environment ${{ inputs.environment }}"
+          fi
+        fi
+        if [[ "$templateParams" == *"_DNS_ZONE_ID_"* ]]; then
+          echo "Token _DNS_ZONE_ID_ found for secret reference replacement"
+
+          if [ -n "${{ secrets.DNS_ZONE_ID }}" ] #Is the secret accessible?
+          then
+            echo "Substitute _DNS_ZONE_ID_ placeholder value with real value from secret"
+            templateParams=${templateParams//=_DNS_ZONE_ID_/=${{ secrets.DNS_ZONE_ID }}}
+          else
+            echo "Secret DNS_ZONE_ID not found in environment ${{ inputs.environment }}"
+          fi
+        fi
+
+        echo "Setting output param string $templateParams"
+        echo "templateParams=$templateParams" >> $GITHUB_OUTPUT
+
       # Deploy Bicep file
     - name: Deploy Bicep
       id: deployAks
       env:
-        templateParams: "${{ inputs.templateParams}}"
+        templateParams: ${{ steps.paramPrep.outputs.templateParams}} #"${{ inputs.templateParams}}"
       run: |
-        if [ -n "${{ secrets.USER_OBJECT_ID }}" ]
-        then
-          echo "Substitute _USER_OBJECT_ID_ placeholder value with real guid from secret"
-          templateParams=${templateParams//=_USER_OBJECT_ID_/=${{ secrets.USER_OBJECT_ID }}}
-        else
-          echo "USER_OBJECT_ID not being leveraged in workflow"
-        fi
-
-        DeployOut=($(az deployment group create -g ${{ inputs.rg }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
+        echo "Creating deployment ${{ inputs.resourceName }} using params $templateParams and AKSC ${{ inputs.templateVersion }}"
+        
+        DeployOut=($(az deployment group create -g ${{ inputs.rg }} -n ${{ inputs.resourceName }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
 
         aksClusterName=${DeployOut[0]}
         containerRegistryName=${DeployOut[1]}
+        keyvaultName=${DeployOut[2]}
+        appGatewayName=${DeployOut[3]}
 
         echo "aksClusterName returned from az deployment = $aksClusterName"
         echo "containerRegistryName returned from az deployment = $containerRegistryName"
-
-        echo "::set-output name=AKSNAME::$aksClusterName"
-        echo "::set-output name=ACRNAME::$containerRegistryName"
+        
+        echo "AKSNAME=$aksClusterName" >> $GITHUB_OUTPUT
+        echo "ACRNAME=$containerRegistryName" >> $GITHUB_OUTPUT
+        echo "AKVNAME=$keyvaultName" >> $GITHUB_OUTPUT
+        echo "AGNAME=$appGatewayName" >> $GITHUB_OUTPUT
 
       # Re-Login to Azure if we're using the AKS RUN COMMAND
-    - uses: azure/login@v1.4.3
+    - uses: azure/login@v1.4.6
       name: Initial Login to Azure to Deploy
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == true
       with:
@@ -112,7 +150,7 @@ jobs:
     - name: Kubelogin
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == false
       env:
-        kubeloginversion: 'v0.0.13'
+        kubeloginversion: 'v0.0.20'
       run: |
         az aks get-credentials -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --overwrite-existing
 
@@ -123,8 +161,22 @@ jobs:
 
     - name: Post Deploy
       if: inputs.postScriptParams
+      env:
+        postScriptParams: "${{ inputs.postScriptParams }}"
       run: |
-        postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},${{ inputs.postScriptParams }}"
+        if [[ "$postScriptParams" == *"_DNS_ZONE_ID_"* ]]; then
+          echo "Token _DNS_ZONE_ID_ found for secret reference replacement"
+
+          if [ -n "${{ secrets.DNS_ZONE_ID }}" ] #Is the secret accessible?
+          then
+            echo "Substitute _DNS_ZONE_ID_ placeholder value with real value from secret"
+            postScriptParams=${postScriptParams//=_DNS_ZONE_ID_/=${{ secrets.DNS_ZONE_ID }}}
+          else
+            echo "Secret DNS_ZONE_ID not found in environment ${{ inputs.environment }}"
+          fi
+        fi
+
+        postcmd="curl -sL https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/postdeploy.sh | bash -s -- -r https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }} -p KubeletId=$(az aks show -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --query identityProfile.kubeletidentity.clientId -o tsv),TenantId=${{ secrets.AZURE_TENANT_ID }},$postScriptParams"
 
         if ${{ inputs.postScriptInvokeCommand}}; then
           if [ "${{ steps.deployAks.outputs.ACRNAME }}" ]; then
@@ -134,6 +186,3 @@ jobs:
         else
           eval $postcmd
         fi
-
-
-

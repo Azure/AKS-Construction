@@ -7,5 +7,6 @@
     },
     "editor.renderWhitespace": "all",
     "files.trimTrailingWhitespace": true,
-    "diffEditor.ignoreTrimWhitespace": false
+    "diffEditor.ignoreTrimWhitespace": false,
+    "files.eol": "\n"
 }

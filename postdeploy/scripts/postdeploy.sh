@@ -1,10 +1,4 @@
 #!/bin/bash
-#
-#  Work In Progress - File not currently used!!
-#  Looking to remove the Post-Install scripting out of the react app, and to just call a bash file
-#  This way, the UI and the github actions can call a common script for all the cluster post-install configuration
-#
-#  Want to remove all 'az' cli commands out of here, into the bicep, so this only contains kubectl and helm (as need to run using invote command for secure clusters)
 
 # Fail if any command fails
 set -e
@@ -12,10 +6,12 @@ set -e
 ingress=""
 monitor=""
 enableMonitorIngress="false"
+grafanaHostname="grafana"
 ingressEveryNode=""
 dnsZoneId=""
 denydefaultNetworkPolicy=""
 certEmail=""
+certClusterIssuer="letsencrypt-prod"
 
 acrName=""
 KubeletId=""
@@ -29,7 +25,7 @@ while getopts "p:g:n:r:" opt; do
     p )
         IFS=',' read -ra params <<< "$OPTARG"
         for i in "${params[@]}"; do
-            if [[ $i =~ (ingress|monitor|enableMonitorIngress|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|acrName|KubeletId|TenantId)=([^ ]*) ]]; then
+            if [[ $i =~ (ingress|monitor|enableMonitorIngress|grafanaHostname|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|certClusterIssuer|acrName|KubeletId|TenantId)=([^ ]*) ]]; then
                 echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
                 declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
             else
@@ -94,6 +90,11 @@ if [  "$monitor" ] && [[ ! "$monitor" = "oss" ]]; then
  show_usage=true
 fi
 
+if [  "$certClusterIssuer" ] && [[ ! $certClusterIssuer =~ (letsencrypt-staging|letsencrypt-prod) ]]; then
+ echo "supported cluster issuer parameter values are (letsencrypt-staging|letsencrypt-prod)"
+ show_usage=true
+fi
+
 if [ "$show_usage" ]; then
     echo "Usage: $0"
     echo "args:"
@@ -101,11 +102,13 @@ if [ "$show_usage" ]; then
     echo " [ -p: parameters] : Can provide one or multiple features:"
     echo "     ingress=<appgw|contour|nginx> - Enable cluster AutoScaler with max nodes"
     echo "     monitor=<oss> - Enable cluster AutoScaler with max nodes"
-    echo "     enableMonitorIngress=<true> - Enable Ingress for Promethous"
+    echo "     enableMonitorIngress=<true> - Enable Ingress for prometheus"
+    echo "     grafanaHostname=<true> - Specify a hostname for the grafana dashboard"
     echo "     ingressEveryNode=<true> - Enable cluster AutoScaler with max nodes"
     echo "     denydefaultNetworkPolicy=<true> - Deploy deny all network police"
     echo "     dnsZoneId=<Azure DNS Zone resourceId> - Enable cluster AutoScaler with max nodes"
     echo "     certEmail=<email for certman certificates> - Enables cert-manager"
+    echo "     certClusterIssuer=<letsencrypt-staging|letsencrypt-prod> - Specifies cert-manager cluster issuer used by grafana"
     echo "     KubeletId=<managed identity of Kubelet> *Require for cert-manager"
     echo "     TenantId=<AzureAD TenentId> *Require for cert-manager"
     echo "     acrName=<name of ACR> * If provided, used imported images for 3rd party charts"
@@ -136,7 +139,7 @@ get_image_property () {
             ((n-=1))
             else
             if $nk; then
-                #echo "new key $n - $i"
+                #echo "testing: new key $n - $i"
                 l[$n]=$(echo $i | tr -d '"')
                 nk=false
             else
@@ -254,11 +257,11 @@ if [ "$monitor" = "oss" ]; then
     kubectl create namespace ${prometheus_namespace} --dry-run=client -o yaml | kubectl apply -f -
     helm upgrade --install ${prometheus_helm_release_name} prometheus-community/kube-prometheus-stack --namespace ${prometheus_namespace} \
         --set grafana.ingress.enabled=${enableMonitorIngress} \
-        --set grafana.ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt-prod \
+        --set grafana.ingress.annotations."cert-manager\.io/cluster-issuer"=$certClusterIssuer \
         --set grafana.ingress.annotations."ingress\.kubernetes\.io/force-ssl-redirect"=\"true\" \
         --set grafana.ingress.ingressClassName=${ingressClass} \
-        --set grafana.ingress.hosts[0]=grafana.${dnsZoneId_domain} \
-        --set grafana.ingress.tls[0].hosts[0]=grafana.${dnsZoneId_domain},grafana.ingress.tls[0].secretName=aks-grafana
+        --set grafana.ingress.hosts[0]=${grafanaHostname}.${dnsZoneId_domain} \
+        --set grafana.ingress.tls[0].hosts[0]=${grafanaHostname}.${dnsZoneId_domain},grafana.ingress.tls[0].secretName=aks-grafana
 fi
 
 
