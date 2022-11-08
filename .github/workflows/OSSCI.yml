@@ -168,6 +168,33 @@ jobs:
       USER_OBJECT_ID: ${{ secrets.USER_OBJECT_ID }}
       DNS_ZONE_ID: ${{ secrets.BYODNSZONEID }}
 
+  NginxGrafanaVerify:
+    runs-on: ubuntu-latest
+    name: Verify Grafana Dashboard (Nginx)
+    environment: ${{ github.event.inputs.environment }}
+    needs: [NginxDeploy]
+    env:
+      URL: "https://grafanangx.aksc.msftcsu.net"
+    steps:
+      - name: Curl Grafana domain (on 80)
+        env:
+          HOSTNAME: grafanangx.aksc.msftcsu.net
+        run: curl $HOSTNAME
+
+      - name: Verify Grafana dashboard available TLS
+        timeout-minutes: 5
+        run: |
+          echo "curl $URL [$(date +"%T")]"
+          curlcommand="curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URL -v --trace-time"
+          echo "Running curl command $curlcommand with retry"
+          respcode=$($curlcommand || sleep 1m; $curlcommand)
+          echo $respcode
+          curl --insecure $URL
+
+      - name: Verify Grafana Certificate
+        run: |
+          curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
+
   NginxDeploy_SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
     name: Simple App (Nginx)
@@ -244,7 +271,7 @@ jobs:
 
   TraefikGrafanaVerify:
     runs-on: ubuntu-latest
-    name: Verify Grafana Dashboard
+    name: Verify Grafana Dashboard (Traefik)
     environment: ${{ github.event.inputs.environment }}
     needs: [TraefikDeploy]
     env:
@@ -330,7 +357,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourGrafanaVerify, ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp]
+    needs: [ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
