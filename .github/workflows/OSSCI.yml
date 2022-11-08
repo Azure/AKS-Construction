@@ -353,11 +353,25 @@ jobs:
 
           curl $pubIp
 
+  TraefikTroubleshoot:
+    needs: [TraefikDeploy, ReusableWF]
+    name: Traefik Troubleshoot
+    uses: ./.github/workflows/AksTroubleshooting.yml
+    if: always()
+    with:
+      Environment: ''
+      RG: ${{ needs.ReusableWF.outputs.RG }}
+      AKSNAME: ${{needs.TraefikDeploy.outputs.AKSNAME}}
+      LANAME: ${{ needs.TraefikDeploy.outputs.LANAME}}
+      LAWGUID: ${{ needs.TraefikDeploy.outputs.LAWGUID}}
+      USERUNCMD: false
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp,ContourGrafanaVerify, NginxGrafanaVerify, TraefikGrafanaVerify]
+    needs: [ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp,ContourGrafanaVerify, NginxGrafanaVerify, TraefikGrafanaVerify, TraefikTroubleshoot]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
