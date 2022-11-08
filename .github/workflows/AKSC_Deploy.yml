@@ -121,6 +121,8 @@ jobs:
       env:
         templateParams: ${{ steps.paramPrep.outputs.templateParams}} #"${{ inputs.templateParams}}"
       run: |
+        echo "Creating deployment ${{ inputs.resourceName }} using params $templateParams and AKSC ${{ inputs.templateVersion }}"
+        
         DeployOut=($(az deployment group create -g ${{ inputs.rg }} -n ${{ inputs.resourceName }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
 
         aksClusterName=${DeployOut[0]}
