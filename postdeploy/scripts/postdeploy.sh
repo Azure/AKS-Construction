@@ -19,7 +19,6 @@ TenantId=""
 
 release_version=""
 
-
 while getopts "p:g:n:r:" opt; do
   case ${opt} in
     p )
