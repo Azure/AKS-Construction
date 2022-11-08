@@ -176,7 +176,6 @@ jobs:
   NginxDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
-    if: false #The Nginx + Grafana piece has a bug resolved in Matts branch.
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       templateVersion: "0.9.3-preview3"
