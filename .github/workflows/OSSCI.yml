@@ -45,7 +45,7 @@ jobs:
       PARAMFILE: ${{ env.ParamFilePath }}
       ExistingDnsDomainName: aksc.msftcsu.net
       ExistingDnsDomainRg: aksbicepacc-ci-deployvnet
-      
+
     steps:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet), so we need this job to proxy"
@@ -79,7 +79,7 @@ jobs:
         env:
           HOSTNAME: grafanacnt.aksc.msftcsu.net
         run: curl $HOSTNAME
-        
+
       - name: Verify Grafana dashboard available TLS
         timeout-minutes: 5
         run: |
@@ -89,7 +89,7 @@ jobs:
           respcode=$($curlcommand || sleep 1m; $curlcommand)
           echo $respcode
           curl --insecure $URL
-          
+
       - name: Verify Grafana Certificate
         run: |
           curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
@@ -176,7 +176,6 @@ jobs:
   NginxDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
-    if: false #The Nginx + Grafana piece has a bug resolved in Matts branch.
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       templateVersion: "0.9.3-preview3"
@@ -247,10 +246,113 @@ jobs:
 
           curl $pubIp
 
+
+  TraefikDeploy:
+    uses: ./.github/workflows/AKSC_Deploy.yml
+    needs: [ReusableWF]
+    with:
+      environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      templateVersion: "0.9.3-preview3"
+      rg: ${{ needs.ReusableWF.outputs.RG }}
+      resourceName: azcontour
+      templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      postScriptParams: "ingress=traefik,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,certClusterIssuer=letsencrypt-staging,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanatrae"
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      USER_OBJECT_ID: ${{ secrets.USER_OBJECT_ID }}
+      DNS_ZONE_ID: ${{ secrets.BYODNSZONEID }}
+
+  TraefikGrafanaVerify:
+    runs-on: ubuntu-latest
+    name: Verify Grafana Dashboard
+    environment: ${{ github.event.inputs.environment }}
+    needs: [TraefikDeploy]
+    env:
+      URL: "https://grafanatrae.aksc.msftcsu.net"
+    steps:
+      - name: Curl Grafana domain (on 80)
+        env:
+          HOSTNAME: grafanatrae.aksc.msftcsu.net
+        run: curl $HOSTNAME
+
+      - name: Verify Grafana dashboard available TLS
+        timeout-minutes: 5
+        run: |
+          echo "curl $URL [$(date +"%T")]"
+          curlcommand="curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URL -v --trace-time"
+          echo "Running curl command $curlcommand with retry"
+          respcode=$($curlcommand || sleep 1m; $curlcommand)
+          echo $respcode
+          curl --insecure $URL
+
+      - name: Verify Grafana Certificate
+        run: |
+          curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
+
+
+  TraefikDeploy_SmokeTest_SimpleApp:
+    runs-on: ubuntu-latest
+    name: Simple App (Traefik)
+    environment: ${{ github.event.inputs.environment }}
+    needs: [TraefikDeploy]
+    steps:
+      - uses: actions/checkout@v2.5.0
+
+      - name: Azure Login
+        uses: Azure/login@v1.4.6
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: AKS Connect
+        env:
+          AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
+        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
+
+      - name: Kubelogin
+        env:
+          kubeloginversion: 'v0.0.20'
+        run: |
+          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
+          unzip kubelogin-linux-amd64.zip
+          sudo mv bin/linux_amd64/kubelogin /usr/bin
+          kubelogin convert-kubeconfig -l azurecli
+
+      - name: Deploy Simple Workload
+        env:
+          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
+          NAMESP: "votey"
+        run: |
+            echo "Creating namespace $NAMESP"
+            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
+
+            echo $MANIFESTTESTURL
+            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
+
+      - name: Verify Simple Workload
+        id: simpleworkloadverify
+        env:
+          NAMESP: "votey"
+        run: |
+          sleep 2m #Give public ip a chance to be allocated
+
+          kubectl get po -n  $NAMESP
+          kubectl get svc -n  $NAMESP
+
+          pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
+          echo $pubIp
+          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
+
+          curl $pubIp
+
+
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourGrafanaVerify, ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp]
+    needs: [ContourGrafanaVerify, ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
