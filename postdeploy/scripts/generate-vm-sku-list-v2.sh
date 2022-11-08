@@ -13,12 +13,14 @@ maxCPUs=8
 #Variables
 SubscriptionId=$(az account show --query id -o tsv)
 
+#if subscription id is null
+if [ -z "$SubscriptionId" ]; then exit 1; fi
+
+echo "Using SubscriptionId $SubscriptionId"
+
 #Load Files
 locations=$(cat $locationsInputFile | jq) ##Get Locations
 skuFamilies=$(cat $skuFamiliesInputFile | jq) #Get Virtual Machine SKU Families
-
-
-
 
 #Loop through sku families
 for loc in $(echo "${locations}" | jq -r '.[] | @base64'); do
