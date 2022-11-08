@@ -148,7 +148,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     </Stack.Item>
 
                     <Stack.Item>
-                        <Label >Node Size</Label>
+                        <Label >Virtual Machine Node Selection</Label>
                         <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: 500 } }}>
                             <Dropdown
 
@@ -161,7 +161,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             {hasError(invalidArray, 'osDiskType') &&
                                 <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'osDiskType')}</MessageBar>
                             }
-                            <TextField label="Custom Node Size" onChange={(ev, val) => updateFn('vmSize', val)} required errorMessage={getError(invalidArray, 'vmSize')} value={cluster.vmSize} />
+                            <TextField label="VM SKU" onChange={(ev, val) => updateFn('vmSize', val)} required errorMessage={getError(invalidArray, 'vmSize')} value={cluster.vmSize} />
                             <ChoiceGroup
                                 onChange={(ev, { key }) => updateFn("osDiskType", key)}
                                 selectedKey={cluster.osDiskType}
