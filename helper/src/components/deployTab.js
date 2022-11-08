@@ -4,6 +4,7 @@ import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdow
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
 import dependencies from "../dependencies.json";
+import locations from '../locations.json';
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag }) {
   const terraformFeatureFlag = featureFlag.includes('tf')
@@ -329,23 +330,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             label="Location"
             selectedKey={deploy.location}
             onChange={(ev, { key }) => updateFn('location', key)}
-            options={[
-              { key: 'europe', text: 'Europe', itemType: DropdownMenuItemType.Header },
-              { key: "WestEurope", text: "West Europe" },
-              { key: "NorthEurope", text: "North Europe" },
-              { key: "UKSouth", text: "UK South" },
-              { key: "UKSouth2", text: "UK South2" },
-              { key: "UKWest", text: "UK West" },
-              { key: 'middleeast', text: 'Middle East', itemType: DropdownMenuItemType.Header },
-              { key: "UAENorth", text: "UAE North" },
-              { key: 'america', text: 'North America', itemType: DropdownMenuItemType.Header },
-              { key: "CentralUS", text: "Central US" },
-              { key: "EastUS", text: "East US" },
-              { key: "EastUS2", text: "East US2" },
-              { key: "WestUS", text: "West US" },
-              { key: "WestUS2", text: "West US2" },
-              { key: "WestCentralUS", text: "West Central US" }
-            ]}
+            options={locations}
             styles={{ dropdown: { width: 300 } }}
           />
         </Stack>

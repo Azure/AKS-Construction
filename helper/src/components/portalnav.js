@@ -331,7 +331,9 @@ export default function PortalNav({ config }) {
   const { deploy, cluster, net, addons } = tabValues
 
   console.log(`PortalNav: Evaluating configruation warnings...`)
-  invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph, 'The selected VM cache is not large enough to support Ephemeral. Select \'Managed\' or a VM with a larger cache')
+
+  invalidFn('cluster', 'osDiskType', ((typeof VMs.find(i => i.key === cluster.vmSize) !== "undefined") ? cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph : false), 'The selected VM cache is not large enough to support Ephemeral. Select \'Managed\' or a VM with a larger cache')
+  invalidFn('cluster', 'vmSize', cluster.vmSize === "" , 'Enter node size from list or custom node size above')
   invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36, 'Enter Valid Directory ID')
   invalidFn('addons', 'registry', net.vnetprivateend && (addons.registry !== 'Premium' && addons.registry !== 'none'), 'Premium tier is required for Private Link, either select Premium, or disable Private Link')
   invalidFn('cluster', 'keyVaultKmsByoKeyId', cluster.keyVaultKms === "byoprivate" && !cluster.keyVaultKmsByoKeyId.match('https:\/\/[^]+.vault.azure.net/keys/[^ ]+/[^ ]+$'), 'Enter valid KeyVault Versioned Key ID (https://YOURVAULTNAME.vault.azure.net/keys/YOURKEYNAME/KEYVERSIONSTRING)')
