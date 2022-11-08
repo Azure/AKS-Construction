@@ -69,7 +69,7 @@ jobs:
 
   ContourGrafanaVerify:
     runs-on: ubuntu-latest
-    name: Verify Grafana Dashboard
+    name: Verify Grafana Dashboard (Contour)
     environment: ${{ github.event.inputs.environment }}
     needs: [ContourDeploy]
     env:
@@ -357,7 +357,7 @@ jobs:
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp]
+    needs: [ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp,ContourGrafanaVerify, NginxGrafanaVerify, TraefikGrafanaVerify]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
