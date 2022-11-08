@@ -296,6 +296,19 @@ jobs:
         run: |
           curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
+  TraefikDeploy_SmokeTest_VoteApp:
+    needs: [TraefikDeploy]
+    uses: ./.github/workflows/AppDeploy_AzureVote.yml
+    with:
+      Environment: ${{ github.event.inputs.environment }}
+      RG: ${{ needs.ReusableWF.outputs.RG }}
+      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      AGNAME: ''
+      APPNAME: ingvote
+      INGRESSTYPE: "traefik"
+      FORCEHELMCLEANINSTALL: true
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   TraefikDeploy_SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
