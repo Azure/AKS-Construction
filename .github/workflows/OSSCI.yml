@@ -354,7 +354,7 @@ jobs:
           curl $pubIp
 
   TraefikTroubleshoot:
-    needs: [TraefikDeploy, ReusableWF]
+    needs: [TraefikDeploy, ReusableWF, TraefikGrafanaVerify]
     name: Traefik Troubleshoot
     uses: ./.github/workflows/AksTroubleshooting.yml
     if: always()
