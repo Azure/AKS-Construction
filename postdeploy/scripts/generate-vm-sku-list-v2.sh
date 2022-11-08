@@ -1,3 +1,5 @@
+#!/bin/sh
+
 begin=$(date +"%s")
 echo "Creating Sku list..."
 
@@ -30,7 +32,7 @@ for loc in $(echo "${locations}" | jq -r '.[] | @base64'); do
     location=$(_jqloc '.key') #location
     locationFilter="location%20eq%20'$location'"
     #Only call API for locations and not groups of locations
-    if [[ $(_jqloc 'has("itemType")') == false ]];
+    if [ $(_jqloc 'has("itemType")') = false ]
     then
         reqUrl="https://management.azure.com/subscriptions/$SubscriptionId/providers/Microsoft.Compute/skus?api-version=2021-07-01&\$filter=$locationFilter"
         skus=$(az rest --method GET --uri $reqUrl)
@@ -59,7 +61,7 @@ for loc in $(echo "${locations}" | jq -r '.[] | @base64'); do
                 echo ${row} | base64 --decode | jq -r ${1}
                 }
                 cpu=$(echo $(_jq) | jq -r        '.capabilities | .[] | select(.name=="vCPUs") | .value')
-                if [[ cpu -ge $minCPUs && cpu -le $maxCPUs ]];
+                if [ $cpu -ge $minCPUs ] && [ $cpu -le $maxCPUs ];
                 then
                     name=$(_jq '.name')
                     osSize=$(echo $(_jq) | jq -r     '.capabilities | .[] | select(.name=="OSVhdSizeMB") | .value')
@@ -72,14 +74,14 @@ for loc in $(echo "${locations}" | jq -r '.[] | @base64'); do
 
                     #Build text property
                     cacheGB=$((cacheGB + 0))
-                    if [[ cacheGB -eq 0  ]];
+                    if [ $cacheGB -eq 0  ];
                     then
                         cache=""
                         eph=false
                     else
                         iops=$(echo $(_jq) | jq -r       '.capabilities | .[] | select(.name=="CombinedTempDiskAndCachedIOPS") | .value')
                         cache=", $cacheGB cache ($iops IOPS)"
-                        if [[ cacheGB -ge $ephMinCacheSizeGB ]];
+                        if [ $cacheGB -ge $ephMinCacheSizeGB ];
                         then
                             eph=true
                         else
