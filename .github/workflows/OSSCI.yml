@@ -21,11 +21,11 @@ on:
         default: Traefik
 
   #Run when PR's are made to main, where the changes are in the bicep directory or this workflow file itself
-  pull_request:
-    branches: [main]
-    paths:
-      - "bicep/*"
-      - ".github/workflows/OSSCI.yml"
+  #pull_request:
+  #  branches: [main]
+  #  paths:
+  #    - "bicep/*"
+  #    - ".github/workflows/OSSCI.yml"
 
   #Run on a weekly schedule
   schedule:
@@ -36,7 +36,7 @@ env:
   RG: "AksBicepAcc-Ci-OssCluster" #The resource group we're deploying to.
   RESNAME: "AksOss" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-  AZCLIVERSION: 2.38.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.42.0 #Pinning to a specific AZ CLI version
 
 permissions:
       id-token: write
@@ -165,6 +165,7 @@ jobs:
   NginxDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.ingressController == 'Nginx' || github.event.inputs.ingressController == 'All') || github.event_name != 'workflow_dispatch'
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       templateVersion: "0.9.3-preview3"
@@ -266,6 +267,7 @@ jobs:
   TraefikDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.ingressController == 'Traefik' || github.event.inputs.ingressController == 'All') || github.event_name != 'workflow_dispatch'
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       templateVersion: "0.9.3-preview3"
