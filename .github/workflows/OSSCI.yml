@@ -302,7 +302,7 @@ jobs:
     with:
       Environment: ${{ github.event.inputs.environment }}
       RG: ${{ needs.ReusableWF.outputs.RG }} 
-      AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
+      AKSNAME: ${{needs.TraefikDeploy.outputs.AKSNAME}}
       AGNAME: ''
       APPNAME: ingvote
       INGRESSTYPE: "traefik"
