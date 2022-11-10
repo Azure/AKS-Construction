@@ -9,6 +9,16 @@ on:
         required: true
         default: "csu"
         type: environment
+      ingressController:
+        description: "Which ingress controller to deploy"
+        type: choice
+        options:
+          - All
+          - Nginx
+          - Contour
+          - Traefik
+        required: true
+        default: Traefik
 
   #Run when PR's are made to main, where the changes are in the bicep directory or this workflow file itself
   pull_request:
@@ -53,6 +63,7 @@ jobs:
   ContourDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.ingressController == 'Contour' || github.event.inputs.ingressController == 'All') || github.event_name != 'workflow_dispatch'
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       templateVersion: "0.9.3-preview3"
