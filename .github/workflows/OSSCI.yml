@@ -89,7 +89,9 @@ jobs:
       - name: Curl Grafana domain (on 80)
         env:
           HOSTNAME: grafanacnt.aksc.msftcsu.net
-        run: curl $HOSTNAME
+        run: |
+          sleep 60s
+          curl $HOSTNAME
 
       - name: Verify Grafana dashboard available TLS
         timeout-minutes: 5
@@ -191,7 +193,9 @@ jobs:
       - name: Curl Grafana domain (on 80)
         env:
           HOSTNAME: grafanangx.aksc.msftcsu.net
-        run: curl $HOSTNAME
+        run: |
+          sleep 60s
+          curl $HOSTNAME
 
       - name: Verify Grafana dashboard available TLS
         timeout-minutes: 5
@@ -293,7 +297,9 @@ jobs:
       - name: Curl Grafana domain (on 80)
         env:
           HOSTNAME: grafanatrae.aksc.msftcsu.net
-        run: curl $HOSTNAME
+        run: |
+          sleep 60s
+          curl $HOSTNAME
 
       - name: Verify Grafana dashboard available TLS
         timeout-minutes: 5
