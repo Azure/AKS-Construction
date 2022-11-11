@@ -306,15 +306,12 @@ if [ "$ingress" = "traefik" ]; then
     echo "#                 Install Traefik Ingress Controller"
     kubectl create namespace ${traefik_namespace} --dry-run=client -o yaml | kubectl apply -f -
     helm repo add traefik https://helm.traefik.io/traefik
-    traefikcmd="helm upgrade --install ${traefik_helm_release_name} traefik/traefik \
-        --set deployment.kind=${ingress_controller_kind} \
+    helm upgrade --install ${traefik_helm_release_name} traefik/traefik \
+        --set deployment.kind="${ingress_controller_kind}" \
         --set service.spec.externalTrafficPolicy=${ingress_externalTrafficPolicy} \
         --set providers.kubernetesIngress.publishedService.enabled=true \
         --set metrics.prometheus.enabled=true \
         --namespace ${traefik_namespace}"
-    echo "Running $traefikcmd"    
-    "$traefikcmd --dry-run"
-    $traefikcmd
 fi
 
 
