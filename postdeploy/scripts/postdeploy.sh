@@ -309,6 +309,7 @@ if [ "$ingress" = "traefik" ]; then
     helm upgrade --install ${traefik_helm_release_name} traefik/traefik \
         --set deployment.kind="${ingress_controller_kind}" \
         --set service.spec.externalTrafficPolicy=${ingress_externalTrafficPolicy} \
+        --set providers.kubernetesIngress.publishedService.enabled=true
         --set metrics.prometheus.enabled=true \
         --namespace ${traefik_namespace}
 fi
