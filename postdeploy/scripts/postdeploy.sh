@@ -311,7 +311,7 @@ if [ "$ingress" = "traefik" ]; then
         --set service.spec.externalTrafficPolicy=${ingress_externalTrafficPolicy} \
         --set providers.kubernetesIngress.publishedService.enabled=true \
         --set metrics.prometheus.enabled=true \
-        --namespace ${traefik_namespace}"
+        --namespace ${traefik_namespace}
 fi
 
 
