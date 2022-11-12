@@ -360,7 +360,7 @@ if [ "$dnsZoneId" ]; then
     fi
 
     EXTERNAL_DNS_REPO=$(get_image_property "externaldns.1_9_0.images.image.repository")
-    dnsImageRepo="$(get_image_property "externaldns.1_11_0.images.image.registry")/${EXTERNAL_DNS_REPO}"
+    dnsImageRepo="$(get_image_property "externaldns.1_9_0.images.image.registry")/${EXTERNAL_DNS_REPO}"
     if [ "$acrName" ]; then
         dnsImageRepo="${acrName}.azurecr.io/${EXTERNAL_DNS_REPO}"
     fi
