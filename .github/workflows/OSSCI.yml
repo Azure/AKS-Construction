@@ -107,63 +107,6 @@ jobs:
         run: |
           curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
-
-  ContourDeploy_SmokeTest_SimpleApp:
-    runs-on: ubuntu-latest
-    name: Simple App (Contour)
-    environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy]
-    steps:
-      - uses: actions/checkout@v2.5.0
-
-      - name: Azure Login
-        uses: Azure/login@v1.4.6
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: AKS Connect
-        env:
-          AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
-        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
-
-      - name: Kubelogin
-        env:
-          kubeloginversion: 'v0.0.20'
-        run: |
-          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
-          unzip kubelogin-linux-amd64.zip
-          sudo mv bin/linux_amd64/kubelogin /usr/bin
-          kubelogin convert-kubeconfig -l azurecli
-
-      - name: Deploy Simple Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-          NAMESP: "votey"
-        run: |
-            echo "Creating namespace $NAMESP"
-            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-
-      - name: Verify Simple Workload
-        id: simpleworkloadverify
-        env:
-          NAMESP: "votey"
-        run: |
-          sleep 2m #Give public ip a chance to be allocated
-
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-
-          pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
-          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
-
-          curl $pubIp
-
   NginxDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
@@ -210,63 +153,6 @@ jobs:
       - name: Verify Grafana Certificate
         run: |
           curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
-
-  NginxDeploy_SmokeTest_SimpleApp:
-    runs-on: ubuntu-latest
-    name: Simple App (Nginx)
-    environment: ${{ github.event.inputs.environment }}
-    needs: [NginxDeploy]
-    steps:
-      - uses: actions/checkout@v2.5.0
-
-      - name: Azure Login
-        uses: Azure/login@v1.4.6
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: AKS Connect
-        env:
-          AKSNAME: ${{ needs.NginxDeploy.outputs.AKSNAME}}
-        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
-
-      - name: Kubelogin
-        env:
-          kubeloginversion: 'v0.0.20'
-        run: |
-          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
-          unzip kubelogin-linux-amd64.zip
-          sudo mv bin/linux_amd64/kubelogin /usr/bin
-          kubelogin convert-kubeconfig -l azurecli
-
-      - name: Deploy Simple Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-          NAMESP: "votey"
-        run: |
-            echo "Creating namespace $NAMESP"
-            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-
-      - name: Verify Simple Workload
-        id: simpleworkloadverify
-        env:
-          NAMESP: "votey"
-        run: |
-          sleep 2m #Give public ip a chance to be allocated
-
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-
-          pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
-          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
-
-          curl $pubIp
-
 
   TraefikDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
@@ -315,96 +201,10 @@ jobs:
         run: |
           curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
-  TraefikDeploy_SmokeTest_VoteApp:
-    needs: [TraefikDeploy, ReusableWF]
-    uses: ./.github/workflows/AppDeploy_AzureVote.yml
-    with:
-      Environment: ${{ github.event.inputs.environment }}
-      RG: ${{ needs.ReusableWF.outputs.RG }} 
-      AKSNAME: ${{needs.TraefikDeploy.outputs.AKSNAME}}
-      AGNAME: ''
-      APPNAME: ingvote
-      INGRESSTYPE: "traefik"
-      FORCEHELMCLEANINSTALL: true
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-
-  TraefikDeploy_SmokeTest_SimpleApp:
-    runs-on: ubuntu-latest
-    name: Simple App (Traefik)
-    environment: ${{ github.event.inputs.environment }}
-    needs: [TraefikDeploy]
-    steps:
-      - uses: actions/checkout@v2.5.0
-
-      - name: Azure Login
-        uses: Azure/login@v1.4.6
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: AKS Connect
-        env:
-          AKSNAME: ${{ needs.TraefikDeploy.outputs.AKSNAME}}
-        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
-
-      - name: Kubelogin
-        env:
-          kubeloginversion: 'v0.0.20'
-        run: |
-          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
-          unzip kubelogin-linux-amd64.zip
-          sudo mv bin/linux_amd64/kubelogin /usr/bin
-          kubelogin convert-kubeconfig -l azurecli
-
-      - name: Deploy Simple Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-          NAMESP: "votey"
-        run: |
-            echo "Creating namespace $NAMESP"
-            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-
-      - name: Verify Simple Workload
-        id: simpleworkloadverify
-        env:
-          NAMESP: "votey"
-        run: |
-          sleep 2m #Give public ip a chance to be allocated
-
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-
-          pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
-          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
-
-          curl $pubIp
-
-  TraefikTroubleshoot:
-    needs: [TraefikDeploy, ReusableWF, TraefikGrafanaVerify, TraefikDeploy_SmokeTest_VoteApp, TraefikDeploy_SmokeTest_SimpleApp]
-    name: Traefik Troubleshoot
-    uses: ./.github/workflows/AksTroubleshooting.yml
-    if: always()
-    with:
-      Environment: ''
-      RG: ${{ needs.ReusableWF.outputs.RG }}
-      AKSNAME: ${{needs.TraefikDeploy.outputs.AKSNAME}}
-      AGNAME: ''
-      LANAME: ${{ needs.TraefikDeploy.outputs.LANAME}}
-      LAWGUID: ${{ needs.TraefikDeploy.outputs.LAWGUID}}
-      USERUNCMD: false
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp, TraefikDeploy_SmokeTest_SimpleApp,ContourGrafanaVerify, NginxGrafanaVerify, TraefikGrafanaVerify, TraefikTroubleshoot, TraefikDeploy_SmokeTest_VoteApp]
+    needs: [ContourGrafanaVerify, NginxGrafanaVerify, TraefikGrafanaVerify]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
