@@ -359,19 +359,19 @@ if [ "$dnsZoneId" ]; then
         provider="azure-private-dns"
     fi
 
-    EXTERNAL_DNS_REPO=$(get_image_property "externaldns.1_11_0.images.image.repository")
+    EXTERNAL_DNS_REPO=$(get_image_property "externaldns.1_9_0.images.image.repository")
     dnsImageRepo="$(get_image_property "externaldns.1_11_0.images.image.registry")/${EXTERNAL_DNS_REPO}"
     if [ "$acrName" ]; then
         dnsImageRepo="${acrName}.azurecr.io/${EXTERNAL_DNS_REPO}"
     fi
 
-    helm upgrade --install externaldns "https://$(get_image_property "externaldns.1_11_0.github_https_url")" \
+    helm upgrade --install externaldns "https://$(get_image_property "externaldns.1_9_0.github_https_url")" \
     --set domainFilters={"${dnsZoneId_domain}"} \
     --set provider="${provider}" \
     --set extraVolumeMounts[0].name=aks-kube-msi,extraVolumeMounts[0].mountPath=/etc/kubernetes,extraVolumeMounts[0].readOnly=true \
     --set extraVolumes[0].name=aks-kube-msi,extraVolumes[0].secret.secretName=aks-kube-msi \
     --set image.repository=${dnsImageRepo} \
-    --set image.tag=$(get_image_property "externaldns.1_11_0.images.image.tag")
+    --set image.tag=$(get_image_property "externaldns.1_9_0.images.image.tag")
 fi
 
 
