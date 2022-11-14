@@ -12,6 +12,7 @@ dnsZoneId=""
 denydefaultNetworkPolicy=""
 certEmail=""
 certClusterIssuer="letsencrypt-prod"
+containerLogsV2=""
 
 acrName=""
 KubeletId=""
@@ -24,7 +25,7 @@ while getopts "p:g:n:r:" opt; do
     p )
         IFS=',' read -ra params <<< "$OPTARG"
         for i in "${params[@]}"; do
-            if [[ $i =~ (ingress|monitor|enableMonitorIngress|grafanaHostname|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|certClusterIssuer|acrName|KubeletId|TenantId)=([^ ]*) ]]; then
+            if [[ $i =~ (ingress|monitor|enableMonitorIngress|grafanaHostname|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|certClusterIssuer|acrName|KubeletId|TenantId|containerLogsV2)=([^ ]*) ]]; then
                 echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
                 declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
             else
@@ -111,6 +112,7 @@ if [ "$show_usage" ]; then
     echo "     KubeletId=<managed identity of Kubelet> *Require for cert-manager"
     echo "     TenantId=<AzureAD TenentId> *Require for cert-manager"
     echo "     acrName=<name of ACR> * If provided, used imported images for 3rd party charts"
+    echo "     containerLogsV2=<true> - Enables ContainerLogsV2"
     exit 1
 fi
 
@@ -400,4 +402,16 @@ fi
 if [ "$denydefaultNetworkPolicy" ]; then
     echo "# ----------- Default Deny All Network Policy, east-west traffic in cluster"
     kubectl apply -f ${release_version:-./postdeploy/k8smanifests}/networkpolicy-deny-all.yml
+fi
+
+if [ "$containerLogsV2" ]; then
+    replace="\# containerlog_schema_version = \"v2\""
+    replaceWith='containerlog_schema_version = "v2"'
+    echo "Downloading default ConfigMap"
+    $configMapYamlFile="$(curl https://raw.githubusercontent.com/microsoft/Docker-Provider/ci_prod/kubernetes/container-azm-ms-agentconfig.yaml)"
+    echo "Setting containerlog_schema_version to v2"
+    echo "${configMapYamlFile/$replace/$replaceWith}" > container-azm-ms-agentconfig.yaml
+    echo "Applying ConfigMap using kubectl apply"
+    kubectl apply -f container-azm-ms-agentconfig.yaml
+    sleep 1m
 fi
