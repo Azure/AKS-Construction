@@ -9,13 +9,23 @@ on:
         required: true
         default: "csu"
         type: environment
+      ingressController:
+        description: "Which ingress controller to deploy"
+        type: choice
+        options:
+          - All
+          - Nginx
+          - Contour
+          - Traefik
+        required: true
+        default: Traefik
 
   #Run when PR's are made to main, where the changes are in the bicep directory or this workflow file itself
-  pull_request:
-    branches: [main]
-    paths:
-      - "bicep/*"
-      - ".github/workflows/OSSCI.yml"
+  #pull_request:
+  #  branches: [main]
+  #  paths:
+  #    - "bicep/*"
+  #    - ".github/workflows/OSSCI.yml"
 
   #Run on a weekly schedule
   schedule:
@@ -26,7 +36,7 @@ env:
   RG: "AksBicepAcc-Ci-OssCluster" #The resource group we're deploying to.
   RESNAME: "AksOss" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-  AZCLIVERSION: 2.38.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.42.0 #Pinning to a specific AZ CLI version
 
 permissions:
       id-token: write
@@ -45,7 +55,7 @@ jobs:
       PARAMFILE: ${{ env.ParamFilePath }}
       ExistingDnsDomainName: aksc.msftcsu.net
       ExistingDnsDomainRg: aksbicepacc-ci-deployvnet
-      
+
     steps:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet), so we need this job to proxy"
@@ -53,6 +63,7 @@ jobs:
   ContourDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.ingressController == 'Contour' || github.event.inputs.ingressController == 'All') || github.event_name != 'workflow_dispatch'
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       templateVersion: "0.9.3-preview3"
@@ -69,7 +80,7 @@ jobs:
 
   ContourGrafanaVerify:
     runs-on: ubuntu-latest
-    name: Verify Grafana Dashboard
+    name: Verify Grafana Dashboard (Contour)
     environment: ${{ github.event.inputs.environment }}
     needs: [ContourDeploy]
     env:
@@ -78,8 +89,10 @@ jobs:
       - name: Curl Grafana domain (on 80)
         env:
           HOSTNAME: grafanacnt.aksc.msftcsu.net
-        run: curl $HOSTNAME
-        
+        run: |
+          sleep 60s
+          curl $HOSTNAME
+
       - name: Verify Grafana dashboard available TLS
         timeout-minutes: 5
         run: |
@@ -89,94 +102,15 @@ jobs:
           respcode=$($curlcommand || sleep 1m; $curlcommand)
           echo $respcode
           curl --insecure $URL
-          
+
       - name: Verify Grafana Certificate
         run: |
           curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
-
-  ContourDeploy_SmokeTest_SimpleApp:
-    runs-on: ubuntu-latest
-    name: Simple App (Contour)
-    environment: ${{ github.event.inputs.environment }}
-    needs: [ContourDeploy]
-    steps:
-      - uses: actions/checkout@v2.5.0
-
-      - name: Azure Login
-        uses: Azure/login@v1.4.6
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: AKS Connect
-        env:
-          AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
-        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
-
-      - name: Kubelogin
-        env:
-          kubeloginversion: 'v0.0.20'
-        run: |
-          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
-          unzip kubelogin-linux-amd64.zip
-          sudo mv bin/linux_amd64/kubelogin /usr/bin
-          kubelogin convert-kubeconfig -l azurecli
-
-      - name: Deploy Simple Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-          NAMESP: "votey"
-        run: |
-            echo "Creating namespace $NAMESP"
-            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
-
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-
-      - name: Verify Simple Workload
-        id: simpleworkloadverify
-        env:
-          NAMESP: "votey"
-        run: |
-          sleep 2m #Give public ip a chance to be allocated
-
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
-
-          pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
-          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
-
-          curl $pubIp
-
-  #ContourSmokeTest_JavaApp-certmgr:
-  #  name: Complex App (Contour)
-  #  needs: [ContourDeploy, ReusableWF]
-  #  if: ${{ needs.ContourDeploy.outputs.AGNAME }} != '' && ${{ needs.ContourDeploy.outputs.AKVNAME }} != ''
-  #  uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-fedcred
-  #  with:
-  #    REPOREF: "0.9.2"
-  #    RG: ${{ needs.ReusableWF.outputs.RG }}
-  #    AKSNAME: ${{ needs.ContourDeploy.outputs.AKSNAME}}
-  #    DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
-  #    DNSRG: ${{needs.ReusableWF.outputs.ExistingDnsDomainRg}}
-  #    DNSRECORDNAME: openjdk-demo-contour
-  #    AKVNAME: ${{ needs.ContourDeploy.outputs.AKVNAME}}
-  #    AGNAME: ${{ needs.ContourDeploy.outputs.AGNAME}}
-  #    APPNAME: openjdk-demo-contour
-  #    FRONTENDCERTTYPE: certmanager-staging
-  #    FORCEHELMCLEANINSTALL: true
-  #  secrets:
-  #    AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  #    AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  #    AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
   NginxDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
-    if: false #The Nginx + Grafana piece has a bug resolved in Matts branch.
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.ingressController == 'Nginx' || github.event.inputs.ingressController == 'All') || github.event_name != 'workflow_dispatch'
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       templateVersion: "0.9.3-preview3"
@@ -191,66 +125,86 @@ jobs:
       USER_OBJECT_ID: ${{ secrets.USER_OBJECT_ID }}
       DNS_ZONE_ID: ${{ secrets.BYODNSZONEID }}
 
-  NginxDeploy_SmokeTest_SimpleApp:
+  NginxGrafanaVerify:
     runs-on: ubuntu-latest
-    name: Simple App (Nginx)
+    name: Verify Grafana Dashboard (Nginx)
     environment: ${{ github.event.inputs.environment }}
     needs: [NginxDeploy]
+    env:
+      URL: "https://grafanangx.aksc.msftcsu.net"
     steps:
-      - uses: actions/checkout@v2.5.0
-
-      - name: Azure Login
-        uses: Azure/login@v1.4.6
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: AKS Connect
+      - name: Curl Grafana domain (on 80)
         env:
-          AKSNAME: ${{ needs.NginxDeploy.outputs.AKSNAME}}
-        run: az aks get-credentials -n $AKSNAME -g $RG --overwrite-existing
-
-      - name: Kubelogin
-        env:
-          kubeloginversion: 'v0.0.20'
+          HOSTNAME: grafanangx.aksc.msftcsu.net
         run: |
-          wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
-          unzip kubelogin-linux-amd64.zip
-          sudo mv bin/linux_amd64/kubelogin /usr/bin
-          kubelogin convert-kubeconfig -l azurecli
+          sleep 60s
+          curl $HOSTNAME
 
-      - name: Deploy Simple Workload
-        env:
-          MANIFESTTESTURL: "https://raw.githubusercontent.com/Gordonby/AKS-K8S-Lab-L200/master/azure-vote-all-in-one-redis.yaml"
-          NAMESP: "votey"
+      - name: Verify Grafana dashboard available TLS
+        timeout-minutes: 5
         run: |
-            echo "Creating namespace $NAMESP"
-            kubectl create namespace $NAMESP --dry-run=client -o yaml | kubectl apply -f -
+          echo "curl $URL [$(date +"%T")]"
+          curlcommand="curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URL -v --trace-time"
+          echo "Running curl command $curlcommand with retry"
+          respcode=$($curlcommand || sleep 1m; $curlcommand)
+          echo $respcode
+          curl --insecure $URL
 
-            echo $MANIFESTTESTURL
-            kubectl apply -f $MANIFESTTESTURL -n  $NAMESP
-
-      - name: Verify Simple Workload
-        id: simpleworkloadverify
-        env:
-          NAMESP: "votey"
+      - name: Verify Grafana Certificate
         run: |
-          sleep 2m #Give public ip a chance to be allocated
+          curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
-          kubectl get po -n  $NAMESP
-          kubectl get svc -n  $NAMESP
+  TraefikDeploy:
+    uses: ./.github/workflows/AKSC_Deploy.yml
+    needs: [ReusableWF]
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.ingressController == 'Traefik' || github.event.inputs.ingressController == 'All') || github.event_name != 'workflow_dispatch'
+    with:
+      environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      templateVersion: "0.9.3-preview3"
+      rg: ${{ needs.ReusableWF.outputs.RG }}
+      resourceName: azcontour
+      templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      postScriptParams: "ingress=traefik,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,certClusterIssuer=letsencrypt-staging,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanatrae"
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      USER_OBJECT_ID: ${{ secrets.USER_OBJECT_ID }}
+      DNS_ZONE_ID: ${{ secrets.BYODNSZONEID }}
 
-          pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
-          echo $pubIp
-          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
+  TraefikGrafanaVerify:
+    runs-on: ubuntu-latest
+    name: Verify Grafana Dashboard (Traefik)
+    environment: ${{ github.event.inputs.environment }}
+    needs: [TraefikDeploy]
+    env:
+      URL: "https://grafanatrae.aksc.msftcsu.net"
+    steps:
+      - name: Curl Grafana domain (on 80)
+        env:
+          HOSTNAME: grafanatrae.aksc.msftcsu.net
+        run: |
+          sleep 60s
+          curl $HOSTNAME
 
-          curl $pubIp
+      - name: Verify Grafana dashboard available TLS
+        timeout-minutes: 5
+        run: |
+          echo "curl $URL [$(date +"%T")]"
+          curlcommand="curl --connect-timeout 2 --retry 25 --retry-delay 20 --no-keepalive --no-tcp-nodelay -X GET --insecure --write-out %{http_code} --silent --fail --output /dev/null $URL -v --trace-time"
+          echo "Running curl command $curlcommand with retry"
+          respcode=$($curlcommand || sleep 1m; $curlcommand)
+          echo $respcode
+          curl --insecure $URL
+
+      - name: Verify Grafana Certificate
+        run: |
+          curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
   Cleanup:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    needs: [ContourGrafanaVerify, ContourDeploy_SmokeTest_SimpleApp, NginxDeploy_SmokeTest_SimpleApp]
+    needs: [ContourGrafanaVerify, NginxGrafanaVerify, TraefikGrafanaVerify]
     if: false #github.event_name != 'workflow_dispatch'
     steps:
       - name: Azure Login
