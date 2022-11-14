@@ -851,8 +851,14 @@ param kedaAddon bool = false
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false
 
-@description('Enables the Blob CSI extension')
-param blobCSIAddon bool = false
+@description('Enables the Blob CSI driver')
+param blobCSIDriver bool = false
+
+@description('Enables the File CSI driver')
+param fileCSIDriver bool = true
+
+@description('Enables the Disk CSI driver')
+param diskCSIDriver bool = true
 
 @allowed([
   'none'
@@ -1249,7 +1255,13 @@ var aksProperties = union({
   }
   storageProfile: {
     blobCSIDriver: {
-      enabled: blobCSIAddon
+      enabled: blobCSIDriver
+    }
+    diskCSIDriver: {
+      enabled: diskCSIDriver
+    }
+    fileCSIDriver: {
+      enabled: fileCSIDriver
     }
   }
 },

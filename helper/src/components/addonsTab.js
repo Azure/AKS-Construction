@@ -75,7 +75,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         { key: 'appgw', text: 'Azure Application Gateway Ingress Controller add-on (https://azure.github.io/application-gateway-kubernetes-ingress)' },
                         { key: 'warNginx', text: 'AKS Web App Routing Solution, simple Nginx Ingress Controller (https://docs.microsoft.com/en-us/azure/aks/web-app-routing *preview)' },
                         { key: 'contour', text: 'Contour (https://projectcontour.io/)' },
-                        { key: 'nginx', text: 'Nginx ingress controller' }
+                        { key: 'nginx', text: 'Nginx ingress controller' },
+                        { key: 'traefik', text: 'Traefik ingress controller' }
                     ]}
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
@@ -173,7 +174,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             </>)
                     }
 
-                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") &&
+                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "traefik") &&
                         <>
                             <MessageBar messageBarType={MessageBarType.warning}>Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configuration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule to Azure Firewall </Link></MessageBar>
                             <Checkbox inputProps={{ "data-testid": "addons-dns"}} checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
@@ -220,7 +221,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 />
             </Stack.Item>
 
-            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") && addons.dns && addons.certMan &&
+            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "traefik") && addons.dns && addons.certMan &&
                 <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
                     <MessageBar messageBarType={MessageBarType.warning}>This will expose your your grafana dashboards to the internet, please login and change the default credentials asap (admin/prom-operator)</MessageBar>
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableMonitorIngress} onChange={(ev, v) => updateFn("enableMonitorIngress", v)} label={`Enable Public Ingress for Grafana (https://grafana.${addons.dnsZoneId && addons.dnsZoneId.split('/')[8]})`} />
@@ -377,9 +378,37 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Checkbox
                     styles={{ root: { marginLeft: "50px" } }}
                     inputProps={{ "data-testid": "addons-blob-csi-checkbox" }}
-                    checked={addons.blobCSIAddon}
-                    onChange={(ev, v) => updateFn("blobCSIAddon", v)}
-                    label="Install the Azure Blob CSI AddOn"
+                    checked={addons.blobCSIDriver}
+                    onChange={(ev, v) => updateFn("blobCSIDriver", v)}
+                    label="Install the Azure Blob CSI Driver"
+                />
+            </Stack.Item>
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    CSI File storage: Enable Driver to access Azure File Storage
+                    (<a target="_new" href="https://learn.microsoft.com/azure/aks/azure-files-dynamic-pv">docs</a>)
+                </Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-file-csi-checkbox" }}
+                    checked={addons.fileCSIDriver}
+                    onChange={(ev, v) => updateFn("fileCSIDriver", v)}
+                    label="Install the Azure File CSI Driver"
+                />
+            </Stack.Item>
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    CSI Disk storage: Enable Driver to access Azure Disk Storage
+                    (<a target="_new" href="https://learn.microsoft.com/azure/aks/azure-disks-dynamic-pv">docs</a>)
+                </Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-disk-csi-checkbox" }}
+                    checked={addons.diskCSIDriver}
+                    onChange={(ev, v) => updateFn("diskCSIDriver", v)}
+                    label="Install the Azure Disk CSI AddOn"
                 />
             </Stack.Item>
 

@@ -19,7 +19,6 @@ TenantId=""
 
 release_version=""
 
-
 while getopts "p:g:n:r:" opt; do
   case ${opt} in
     p )
@@ -29,7 +28,7 @@ while getopts "p:g:n:r:" opt; do
                 echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
                 declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
             else
-                echo "Unknown paramter $i"
+                echo "Unknown parameter $i"
                 show_usage=true
                 break
             fi
@@ -54,7 +53,7 @@ if [ "$dnsZoneId" ]; then
         dnsZoneId_type=${BASH_REMATCH[3]}
         dnsZoneId_domain=${BASH_REMATCH[4]}
     else
-        echo "dnsZoneId paramter needs to be a resourceId format for Azure DNS Zone"
+        echo "dnsZoneId parameter needs to be a resourceId format for Azure DNS Zone"
         show_usage=true
     fi
 
@@ -66,22 +65,22 @@ if [ "$dnsZoneId" ]; then
 fi
 
 if [ "$ingressEveryNode" ] && [[ ! $ingressEveryNode = "true" ]]; then
- echo "supported ingressEveryNode paramter values (true)"
+ echo "supported ingressEveryNode parameter values (true)"
  show_usage=true
 fi
 
 if [ "$denydefaultNetworkPolicy" ] && [[ ! $denydefaultNetworkPolicy = "true" ]]; then
- echo "supported denydefaultNetworkPolicy paramter values (true)"
+ echo "supported denydefaultNetworkPolicy parameter values (true)"
  show_usage=true
 fi
 
-if [ "$ingress" ] && [[ ! $ingress =~ (appgw|contour|nginx) ]]; then
- echo "supported ingress paramter values (appgw|contour|nginx)"
+if [ "$ingress" ] && [[ ! $ingress =~ (appgw|contour|nginx|traefik) ]]; then
+ echo "supported ingress parameter values (appgw|contour|nginx|traefik)"
  show_usage=true
 fi
 
 if [ "$ingressEveryNode" ] && [[ $ingress = "appgw" ]]; then
- echo "ingressEveryNode only supported if ingress paramter is (nginx|contour)"
+ echo "ingressEveryNode only supported if ingress parameter is (nginx|contour|traefik)"
  show_usage=true
 fi
 
@@ -115,7 +114,7 @@ if [ "$show_usage" ]; then
     exit 1
 fi
 
-#  Use the dependencies file to get the helmchart image details
+#  Uses dependencies.json as a config file to retrieve Helm Chart version details
 get_image_property () {
 
     fileloc=${release_version:-./helper/src}/dependencies.json
@@ -227,12 +226,12 @@ get_image_property_awk () {
 #        fi
 #fi
 
-ingress_controller_kind="deployment"
-ingress_externalTrafficPolicy="Cluster"
-if [ "$ingressEveryNode" ]; then
-    ingress_controller_kind="daemonset"
-    ingress_externalTrafficPolicy="Local"
-fi
+# ingress_controller_kind="Deployment"
+# ingress_externalTrafficPolicy="Cluster"
+# if [ "$ingressEveryNode" ]; then
+#     ingress_controller_kind="DaemonSet"
+#     ingress_externalTrafficPolicy="Local"
+# fi
 ingress_metrics_enabled=false
 if [ "$monitor" = "oss" ]; then
     ingress_metrics_enabled=true
@@ -267,6 +266,12 @@ fi
 
 if [ "$ingress" = "nginx" ]; then
 
+    ingress_controller_kind="Deployment"
+    ingress_externalTrafficPolicy="Cluster"
+    if [ "$ingressEveryNode" ]; then
+    ingress_controller_kind="DaemonSet"
+    ingress_externalTrafficPolicy="Local"
+    fi
     nginx_namespace="ingress-basic"
     nginx_helm_release_name="nginx-ingress"
 
@@ -285,8 +290,39 @@ if [ "$ingress" = "nginx" ]; then
         --namespace ${nginx_namespace}
 fi
 
+if [ "$ingress" = "traefik" ]; then
+
+    ingress_controller_kind="Deployment"
+    ingress_externalTrafficPolicy="Cluster"
+    if [ "$ingressEveryNode" ]; then
+    ingress_controller_kind="DaemonSet"
+    ingress_externalTrafficPolicy="Local"
+    fi
+
+    traefik_namespace="ingress-basic"
+    traefik_helm_release_name="traefik"
+
+    echo "# ------------------------------------------------"
+    echo "#                 Install Traefik Ingress Controller"
+    kubectl create namespace ${traefik_namespace} --dry-run=client -o yaml | kubectl apply -f -
+    helm repo add traefik https://helm.traefik.io/traefik
+    helm upgrade --install ${traefik_helm_release_name} traefik/traefik \
+        --set deployment.kind="${ingress_controller_kind}" \
+        --set service.spec.externalTrafficPolicy=${ingress_externalTrafficPolicy} \
+        --set providers.kubernetesIngress.publishedService.enabled=true \
+        --set metrics.prometheus.enabled=true \
+        --namespace ${traefik_namespace}
+fi
+
 
 if [ "$ingress" = "contour" ]; then
+
+    ingress_controller_kind="deployment"
+    ingress_externalTrafficPolicy="Cluster"
+    if [ "$ingressEveryNode" ]; then
+    ingress_controller_kind="daemonset"
+    ingress_externalTrafficPolicy="Local"
+    fi
 
     contour_namespace="ingress-basic"
     contour_helm_release_name="contour-ingress"

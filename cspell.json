@@ -124,6 +124,7 @@
         "testid",
         "Tfcmd",
         "tfplan",
+        "traefik",
         "updatevals",
         "urlname",
         "userauth",

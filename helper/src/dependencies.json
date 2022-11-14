@@ -47,6 +47,16 @@
                     "tag": "v0.11.0"
                 }
             }
+        },
+        "1_11_0": {
+            "github_https_url": "github.com/kubernetes-sigs/external-dns/releases/download/external-dns-helm-chart-1.11.0/external-dns-1.11.0.tgz",
+            "images": {
+                "image": {
+                    "registry": "k8s.gcr.io",
+                    "repository": "external-dns/external-dns",
+                    "tag": "v0.12.2"
+                }
+            }
         }
     }
 }
