@@ -139,7 +139,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy && { denydefaultNetworkPolicy: addons.denydefaultNetworkPolicy}),
     ...(addons.ingress !== "none" && {
 
-        ...((addons.ingress === "contour" || addons.ingress === "nginx") && {
+        ...((addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik") && {
           ingress: addons.ingress,
           ...(addons.ingressEveryNode && { ingressEveryNode: addons.ingressEveryNode})
         }),
@@ -158,7 +158,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(addons.monitor === "oss" && {
       monitor: addons.monitor,
-      ...(addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" && {
+      ...(addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik" && {
         ingress: addons.ingress,
         ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
       })
