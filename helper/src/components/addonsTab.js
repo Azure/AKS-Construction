@@ -358,9 +358,37 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Checkbox
                     styles={{ root: { marginLeft: "50px" } }}
                     inputProps={{ "data-testid": "addons-blob-csi-checkbox" }}
-                    checked={addons.blobCSIAddon}
-                    onChange={(ev, v) => updateFn("blobCSIAddon", v)}
-                    label="Install the Azure Blob CSI AddOn"
+                    checked={addons.blobCSIDriver}
+                    onChange={(ev, v) => updateFn("blobCSIDriver", v)}
+                    label="Install the Azure Blob CSI Driver"
+                />
+            </Stack.Item>
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    CSI File storage: Enable Driver to access Azure File Storage
+                    (<a target="_new" href="https://learn.microsoft.com/azure/aks/azure-files-dynamic-pv">docs</a>)
+                </Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-file-csi-checkbox" }}
+                    checked={addons.fileCSIDriver}
+                    onChange={(ev, v) => updateFn("fileCSIDriver", v)}
+                    label="Install the Azure File CSI Driver"
+                />
+            </Stack.Item>
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    CSI Disk storage: Enable Driver to access Azure Disk Storage
+                    (<a target="_new" href="https://learn.microsoft.com/azure/aks/azure-disks-dynamic-pv">docs</a>)
+                </Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-disk-csi-checkbox" }}
+                    checked={addons.diskCSIDriver}
+                    onChange={(ev, v) => updateFn("diskCSIDriver", v)}
+                    label="Install the Azure Disk CSI AddOn"
                 />
             </Stack.Item>
 

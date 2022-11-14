@@ -80,6 +80,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
     ...(cluster.apisecurity === "private" && cluster.apisecurity === "private" && defaults.cluster.privateClusterDnsMethod !== cluster.privateClusterDnsMethod && { privateClusterDnsMethod: cluster.privateClusterDnsMethod }),
     ...(cluster.apisecurity === "private" && cluster.apisecurity === "private" && cluster.privateClusterDnsMethod === 'privateDnsZone' && { dnsApiPrivateZoneId: cluster.dnsApiPrivateZoneId }),
+    ...(defaults.addons.fileCSIDriver !== addons.fileCSIDriver && {fileCSIDriver: addons.fileCSIDriver }),
+    ...(defaults.addons.diskCSIDriver !== addons.diskCSIDriver && {diskCSIDriver: addons.diskCSIDriver }),
     ...(addons.ingress !== "none" && addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
     ...(addons.ingress === "appgw" && {
       ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
@@ -129,7 +131,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       ...(addons.ingress !== defaults.addons.ingress && {warIngressNginx: true})
     }),
     ...(defaults.addons.kedaAddon !== addons.kedaAddon && {kedaAddon: addons.kedaAddon }),
-    ...(defaults.addons.blobCSIAddon !== addons.blobCSIAddon && {blobCSIAddon: addons.blobCSIAddon }),
+    ...(defaults.addons.blobCSIDriver !== addons.blobCSIDriver && {blobCSIDriver: addons.blobCSIDriver }),
     ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {oidcIssuer: true, workloadIdentity: addons.workloadIdentity }),
     ...(net.networkPlugin === 'azure' && net.networkPluginMode && {networkPluginMode: 'Overlay'}),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
