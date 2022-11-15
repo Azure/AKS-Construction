@@ -1,6 +1,6 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
+import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, SpinButton } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 
 
@@ -231,6 +231,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         label="Daily data cap (GB)"
                         defaultValue="0"
                         value={addons.logDataCap}
+                        onChange={(ev, { key }) => updateFn("logDataCap", key)} selectedKey={addons.logDataCap}
                         min={0}
                         max={100}
                         step={1}
