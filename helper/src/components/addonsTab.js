@@ -189,7 +189,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Label >Cluster Monitoring requirements</Label>
                 <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monitor for Containers option, or the open source CNCF Prometheus/Grafana solution</MessageBar>
                 { addons.monitor === "aci" &&
-                    <MessageBar messageBarType={MessageBarType.info}>For sending logs to a central subscription workspace, use <link target="_target" href="https://learn.microsoft.com/azure/azure-monitor/essentials/diagnostic-settings-policy">Azure Policy</link> to configure AKS DiagnosticSettings.</MessageBar>
+                    <MessageBar messageBarType={MessageBarType.info}>For sending logs to a central subscription workspace, use <Link target="_target" href="https://learn.microsoft.com/azure/azure-monitor/essentials/diagnostic-settings-policy">Azure Policy</Link> to configure AKS DiagnosticSettings.</MessageBar>
                 }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
@@ -229,14 +229,14 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
                     <SpinButton
                         label="Daily data cap (GB)"
-                        defaultValue="0"
                         value={addons.logDataCap}
-                        onChange={(ev, { key }) => updateFn("logDataCap", key)} selectedKey={addons.logDataCap}
+                        onChange={(ev, v) => updateFn("logDataCap", v)}
                         min={0}
                         max={100}
                         step={1}
                         incrementButtonAriaLabel="Increase value by 1"
                         decrementButtonAriaLabel="Decrease value by 1"
+                        styles={{ root: { marginTop: '15px'}}}
                     />
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />

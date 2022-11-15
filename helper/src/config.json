@@ -55,6 +55,7 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "logDataCap": 0,
             "warIngressNginx": false,
             "daprAddon": false,
             "daprAddonHA": false,
