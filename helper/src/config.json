@@ -39,6 +39,7 @@
             "autoscale": true,
             "upgradeChannel": "none",
             "SystemPoolType": "CostOptimised",
+            "nodepoolName": "npuser01",
             "agentCount": 3,
             "maxCount": 20,
             "computeType": "gp",

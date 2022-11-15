@@ -890,6 +890,11 @@ param agentCount int = 3
 param agentCountMax int = 0
 var autoScale = agentCountMax > agentCount
 
+@minLength(3)
+@maxLength(20)
+@description('Name for user node pool')
+param nodePoolName string = 'npuser01'
+
 @description('Allocate pod ips dynamically')
 param cniDynamicIpAllocation bool = false
 
@@ -1108,7 +1113,7 @@ var userPoolVmProfile = {
 }
 
 var agentPoolProfileUser = union({
-  name: 'npuser01'
+  name: nodePoolName
   mode: 'User'
   osDiskType: osDiskType
   osDiskSizeGB: osDiskSizeGB
