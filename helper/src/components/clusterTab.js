@@ -32,6 +32,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             console.log (`agentCount=${newp.agentCount} MIN=${AGENT_COUNT_MIN} MAX=${AGENT_COUNT_MAX}`)
             console.log (`maxCount=${newp.maxCount} MIN=${MAXCOUNT_MIN}`)
 
+            if(newp.SystemPoolType!=='none' && !cluster.nodepoolName){
+                cluster.nodepoolName = 'npuser01'
+            }
+
             if (newp.maxCount < MAXCOUNT_MIN) {
                 updatevals = {...updatevals, maxCount: MAXCOUNT_MIN}
             }
@@ -116,7 +120,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         label={`Node count range ${cluster.autoscale ? 'range' : ''}`} min={0}  max={100} step={1}
                         value={cluster.autoscale? cluster.maxCount : cluster.agentCount} showValue={true}
                         onChange={(val, range) => sliderUpdateFn(cluster.autoscale ? {agentCount: range[0], maxCount: range[1]} : {agentCount: val})} />
-                        <TextField label="User node pool name" onChange={(ev, val) => updateFn('nodepoolName', val)} errorMessage={getError(invalidArray, 'nodepoolName')} value={cluster.nodepoolName} />
+                        <TextField placeholder='npuser01' label="User node pool name" onChange={(ev, val) => updateFn('nodepoolName', val)} required errorMessage={getError(invalidArray, 'nodepoolName')} value={cluster.nodepoolName} />
                     </Stack.Item>
                 </Stack>
 
