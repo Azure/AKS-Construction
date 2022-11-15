@@ -67,7 +67,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(deploy.enableTelemetry !== defaults.deploy.enableTelemetry && {enableTelemetry: deploy.enableTelemetry }),
     ...(addons.monitor === "aci" && {
         omsagent: true, retentionInDays: addons.retentionInDays,
-        logDataCap: addons.logDataCap,
+        ...( addons.logDataCap !== defaults.addons.logDataCap && {logDataCap: addons.logDataCap }),
         ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts })
        }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
