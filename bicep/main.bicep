@@ -1089,7 +1089,7 @@ var systemPoolPresets = {
 }
 
 var systemPoolBase = {
-  name: 'npsystem'
+  name:  JustUseSystemPool ? nodePoolName : 'npsystem'
   mode: 'System'
   osType: 'Linux'
   maxPods: 30
@@ -1127,6 +1127,10 @@ var agentPoolProfileUser = union({
 }, userPoolVmProfile)
 
 var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
+
+
+output userNodePoolName string = nodePoolName
+output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 

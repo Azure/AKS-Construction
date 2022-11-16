@@ -47,12 +47,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             }
 
             //clear when changing computeType
-            if (newp.computeType)
-            {
-               updatevals = {...updatevals, vmSize: null}
-
-            }
-
+            //if (newp.computeType)
+            //{
+              // updatevals = {...updatevals, vmSize: null}
+            //}
 
             return updatevals
         })
@@ -120,7 +118,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         label={`Node count range ${cluster.autoscale ? 'range' : ''}`} min={0}  max={100} step={1}
                         value={cluster.autoscale? cluster.maxCount : cluster.agentCount} showValue={true}
                         onChange={(val, range) => sliderUpdateFn(cluster.autoscale ? {agentCount: range[0], maxCount: range[1]} : {agentCount: val})} />
-                        <TextField placeholder='npuser01' label="User node pool name" onChange={(ev, val) => updateFn('nodepoolName', val)} required errorMessage={getError(invalidArray, 'nodepoolName')} value={cluster.nodepoolName} />
+                        <TextField placeholder='npuser01' label="Node pool name" onChange={(ev, val) => updateFn('nodepoolName', val)} required errorMessage={getError(invalidArray, 'nodepoolName')} value={cluster.nodepoolName} />
                     </Stack.Item>
                 </Stack>
 

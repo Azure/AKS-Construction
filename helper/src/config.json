@@ -40,6 +40,7 @@
             "upgradeChannel": "none",
             "SystemPoolType": "CostOptimised",
             "nodepoolName": "npuser01",
+            "systemNodepoolName": "npsystem",
             "agentCount": 3,
             "maxCount": 20,
             "computeType": "gp",
