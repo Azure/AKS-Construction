@@ -33,18 +33,18 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
-                <Checkbox disabled={addons.registry !== "Premium"} checked={addons.enableACRTrustPolicy} onChange={(ev, v) => updateFn("enableACRTrustPolicy", v)} label={<Text>Enable ACR Docker Content Trust Capability (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>)</Text>} />
+                <Checkbox checked={addons.enableACRTrustPolicy} onChange={(ev, v) => updateFn("enableACRTrustPolicy", v)} label={<Text>Enable ACR Docker Content Trust Capability (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>)</Text>} />
                 {addons.enableACRTrustPolicy === true &&
-                    <MessageBar styles={{ root: { width: '700px' } }} messageBarType={MessageBarType.info}>To enable client trust in AKS, leverage open source tooling eg. <a target="_new" href="https://github.com/sse-secure-systems/connaisseur">Connaisseur</a>  (<a target="_new" href="https://github.com/Gordonby/connaisseur-aks-acr">sample</a>)</MessageBar>
+                    <MessageBar styles={{ root: { marginTop: '10px',width: '700px' } }} messageBarType={MessageBarType.info}>To enable client trust in AKS, leverage open source tooling eg. <a target="_new" href="https://github.com/sse-secure-systems/connaisseur">Connaisseur</a>  (<a target="_new" href="https://github.com/Gordonby/connaisseur-aks-acr">sample</a>)</MessageBar>
                 }
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
                 <Checkbox disabled={addons.registry !== "Premium"} checked={addons.acrUntaggedRetentionPolicyEnabled} onChange={(ev, v) => updateFn("acrUntaggedRetentionPolicyEnabled", v)} label={<Text>Create untagged image retention policy (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>) (*preview)</Text>} />
-                <MessageBar styles={{ root: { width: '700px' } }} messageBarType={MessageBarType.warning}>Deleting untagged images will remove them from your ACR after a defined period (<a target="_new" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy">docs</a>) (*preview)</MessageBar>
+                <MessageBar styles={{ root: { marginTop: '10px', width: '700px' } }} messageBarType={MessageBarType.warning}>Deleting untagged images will remove them from your ACR after a defined period (<a target="_new" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy">docs</a>) (*preview)</MessageBar>
 
                 {addons.acrUntaggedRetentionPolicyEnabled && (
-                    <Stack.Item style={{ marginLeft: "20px"}}>
+                    <Stack.Item style={{ marginTop: '10px', marginLeft: "50px"}}>
                         <Slider label="Days to retain untagged images for" min={0} max={365} step={1} defaultValue={addons.acrUntaggedRetentionPolicy} showValue={true}
                             onChange={(v) => updateFn("acrUntaggedRetentionPolicy", v)}
                             snapToStep />
