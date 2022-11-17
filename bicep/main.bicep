@@ -890,6 +890,11 @@ param agentCount int = 3
 param agentCountMax int = 0
 var autoScale = agentCountMax > agentCount
 
+@minLength(3)
+@maxLength(20)
+@description('Name for user node pool')
+param nodePoolName string = 'npuser01'
+
 @description('Allocate pod ips dynamically')
 param cniDynamicIpAllocation bool = false
 
@@ -1084,7 +1089,7 @@ var systemPoolPresets = {
 }
 
 var systemPoolBase = {
-  name: 'npsystem'
+  name:  JustUseSystemPool ? nodePoolName : 'npsystem'
   mode: 'System'
   osType: 'Linux'
   maxPods: 30
@@ -1108,7 +1113,7 @@ var userPoolVmProfile = {
 }
 
 var agentPoolProfileUser = union({
-  name: 'npuser01'
+  name: nodePoolName
   mode: 'User'
   osDiskType: osDiskType
   osDiskSizeGB: osDiskSizeGB
@@ -1122,6 +1127,10 @@ var agentPoolProfileUser = union({
 }, userPoolVmProfile)
 
 var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
+
+
+output userNodePoolName string = nodePoolName
+output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
