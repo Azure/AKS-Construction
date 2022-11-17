@@ -252,7 +252,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         value={addons.logDataCap}
                         onChange={(ev, v) => updateFn("logDataCap", v)}
                         min={0}
-                        max={100}
                         step={1}
                         incrementButtonAriaLabel="Increase value by 1"
                         decrementButtonAriaLabel="Decrease value by 1"
