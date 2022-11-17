@@ -891,7 +891,7 @@ param agentCountMax int = 0
 var autoScale = agentCountMax > agentCount
 
 @minLength(3)
-@maxLength(20)
+@maxLength(12)
 @description('Name for user node pool')
 param nodePoolName string = 'npuser01'
 
