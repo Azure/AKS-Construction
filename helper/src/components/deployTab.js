@@ -32,7 +32,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
-    ...(((cluster.nodepoolName.toLowerCase() !== defaults.cluster.nodepoolName  && cluster.SystemPoolType !== 'none') || ( cluster.SystemPoolType === 'none' && cluster.nodepoolName.toLowerCase() !== defaults.cluster.systemNodepoolName )) && { nodePoolName: cluster.nodepoolName }),
+    ...(((cluster.nodepoolName.toLowerCase() !== defaults.cluster.nodepoolName  && cluster.SystemPoolType !== 'none')
+        || ( cluster.SystemPoolType === 'none' && (cluster.nodepoolName.toLowerCase() !== defaults.cluster.systemNodepoolName && cluster.nodepoolName.toLowerCase() !== defaults.cluster.nodepoolName )))
+        && { nodePoolName: cluster.nodepoolName }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
