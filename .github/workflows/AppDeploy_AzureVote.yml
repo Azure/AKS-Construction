@@ -46,7 +46,7 @@ on:
         default: false
         required: false
       HELMPACKAGEURI:
-        default: "https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.9.82.tgz" #"https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.9.8.tgz"
+        default: "https://github.com/Gordonby/minihelm/raw/main/samples/AzureVote-0.9.8.tgz"
         required: false
         type: string
         description: "The location of the Helm package"

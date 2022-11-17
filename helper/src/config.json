@@ -57,6 +57,10 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "logDataCap": 0,
+            "acrUntaggedRetentionPolicy": 30,
+            "acrUntaggedRetentionPolicyEnabled": false,
+            "enableACRTrustPolicy": false,
             "warIngressNginx": false,
             "daprAddon": false,
             "daprAddonHA": false,

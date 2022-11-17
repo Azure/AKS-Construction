@@ -1,6 +1,6 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
+import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, SpinButton } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 
 
@@ -30,6 +30,26 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <MessageBar styles={{ root: { marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'registry')}</MessageBar>
                 }
 
+            </Stack.Item>
+
+            <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
+                <Checkbox checked={addons.enableACRTrustPolicy} onChange={(ev, v) => updateFn("enableACRTrustPolicy", v)} label={<Text>Enable ACR Docker Content Trust Capability (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>)</Text>} />
+                {addons.enableACRTrustPolicy === true &&
+                    <MessageBar styles={{ root: { marginTop: '10px',width: '700px' } }} messageBarType={MessageBarType.info}>To enable client trust in AKS, leverage open source tooling eg. <a target="_new" href="https://github.com/sse-secure-systems/connaisseur">Connaisseur</a>  (<a target="_new" href="https://github.com/Gordonby/connaisseur-aks-acr">sample</a>)</MessageBar>
+                }
+            </Stack.Item>
+
+            <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
+                <Checkbox disabled={addons.registry !== "Premium"} checked={addons.acrUntaggedRetentionPolicyEnabled} onChange={(ev, v) => updateFn("acrUntaggedRetentionPolicyEnabled", v)} label={<Text>Create untagged image retention policy (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>) (*preview)</Text>} />
+                <MessageBar styles={{ root: { marginTop: '10px', width: '700px' } }} messageBarType={MessageBarType.warning}>Deleting untagged images will remove them from your ACR after a defined period (<a target="_new" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy">docs</a>) (*preview)</MessageBar>
+
+                {addons.acrUntaggedRetentionPolicyEnabled && (
+                    <Stack.Item style={{ marginTop: '10px', marginLeft: "50px"}}>
+                        <Slider label="Days to retain untagged images for" min={0} max={365} step={1} defaultValue={addons.acrUntaggedRetentionPolicy} showValue={true}
+                            onChange={(v) => updateFn("acrUntaggedRetentionPolicy", v)}
+                            snapToStep />
+                    </Stack.Item>
+                )}
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
@@ -188,6 +208,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             <Stack.Item align="start">
                 <Label >Cluster Monitoring requirements</Label>
                 <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monitor for Containers option, or the open source CNCF Prometheus/Grafana solution</MessageBar>
+                { addons.monitor === "aci" &&
+                    <MessageBar messageBarType={MessageBarType.info}>For sending logs to a central subscription workspace, use <Link target="_target" href="https://learn.microsoft.com/azure/azure-monitor/essentials/diagnostic-settings-policy">Azure Policy</Link> to configure AKS DiagnosticSettings.</MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.monitor}
@@ -222,6 +245,17 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             { key: 270, text: '270 Days' },
                             { key: 365, text: '365 Days' }
                         ]}
+                    />
+
+                    <SpinButton
+                        label="Daily data cap (GB)"
+                        value={addons.logDataCap}
+                        onChange={(ev, v) => updateFn("logDataCap", v)}
+                        min={0}
+                        step={1}
+                        incrementButtonAriaLabel="Increase value by 1"
+                        decrementButtonAriaLabel="Decrease value by 1"
+                        styles={{ root: { marginTop: '15px'}}}
                     />
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
