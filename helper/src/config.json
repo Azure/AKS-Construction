@@ -55,6 +55,7 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "logDataCap": 0,
             "acrUntaggedRetentionPolicy": 30,
             "acrUntaggedRetentionPolicyEnabled": false,
             "enableACRTrustPolicy": false,

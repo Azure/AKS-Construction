@@ -1,6 +1,6 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
+import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, SpinButton } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 
 
@@ -208,6 +208,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             <Stack.Item align="start">
                 <Label >Cluster Monitoring requirements</Label>
                 <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monitor for Containers option, or the open source CNCF Prometheus/Grafana solution</MessageBar>
+                { addons.monitor === "aci" &&
+                    <MessageBar messageBarType={MessageBarType.info}>For sending logs to a central subscription workspace, use <Link target="_target" href="https://learn.microsoft.com/azure/azure-monitor/essentials/diagnostic-settings-policy">Azure Policy</Link> to configure AKS DiagnosticSettings.</MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.monitor}
@@ -242,6 +245,17 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             { key: 270, text: '270 Days' },
                             { key: 365, text: '365 Days' }
                         ]}
+                    />
+
+                    <SpinButton
+                        label="Daily data cap (GB)"
+                        value={addons.logDataCap}
+                        onChange={(ev, v) => updateFn("logDataCap", v)}
+                        min={0}
+                        step={1}
+                        incrementButtonAriaLabel="Increase value by 1"
+                        decrementButtonAriaLabel="Decrease value by 1"
+                        styles={{ root: { marginTop: '15px'}}}
                     />
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />

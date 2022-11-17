@@ -66,7 +66,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
     ...(deploy.enableTelemetry !== defaults.deploy.enableTelemetry && {enableTelemetry: deploy.enableTelemetry }),
-    ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
+    ...(addons.monitor === "aci" && {
+        omsagent: true, retentionInDays: addons.retentionInDays,
+        ...( addons.logDataCap !== defaults.addons.logDataCap && {logDataCap: addons.logDataCap }),
+        ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts })
+       }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(defaults.addons.openServiceMeshAddon !== addons.openServiceMeshAddon && {openServiceMeshAddon: addons.openServiceMeshAddon }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
