@@ -13,7 +13,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
     const [callout1, setCallout1] = useState(false)
 
-    const { net, addons } = tabValues
+    const { net, addons, cluster } = tabValues
     var _calloutTarget1 = React.createRef()
 
 
@@ -119,6 +119,17 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                 <Label>Uses a private IP address from your VNet to access your dependent Azure service, such as Azure KeyVault, Azure Container Registry etc</Label>
                 <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.vnetprivateend} onChange={(ev, v) => updateFn("vnetprivateend", v)} label="Enable Private Link" />
             </Stack.Item>
+
+            {cluster.SystemPoolType !== "none" &&
+                <>
+                    <Separator className="notopmargin" />
+
+                    <Stack.Item>
+                        <Label>Assign a public IP per node for your node pools</Label>
+                        <Checkbox styles={{ root: { marginLeft: '50px', marginTop: '0 !important' } }} disabled={false} checked={net.enableNodePublicIP} onChange={(ev, v) => updateFn("enableNodePublicIP", v)} label="Enable Node Public IP" />
+                    </Stack.Item>
+                </>
+            }
 
             <Separator className="notopmargin" />
 

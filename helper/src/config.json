@@ -115,6 +115,7 @@
             "nsg": false,
             "nsgFlowLogs": false,
             "vnetprivateend": false,
+            "enableNodePublicIP": false,
             "vnet_opt": "default",
             "byoAKSSubnetId": "",
             "byoAGWSubnetId": "",

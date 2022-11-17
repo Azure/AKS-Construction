@@ -68,6 +68,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.csisecret === 'akvNew' && deploy.keyVaultIPAllowlist  && apiips_array.length > 0 && {keyVaultIPAllowlist: apiips_array }),
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
+    ...(cluster.SystemPoolType !== "none" && net.enableNodePublicIP !== defaults.net.enableNodePublicIP && {enableNodePublicIP: net.enableNodePublicIP }),
     ...(deploy.enableTelemetry !== defaults.deploy.enableTelemetry && {enableTelemetry: deploy.enableTelemetry }),
     ...(addons.monitor === "aci" && {
         omsagent: true, retentionInDays: addons.retentionInDays,
