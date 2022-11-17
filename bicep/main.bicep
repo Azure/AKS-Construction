@@ -1045,6 +1045,9 @@ param oidcIssuer bool = false
 @description('Installs Azure Workload Identity into the cluster')
 param workloadIdentity bool = false
 
+@description('Assign a public IP per node for user node pools')
+param enableNodePublicIP bool = false
+
 param warIngressNginx bool = false
 
 @description('System Pool presets are derived from the recommended system pool specs')
@@ -1119,6 +1122,7 @@ var agentPoolProfileUser = union({
   upgradeSettings: {
     maxSurge: '33%'
   }
+  enableNodePublicIP: enableNodePublicIP
 }, userPoolVmProfile)
 
 var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
