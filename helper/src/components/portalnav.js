@@ -336,6 +336,8 @@ export default function PortalNav({ config }) {
   invalidFn('cluster', 'vmSize', cluster.vmSize === "" , 'Enter node size from list or custom node size above')
   invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36, 'Enter Valid Directory ID')
   invalidFn('addons', 'registry', net.vnetprivateend && (addons.registry !== 'Premium' && addons.registry !== 'none'), 'Premium tier is required for Private Link, either select Premium, or disable Private Link')
+  // invalidFn('addons', 'registry', addons.registry !== 'Premium' && addons.registry !== 'none' && addons.enableACRTrustPolicy, 'Premium tier is required for ACR Trust Policy')
+  // invalidFn('addons', 'registry', addons.registry !== 'Premium' && addons.registry !== 'none' && addons.acrUntaggedRetentionPolicyEnabled, 'Premium tier is required for ACR Untagged Retention Policy')
   invalidFn('cluster', 'keyVaultKmsByoKeyId', cluster.keyVaultKms === "byoprivate" && !cluster.keyVaultKmsByoKeyId.match('https:\/\/[^]+.vault.azure.net/keys/[^ ]+/[^ ]+$'), 'Enter valid KeyVault Versioned Key ID (https://YOURVAULTNAME.vault.azure.net/keys/YOURKEYNAME/KEYVERSIONSTRING)')
   invalidFn('cluster', 'keyVaultKmsByoRG', cluster.keyVaultKms === "byoprivate" && !cluster.keyVaultKmsByoRG, 'Enter existing KeyVault Resource Group Name')
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'), 'Enter valid Azure Public or Private DNS Zone resourceId')

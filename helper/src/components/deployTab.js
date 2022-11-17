@@ -51,6 +51,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.registry !== "none" && {
         registries_sku: addons.registry,
         ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
+        ...(addons.registry === "Premium" && addons.enableACRTrustPolicy !== defaults.addons.enableACRTrustPolicy && { enableACRTrustPolicy: addons.enableACRTrustPolicy}),
         ...(cluster.apisecurity === "private" && ((addons.ingress === "contour")  || (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId)) &&  { imageNames: [
           ...(addons.ingress === "contour" ?  Object.keys(dependencies['bitnami/contour']['8_0_2'].images).map(i => `${dependencies['bitnami/contour']['8_0_2'].images[i].registry}/${dependencies['bitnami/contour']['8_0_2'].images[i].repository}:${dependencies['bitnami/contour']['8_0_2'].images[i].tag}`) : []),
           ...(addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? Object.keys(dependencies['externaldns']['1_9_0'].images).map(i => `${dependencies['externaldns']['1_9_0'].images[i].registry}/${dependencies['externaldns']['1_9_0'].images[i].repository}:${dependencies['externaldns']['1_9_0'].images[i].tag}`) : [])
@@ -114,6 +115,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
 
   const preview_params = {
+    ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled !== defaults.addons.acrUntaggedRetentionPolicyEnabled && { acrUntaggedRetentionPolicyEnabled: addons.acrUntaggedRetentionPolicyEnabled}),
+    ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled && addons.acrUntaggedRetentionPolicy !== defaults.addons.acrUntaggedRetentionPolicy && { acrUntaggedRetentionPolicy: addons.acrUntaggedRetentionPolicy}),
     ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNATGateway' && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
