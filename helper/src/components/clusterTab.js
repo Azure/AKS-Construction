@@ -2,31 +2,21 @@
 import React from 'react';
 import { mergeStyles, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
 import { adv_stackstyle, getError, hasError } from './common'
+import vmSKUs from '../vmSKUs.json'
 
 const optionRootClass = mergeStyles({
     display: 'flex',
     alignItems: 'baseline'
 });
 
-export const VMs = [
-    { key: 'b', text: 'Burstable (dev/test)', itemType: DropdownMenuItemType.Header },
-    { key: 'Standard_B2s', text: '2 vCPU,  4 GiB RAM,   8GiB SSD, 40%	-> 200% CPU', eph: false },
-    { key: 'Standard_B2ms', text: '2 vCPU,  8 GiB RAM,   8GiB SSD, 40%	-> 200% CPU', eph: true },
-    { key: 'dv2', text: 'General purpose V2', itemType: DropdownMenuItemType.Header },
-    { key: 'default', text: '2 vCPU,  7 GiB RAM,  14GiB SSD,  86 GiB cache (8000 IOPS)', eph: false },
-    { key: 'Standard_DS3_v2', text: '4 vCPU, 14 GiB RAM,  28GiB SSD, 172 GiB cache (16000 IOPS)', eph: true },
-    { key: 'dv4', text: 'General purpose V4', itemType: DropdownMenuItemType.Header },
-    { key: 'Standard_D2ds_v4', text: '2 vCPU,  8 GiB RAM,  75GiB SSD,               (19000 IOPS)', eph: false },
-    { key: 'Standard_D4ds_v4', text: '4 vCPU, 16 GiB RAM, 150GiB SSD, 100 GiB cache (38500 IOPS)', eph: false },
-    { key: 'Standard_D8ds_v4', text: '8 vCPU, 32 GiB RAM, 300GiB SSD,               (77000 IOPS)', eph: true },
-    { key: 'fv2', text: 'Compute optimized', itemType: DropdownMenuItemType.Header },
-    { key: 'Standard_F2s_v2', text: '2 vCPU,  4 GiB RAM,  16GiB SSD,               (3200 IOPS)', eph: false }
-]
+export var VMs = vmSKUs
 
 export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { net, addons, cluster, deploy } = tabValues
     const defenderFeatureFlag = featureFlag.includes('defender')
 
+    //Initial filter on load
+    VMs = vmSKUs.filter(l => {return l.location.toLowerCase() === (deploy.location.toLowerCase()) && l.computeType.toLowerCase() === cluster.computeType.toLowerCase()}) //Filter VM Sku list based on location
 
     function sliderUpdateFn(updates) {
 
@@ -42,6 +32,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             console.log (`agentCount=${newp.agentCount} MIN=${AGENT_COUNT_MIN} MAX=${AGENT_COUNT_MAX}`)
             console.log (`maxCount=${newp.maxCount} MIN=${MAXCOUNT_MIN}`)
 
+            if(newp.SystemPoolType!=='none' && !cluster.nodepoolName){
+                cluster.nodepoolName = 'npuser01'
+            }
+
             if (newp.maxCount < MAXCOUNT_MIN) {
                 updatevals = {...updatevals, maxCount: MAXCOUNT_MIN}
             }
@@ -51,6 +45,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             } else if (newp.agentCount > AGENT_COUNT_MAX) {
                 updatevals = {...updatevals, agentCount: AGENT_COUNT_MAX }
             }
+
+            //clear when changing computeType
+            //if (newp.computeType)
+            //{
+              // updatevals = {...updatevals, vmSize: null}
+            //}
 
             return updatevals
         })
@@ -118,6 +118,15 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         label={`Node count range ${cluster.autoscale ? 'range' : ''}`} min={0}  max={100} step={1}
                         value={cluster.autoscale? cluster.maxCount : cluster.agentCount} showValue={true}
                         onChange={(val, range) => sliderUpdateFn(cluster.autoscale ? {agentCount: range[0], maxCount: range[1]} : {agentCount: val})} />
+
+                        <TextField
+                        placeholder='npuser01'
+                        label="Node pool name"
+                        maxLength={12}
+                        onChange={(ev, val) => updateFn('nodepoolName', val)}
+                        required
+                        errorMessage={getError(invalidArray, 'nodepoolName')}
+                        value={cluster.nodepoolName} />
                     </Stack.Item>
                 </Stack>
 
@@ -125,8 +134,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <Stack.Item>
                         <Label >Compute Type</Label>
                         <ChoiceGroup
-
-                            selectedKey="gp"
+                            onChange={(ev, { key }) => {  sliderUpdateFn({computeType: key}) }}
+                            selectedKey={cluster.computeType}
                             options={[
                                 {
                                     key: 'gp',
@@ -145,12 +154,13 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                     text: 'GPU Workloads',
                                     disabled: true
                                 }
-                            ]} />
+                            ]}
+                            />
                     </Stack.Item>
 
                     <Stack.Item>
-                        <Label >Node Size</Label>
-                        <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: 450 } }}>
+                        <Label >Virtual Machine Node Selection</Label>
+                        <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: 500 } }}>
                             <Dropdown
 
                                 selectedKey={cluster.vmSize}
@@ -159,10 +169,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                 options={VMs}
                                 styles={{ dropdown: { width: "100%" } }}
                             />
-
                             {hasError(invalidArray, 'osDiskType') &&
                                 <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'osDiskType')}</MessageBar>
                             }
+                            <TextField label="VM SKU" onChange={(ev, val) => updateFn('vmSize', val)} required errorMessage={getError(invalidArray, 'vmSize')} value={cluster.vmSize} />
                             <ChoiceGroup
                                 onChange={(ev, { key }) => updateFn("osDiskType", key)}
                                 selectedKey={cluster.osDiskType}

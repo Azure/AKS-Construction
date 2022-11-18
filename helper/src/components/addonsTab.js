@@ -1,6 +1,6 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType } from '@fluentui/react';
+import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, SpinButton } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 
 
@@ -33,6 +33,26 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
+                <Checkbox checked={addons.enableACRTrustPolicy} onChange={(ev, v) => updateFn("enableACRTrustPolicy", v)} label={<Text>Enable ACR Docker Content Trust Capability (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>)</Text>} />
+                {addons.enableACRTrustPolicy === true &&
+                    <MessageBar styles={{ root: { marginTop: '10px',width: '700px' } }} messageBarType={MessageBarType.info}>To enable client trust in AKS, leverage open source tooling eg. <a target="_new" href="https://github.com/sse-secure-systems/connaisseur">Connaisseur</a>  (<a target="_new" href="https://github.com/Gordonby/connaisseur-aks-acr">sample</a>)</MessageBar>
+                }
+            </Stack.Item>
+
+            <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
+                <Checkbox disabled={addons.registry !== "Premium"} checked={addons.acrUntaggedRetentionPolicyEnabled} onChange={(ev, v) => updateFn("acrUntaggedRetentionPolicyEnabled", v)} label={<Text>Create untagged image retention policy (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>) (*preview)</Text>} />
+                <MessageBar styles={{ root: { marginTop: '10px', width: '700px' } }} messageBarType={MessageBarType.warning}>Deleting untagged images will remove them from your ACR after a defined period (<a target="_new" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy">docs</a>) (*preview)</MessageBar>
+
+                {addons.acrUntaggedRetentionPolicyEnabled && (
+                    <Stack.Item style={{ marginTop: '10px', marginLeft: "50px"}}>
+                        <Slider label="Days to retain untagged images for" min={0} max={365} step={1} defaultValue={addons.acrUntaggedRetentionPolicy} showValue={true}
+                            onChange={(v) => updateFn("acrUntaggedRetentionPolicy", v)}
+                            snapToStep />
+                    </Stack.Item>
+                )}
+            </Stack.Item>
+
+            <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
                 <Checkbox disabled={addons.registry === "none" || !net.vnetprivateend} checked={addons.acrPrivatePool} onChange={(ev, v) => updateFn("acrPrivatePool", v)} label={<Text>Create ACR Private Agent Pool (private link only) (preview limited regions <a target="_new" href="https://docs.microsoft.com/azure/container-registry/tasks-agent-pools">docs</a>)</Text>} />
                 <Stack horizontal styles={{ root: { marginLeft: "50px" } }}>
                     <TextField disabled={true} label="Agent Pool" defaultValue="S1"/>
@@ -55,7 +75,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         { key: 'appgw', text: 'Azure Application Gateway Ingress Controller add-on (https://azure.github.io/application-gateway-kubernetes-ingress)' },
                         { key: 'warNginx', text: 'AKS Web App Routing Solution, simple Nginx Ingress Controller (https://docs.microsoft.com/en-us/azure/aks/web-app-routing *preview)' },
                         { key: 'contour', text: 'Contour (https://projectcontour.io/)' },
-                        { key: 'nginx', text: 'Nginx ingress controller' }
+                        { key: 'nginx', text: 'Nginx ingress controller' },
+                        { key: 'traefik', text: 'Traefik ingress controller' }
                     ]}
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
@@ -153,7 +174,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             </>)
                     }
 
-                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") &&
+                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "traefik") &&
                         <>
                             <MessageBar messageBarType={MessageBarType.warning}>Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configuration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule to Azure Firewall </Link></MessageBar>
                             <Checkbox inputProps={{ "data-testid": "addons-dns"}} checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
@@ -187,6 +208,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             <Stack.Item align="start">
                 <Label >Cluster Monitoring requirements</Label>
                 <MessageBar>Observing your clusters health is critical to smooth operations, select the managed Azure Monitor for Containers option, or the open source CNCF Prometheus/Grafana solution</MessageBar>
+                { addons.monitor === "aci" &&
+                    <MessageBar messageBarType={MessageBarType.info}>For sending logs to a central subscription workspace, use <Link target="_target" href="https://learn.microsoft.com/azure/azure-monitor/essentials/diagnostic-settings-policy">Azure Policy</Link> to configure AKS DiagnosticSettings.</MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.monitor}
@@ -200,7 +224,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 />
             </Stack.Item>
 
-            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw") && addons.dns && addons.certMan &&
+            {addons.monitor === 'oss' && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "traefik") && addons.dns && addons.certMan &&
                 <Stack.Item align="center" styles={{ root: { maxWidth: '700px'}}}>
                     <MessageBar messageBarType={MessageBarType.warning}>This will expose your your grafana dashboards to the internet, please login and change the default credentials asap (admin/prom-operator)</MessageBar>
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableMonitorIngress} onChange={(ev, v) => updateFn("enableMonitorIngress", v)} label={`Enable Public Ingress for Grafana (https://grafana.${addons.dnsZoneId && addons.dnsZoneId.split('/')[8]})`} />
@@ -221,6 +245,17 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             { key: 270, text: '270 Days' },
                             { key: 365, text: '365 Days' }
                         ]}
+                    />
+
+                    <SpinButton
+                        label="Daily data cap (GB)"
+                        value={addons.logDataCap}
+                        onChange={(ev, v) => updateFn("logDataCap", v)}
+                        min={0}
+                        step={1}
+                        incrementButtonAriaLabel="Increase value by 1"
+                        decrementButtonAriaLabel="Decrease value by 1"
+                        styles={{ root: { marginTop: '15px'}}}
                     />
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
@@ -357,9 +392,37 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Checkbox
                     styles={{ root: { marginLeft: "50px" } }}
                     inputProps={{ "data-testid": "addons-blob-csi-checkbox" }}
-                    checked={addons.blobCSIAddon}
-                    onChange={(ev, v) => updateFn("blobCSIAddon", v)}
-                    label="Install the Azure Blob CSI AddOn"
+                    checked={addons.blobCSIDriver}
+                    onChange={(ev, v) => updateFn("blobCSIDriver", v)}
+                    label="Install the Azure Blob CSI Driver"
+                />
+            </Stack.Item>
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    CSI File storage: Enable Driver to access Azure File Storage
+                    (<a target="_new" href="https://learn.microsoft.com/azure/aks/azure-files-dynamic-pv">docs</a>)
+                </Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-file-csi-checkbox" }}
+                    checked={addons.fileCSIDriver}
+                    onChange={(ev, v) => updateFn("fileCSIDriver", v)}
+                    label="Install the Azure File CSI Driver"
+                />
+            </Stack.Item>
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    CSI Disk storage: Enable Driver to access Azure Disk Storage
+                    (<a target="_new" href="https://learn.microsoft.com/azure/aks/azure-disks-dynamic-pv">docs</a>)
+                </Label>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-disk-csi-checkbox" }}
+                    checked={addons.diskCSIDriver}
+                    onChange={(ev, v) => updateFn("diskCSIDriver", v)}
+                    label="Install the Azure Disk CSI AddOn"
                 />
             </Stack.Item>
 

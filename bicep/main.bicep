@@ -54,8 +54,6 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId) && cre
   params: {
     byoAKSSubnetId: byoAKSSubnetId
     user_identity_principalId: createAksUai ? aksUai.properties.principalId : ''
-    user_identity_name: aksUai.name
-    user_identity_rg: resourceGroup().name
     rbacAssignmentScope: uaiNetworkScopeRbac
   }
 }
@@ -468,7 +466,7 @@ module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)
   }
 }
 
-var AcrPullRole = resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+var AcrPullRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
 
 resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(registries_sku)) {
@@ -481,7 +479,7 @@ resource aks_acr_pull 'Microsoft.Authorization/roleAssignments@2022-04-01' = if 
   }
 }
 
-var AcrPushRole = resourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')
+var AcrPushRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')
 
 @description('The principal ID of the service principal to assign the push role to the ACR')
 param acrPushRolePrincipalId string = ''
@@ -756,7 +754,7 @@ resource appgw 'Microsoft.Network/applicationGateways@2021-02-01' = if (deployAp
   properties: appgwProperties
 }
 
-var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+var contributor = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
 // https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
 // AGIC's identity requires "Contributor" permission over Application Gateway.
 resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (ingressApplicationGateway && deployAppGw) {
@@ -770,7 +768,7 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2022-04-01' =
 }
 
 // AGIC's identity requires "Reader" permission over Application Gateway's resource group.
-var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
+var reader = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
 resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (ingressApplicationGateway && deployAppGw) {
   scope: resourceGroup()
   name: guid(aks.id, 'Agic', reader)
@@ -782,7 +780,7 @@ resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2022-04-01' 
 }
 
 // AGIC's identity requires "Managed Identity Operator" permission over the user assigned identity of Application Gateway.
-var managedIdentityOperator = resourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830')
+var managedIdentityOperator = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830')
 resource appGwAGICMIOp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (ingressApplicationGateway &&  deployAppGw) {
   scope: appGwIdentity
   name: guid(aks.id, 'Agic', managedIdentityOperator)
@@ -853,8 +851,14 @@ param kedaAddon bool = false
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false
 
-@description('Enables the Blob CSI extension')
-param blobCSIAddon bool = false
+@description('Enables the Blob CSI driver')
+param blobCSIDriver bool = false
+
+@description('Enables the File CSI driver')
+param fileCSIDriver bool = true
+
+@description('Enables the Disk CSI driver')
+param diskCSIDriver bool = true
 
 @allowed([
   'none'
@@ -885,6 +889,11 @@ param agentCount int = 3
 @description('The maximum number of nodes for the user node pool')
 param agentCountMax int = 0
 var autoScale = agentCountMax > agentCount
+
+@minLength(3)
+@maxLength(12)
+@description('Name for user node pool')
+param nodePoolName string = 'npuser01'
 
 @description('Allocate pod ips dynamically')
 param cniDynamicIpAllocation bool = false
@@ -1041,6 +1050,9 @@ param oidcIssuer bool = false
 @description('Installs Azure Workload Identity into the cluster')
 param workloadIdentity bool = false
 
+@description('Assign a public IP per node for user node pools')
+param enableNodePublicIP bool = false
+
 param warIngressNginx bool = false
 
 @description('System Pool presets are derived from the recommended system pool specs')
@@ -1080,7 +1092,7 @@ var systemPoolPresets = {
 }
 
 var systemPoolBase = {
-  name: 'npsystem'
+  name:  JustUseSystemPool ? nodePoolName : 'npsystem'
   mode: 'System'
   osType: 'Linux'
   maxPods: 30
@@ -1104,7 +1116,7 @@ var userPoolVmProfile = {
 }
 
 var agentPoolProfileUser = union({
-  name: 'npuser01'
+  name: nodePoolName
   mode: 'User'
   osDiskType: osDiskType
   osDiskSizeGB: osDiskSizeGB
@@ -1115,9 +1127,14 @@ var agentPoolProfileUser = union({
   upgradeSettings: {
     maxSurge: '33%'
   }
+  enableNodePublicIP: enableNodePublicIP
 }, userPoolVmProfile)
 
 var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
+
+
+output userNodePoolName string = nodePoolName
+output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
@@ -1251,7 +1268,13 @@ var aksProperties = union({
   }
   storageProfile: {
     blobCSIDriver: {
-      enabled: blobCSIAddon
+      enabled: blobCSIDriver
+    }
+    diskCSIDriver: {
+      enabled: diskCSIDriver
+    }
+    fileCSIDriver: {
+      enabled: fileCSIDriver
     }
   }
 },
@@ -1340,7 +1363,7 @@ param automatedDeployment bool = false
 @description('The principal ID to assign the AKS admin role.')
 param adminPrincipalId string = ''
 // for AAD Integrated Cluster wusing 'enableAzureRBAC', add Cluster admin to the current user!
-var buildInAKSRBACClusterAdmin = resourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
+var buildInAKSRBACClusterAdmin = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
 resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (enableAzureRBAC && !empty(adminPrincipalId)) {
   scope: aks // Use when specifying a scope that is different than the deployment scope
   name: guid(aks.id, 'aksadmin', buildInAKSRBACClusterAdmin)
@@ -1472,20 +1495,27 @@ module aksmetricalerts './aksmetricalerts.bicep' = if (createLaw) {
 @description('The Log Analytics retention period')
 param retentionInDays int = 30
 
+@description('The Log Analytics daily data cap (GB) (0=no limit)')
+param logDataCap int = 0
+
 var aks_law_name = 'log-${resourceName}'
 
 var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecurityGroups || defenderForContainers)
 
-resource aks_law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = if (createLaw) {
+resource aks_law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (createLaw) {
   name: aks_law_name
   location: location
-  properties: {
-    retentionInDays: retentionInDays
-  }
+  properties : union({
+      retentionInDays: retentionInDays
+    },
+    logDataCap>0 ? { workspaceCapping: {
+      dailyQuotaGb: logDataCap
+    }} : {}
+  )
 }
 
 //This role assignment enables AKS->LA Fast Alerting experience
-var MonitoringMetricsPublisherRole = resourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
+var MonitoringMetricsPublisherRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
 resource FastAlertingRole_Aks_Law 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (omsagent) {
   scope: aks
   name: guid(aks.id, 'omsagent', MonitoringMetricsPublisherRole)

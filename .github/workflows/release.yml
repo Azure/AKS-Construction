@@ -48,6 +48,17 @@ jobs:
         run: |
           echo "GitHub Ref: ${{ github.ref }}"
 
+      - name: Azure Login
+        uses: Azure/login@v1.4.6
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build VM Sku json file
+        timeout-minutes: 3
+        run: |
+          cd postdeploy/scripts
+          ./generate-vm-sku-list-v2.sh
+
       - name: Build node app with bicep release
         run: |
           cd helper

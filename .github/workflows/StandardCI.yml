@@ -35,6 +35,8 @@ permissions:
       id-token: write
       contents: read
 
+concurrency: "StanCI-${{ github.event.inputs.Environment != '' && github.event.inputs.Environment || 'csu' }}-AksBicepAcc-Ci-BasicCluster"
+
 jobs:
   ReusableWF:
     runs-on: ubuntu-latest

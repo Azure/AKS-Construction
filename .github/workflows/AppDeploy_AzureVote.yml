@@ -27,7 +27,7 @@ on:
         required: false
         type: string
       INGRESSTYPE:
-        default: "PublicLoadBalancer" #'PublicLoadBalancer'/InternalLoadBalancer/AGIC-Public-Ingress/AGIC-Private-Ingress
+        default: "PublicLoadBalancer" #'PublicLoadBalancer'/InternalLoadBalancer/AGIC-Public-Ingress/AGIC-Private-Ingress/traefik
         required: false
         type: string
       UNINSTALLAFTERVERIFY:
@@ -118,17 +118,19 @@ jobs:
           echo "${{ inputs.INGRESSTYPE }}"
           case "${{ inputs.INGRESSTYPE }}" in
           PublicLoadBalancer)
-            serviceType="LoadBalancer"; privateIp=false; ingress=false ;;
+            serviceType="LoadBalancer"; privateIp=false; ingress=false; ingressClass=na ;;
           InternalLoadBalancer)
-            serviceType="LoadBalancer"; privateIp=true; ingress=false ;;
+            serviceType="LoadBalancer"; privateIp=true; ingress=false; ingressClass=na ;;
           AGIC-Public-Ingress)
-            serviceType="ClusterIP"; privateIp=false; ingress=true ;;
+            serviceType="ClusterIP"; privateIp=false; ingress=true; ingressClass=azure/application-gateway ;;
           AGIC-Private-Ingress)
-            serviceType="ClusterIP"; privateIp=true; ingress=true ;;
+            serviceType="ClusterIP"; privateIp=true; ingress=true; ingressClass=azure/application-gateway ;;
+          traefik)
+            serviceType="ClusterIP"; privateIp=false; ingress=true; ingressClass=traefik ;;
           esac
 
           #Create a list of helm parameters to override
-          helmsetparams="ingress.enabled=${ingress},ingress.appGwPrivateIp=$privateIp,front.service.azureLbInternal=$privateIp,front.service.type=\"$serviceType\""
+          helmsetparams="ingress.enabled=${ingress},ingress.class=${ingressClass},ingress.appGwPrivateIp=$privateIp,front.service.azureLbInternal=$privateIp,front.service.type=\"$serviceType\""
 
           #Set step outputs, which are used in subsequent steps to ensure the app is working
           if [ $ingress == false ]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi

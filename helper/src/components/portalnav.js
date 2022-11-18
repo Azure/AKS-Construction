@@ -44,14 +44,14 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
 
         <div style={{ display: "inline-block", padding: "11px 12px 0px" }}>
           <Link className="navbar-brand no-outline" >
-            <Image src="aks.svg" height="33px" />
+            <Image src="aks.svg" height="33px" alt='aks logo' />
           </Link>
           <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{ "color": "red" }}>Helper</span></Text>
           <Text className={titleClass} style={{ "marginTop": "6px", "marginLeft": "20px" }}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at the <a href="https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a> docs</Text>
         </div>
         <div style={{ display: "inline-block", float: "right" }}>
 
-          <CommandBarButton iconProps={{ iconName: presets[selectedPreset].icon }} menuProps={{
+          <CommandBarButton aria-label='Preset scenario' iconProps={{ iconName: presets[selectedPreset].icon }} menuProps={{
             items: Object.keys(presets).map(p => {
               return {
                 key: p,
@@ -330,9 +330,13 @@ export default function PortalNav({ config }) {
   const { deploy, cluster, net, addons } = tabValues
 
   console.log(`PortalNav: Evaluating configruation warnings...`)
-  invalidFn('cluster', 'osDiskType', cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph, 'The selected VM cache is not large enough to support Ephemeral. Select \'Managed\' or a VM with a larger cache')
+
+  invalidFn('cluster', 'osDiskType', ((typeof VMs.find(i => i.key === cluster.vmSize) !== "undefined") ? cluster.osDiskType === 'Ephemeral' && !VMs.find(i => i.key === cluster.vmSize).eph : false), 'The selected VM cache is not large enough to support Ephemeral. Select \'Managed\' or a VM with a larger cache')
+  invalidFn('cluster', 'vmSize', cluster.vmSize === "" , 'Enter node size from list or custom node size above')
   invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36, 'Enter Valid Directory ID')
   invalidFn('addons', 'registry', net.vnetprivateend && (addons.registry !== 'Premium' && addons.registry !== 'none'), 'Premium tier is required for Private Link, either select Premium, or disable Private Link')
+  // invalidFn('addons', 'registry', addons.registry !== 'Premium' && addons.registry !== 'none' && addons.enableACRTrustPolicy, 'Premium tier is required for ACR Trust Policy')
+  // invalidFn('addons', 'registry', addons.registry !== 'Premium' && addons.registry !== 'none' && addons.acrUntaggedRetentionPolicyEnabled, 'Premium tier is required for ACR Untagged Retention Policy')
   invalidFn('cluster', 'keyVaultKmsByoKeyId', cluster.keyVaultKms === "byoprivate" && !cluster.keyVaultKmsByoKeyId.match('https:\/\/[^]+.vault.azure.net/keys/[^ ]+/[^ ]+$'), 'Enter valid KeyVault Versioned Key ID (https://YOURVAULTNAME.vault.azure.net/keys/YOURKEYNAME/KEYVERSIONSTRING)')
   invalidFn('cluster', 'keyVaultKmsByoRG', cluster.keyVaultKms === "byoprivate" && !cluster.keyVaultKmsByoRG, 'Enter existing KeyVault Resource Group Name')
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'), 'Enter valid Azure Public or Private DNS Zone resourceId')

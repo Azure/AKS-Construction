@@ -5,6 +5,7 @@ import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdow
 import { CodeBlock, adv_stackstyle, getError } from './common'
 import dependencies from "../dependencies.json";
 import { Presets } from './presets';
+import locations from '../locations.json';
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag, cardWorkloadCommands }) {
   const terraformFeatureFlag = featureFlag.includes('tf')
@@ -32,6 +33,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
+    ...(((cluster.nodepoolName.toLowerCase() !== defaults.cluster.nodepoolName  && cluster.SystemPoolType !== 'none')
+        || ( cluster.SystemPoolType === 'none' && (cluster.nodepoolName.toLowerCase() !== defaults.cluster.systemNodepoolName && cluster.nodepoolName.toLowerCase() !== defaults.cluster.nodepoolName )))
+        && { nodePoolName: cluster.nodepoolName }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
@@ -51,6 +55,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.registry !== "none" && {
         registries_sku: addons.registry,
         ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
+        ...(addons.registry === "Premium" && addons.enableACRTrustPolicy !== defaults.addons.enableACRTrustPolicy && { enableACRTrustPolicy: addons.enableACRTrustPolicy}),
         ...(cluster.apisecurity === "private" && ((addons.ingress === "contour")  || (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId)) &&  { imageNames: [
           ...(addons.ingress === "contour" ?  Object.keys(dependencies['bitnami/contour']['8_0_2'].images).map(i => `${dependencies['bitnami/contour']['8_0_2'].images[i].registry}/${dependencies['bitnami/contour']['8_0_2'].images[i].repository}:${dependencies['bitnami/contour']['8_0_2'].images[i].tag}`) : []),
           ...(addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? Object.keys(dependencies['externaldns']['1_9_0'].images).map(i => `${dependencies['externaldns']['1_9_0'].images[i].registry}/${dependencies['externaldns']['1_9_0'].images[i].repository}:${dependencies['externaldns']['1_9_0'].images[i].tag}`) : [])
@@ -64,8 +69,13 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.csisecret === 'akvNew' && deploy.keyVaultIPAllowlist  && apiips_array.length > 0 && {keyVaultIPAllowlist: apiips_array }),
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
+    ...(cluster.SystemPoolType !== "none" && net.enableNodePublicIP !== defaults.net.enableNodePublicIP && {enableNodePublicIP: net.enableNodePublicIP }),
     ...(deploy.enableTelemetry !== defaults.deploy.enableTelemetry && {enableTelemetry: deploy.enableTelemetry }),
-    ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
+    ...(addons.monitor === "aci" && {
+        omsagent: true, retentionInDays: addons.retentionInDays,
+        ...( addons.logDataCap !== defaults.addons.logDataCap && {logDataCap: addons.logDataCap }),
+        ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts })
+       }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(defaults.addons.openServiceMeshAddon !== addons.openServiceMeshAddon && {openServiceMeshAddon: addons.openServiceMeshAddon }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
@@ -80,6 +90,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.apisecurity === "private" && { enablePrivateCluster: true }),
     ...(cluster.apisecurity === "private" && cluster.apisecurity === "private" && defaults.cluster.privateClusterDnsMethod !== cluster.privateClusterDnsMethod && { privateClusterDnsMethod: cluster.privateClusterDnsMethod }),
     ...(cluster.apisecurity === "private" && cluster.apisecurity === "private" && cluster.privateClusterDnsMethod === 'privateDnsZone' && { dnsApiPrivateZoneId: cluster.dnsApiPrivateZoneId }),
+    ...(defaults.addons.fileCSIDriver !== addons.fileCSIDriver && {fileCSIDriver: addons.fileCSIDriver }),
+    ...(defaults.addons.diskCSIDriver !== addons.diskCSIDriver && {diskCSIDriver: addons.diskCSIDriver }),
     ...(addons.ingress !== "none" && addons.dns && addons.dnsZoneId && { dnsZoneId: addons.dnsZoneId }),
     ...(addons.ingress === "appgw" && {
       ingressApplicationGateway: true, ...(net.vnet_opt === 'custom' && defaults.net.vnetAppGatewaySubnetAddressPrefix !== net.vnetAppGatewaySubnetAddressPrefix && { vnetAppGatewaySubnetAddressPrefix: net.vnetAppGatewaySubnetAddressPrefix }), ...(net.vnet_opt !== 'default' && {
@@ -108,6 +120,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
 
   const preview_params = {
+    ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled !== defaults.addons.acrUntaggedRetentionPolicyEnabled && { acrUntaggedRetentionPolicyEnabled: addons.acrUntaggedRetentionPolicyEnabled}),
+    ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled && addons.acrUntaggedRetentionPolicy !== defaults.addons.acrUntaggedRetentionPolicy && { acrUntaggedRetentionPolicy: addons.acrUntaggedRetentionPolicy}),
     ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNATGateway' && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
@@ -129,7 +143,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       ...(addons.ingress !== defaults.addons.ingress && {warIngressNginx: true})
     }),
     ...(defaults.addons.kedaAddon !== addons.kedaAddon && {kedaAddon: addons.kedaAddon }),
-    ...(defaults.addons.blobCSIAddon !== addons.blobCSIAddon && {blobCSIAddon: addons.blobCSIAddon }),
+    ...(defaults.addons.blobCSIDriver !== addons.blobCSIDriver && {blobCSIDriver: addons.blobCSIDriver }),
     ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {oidcIssuer: true, workloadIdentity: addons.workloadIdentity }),
     ...(net.networkPlugin === 'azure' && net.networkPluginMode && {networkPluginMode: 'Overlay'}),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
@@ -139,7 +153,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.networkPolicy !== 'none' && addons.denydefaultNetworkPolicy && { denydefaultNetworkPolicy: addons.denydefaultNetworkPolicy}),
     ...(addons.ingress !== "none" && {
 
-        ...((addons.ingress === "contour" || addons.ingress === "nginx") && {
+        ...((addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik") && {
           ingress: addons.ingress,
           ...(addons.ingressEveryNode && { ingressEveryNode: addons.ingressEveryNode})
         }),
@@ -158,7 +172,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(addons.monitor === "oss" && {
       monitor: addons.monitor,
-      ...(addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" && {
+      ...(addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik" && {
         ingress: addons.ingress,
         ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
       })
@@ -330,23 +344,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             label="Location"
             selectedKey={deploy.location}
             onChange={(ev, { key }) => updateFn('location', key)}
-            options={[
-              { key: 'europe', text: 'Europe', itemType: DropdownMenuItemType.Header },
-              { key: "WestEurope", text: "West Europe" },
-              { key: "NorthEurope", text: "North Europe" },
-              { key: "UKSouth", text: "UK South" },
-              { key: "UKSouth2", text: "UK South2" },
-              { key: "UKWest", text: "UK West" },
-              { key: 'middleeast', text: 'Middle East', itemType: DropdownMenuItemType.Header },
-              { key: "UAENorth", text: "UAE North" },
-              { key: 'america', text: 'North America', itemType: DropdownMenuItemType.Header },
-              { key: "CentralUS", text: "Central US" },
-              { key: "EastUS", text: "East US" },
-              { key: "EastUS2", text: "East US2" },
-              { key: "WestUS", text: "West US" },
-              { key: "WestUS2", text: "West US2" },
-              { key: "WestCentralUS", text: "West Central US" }
-            ]}
+            options={locations}
             styles={{ dropdown: { width: 300 } }}
           />
         </Stack>
