@@ -45,11 +45,11 @@
                         "values": {
                             "deploy": {
                                 "workloadDeployCommands": [
-                                    "# Deploy Minecraft storage",
-                                    "az deployment group create -g $RESOURCEGROUP -f $URI",
+                                    "# Deploy Minecraft storage and infra",
+                                    "az deployment group create -g $RESOURCEGROUP -u https://github.com/Gordonby/MinecraftOnAzure/blob/main/infra/main.json",
                                     "",
-                                    "# Install Minecraft server",
-                                    "helm install something"
+                                    "# Deploy Minecraft to AKS with helm via bicep",
+                                    "az deployment group create -g $RESOURCEGROUP"
                                 ]
                             },
                             "cluster": {
