@@ -8,7 +8,7 @@
                 "key": "minecraft",
                 "sectionTitle": "Minecraft servers",
                 "sectionDescription" : "Minecraft servers allow you to create your own internet accessible world to play with your friends online.",
-                "sectionWarning": "Whilst Minecraft servers are free, players using Minecraft require a licence",
+                "sectionWarning": "Whilst Minecraft servers are free, players using Minecraft requires a licence",
                 "sectionMoreInfoLink" : "https://github.com/Gordonby/MinecraftOnAzure/blob/main/aks.md",
                 "cards": [
                     {
@@ -42,14 +42,16 @@
                             "initials": "GB",
                             "status": "Updated Nov, 2022"
                         },
-                        "workloadDeployCommands": [
-                            "#Deploy Minecraft storage",
-                            "az deployment group create -g $RESOURCEGROUP -f $URI",
-                            "",
-                            "#Install Minecraft server",
-                            "helm install"
-                        ],
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": [
+                                    "# Deploy Minecraft storage",
+                                    "az deployment group create -g $RESOURCEGROUP -f $URI",
+                                    "",
+                                    "# Install Minecraft server",
+                                    "helm install something"
+                                ]
+                            },
                             "cluster": {
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": true,
@@ -92,10 +94,10 @@
                                     "description": "General purpose VM type"
                                 },
                                 {
-                                    "description": "Logging & monitoring"
+                                    "description": "Full Logging & monitoring"
                                 },
                                 {
-                                    "description": "Container Registry"
+                                    "description": "Container Registry for the workload image"
                                 },
                                 {
                                     "description": "AAD Integration for RBAC control plane",

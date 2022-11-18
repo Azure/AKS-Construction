@@ -1,12 +1,12 @@
 {
     "entScaleOps": {
-        "title": "Enterprise Scale",
+        "title": "Azure Landing Zone",
         "icon": "ManagerSelfService",
         "sections": [
             {
                 "key": "entscale",
                 "sectionTitle": "Enterprise Scale Management Group",
-                "sectionDescription" : "The Enterprise-Scale (Azure Landing Zone) architecture provides prescriptive guidance, following design principles across the critical design areas for an organization's Azure environment. These AKS Landing Zone presets are designed to fit with the different Enterprise Scale Mangement Group patterns.",
+                "sectionDescription" : "The Azure Landing Zone (Enterprise-Scale) architecture provides prescriptive guidance, following design principles across the critical design areas for an organization's Azure environment. These AKS Landing Zone presets are designed to fit with the different Enterprise Scale Mangement Group patterns.",
                 "sectionMoreInfoLink" : "https://docs.microsoft.com/azure/cloud-adoption-framework/ready/enterprise-scale",
                 "sectionWarning": "Before you continue, Ensure you have deployed the Enterprise Scale reference implementation",
                 "cards": [

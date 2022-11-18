@@ -50,21 +50,27 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
           <Text className={titleClass} style={{ "marginTop": "6px", "marginLeft": "20px" }}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at the <a href="https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a> docs</Text>
         </div>
         <div style={{ display: "inline-block", float: "right" }}>
-
-          <CommandBarButton aria-label='Preset scenario' iconProps={{ iconName: presets[selectedPreset].icon }} menuProps={{
-            items: Object.keys(presets).map(p => {
-              return {
-                key: p,
-                text: presets[p].title,
-                disabled: presets[p].disabled,
-                iconProps: { iconName: presets[p].icon },
-                onClick: () => setPresets(p)
-              }
-            })
-
-          }} text={presets[selectedPreset].title} disabled={false} checked={true}
-            styles={{ root: { "vertical-align": "top", padding: "11px 12px 13px", border: "2px solid transparent", background: "transparent" }, label: { color: "#0067b8", fontWeight: "600", fontSize: "15px", lineHeight: "1.3" } }} />
-
+          <TooltipHost
+            content="Scenarios are distinct approaches to deploying AKS clusters. They are designed to be used as a starting point for your own customizations. You can also use them as a reference for how to implement a specific scenario."
+            setAriaDescribedBy={false}>
+            <CommandBarButton
+              aria-label='Preset scenario'
+              iconProps={{ iconName: presets[selectedPreset].icon }}
+              menuProps={{
+                items: Object.keys(presets).map(p => {
+                  return {
+                    key: p,
+                    text: presets[p].title,
+                    disabled: presets[p].disabled,
+                    iconProps: { iconName: presets[p].icon },
+                    onClick: () => setPresets(p)
+                  }
+                })
+              }}
+              text={presets[selectedPreset].title} disabled={false} checked={true}
+              styles={{ root: { "vertical-align": "top", padding: "11px 12px 13px", border: "2px solid transparent", background: "transparent" }, label: { color: "#0067b8", fontWeight: "600", fontSize: "15px", lineHeight: "1.3" } }}
+            />
+          </TooltipHost>
 
         </div>
       </div>
@@ -185,7 +191,7 @@ export default function PortalNav({ config }) {
               val.reduce((a, c) => a === undefined ? (c.page && c.field ? (currenttabValues[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
               :
               val
-            //console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
+            console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
             return { ...a, [c]: targetVal }
           }, {})
         }

@@ -1,6 +1,6 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
+import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdown, Stack, Text, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
 import dependencies from "../dependencies.json";
@@ -8,7 +8,7 @@ import { Presets } from './presets';
 import locations from '../locations.json';
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag, cardWorkloadCommands }) {
-  const terraformFeatureFlag = featureFlag.includes('tf')
+  //const terraformFeatureFlag = featureFlag.includes('tf')
 
   const { net, addons, cluster, deploy } = tabValues
 
@@ -172,7 +172,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(addons.monitor === "oss" && {
       monitor: addons.monitor,
-      ...(addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik" && {
+      ...((addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik") && {
         ingress: addons.ingress,
         ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
       })
@@ -240,7 +240,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
   `if [ $(az group exists --name NetworkWatcherRG) = false ]; then az group create -l ${deploy.location} -n NetworkWatcherRG; fi\n\n` : ''
 
-  const cardSpecificWorkloadDeployCmd = '\n\n#Workload Deployment Commands'
+  const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands.length===0 ? '' : '\n# Workload Deployment Commands\n' + deploy.workloadDeployCommands.map(w => w).join('\n').replace('$RESOURCEGROUP',deploy.rg)
 
   const deploycmd =
     `# Create Resource Group\n` +
