@@ -45,11 +45,8 @@
                         "values": {
                             "deploy": {
                                 "workloadDeployCommands": [
-                                    "# Deploy Minecraft storage and infra",
-                                    "az deployment group create -g $RESOURCEGROUP -u https://github.com/Gordonby/MinecraftOnAzure/blob/main/infra/main.json",
-                                    "",
-                                    "# Deploy Minecraft to AKS with helm via bicep",
-                                    "az deployment group create -g $RESOURCEGROUP"
+                                    "git clone https://github.com/Gordonby/MinecraftOnAzure.git",
+                                    "az deployment group create -g $RESOURCEGROUP -f MinecraftOnAzure/main.bicep -p AksName=$AKSNAME AcceptMinecraftEula=true"
                                 ]
                             },
                             "cluster": {
@@ -119,6 +116,10 @@
                             "helm install"
                         ],
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": [
+                                ]
+                            },
                             "cluster": {
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": true,
