@@ -104,7 +104,7 @@ function Header2({ presets, setPresets, selectedPreset, featureFlag }) {
  */
 export default function PortalNav({ config }) {
 
-  console.log(`PortalNav: ${JSON.stringify(Object.keys(config))}`)
+  //console.log(`PortalNav: ${JSON.stringify(Object.keys(config))}`)
 
   const { tabLabels, defaults, presets } = config
   const [pivotkey, setPivotkey] = useState(Object.keys(tabLabels)[0])
@@ -169,9 +169,9 @@ export default function PortalNav({ config }) {
 
 
   function updateTabValues(currenttabValues, sections, sectionKey, cardKey) {
-    console.log(`updateTabValues`)
+    //console.log(`updateTabValues`)
     const card_values = sections.find(s => s.key === sectionKey).cards.find(c => c.key === cardKey).values
-    console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
+    //console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
     return Object.keys(card_values).reduce((acc, curr) => {
       return {
         ...acc,
@@ -266,7 +266,7 @@ export default function PortalNav({ config }) {
   }
 
   function presetChanged(preset) {
-    console.log(preset)
+    console.log(`Preset changed to ${preset}`)
 
     setUrlParams((currentUrlParams) => {
       currentUrlParams.set('preset', preset)
@@ -280,6 +280,7 @@ export default function PortalNav({ config }) {
     })
 
     // Apply selected presets to tab values
+    console.log(`Preset changed to ${preset}, updating tab values to ${JSON.stringify(selected.values)}`)
     const tabApplySections = Object.keys(selected.values).reduce((acc, curr) =>
       updateTabValues(acc, sections, curr, selected.values[curr]),
       defaults
