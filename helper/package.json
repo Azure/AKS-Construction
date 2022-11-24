@@ -1,8 +1,18 @@
 {
-  "name": "aks-deploy-guide2",
-  "version": "0.1.0",
+  "name": "AKS Construction helper",
+  "version": "0.9.0",
   "private": true,
-  "homepage": "/AKS-Construction/",
+  "devDependencies": {
+    "@fluentui/azure-themes": "^8.5.30",
+    "@fluentui/react": "^8.103.2",
+    "@microsoft/applicationinsights-web": "^2.8.9",
+    "@playwright/test": "^1.28.1",
+    "playwright-expect": "^0.1.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "CI=false react-scripts build",
@@ -10,7 +20,10 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [
@@ -23,15 +36,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@fluentui/azure-themes": "^8.2.52",
-    "@fluentui/react": "^8.77.2",
-    "@microsoft/applicationinsights-web": "^2.7.0",
-    "@playwright/test": "^1.15.2",
-    "playwright-expect": "^0.1.2",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-scripts": "5.0.1"
   }
 }
