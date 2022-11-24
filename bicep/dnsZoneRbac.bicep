@@ -15,7 +15,7 @@ var dnsZoneName = !empty(dnsZoneId) ? split(dnsZoneId, '/')[8] : ''
 var isDnsZonePrivate = !empty(dnsZoneId) ? split(dnsZoneId, '/')[7] == 'privateDnsZones' : false
 
 module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
-  name: 'dns-${dnsZoneName}'
+  name: '${deployment().name}-dns-${dnsZoneName}'
   scope: resourceGroup(dnsZoneRg)
   params: {
     dnsZoneName: dnsZoneName
