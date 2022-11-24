@@ -152,7 +152,7 @@
                             "cluster": {
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": true,
-                                "apisecurity": "none",
+                                "apisecurity": "private",
                                 "autoscale": true,
                                 "agentCount": 2,
                                 "maxCount": 5,
