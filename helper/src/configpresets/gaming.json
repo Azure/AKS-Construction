@@ -45,7 +45,7 @@
                         "values": {
                             "deploy": {
                                 "workloadDeployCommands": [
-                                    "git clone https://github.com/Gordonby/MinecraftOnAzure.git",
+                                    "git clone https://gitlab.com/Gordonby/MinecraftOnAzure.git",
                                     "az deployment group create -g $RESOURCEGROUP -f MinecraftOnAzure/infra/inframain.bicep -n minecraftStorage",
                                     "STORACCOUNTNAME=$(az deployment group show -g $RESOURCEGROUP -n minecraftStorage --query properties.outputs.storageAccountName.value -o tsv)",
                                     "STORACCOUNTKEY=$(az storage account keys list -n $STORACCOUNTNAME --query [0].value -o tsv)",
@@ -53,20 +53,22 @@
                                     "az aks get-credentials -g $RESOURCEGROUP -n $AKSNAME --overwrite-existing",
                                     "kubectl create namespace minecraft",
                                     "kubectl create secret generic minecraft-storage-secret --from-literal=azurestorageaccountname=\"$STORACCOUNTNAME\" --from-literal=azurestorageaccountkey=\"$STORACCOUNTKEY\" -n minecraft",
-                                    "kubectl apply -f https://raw.githubusercontent.com/Gordonby/MinecraftOnAzure/main/app/minecraft.yml -n minecraft",
+                                    "kubectl apply -f app/minecraft.yml -n minecraft",
                                     "kubectl get all -n minecraft",
+                                    "",
                                     "# It'll take quite a while for the pod to *first start* as it needs to download Minecraft server files to the Azure Storage fileshare",
-                                    "# Once the pod is running, you can connect to the Minecraft server using the public IP address of the service"
+                                    "# Once the Minecraft server is running, you can connect to the Minecraft server using the public IP address of the service",
+                                    "kubectl get svc -n minecraft"
                                 ]
                             },
                             "cluster": {
                                 "enable_aad": true,
-                                "AksDisableLocalAccounts": true,
                                 "apisecurity": "none",
                                 "autoscale": false,
                                 "agentCount": 1,
                                 "upgradeChannel": "none",
-                                "vmSize" : "Standard_B2ms"
+                                "vmSize" : "Standard_B2ms",
+                                "osDiskType" : "Managed"
                             },
                             "addons": {
                                 "networkPolicy": "none",

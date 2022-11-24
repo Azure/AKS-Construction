@@ -7,7 +7,7 @@ import dependencies from "../dependencies.json";
 import { Presets } from './presets';
 import locations from '../locations.json';
 
-export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag, cardWorkloadCommands }) {
+export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag }) {
   //const terraformFeatureFlag = featureFlag.includes('tf')
 
   const { net, addons, cluster, deploy } = tabValues
@@ -240,7 +240,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
   `if [ $(az group exists --name NetworkWatcherRG) = false ]; then az group create -l ${deploy.location} -n NetworkWatcherRG; fi\n\n` : ''
 
-  const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands.length===0 ? '' : '\n# Workload Deployment Commands\n' + deploy.workloadDeployCommands.map(w => w).join('\n').replace('$RESOURCEGROUP',deploy.rg).replace('$AKSNAME', deploy.aks)
+  console.log(deploy.workloadDeployCommands.length)
+  const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands && deploy.workloadDeployCommands.length>0 ? '\n# Workload Deployment Commands\n' + deploy.workloadDeployCommands.map(w => w).join('\n').replace('$RESOURCEGROUP',deploy.rg).replace('$AKSNAME', deploy.aks) : ''
 
   const deploycmd =
     `# Create Resource Group\n` +
