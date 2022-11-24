@@ -9,7 +9,7 @@
                 "sectionTitle": "Minecraft servers",
                 "sectionDescription" : "Minecraft servers allow you to create your own internet accessible world to play with your friends online.",
                 "sectionWarning": "Whilst Minecraft servers are free, players using Minecraft requires a licence",
-                "sectionMoreInfoLink" : "https://github.com/Gordonby/MinecraftOnAzure/blob/main/aks.md",
+                "sectionMoreInfoLink" : "https://gitlab.com/Gordonby/MinecraftOnAzure/",
                 "cards": [
                     {
                         "key": "bedrockSmall",
@@ -53,7 +53,7 @@
                                     "az aks get-credentials -g $RESOURCEGROUP -n $AKSNAME --overwrite-existing",
                                     "kubectl create namespace minecraft",
                                     "kubectl create secret generic minecraft-storage-secret --from-literal=azurestorageaccountname=\"$STORACCOUNTNAME\" --from-literal=azurestorageaccountkey=\"$STORACCOUNTKEY\" -n minecraft",
-                                    "kubectl apply -f app/minecraft.yml -n minecraft",
+                                    "kubectl apply -f MinecraftOnAzure/app/minecraft.yml -n minecraft",
                                     "kubectl get all -n minecraft",
                                     "",
                                     "# It'll take quite a while for the pod to *first start* as it needs to download Minecraft server files to the Azure Storage fileshare",
@@ -65,10 +65,13 @@
                                 "enable_aad": true,
                                 "apisecurity": "none",
                                 "autoscale": false,
+                                "AksPaidSkuForSLA" : false,
                                 "agentCount": 1,
-                                "upgradeChannel": "none",
+                                "upgradeChannel": "stable",
                                 "vmSize" : "Standard_B2ms",
-                                "osDiskType" : "Managed"
+                                "osDiskType" : "Managed",
+                                "nodepoolName" : "minecraft",
+                                "SystemPoolType" : "none"
                             },
                             "addons": {
                                 "networkPolicy": "none",
@@ -77,7 +80,8 @@
                                 "ingress": "none",
                                 "appgwKVIntegration": false,
                                 "monitor": "none",
-                                "csisecret": "none"
+                                "csisecret": "none",
+                                "diskCSIDriver" : false
                             },
                             "net": {
                                 "vnetprivateend": false,
@@ -114,17 +118,29 @@
                                 }
                             ]
                         },
-                        "imageSrc": "./Minecraft.png",
+                        "imageSrc": "./MinecraftNether.png",
                         "author": {
                             "name": "Gordon Byers",
                             "initials": "GB",
                             "status": "Updated Nov, 2022"
                         },
-                        "postDeployCommands": [
-                        ],
                         "values": {
                             "deploy": {
                                 "workloadDeployCommands": [
+                                    "git clone https://gitlab.com/Gordonby/MinecraftOnAzure.git",
+                                    "az deployment group create -g $RESOURCEGROUP -f MinecraftOnAzure/infra/inframain.bicep -n minecraftStorage",
+                                    "STORACCOUNTNAME=$(az deployment group show -g $RESOURCEGROUP -n minecraftStorage --query properties.outputs.storageAccountName.value -o tsv)",
+                                    "STORACCOUNTKEY=$(az storage account keys list -n $STORACCOUNTNAME --query [0].value -o tsv)",
+                                    "",
+                                    "az aks get-credentials -g $RESOURCEGROUP -n $AKSNAME --overwrite-existing",
+                                    "kubectl create namespace minecraft",
+                                    "kubectl create secret generic minecraft-storage-secret --from-literal=azurestorageaccountname=\"$STORACCOUNTNAME\" --from-literal=azurestorageaccountkey=\"$STORACCOUNTKEY\" -n minecraft",
+                                    "kubectl apply -f app/minecraft.yml -n minecraft",
+                                    "kubectl get all -n minecraft",
+                                    "",
+                                    "# It'll take quite a while for the pod to *first start* as it needs to download Minecraft server files to the Azure Storage fileshare",
+                                    "# Once the Minecraft server is running, you can connect to the Minecraft server using the public IP address of the service",
+                                    "kubectl get svc -n minecraft"
                                 ]
                             },
                             "cluster": {
@@ -136,7 +152,9 @@
                                 "upgradeChannel": "none",
                                 "vmSize" : "Standard_D8ds_v4",
                                 "SystemPoolType" : "CostOptimised",
-                                "AksPaidSkuForSLA" : true
+                                "AksPaidSkuForSLA" : false,
+                                "nodepoolName" : "minecraft",
+                                "osDiskType" : "Ephemeral"
                             },
                             "addons": {
                                 "networkPolicy": "none",
@@ -144,8 +162,10 @@
                                 "azurepolicy": "none",
                                 "ingress": "none",
                                 "appgwKVIntegration": false,
-                                "monitor": "none",
-                                "csisecret": "none"
+                                "monitor": "aci",
+                                "csisecret": "none",
+                                "logDataCap": 3,
+                                "diskCSIDriver" : false
                             },
                             "net": {
                                 "vnetprivateend": false,

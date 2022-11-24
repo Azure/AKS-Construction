@@ -240,8 +240,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
   `if [ $(az group exists --name NetworkWatcherRG) = false ]; then az group create -l ${deploy.location} -n NetworkWatcherRG; fi\n\n` : ''
 
-  console.log(deploy.workloadDeployCommands.length)
-  const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands && deploy.workloadDeployCommands.length>0 ? '\n# Workload Deployment Commands\n' + deploy.workloadDeployCommands.map(w => w).join('\n').replace('$RESOURCEGROUP',deploy.rg).replace('$AKSNAME', deploy.aks) : ''
+  const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands && deploy.workloadDeployCommands.length>0 ? '\n# Workload Deployment Commands\n' + deploy.workloadDeployCommands.map(w => w).join('\n').replace(/\$RESOURCEGROUP/g,deploy.rg).replace(/\$AKSNAME/g, aks) : ''
 
   const deploycmd =
     `# Create Resource Group\n` +
