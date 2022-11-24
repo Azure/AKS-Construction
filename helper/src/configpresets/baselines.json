@@ -42,6 +42,9 @@
                         },
                         "imageSrc": "https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/images/secure-baseline-architecture.svg",
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
                             "cluster": {
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": false,
@@ -123,6 +126,9 @@
                         },
                         "imageSrc": "https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks-pci/images/regulated-architecture.svg",
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
                             "cluster": {
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": true,
