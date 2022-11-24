@@ -6,8 +6,9 @@ import { adv_stackstyle, hasError, getError } from './common'
 
 export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { addons, net } = tabValues
-    const osmFeatureFlag = featureFlag.includes('osm')
-    const wiFeatureFlag = featureFlag.includes('workloadId')
+    //const osmFeatureFlag = featureFlag.includes('osm')
+    //const wiFeatureFlag = featureFlag.includes('workloadId')
+    
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 

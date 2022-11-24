@@ -171,7 +171,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(addons.monitor === "oss" && {
       monitor: addons.monitor,
-      ...(addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik" && {
+      ...((addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik") && {
         ingress: addons.ingress,
         ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
       })
