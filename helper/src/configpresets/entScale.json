@@ -1,6 +1,7 @@
 {
     "entScaleOps": {
         "title": "Azure Landing Zone",
+        "description": "Azure Landing Zones help organizations operate mature cloud environments",
         "icon": "ManagerSelfService",
         "sections": [
             {
@@ -45,6 +46,9 @@
                             "status": "Updated March, 2021"
                         },
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
                             "cluster": {
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": false,
@@ -130,6 +134,9 @@
                             "status": "Updated March, 2021"
                         },
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
                             "cluster": {
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": true,
@@ -213,6 +220,9 @@
                             "status": "Updated March, 2021"
                         },
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
                             "cluster": {
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": true,
