@@ -197,16 +197,14 @@ export default function PortalNav({ config }) {
     console.log("Update Selected Fired " + sectionKey + " - " + cardKey)
 
     setUrlParams((currentUrlParams) => {
-
       currentUrlParams.set(sectionKey, cardKey)
+      window.history.replaceState(null, null, "?"+currentUrlParams.toString())
       return currentUrlParams
     })
 
     console.log(`updateSelected: sectionKey=${sectionKey} cardKey=${cardKey}`)
     setSelected(currentSelected => {return { ...currentSelected, values: { ...selected.values, [sectionKey]: cardKey } }})
     setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, sectionKey, cardKey))
-
-    window.history.replaceState(null, null, "?"+urlParams.toString())
   }
 
 
@@ -266,26 +264,35 @@ export default function PortalNav({ config }) {
 
   function presetChanged(preset) {
     console.log(`presetChanged preset=${JSON.stringify(preset)}`)
+    // capture old selected cards to remove from the url
+    const oldSelectedCards = Object.keys(selected.values)
     const newSelected = initSelected(preset)
     setSelected(newSelected)
+
     setTabValues(initTabValues(newSelected, {...defaults, deploy: tabValues.deploy}))
+    setUrlParams((currentUrlParams) => {
+      // remove old cards
+      for (const key of oldSelectedCards) currentUrlParams.delete(key)
+      // add new
+      currentUrlParams.set('preset', preset)
+      window.history.replaceState(null, null, "?"+currentUrlParams.toString())
+      return currentUrlParams
+    })
   }
 
   function mergeState(tab, field, value, previewLink) {
 
     let updatevals
+    let newFields = new Map()
     if (typeof field === "string") {
       updatevals = { [field]: value }
-      urlParams.set(`${tab}.${field}`, value)
+      newFields.set(`${tab}.${field}`, value)
     } else if (typeof field === "function") {
       updatevals = field(tabValues[tab])
       for (let nfield of Object.keys(updatevals)) {
-        urlParams.set(`${tab}.${nfield}`, updatevals[nfield])
+        newFields.set(`${tab}.${nfield}`, updatevals[nfield])
       }
     }
-
-    //maintains the current config in querystring for easy bookmarking
-    window.history.replaceState(null, null, "?" + urlParams.toString())
 
     setTabValues((p) => {
       return {
@@ -296,6 +303,14 @@ export default function PortalNav({ config }) {
         }
       }
     })
+
+    setUrlParams((currentUrlParams) => {
+      // remove old cards
+      for (const [key, value] of newFields.entries()) currentUrlParams.set(key, value)
+      window.history.replaceState(null, null, "?"+currentUrlParams.toString())
+      return currentUrlParams
+    })
+
   }
 
   function getError(page, field) {
