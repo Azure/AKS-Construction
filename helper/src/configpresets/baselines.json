@@ -84,7 +84,11 @@
                                 "monitor": "aci",
                                 "csisecret": "akvNew",
                                 "acrUntaggedRetentionPolicy": 15,
-                                "acrUntaggedRetentionPolicyEnabled": true
+                                "acrUntaggedRetentionPolicyEnabled": true,
+                                "workloadIdentity": true,
+                                "fileCSIDriver": false,
+                                "diskCSIDriver": false
+
                             },
                             "net": {
                                 "vnetprivateend": true,
@@ -173,7 +177,8 @@
                                 "csisecret": "akvNew",
                                 "acrUntaggedRetentionPolicy": 15,
                                 "acrUntaggedRetentionPolicyEnabled": true,
-                                "enableACRTrustPolicy": true
+                                "enableACRTrustPolicy": true,
+                                "workloadIdentity": true
                             },
                             "net": {
                                 "vnetprivateend": true,
