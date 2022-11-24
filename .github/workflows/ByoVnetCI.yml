@@ -99,6 +99,19 @@ jobs:
           modules: 'PSRule.Rules.CAF'
           inputPath: "${{ env.ParamFilePath }}"
 
+  CostEstimate:
+    needs: [ReusableWF]
+    uses: Gordonby/arm-estimator/.github/workflows/estimate.yml@main
+    with:
+      rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      environment: ${{needs.ReusableWF.outputs.Environment}}
+      templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/0.9.4/main.json
+      templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/main/.github/workflows_dep/AksDeploy-ByoVnet.parameters.json
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
   #Pre deployment validation of the parameters + bicep code
   Validation:
     runs-on: ubuntu-latest
@@ -561,6 +574,7 @@ jobs:
       Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
       ExistingDnsDomainName: aksc.msftcsu.net
       ExistingDnsDomainRg: aksbicepacc-ci-deployvnet
+      Environment: ${{ github.event.inputs.environment }}
     steps:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
