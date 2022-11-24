@@ -100,13 +100,14 @@ jobs:
           inputPath: "${{ env.ParamFilePath }}"
 
   CostEstimate:
-    needs: [ReusableWF]
+    needs: [ReusableWF, Validation]
     uses: Gordonby/arm-estimator/.github/workflows/estimate.yml@main
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       environment: ${{needs.ReusableWF.outputs.Environment}}
       templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/0.9.4/main.json
       templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/main/.github/workflows_dep/AksDeploy-ByoVnet.parameters.json
+      #templateParams: needs.Validation.outputs.PARAMOVERRIDES
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -121,7 +122,7 @@ jobs:
       RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
       REGION: ${{ steps.params.outputs.REGION}}
       RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
-
+      PARAMOVERRIDES: steps.imperitiveparams.outputs.PARAMOVERRIDES
     steps:
       - uses: actions/checkout@v2
 
