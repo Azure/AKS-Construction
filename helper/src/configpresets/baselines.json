@@ -180,7 +180,8 @@
                                 "vnet_opt": "custom",
                                 "afw": true,
                                 "azureFirewallSku": "Premium",
-                                "nsg": true
+                                "nsg": true,
+                                "nsgFlowLogs": true
                             }
                         }
                     }
