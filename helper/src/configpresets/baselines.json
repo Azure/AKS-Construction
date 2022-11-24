@@ -1,13 +1,13 @@
 {
     "baselineRI": {
-        "title": "AKS Baseline",
+        "title": "AKS Secure Baseline",
         "icon": "Dictionary",
-        "disabled" : true,
+        "disabled" : false,
         "sections": [
             {
                 "key": "baselineRI",
-                "sectionTitle": "AKS Baseline Cluster Stamps",
-                "sectionDescription" : "The AKS Baseline architectures are references for learning how to build AKS Clusters that include recommendations for networking, security, identity, management, and monitoring of the cluster based on an organization's business requirements. These presets closely replicate the cluster-stamp for each sample reference implementation, and should be leveraged after you've read the AKS baseline reference architecture documentation.",
+                "sectionTitle": "AKS Secure Baseline Cluster Stamps",
+                "sectionDescription" : "The AKS Secure Baseline architectures are references for learning how to build AKS Clusters that include recommendations for networking, security, identity, management, and monitoring of the cluster based on an organization's business requirements. These presets closely replicate the cluster-stamp for each sample reference implementation, and should be leveraged after you've read the AKS baseline reference architecture documentation.",
                 "sectionMoreInfoLink" : "https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks",
                 "sectionWarning": "",
                 "cards": [
@@ -20,7 +20,7 @@
                             "title": "Standard Workload V2",
                             "bulets": [
                                 {
-                                    "description": "Cluster auto-scaler (2-4 nodes)",
+                                    "description": "Cluster auto-scaler (2-5 nodes)",
                                     "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
                                 },
                                 {
@@ -28,15 +28,34 @@
                                     "linksrc": "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview"
                                 },
                                 {
-                                    "description": "Azure Container Registry (public)"
+                                    "description": "Azure Firewall for outbound traffic",
+                                    "linksrc": "https://learn.microsoft.com/en-us/azure/architecture/example-scenario/aks-firewall/aks-firewall"
+                                },
+                                {
+                                    "description": "Traefik Ingress Controller"
+                                },
+                                {
+                                    "description": "Azure Container Registry (private)"
+                                },
+                                {
+                                    "description": "Restrict dependencies with Private Link",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/private-link/private-link-overview"
                                 },
                                 {
                                     "description": "AAD Integration",
                                     "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
                                 },
                                 {
-                                    "description": "Audit Pod security baseline standards",
+                                    "description": "Audit restricted pod security standards",
                                     "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
+                                },
+                                {
+                                    "description": "East-West traffic control",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/use-network-policies"
+                                },
+                                {
+                                    "description": "Store Kubernetes Secrets in Azure KeyVault,",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
                                 }
                             ]
                         },
@@ -44,27 +63,35 @@
                         "values": {
                             "cluster": {
                                 "enable_aad": true,
-                                "AksDisableLocalAccounts": false,
+                                "AksDisableLocalAccounts": true,
                                 "apisecurity": "none",
                                 "autoscale": true,
                                 "agentCount": 2,
-                                "maxCount": 10,
+                                "maxCount": 5,
                                 "upgradeChannel": "none",
-                                "DefenderForContainers": true
+                                "DefenderForContainers": true,
+                                "AksPaidSkuForSLA": true,
+                                "SystemPoolType": "Standard",
+                                "availabilityZones": "yes"
                             },
                             "addons": {
                                 "networkPolicy": "azure",
-                                "registry": "Basic",
+                                "registry": "Premium",
                                 "azurepolicy": "audit",
-                                "ingress": "none",
+                                "azurePolicyInitiative": "Restricted",
+                                "ingress": "traefik",
                                 "appgwKVIntegration": false,
                                 "monitor": "aci",
-                                "csisecret": "none"
+                                "csisecret": "akvNew",
+                                "acrUntaggedRetentionPolicy": 15,
+                                "acrUntaggedRetentionPolicyEnabled": true
                             },
                             "net": {
-                                "vnetprivateend": false,
-                                "vnet_opt": "default",
-                                "afw": true
+                                "vnetprivateend": true,
+                                "vnet_opt": "custom",
+                                "afw": true,
+                                "azureFirewallSku": "Premium",
+                                "nsg": true
                             }
                         }
                     },
@@ -75,13 +102,9 @@
                         "linksrc" : "https://github.com/mspnp/aks-baseline-regulated",
                         "description": {
                             "title": "Suited for regulated workloads",
-                            "titleWarning": {
-                                "description": "Requires existing Subnet, preconfigured with firewall egress",
-                                "MessageBarType": 5
-                            },
                             "bulets": [
                                 {
-                                    "description": "Cluster auto-scaler",
+                                    "description": "Cluster auto-scaler (2-5 nodes)",
                                     "linksrc": "https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler"
                                 },
                                 {
@@ -89,18 +112,25 @@
                                     "linksrc": "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview"
                                 },
                                 {
-                                    "description": "Azure Container Registry (with Private Link)"
+                                    "description": "Azure Firewall for outbound traffic",
+                                    "linksrc": "https://learn.microsoft.com/en-us/azure/architecture/example-scenario/aks-firewall/aks-firewall"
                                 },
                                 {
-                                    "description": "Azure AppGateway Ingress",
-                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/application-gateway/ingress-controller-overview"
+                                    "description": "Nginx Ingress Controller"
+                                },
+                                {
+                                    "description": "Azure Container Registry (private)"
+                                },
+                                {
+                                    "description": "Restrict dependencies with Private Link",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/private-link/private-link-overview"
                                 },
                                 {
                                     "description": "AAD Integration",
                                     "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
                                 },
                                 {
-                                    "description": "Audit Pod security baseline standards",
+                                    "description": "Audit restricted pod security standards",
                                     "linksrc": "https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes"
                                 },
                                 {
@@ -108,16 +138,12 @@
                                     "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/use-network-policies"
                                 },
                                 {
-                                    "description": "Private Cluster",
-                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/private-clusters"
-                                },
-                                {
-                                    "description": "Restrict dependencies with Private Link",
-                                    "linksrc": "https://docs.microsoft.com/en-us/azure/private-link/private-link-overview"
-                                },
-                                {
                                     "description": "Store Kubernetes Secrets in Azure KeyVault,",
                                     "linksrc": "https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+                                },
+                                {
+                                    "description": "Private Cluster",
+                                    "linksrc": "https://docs.microsoft.com/en-us/azure/aks/private-clusters"
                                 }
                             ]
                         },
@@ -126,24 +152,35 @@
                             "cluster": {
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": true,
-                                "apisecurity": "private",
+                                "apisecurity": "none",
                                 "autoscale": true,
+                                "agentCount": 2,
+                                "maxCount": 5,
                                 "upgradeChannel": "none",
-                                "DefenderForContainers": true
+                                "DefenderForContainers": true,
+                                "AksPaidSkuForSLA": true,
+                                "SystemPoolType": "Standard",
+                                "availabilityZones": "yes"
                             },
                             "addons": {
                                 "networkPolicy": "azure",
                                 "registry": "Premium",
                                 "azurepolicy": "audit",
-                                "ingress": "appgw",
+                                "azurePolicyInitiative": "Restricted",
+                                "ingress": "nginx",
+                                "appgwKVIntegration": false,
                                 "monitor": "aci",
                                 "csisecret": "akvNew",
-                                "appgwKVIntegration": true
+                                "acrUntaggedRetentionPolicy": 15,
+                                "acrUntaggedRetentionPolicyEnabled": true,
+                                "enableACRTrustPolicy": true
                             },
                             "net": {
                                 "vnetprivateend": true,
-                                "vnet_opt": "byo",
-                                "afw": false
+                                "vnet_opt": "custom",
+                                "afw": true,
+                                "azureFirewallSku": "Premium",
+                                "nsg": true
                             }
                         }
                     }
