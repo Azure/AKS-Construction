@@ -169,7 +169,7 @@ export default function PortalNav({ config }) {
 
 
   function updateTabValues(currenttabValues, sections, sectionKey, cardKey) {
-    //console.log(`updateTabValues`)
+    //console.log(`updateTabValues card: ${cardKey}`)
     const card_values = sections.find(s => s.key === sectionKey).cards.find(c => c.key === cardKey).values
     //console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
     return Object.keys(card_values).reduce((acc, curr) => {
@@ -273,16 +273,20 @@ export default function PortalNav({ config }) {
       return currentUrlParams
     })
 
+    const values = presets[preset].sections.reduce((a, s) => {
+      return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
+    }, {})
+
     setSelected({
-      preset, values: presets[preset].sections.reduce((a, s) => {
-        return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
-      }, {})
+      preset, values
     })
 
+    console.log(`section: ${JSON.stringify(sections)}`)
+
     // Apply selected presets to tab values
-    console.log(`Preset changed to ${preset}, updating tab values to ${JSON.stringify(selected.values)}`)
-    const tabApplySections = Object.keys(selected.values).reduce((acc, curr) =>
-      updateTabValues(acc, sections, curr, selected.values[curr]),
+    console.log(`Preset changed to ${preset}, updating tab values to ${JSON.stringify(values)}`)
+    const tabApplySections = Object.keys(values).reduce((acc, curr) =>
+      updateTabValues(acc, sections, curr, values[curr]),
       defaults
     )
 
