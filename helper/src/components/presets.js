@@ -12,14 +12,13 @@ const headerIconClass = mergeStyles({
     fontSize: 35,
     height: 25,
     width: 50,
-    margin: '7px 10px',
+    margin: '0px 10px',
 });
 
 const headerText = mergeStyles({
-lineHeight: 50,
-width: 50,
-margin: '0 5px',
-verticalAlign: 'top'
+    lineHeight: 25,
+    margin: '0px 5px',
+    verticalAlign: 'top'
 });
 
 export const SeparatorStyle = {
@@ -44,8 +43,10 @@ export function Presets({ description, icon, sections, selectedValues, updateSel
     <div>
         { description != null && description !== "" &&
             <>
-                <FontIcon aria-label={icon} iconName={icon} className={headerIconClass} />
-                <Text variant={'mediumPlus'} className={headerText} >{description}</Text>
+                <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', width:'100%'}}>
+                    <FontIcon aria-label={icon} iconName={icon} className={headerIconClass} />
+                    <Text variant={'mediumPlus'} className={headerText} >{description}</Text>
+                </div>
             </>
         }
       { sections.map(s => [

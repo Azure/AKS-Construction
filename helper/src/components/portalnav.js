@@ -42,14 +42,14 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
 
       <div style={{ width: "100%", display: 'flex', paddingTop: "5px" }}>
 
-        <div style={{  whiteSpace: "nowrap", marginTop: "5px" }}>
+        <div style={{  whiteSpace: "nowrap", marginTop: "7px" }}>
           <Link className="navbar-brand no-outline" >
             <Image src="aks.svg" height="33px" alt='aks logo' />
           </Link>
           <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{ "color": "red" }}>Helper</span></Text>
         </div>
 
-        <Text variant={'mediumPlus'} className={titleClass} style={{ "marginTop": "12px" }}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at <a href="https://learn.microsoft.com/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a></Text>
+        <Text variant={'mediumPlus'} className={titleClass} style={{ "marginTop": "12px" }}>Docs and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at <a href="https://learn.microsoft.com/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a></Text>
 
         <div style={{whiteSpace: "nowrap"}}>
 
