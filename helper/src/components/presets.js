@@ -9,16 +9,16 @@ const iconClass = mergeStyles({
 });
 
 const headerIconClass = mergeStyles({
-    fontSize: 50,
-    height: 50,
+    fontSize: 35,
+    height: 25,
     width: 50,
-    margin: '0 25px',
+    margin: '7px 10px',
 });
 
 const headerText = mergeStyles({
 lineHeight: 50,
 width: 50,
-margin: '0 25px',
+margin: '0 5px',
 verticalAlign: 'top'
 });
 
@@ -45,7 +45,7 @@ export function Presets({ description, icon, sections, selectedValues, updateSel
         { description != null && description !== "" &&
             <>
                 <FontIcon aria-label={icon} iconName={icon} className={headerIconClass} />
-                <Text variant={'large'} className={headerText} >{description}</Text>
+                <Text variant={'mediumPlus'} className={headerText} >{description}</Text>
             </>
         }
       { sections.map(s => [

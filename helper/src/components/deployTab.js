@@ -240,7 +240,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
   `if [ $(az group exists --name NetworkWatcherRG) = false ]; then az group create -l ${deploy.location} -n NetworkWatcherRG; fi\n\n` : ''
 
-  const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands && deploy.workloadDeployCommands.length>0 ? '\n# Workload Deployment Commands\n' + deploy.workloadDeployCommands.map(w => w).join('\n').replace(/\$RESOURCEGROUP/g,deploy.rg).replace(/\$AKSNAME/g, aks) : ''
+  const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands && deploy.workloadDeployCommands.length>0 ? deploy.workloadDeployCommands.map(w => w).join('\n').replace(/\$RESOURCEGROUP/g,deploy.rg).replace(/\$AKSNAME/g, aks) : ''
 
   const deploycmd =
     `# Create Resource Group\n` +
@@ -251,8 +251,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
       return ` \\\n\t${k}=${targetVal}`
-    }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deploystr : '') +
-    cardSpecificWorkloadDeployCmd
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deploystr : '')
 
 
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
@@ -537,6 +536,11 @@ az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
 
 
       </Pivot>
+
+
+      <PivotItem headerText="Command Line" itemKey="deployArmCli" itemIcon="PasteAsCode" hidden={deploy.workloadDeployCommands.length===0} >
+        <CodeBlock hideSave={true} lang="Workload Deployment shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={cardSpecificWorkloadDeployCmd} testId={'deploy-deploycmd'}/>
+      </PivotItem>
 
     </Stack>
   )

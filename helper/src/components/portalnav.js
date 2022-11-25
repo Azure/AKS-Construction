@@ -49,7 +49,7 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
           <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{ "color": "red" }}>Helper</span></Text>
         </div>
 
-        <Text className={titleClass} style={{ "marginTop": "12px" }}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at the <a href="https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a> docs</Text>
+        <Text variant={'mediumPlus'} className={titleClass} style={{ "marginTop": "12px" }}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at <a href="https://learn.microsoft.com/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a></Text>
 
         <div style={{whiteSpace: "nowrap"}}>
 
