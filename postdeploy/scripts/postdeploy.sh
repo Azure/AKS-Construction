@@ -408,7 +408,7 @@ if [ "$containerLogsV2" ]; then
     replace="\# containerlog_schema_version = \"v2\""
     replaceWith='containerlog_schema_version = "v2"'
     echo "Downloading default ConfigMap"
-    $configMapYamlFile="$(curl https://raw.githubusercontent.com/microsoft/Docker-Provider/ci_prod/kubernetes/container-azm-ms-agentconfig.yaml)"
+    configMapYamlFile="$(curl -s https://raw.githubusercontent.com/microsoft/Docker-Provider/ci_prod/kubernetes/container-azm-ms-agentconfig.yaml > /dev/null)"
     echo "Setting containerlog_schema_version to v2"
     "${configMapYamlFile/$replace/$replaceWith}" > container-azm-ms-agentconfig.yaml
     echo "Applying ConfigMap using kubectl apply"
