@@ -48,7 +48,7 @@ jobs:
     - name: Cleanup
       shell: pwsh
       run: |
-        $RG='${{ inputs.rg }}"'
+        $RG="${{ inputs.rg }}"
         # Get all ARM resources from all resource groups
         $rgToPurge = Get-AzResourceGroup -Name $RG
         try {
