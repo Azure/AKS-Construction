@@ -410,7 +410,7 @@ if [ "$containerLogsV2" ]; then
     echo "Downloading default ConfigMap"
     configMapYamlFile="$(curl -s https://raw.githubusercontent.com/microsoft/Docker-Provider/ci_prod/kubernetes/container-azm-ms-agentconfig.yaml)"
     echo "Setting containerlog_schema_version to v2"
-    "${configMapYamlFile/$replace/$replaceWith}" > container-azm-ms-agentconfig.yaml
+    echo "${configMapYamlFile/$replace/$replaceWith}" > container-azm-ms-agentconfig.yaml
     echo "Applying ConfigMap using kubectl apply"
     kubectl apply -f container-azm-ms-agentconfig.yaml
     sleep 1m
