@@ -102,7 +102,7 @@ jobs:
   CostEstimate:
     needs: [ReusableWF, Validation]
     #uses: TheCloudTheory/arm-estimator/.github/workflows/estimate.yml@1.0.0-beta6
-    uses: Gordonby/arm-estimator/.github/workflows/estimate.yml@gb-workflowparams
+    uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowparams
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       environment: ${{needs.ReusableWF.outputs.Environment}}
