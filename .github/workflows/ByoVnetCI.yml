@@ -124,7 +124,7 @@ jobs:
       RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
       REGION: ${{ steps.params.outputs.REGION}}
       RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
-      PARAMOVERRIDES: ${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}
+      PARAMOVERRIDES: ${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}} #This won't work if the string includes any SECRETS!!!
     steps:
       - uses: actions/checkout@v2
 
