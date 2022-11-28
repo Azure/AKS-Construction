@@ -9,7 +9,7 @@ on:
       environment:
         description: 'Which environment to deploy to'
         required: true
-        default: "azurecirgs"
+        default: "csu"
         type: environment
       ResourceGroup:
         description: 'Which Resource Group to deploy to'
