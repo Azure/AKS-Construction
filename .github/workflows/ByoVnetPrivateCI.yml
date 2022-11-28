@@ -124,7 +124,8 @@ jobs:
       environment: ${{needs.ReusableWF.outputs.Environment}}
       aceVersion: 1.0.0-beta6
       templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/${{ needs.ReusableWF.outputs.LatestAkscVersionTag }}/main.json
-      templateParamFileURL: ${{ needs.ReusableWF.outputs.ParamFilePath }}
+      #templateParamFileURL: ${{ needs.ReusableWF.outputs.ParamFilePath }}
+      templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/${{ github.ref }}/${{ needs.ReusableWF.outputs.ParamFilePath }}
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
