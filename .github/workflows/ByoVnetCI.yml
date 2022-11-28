@@ -585,8 +585,9 @@ jobs:
         run: echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
       - name: Job parameter inspection
         run: |
-          echo ${{ github.event.inputs.doSmokeTestUninstall }}
-          echo $RG
+          echo "PARAMOVERRIDES: ${{ needs.Validation.outputs.PARAMOVERRIDES}}"
+          echo "doSmokeTestUninstall: ${{ github.event.inputs.doSmokeTestUninstall }}"
+          echo "RG: $RG"
 
   Post-Deploy:
     needs: [Validation, Deploy, ReusableWF]
