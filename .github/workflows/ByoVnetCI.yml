@@ -332,7 +332,7 @@ jobs:
           inlineScript: |
             DEPNAME='${{ env.DEPNAME }}'
             WHATIFPATH='whatif.json'
-            PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}}'
+            PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDESNOSECRETS}}'
 
             az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS > $WHATIFPATH
 
