@@ -8,7 +8,7 @@
                 "key": "minecraft",
                 "sectionTitle": "Minecraft servers",
                 "sectionDescription" : "Minecraft servers allow you to create your own internet accessible world to play with your friends online.",
-                "sectionWarning": "Whilst Minecraft servers are free, players using Minecraft requires a licence",
+                "sectionWarning": "Whilst Minecraft servers are free, players using Minecraft require a licence",
                 "sectionMoreInfoLink" : "https://gitlab.com/Gordonby/MinecraftOnAzure/",
                 "cards": [
                     {
