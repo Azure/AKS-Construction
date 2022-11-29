@@ -1,0 +1,181 @@
+{
+    "gaming": {
+        "title": "Gaming",
+        "description": "Gaming Scenarios for Kubernetes that include end to end workload installation",
+        "icon": "Game",
+        "sections": [
+            {
+                "key": "minecraft",
+                "sectionTitle": "Minecraft servers",
+                "sectionDescription" : "Minecraft servers allow you to create your own internet accessible world to play with your friends online.",
+                "sectionWarning": "Whilst Minecraft servers are free, players using Minecraft require a licence",
+                "sectionMoreInfoLink" : "https://gitlab.com/Gordonby/MinecraftOnAzure/",
+                "cards": [
+                    {
+                        "key": "bedrockSmall",
+                        "default": true,
+                        "title": "Bedrock Edition : Small",
+                        "description": {
+                            "title": "Installs a Bedrock server on a small compute node for less than 5 players, with minimal Azure system components for optimization.",
+                            "bulets": [
+                                {
+                                    "description": "Single node cluster"
+                                },
+                                {
+                                    "description": "Burstable VM type"
+                                },
+                                {
+                                    "description": "No logging/monitoring"
+                                },
+                                {
+                                    "description": "Minimal system components"
+                                },
+                                {
+                                    "description": "AAD Integration for RBAC control plane",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                                }
+                            ]
+                        },
+                        "imageSrc": "./Minecraft.png",
+                        "author": {
+                            "name": "Gordon Byers",
+                            "initials": "GB",
+                            "status": "Updated Nov, 2022"
+                        },
+                        "values": {
+                            "deploy": {
+                                "workloadDeployCommands": [
+                                    "git clone https://gitlab.com/Gordonby/MinecraftOnAzure.git",
+                                    "az deployment group create -g $RESOURCEGROUP -f MinecraftOnAzure/infra/inframain.bicep -n minecraftStorage",
+                                    "STORACCOUNTNAME=$(az deployment group show -g $RESOURCEGROUP -n minecraftStorage --query properties.outputs.storageAccountName.value -o tsv)",
+                                    "STORACCOUNTKEY=$(az storage account keys list -n $STORACCOUNTNAME --query [0].value -o tsv)",
+                                    "",
+                                    "az aks get-credentials -g $RESOURCEGROUP -n $AKSNAME --overwrite-existing",
+                                    "kubectl create namespace minecraft",
+                                    "kubectl create secret generic minecraft-storage-secret --from-literal=azurestorageaccountname=\"$STORACCOUNTNAME\" --from-literal=azurestorageaccountkey=\"$STORACCOUNTKEY\" -n minecraft",
+                                    "kubectl apply -f MinecraftOnAzure/app/minecraft.yml -n minecraft",
+                                    "kubectl get all -n minecraft",
+                                    "",
+                                    "# It'll take quite a while for the pod to *first start* as it needs to download Minecraft server files to the Azure Storage fileshare",
+                                    "# Once the Minecraft server is running, you can connect to the Minecraft server using the public IP address of the service",
+                                    "kubectl get svc -n minecraft"
+                                ]
+                            },
+                            "cluster": {
+                                "enable_aad": true,
+                                "apisecurity": "none",
+                                "autoscale": false,
+                                "AksPaidSkuForSLA" : false,
+                                "agentCount": 1,
+                                "upgradeChannel": "stable",
+                                "vmSize" : "Standard_B2ms",
+                                "osDiskType" : "Managed",
+                                "nodepoolName" : "minecraft",
+                                "SystemPoolType" : "none"
+                            },
+                            "addons": {
+                                "networkPolicy": "none",
+                                "registry": "none",
+                                "azurepolicy": "none",
+                                "ingress": "none",
+                                "appgwKVIntegration": false,
+                                "monitor": "none",
+                                "csisecret": "none",
+                                "diskCSIDriver" : false
+                            },
+                            "net": {
+                                "vnetprivateend": false,
+                                "vnet_opt": "default",
+                                "afw": false
+                            }
+                        }
+                    },
+                    {
+                        "key": "bedrockSerious",
+                        "default": false,
+                        "title": "Bedrock Edition : Serious!",
+                        "description": {
+                            "title": "Installs a Bedrock server on a large compute node for more than 5 players, with logging and more security.",
+                            "bulets": [
+                                {
+                                    "description": "Dedicated system pool (2 nodes)"
+                                },
+                                {
+                                    "description": "Dedicated user pool (2 nodes)"
+                                },
+                                {
+                                    "description": "General purpose VM type"
+                                },
+                                {
+                                    "description": "Full Logging & monitoring"
+                                },
+                                {
+                                    "description": "Container Registry for the workload image"
+                                },
+                                {
+                                    "description": "AAD Integration for RBAC control plane",
+                                    "linksrc": "https://docs.microsoft.com/en-gb/azure/aks/managed-aad"
+                                }
+                            ]
+                        },
+                        "imageSrc": "./MinecraftNether.png",
+                        "author": {
+                            "name": "Gordon Byers",
+                            "initials": "GB",
+                            "status": "Updated Nov, 2022"
+                        },
+                        "values": {
+                            "deploy": {
+                                "workloadDeployCommands": [
+                                    "git clone https://gitlab.com/Gordonby/MinecraftOnAzure.git",
+                                    "az deployment group create -g $RESOURCEGROUP -f MinecraftOnAzure/infra/inframain.bicep -n minecraftStorage",
+                                    "STORACCOUNTNAME=$(az deployment group show -g $RESOURCEGROUP -n minecraftStorage --query properties.outputs.storageAccountName.value -o tsv)",
+                                    "STORACCOUNTKEY=$(az storage account keys list -n $STORACCOUNTNAME --query [0].value -o tsv)",
+                                    "",
+                                    "az aks get-credentials -g $RESOURCEGROUP -n $AKSNAME --overwrite-existing",
+                                    "kubectl create namespace minecraft",
+                                    "kubectl create secret generic minecraft-storage-secret --from-literal=azurestorageaccountname=\"$STORACCOUNTNAME\" --from-literal=azurestorageaccountkey=\"$STORACCOUNTKEY\" -n minecraft",
+                                    "kubectl apply -f app/minecraft.yml -n minecraft",
+                                    "kubectl get all -n minecraft",
+                                    "",
+                                    "# It'll take quite a while for the pod to *first start* as it needs to download Minecraft server files to the Azure Storage fileshare",
+                                    "# Once the Minecraft server is running, you can connect to the Minecraft server using the public IP address of the service",
+                                    "kubectl get svc -n minecraft"
+                                ]
+                            },
+                            "cluster": {
+                                "enable_aad": true,
+                                "AksDisableLocalAccounts": true,
+                                "apisecurity": "none",
+                                "autoscale": false,
+                                "agentCount": 2,
+                                "upgradeChannel": "none",
+                                "vmSize" : "Standard_D8ds_v4",
+                                "SystemPoolType" : "CostOptimised",
+                                "AksPaidSkuForSLA" : false,
+                                "nodepoolName" : "minecraft",
+                                "osDiskType" : "Ephemeral"
+                            },
+                            "addons": {
+                                "networkPolicy": "none",
+                                "registry": "Standard",
+                                "azurepolicy": "none",
+                                "ingress": "none",
+                                "appgwKVIntegration": false,
+                                "monitor": "aci",
+                                "csisecret": "none",
+                                "logDataCap": 3,
+                                "diskCSIDriver" : false
+                            },
+                            "net": {
+                                "vnetprivateend": false,
+                                "vnet_opt": "default",
+                                "afw": false
+                            }
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

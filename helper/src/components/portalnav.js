@@ -42,14 +42,14 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
 
       <div style={{ width: "100%", display: 'flex', paddingTop: "5px" }}>
 
-        <div style={{  whiteSpace: "nowrap", marginTop: "5px" }}>
+        <div style={{  whiteSpace: "nowrap", marginTop: "7px" }}>
           <Link className="navbar-brand no-outline" >
             <Image src="aks.svg" height="33px" alt='aks logo' />
           </Link>
           <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{ "color": "red" }}>Helper</span></Text>
         </div>
 
-        <Text className={titleClass} style={{ "marginTop": "12px" }}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at the <a href="https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a> docs</Text>
+        <Text variant={'mediumPlus'} className={titleClass} style={{ "marginTop": "12px" }}>Docs and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at <a href="https://learn.microsoft.com/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a></Text>
 
         <div style={{whiteSpace: "nowrap"}}>
 
@@ -69,7 +69,6 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
 
 
         </div>
-
       </div>
     </nav>
   )
@@ -129,6 +128,8 @@ export default function PortalNav({ config }) {
   }
 
 
+  const {description, icon } = presets[selected.preset]
+
   function initTabValues (selected, baseTabValues, resetDynamic = false)  {
         // Apply selected presets to tab values
     var tabApplySections = Object.keys(selected.values).reduce((acc, curr) =>
@@ -185,7 +186,7 @@ export default function PortalNav({ config }) {
               val.reduce((a, c) => a === undefined ? (c.page && c.field ? (currenttabValues[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
               :
               val
-            //console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
+            console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
             return { ...a, [c]: targetVal }
           }, {})
         }
@@ -387,7 +388,7 @@ export default function PortalNav({ config }) {
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
-          <Presets sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
+          <Presets description={description} icon={icon} sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
 
           <Separator styles={SeparatorStyle}><span style={{ "color": "rgb(0, 103, 184)" }}>Fine tune & Deploy</span></Separator>
 
