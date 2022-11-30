@@ -67,7 +67,7 @@ on:
 concurrency: ci-${{ github.ref }}
 
 env:
-  AZCLIVERSION: 2.30.0 #2.29.2 #2.26.0 #latest
+  AZCLIVERSION: 2.42.0 #2.30.0 #2.29.2 #2.26.0 #latest
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "Byov"
   DEPNAME: "Dep${{ github.run_number }}"
@@ -78,13 +78,13 @@ jobs:
     runs-on: ubuntu-latest
     if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.5.0
 
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
       - name: PSRule for Azure - Well Architected
-        uses: microsoft/ps-rule@v2.3.2
+        uses: microsoft/ps-rule@v2.6.0
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.Azure'
@@ -93,7 +93,7 @@ jobs:
       # In addition to the Well Architected analysis, we can also leverage the CAF rules
       # Run analysis against PSRule for Cloud Adoption Framework
       - name: PSRule for CAF
-        uses: microsoft/ps-rule@v2.0.0
+        uses: microsoft/ps-rule@v2.6.0
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.CAF'
@@ -101,12 +101,12 @@ jobs:
 
   CostEstimate:
     needs: [ReusableWF, Validation]
-    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@main
+    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.0.0-beta6
     #uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowparams
     with:
-      rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      rg: ${{ needs.ReusableWF.outputs.RG }}
       environment: ${{needs.ReusableWF.outputs.Environment}}
-      aceVersion: main #1.0.0-beta6
+      aceVersion: 1.0.0-beta6
       templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/0.9.4/main.json
       templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/main/.github/workflows_dep/AksDeploy-ByoVnet.parameters.json
       templateParams: ${{ needs.Validation.outputs.PARAMOVERRIDESNOSECRETS}} #${{ needs.Validation.outputs.PARAMOVERRIDES}}
@@ -127,7 +127,7 @@ jobs:
       PARAMOVERRIDES: ${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}} #This won't work if the string includes any SECRETS!!!
       PARAMOVERRIDESNOSECRETS: ${{ steps.imperitiveparams.outputs.PARAMOVERRIDESNOSECRETS}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.5.0
 
       - name: Job parameter check
         if: github.event.inputs.doDebugSteps == 'true'
@@ -191,7 +191,7 @@ jobs:
             echo "::set-output name=NEWRESNAME::$NEWRESNAME"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -209,7 +209,7 @@ jobs:
         if: github.event.inputs.doVerifySteps == 'true'
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -265,7 +265,7 @@ jobs:
           }
 
       - name: Create Parameter file imperative override string
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         id: imperitiveparams
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
@@ -281,7 +281,7 @@ jobs:
             echo "::set-output name=PARAMOVERRIDESNOSECRETS::$PARAMOVERRIDESNOSECRETS"
             
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         with:
@@ -296,7 +296,7 @@ jobs:
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS --verbose
 
       - name: What If (GA edge Az cli version) (has issues)
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         id: edgeWhatIf
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
@@ -323,7 +323,7 @@ jobs:
             echo "::set-output name=edgeSuccess::true"
 
       - name: What If (No Secrets param string, used for Cost Estimate)
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         continue-on-error: true
@@ -344,7 +344,7 @@ jobs:
             cat $WHATIFPATH
 
       - name: What If (workaround task)
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         continue-on-error: true #Setting to true due to bug in the AzureCLI https://github.com/Azure/azure-cli/issues/19850
         if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
         env:
@@ -458,7 +458,7 @@ jobs:
 
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop' || contains( github.event.pull_request.labels.*.name, 'test-deploy-byoconfig')
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.5.0
 
       - name: Job parameter check
         if: github.event.inputs.doDebugSteps == 'true'
@@ -482,7 +482,7 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -491,7 +491,7 @@ jobs:
 
       - name: Deploy Infrastructure
         id: deployAks
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -686,7 +686,7 @@ jobs:
     env:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.5.0
 
       - name: Param check
         if: github.event.inputs.doDebugSteps == 'true'
@@ -698,12 +698,10 @@ jobs:
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME }}"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
 
       - name: Test Control Plane Config
         shell: pwsh
@@ -776,7 +774,7 @@ jobs:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     steps:
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
