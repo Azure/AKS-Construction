@@ -106,7 +106,7 @@ jobs:
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       environment: ${{needs.ReusableWF.outputs.Environment}}
-      aceVersion: 1.0.0-beta6
+      aceVersion: main #1.0.0-beta6
       templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/0.9.4/main.json
       templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/main/.github/workflows_dep/AksDeploy-ByoVnet.parameters.json
       templateParams: ${{ needs.Validation.outputs.PARAMOVERRIDESNOSECRETS}} #${{ needs.Validation.outputs.PARAMOVERRIDES}}
