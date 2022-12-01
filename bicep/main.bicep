@@ -81,6 +81,11 @@ param acrAgentPoolSubnetAddressPrefix string = '10.240.4.64/26'
 
 @minLength(9)
 @maxLength(18)
+@description('The address range for Virtual Nodes in your custom vnet')
+param vnetAksVirtualNodesSubnetAddressPrefix string = '10.240.6.0/24'
+
+@minLength(9)
+@maxLength(18)
 @description('The address range for Azure Bastion in your custom vnet')
 param bastionSubnetAddressPrefix string = '10.240.4.128/26'
 
@@ -107,6 +112,9 @@ param acrPrivatePool bool = false
 
 @description('Deploy Azure Bastion to your vnet. (works with Custom Networking only, not BYO)')
 param bastion bool = false
+
+@description('Enable Virtual Nodes. (Requires Custom Vnet + Azure CNI)')
+param virtualNodes bool = false
 
 @description('Deploy NSGs to your vnet subnets. (works with Custom Networking only, not BYO)')
 param CreateNetworkSecurityGroups bool = false
@@ -135,6 +143,8 @@ module network './network.bicep' = if (custom_vnet) {
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
     bastion: bastion
     bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
+    virtualNodes: virtualNodes
+    vnetAksVirtualNodesSubnetAddressPrefix: vnetAksVirtualNodesSubnetAddressPrefix
     availabilityZones: availabilityZones
     workspaceName: createLaw ? aks_law.name : ''
     workspaceResourceGroupName:  createLaw ? resourceGroup().name : ''
@@ -1139,30 +1149,40 @@ output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
 
 var aks_addons = union({
-  azurepolicy: {
-    config: {
-      version: !empty(azurepolicy) ? 'v2' : json('null')
+    azurepolicy: {
+      config: {
+        version: !empty(azurepolicy) ? 'v2' : json('null')
+      }
+      enabled: !empty(azurepolicy)
     }
-    enabled: !empty(azurepolicy)
-  }
-  azureKeyvaultSecretsProvider: {
-    config: {
-      enableSecretRotation: 'true'
-      rotationPollInterval: keyVaultAksCSIPollInterval
+    azureKeyvaultSecretsProvider: {
+      config: {
+        enableSecretRotation: 'true'
+        rotationPollInterval: keyVaultAksCSIPollInterval
+      }
+      enabled: keyVaultAksCSI
     }
-    enabled: keyVaultAksCSI
-  }
-  openServiceMesh: {
-    enabled: openServiceMeshAddon
-    config: {}
-  }
-}, createLaw && omsagent ? {
-  omsagent: {
-    enabled: createLaw && omsagent
-    config: {
-      logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
+    openServiceMesh: {
+      enabled: openServiceMeshAddon
+      config: {}
     }
-  }} : {})
+  },
+  createLaw && omsagent ? {
+    omsagent: {
+      enabled: createLaw && omsagent
+      config: {
+        logAnalyticsWorkspaceResourceID: createLaw && omsagent ? aks_law.id : json('null')
+      }
+    }
+  } : {},
+  virtualNodes && custom_vnet && networkPlugin == 'azure' ? {
+    aciConnectorLinux: {
+      enabled: virtualNodes && custom_vnet && networkPlugin == 'azure'
+      config: {
+        SubnetName: network.outputs.virtualNodesSubnetName
+      }
+    }
+  } : {})
 
 var aks_addons1 = ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   ingressApplicationGateway: {

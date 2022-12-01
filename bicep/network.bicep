@@ -42,8 +42,22 @@ param natGatewayIdleTimeoutMins int = 30
 param bastion bool =false
 param bastionSubnetAddressPrefix string = ''
 
+//Virtual Nodes
+param virtualNodes bool = false
+param vnetAksVirtualNodesSubnetAddressPrefix string = ''
+
 @description('Used by the Bastion Public IP')
 param availabilityZones array = []
+
+var virtualnodes_subnet_name = 'VirtualNodesSubnet'
+var virtualnodes_baseSubnet = {
+  name: virtualnodes_subnet_name
+  properties: {
+    addressPrefix: vnetAksVirtualNodesSubnetAddressPrefix
+  }
+}
+var virtualnodes_subnet = virtualNodes && networkSecurityGroups ? union(virtualnodes_baseSubnet, nsgBastion.outputs.nsgSubnetObj) : virtualnodes_baseSubnet
+output virtualNodesSubnetName string = virtualNodes ? virtualnodes_subnet_name : ''
 
 
 var bastion_subnet_name = 'AzureBastionSubnet'
@@ -154,6 +168,7 @@ var subnets = union(
   azureFirewalls ? array(fw_subnet) : [],
   privateLinks ? array(private_link_subnet) : [],
   acrPrivatePool ? array(acrpool_subnet) : [],
+  virtualNodes ? array(virtualnodes_subnet) : [],
   bastion ? array(bastion_subnet) : [],
   ingressApplicationGateway ? array(appgw_subnet) : [],
   azureFirewallsManagementSeperation ? array(fwmgmt_subnet) : []
@@ -445,6 +460,21 @@ module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
   ]
 }
 
+module nsgVirtualNodes 'nsg.bicep' = if(virtualNodes && networkSecurityGroups) {
+  name: 'nsgVirtualNodes'
+  params: {
+    location: location
+    resourceName: '${virtualnodes_subnet_name}-${resourceName}'
+    workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
+    workspaceRegion:  !empty(workspaceName) ? log.location : ''
+    workspaceResourceId:  !empty(workspaceName) ? log.id : ''
+    FlowLogStorageAccountId: CreateNsgFlowLogs ? flowLogStor.id : ''
+  }
+  dependsOn: [
+    nsgAppGw
+  ]
+}
+
 module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   name: 'nsgPrivateLinks'
   params: {
@@ -490,4 +520,3 @@ resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
     natGwIp
   ]
 }
-
