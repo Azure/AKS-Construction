@@ -14,7 +14,7 @@ param networkSecurityGroups bool = false
 //Firewall
 param azureFirewalls bool = false
 param azureFirewallsSku string = 'Basic'
-param azureFirewallsManagementSeperation bool = azureFirewallsSku=='Basic'
+param azureFirewallsManagementSeperation bool = azureFirewalls && azureFirewallsSku=='Basic'
 param vnetFirewallSubnetAddressPrefix string = ''
 param vnetFirewallManagementSubnetAddressPrefix string = ''
 
