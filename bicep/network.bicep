@@ -9,7 +9,7 @@ param vnetAksSubnetAddressPrefix string
 //Nsg
 param workspaceName string = ''
 param workspaceResourceGroupName string = ''
-param networkSecurityGroups bool = true
+param networkSecurityGroups bool = false
 
 //Firewall
 param azureFirewalls bool = false
@@ -56,7 +56,7 @@ var virtualnodes_baseSubnet = {
     addressPrefix: vnetAksVirtualNodesSubnetAddressPrefix
   }
 }
-var virtualnodes_subnet = virtualNodes && networkSecurityGroups ? union(virtualnodes_baseSubnet, nsgBastion.outputs.nsgSubnetObj) : virtualnodes_baseSubnet
+var virtualnodes_subnet = virtualNodes && networkSecurityGroups ? union(virtualnodes_baseSubnet, nsgVirtualNodes.outputs.nsgSubnetObj) : virtualnodes_baseSubnet
 output virtualNodesSubnetName string = virtualNodes ? virtualnodes_subnet_name : ''
 
 
