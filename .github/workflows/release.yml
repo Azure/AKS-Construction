@@ -57,6 +57,7 @@ jobs:
         timeout-minutes: 3
         run: |
           cd postdeploy/scripts
+          chmod +x generate-vm-sku-list-v2.sh
           ./generate-vm-sku-list-v2.sh
 
       - name: Build node app with bicep release

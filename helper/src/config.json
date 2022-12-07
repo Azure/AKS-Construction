@@ -26,7 +26,8 @@
             "selectedTemplate": "local",
             "githubrepo": "",
             "githubrepobranch": "main",
-            "deployItemKey": "deployArmCli"
+            "deployItemKey": "deployArmCli",
+            "workloadDeployCommands" : []
         },
         "cluster": {
             "keyVaultKmsByoRG": "",
