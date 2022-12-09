@@ -1,13 +1,14 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, DropdownMenuItemType, Dropdown, Stack, Text, Toggle, Label, MessageBar, MessageBarType } from '@fluentui/react';
+import {  Checkbox, Pivot, PivotItem, Image, TextField, Link, Separator, Dropdown, Stack, Text, Label, MessageBar, MessageBarType } from '@fluentui/react';
 
 import { CodeBlock, adv_stackstyle, getError } from './common'
 import dependencies from "../dependencies.json";
+import { Presets } from './presets';
 import locations from '../locations.json';
 
 export default function DeployTab({ defaults, updateFn, tabValues, invalidArray, invalidTabs, urlParams, featureFlag }) {
-  const terraformFeatureFlag = featureFlag.includes('tf')
+  //const terraformFeatureFlag = featureFlag.includes('tf')
 
   const { net, addons, cluster, deploy } = tabValues
 
@@ -32,6 +33,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.AksPaidSkuForSLA !== defaults.cluster.AksPaidSkuForSLA && { AksPaidSkuForSLA: cluster.AksPaidSkuForSLA }),
     ...(cluster.SystemPoolType === 'none' ? { JustUseSystemPool: true } : cluster.SystemPoolType !== defaults.cluster.SystemPoolType && { SystemPoolType: cluster.SystemPoolType }),
     ...(cluster.vmSize !== defaults.cluster.vmSize && { agentVMSize: cluster.vmSize }),
+    ...(((cluster.nodepoolName.toLowerCase() !== defaults.cluster.nodepoolName  && cluster.SystemPoolType !== 'none')
+        || ( cluster.SystemPoolType === 'none' && (cluster.nodepoolName.toLowerCase() !== defaults.cluster.systemNodepoolName && cluster.nodepoolName.toLowerCase() !== defaults.cluster.nodepoolName )))
+        && { nodePoolName: cluster.nodepoolName }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
@@ -51,6 +55,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.registry !== "none" && {
         registries_sku: addons.registry,
         ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
+        ...(addons.registry === "Premium" && addons.enableACRTrustPolicy !== defaults.addons.enableACRTrustPolicy && { enableACRTrustPolicy: addons.enableACRTrustPolicy}),
         ...(cluster.apisecurity === "private" && ((addons.ingress === "contour")  || (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId)) &&  { imageNames: [
           ...(addons.ingress === "contour" ?  Object.keys(dependencies['bitnami/contour']['8_0_2'].images).map(i => `${dependencies['bitnami/contour']['8_0_2'].images[i].registry}/${dependencies['bitnami/contour']['8_0_2'].images[i].repository}:${dependencies['bitnami/contour']['8_0_2'].images[i].tag}`) : []),
           ...(addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId ? Object.keys(dependencies['externaldns']['1_9_0'].images).map(i => `${dependencies['externaldns']['1_9_0'].images[i].registry}/${dependencies['externaldns']['1_9_0'].images[i].repository}:${dependencies['externaldns']['1_9_0'].images[i].tag}`) : [])
@@ -64,8 +69,13 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.csisecret === 'akvNew' && deploy.keyVaultIPAllowlist  && apiips_array.length > 0 && {keyVaultIPAllowlist: apiips_array }),
         ...(defaults.net.privateLinkSubnetAddressPrefix !== net.privateLinkSubnetAddressPrefix && {privateLinkSubnetAddressPrefix: net.privateLinkSubnetAddressPrefix}),
     }),
+    ...(cluster.SystemPoolType !== "none" && net.enableNodePublicIP !== defaults.net.enableNodePublicIP && {enableNodePublicIP: net.enableNodePublicIP }),
     ...(deploy.enableTelemetry !== defaults.deploy.enableTelemetry && {enableTelemetry: deploy.enableTelemetry }),
-    ...(addons.monitor === "aci" && { omsagent: true, retentionInDays: addons.retentionInDays, ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts }) }),
+    ...(addons.monitor === "aci" && {
+        omsagent: true, retentionInDays: addons.retentionInDays,
+        ...( addons.logDataCap !== defaults.addons.logDataCap && {logDataCap: addons.logDataCap }),
+        ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts })
+       }),
     ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
     ...(defaults.addons.openServiceMeshAddon !== addons.openServiceMeshAddon && {openServiceMeshAddon: addons.openServiceMeshAddon }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
@@ -110,6 +120,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
 
   const preview_params = {
+    ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled !== defaults.addons.acrUntaggedRetentionPolicyEnabled && { acrUntaggedRetentionPolicyEnabled: addons.acrUntaggedRetentionPolicyEnabled}),
+    ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled && addons.acrUntaggedRetentionPolicy !== defaults.addons.acrUntaggedRetentionPolicy && { acrUntaggedRetentionPolicy: addons.acrUntaggedRetentionPolicy}),
     ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNATGateway' && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
@@ -160,7 +172,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(addons.monitor === "oss" && {
       monitor: addons.monitor,
-      ...(addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik" && {
+      ...((addons.ingress === "appgw" || addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik") && {
         ingress: addons.ingress,
         ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
       })
@@ -227,6 +239,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const networkWatcher = net.nsg && net.nsgFlowLogs !== defaults.net.nsgFlowLogs ?
     `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
   `if [ $(az group exists --name NetworkWatcherRG) = false ]; then az group create -l ${deploy.location} -n NetworkWatcherRG; fi\n\n` : ''
+
+  const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands && deploy.workloadDeployCommands.length>0 ? deploy.workloadDeployCommands.map(w => w).join('\n').replace(/\$RESOURCEGROUP/g,deploy.rg).replace(/\$AKSNAME/g, aks) : ''
 
   const deploycmd =
     `# Create Resource Group\n` +
@@ -407,6 +421,9 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
           <CodeBlock hideSave={true} lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
 
+          { cardSpecificWorkloadDeployCmd.length > 0 &&
+            <CodeBlock hideSave={true} lang="Workload Deployment shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={cardSpecificWorkloadDeployCmd} testId={'deploy-deploycmd'}/>
+          }
           { urlParams.toString() !== "" &&
             <Text variant="medium">Not ready to deploy? Bookmark your configuration by copying <a href={"?" + urlParams.toString()}>this link</a></Text>
           }

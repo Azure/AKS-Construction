@@ -145,7 +145,7 @@ resource appgw 'Microsoft.Network/applicationGateways@2020-07-01' = if (!empty(u
 }
 
 param agicPrincipleId string
-var contributor = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+var contributor = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
 // https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-template#new-service-principal
 resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
   scope: appgw
@@ -157,7 +157,7 @@ resource appGwAGICContrib 'Microsoft.Authorization/roleAssignments@2020-04-01-pr
   }
 }
 
-var reader = resourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
+var reader = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
 resource appGwAGICRGReader 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
   scope: resourceGroup()
   name: guid(resourceGroup().id, appgwName, 'rgread')

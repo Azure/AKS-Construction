@@ -26,7 +26,8 @@
             "selectedTemplate": "local",
             "githubrepo": "",
             "githubrepobranch": "main",
-            "deployItemKey": "deployArmCli"
+            "deployItemKey": "deployArmCli",
+            "workloadDeployCommands" : []
         },
         "cluster": {
             "keyVaultKmsByoRG": "",
@@ -39,6 +40,8 @@
             "autoscale": true,
             "upgradeChannel": "none",
             "SystemPoolType": "CostOptimised",
+            "nodepoolName": "npuser01",
+            "systemNodepoolName": "npsystem",
             "agentCount": 3,
             "maxCount": 20,
             "computeType": "gp",
@@ -55,6 +58,10 @@
             "DefenderForContainers" : false
         },
         "addons": {
+            "logDataCap": 0,
+            "acrUntaggedRetentionPolicy": 30,
+            "acrUntaggedRetentionPolicyEnabled": false,
+            "enableACRTrustPolicy": false,
             "warIngressNginx": false,
             "daprAddon": false,
             "daprAddonHA": false,
@@ -109,6 +116,7 @@
             "nsg": false,
             "nsgFlowLogs": false,
             "vnetprivateend": false,
+            "enableNodePublicIP": false,
             "vnet_opt": "default",
             "byoAKSSubnetId": "",
             "byoAGWSubnetId": "",

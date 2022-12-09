@@ -40,18 +40,20 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
   return (
     <nav role="menubar">
 
-      <div style={{ width: "100%" }}>
+      <div style={{ width: "100%", display: 'flex', paddingTop: "5px" }}>
 
-        <div style={{ display: "inline-block", padding: "11px 12px 0px" }}>
+        <div style={{  whiteSpace: "nowrap", marginTop: "7px" }}>
           <Link className="navbar-brand no-outline" >
-            <Image src="aks.svg" height="33px" />
+            <Image src="aks.svg" height="33px" alt='aks logo' />
           </Link>
           <Text nowrap variant="xLarge" className={titleClass} >AKS Construction <span style={{ "color": "red" }}>Helper</span></Text>
-          <Text className={titleClass} style={{ "marginTop": "6px", "marginLeft": "20px" }}>Documentation and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at the <a href="https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a> docs</Text>
         </div>
-        <div style={{ display: "inline-block", float: "right" }}>
 
-          <CommandBarButton iconProps={{ iconName: presets[selectedPreset].icon }} menuProps={{
+        <Text variant={'mediumPlus'} className={titleClass} style={{ "marginTop": "12px" }}>Docs and CI/CD samples are in the <a href="https://github.com/Azure/AKS-Construction" target="_blank" rel="noopener noreferrer">GitHub Repository</a> and at <a href="https://learn.microsoft.com/azure/cloud-adoption-framework/scenarios/app-platform/aks/landing-zone-accelerator" target="_blank" rel="noopener noreferrer">AKS Landing Zone Accelerator</a></Text>
+
+        <div style={{whiteSpace: "nowrap"}}>
+
+          <CommandBarButton aria-label='Preset scenario' iconProps={{ iconName: presets[selectedPreset].icon }} menuProps={{
             items: Object.keys(presets).map(p => {
               return {
                 key: p,
@@ -67,7 +69,6 @@ function Header({ presets, setPresets, selectedPreset, featureFlag }) {
 
 
         </div>
-
       </div>
     </nav>
   )
@@ -103,58 +104,57 @@ function Header2({ presets, setPresets, selectedPreset, featureFlag }) {
  *   All validation should live here
  */
 export default function PortalNav({ config }) {
-
   console.log(`PortalNav: ${JSON.stringify(Object.keys(config))}`)
 
   const { tabLabels, defaults, presets } = config
   const [pivotkey, setPivotkey] = useState(Object.keys(tabLabels)[0])
-
   useAITracking("PortalNav", tabLabels[pivotkey])
 
   const [urlParams, setUrlParams] = useState(new URLSearchParams(window.location.search))
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
-
-  const featureFlag = urlParams.getAll('feature')
-  const defaultPreset = urlParams.get('preset') || 'defaultOps'
-
   // The selected cards within the sections for the chosen preset, for example { "ops": "normal", "secure": "high" }
-  const [selected, setSelected] = useState(() => {
+  const [selected, setSelected] = useState(initSelected(urlParams.get('preset') || 'defaultOps'))
+  // The tabValues, for example { "deploy": { "clusterName": "az234"}}
+  const [tabValues, setTabValues] = useState(initTabValues(selected, defaults, true))
+
+  function initSelected (currentPreset) {
     return {
-      preset: defaultPreset,
-      values: presets[defaultPreset].sections.reduce((a, s) => {
+      preset: currentPreset,
+      sections: presets[currentPreset].sections,
+      values: presets[currentPreset].sections.reduce((a, s) => {
         return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
       }, {})
     }
-  })
+  }
 
-  // The sections array within the selected preset, for example [{"key": "ops"...}, {"key": "secure"...}]
-  const { sections } = presets[selected.preset]
 
-  // The tabValues, for example { "deploy": { "clusterName": "az234"}}
-  const [tabValues, setTabValues] = useState(() => {
-    const clusterName = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
+  const {description, icon } = presets[selected.preset]
 
-    // Apply selected presets to tab values
-    const tabApplySections = Object.keys(selected.values).reduce((acc, curr) =>
-      updateTabValues(acc, sections, curr, selected.values[curr])
-      , defaults)
+  function initTabValues (selected, baseTabValues, resetDynamic = false)  {
+        // Apply selected presets to tab values
+    var tabApplySections = Object.keys(selected.values).reduce((acc, curr) =>
+      updateTabValues(acc, selected.sections, curr, selected.values[curr])
+      , baseTabValues)
 
-    // Apply dynamic presets to tab values
-    const dynamicApplySections = {
-      ...tabApplySections,
-      deploy: {
-        ...tabApplySections.deploy,
-        clusterName,
-        rg: `${clusterName}-rg`
+    if (resetDynamic) {
+      const clusterName = `az-k8s-${(Math.floor(Math.random() * 900000) + 100000).toString(36)}`
+      // Apply dynamic presets to tab values
+      tabApplySections = {
+        ...tabApplySections,
+        deploy: {
+          ...tabApplySections.deploy,
+          clusterName,
+          rg: `${clusterName}-rg`
+        }
       }
     }
     // Apply url params to tab values
-    const urlApplySections = Object.keys(dynamicApplySections).reduce((acct, currt) => {
+    tabApplySections = Object.keys(tabApplySections).reduce((acct, currt) => {
       return {
         ...acct,
-        [currt]: Object.keys(dynamicApplySections[currt]).reduce((accv, currv) => {
+        [currt]: Object.keys(tabApplySections[currt]).reduce((accv, currv) => {
           const urlname = `${currt}.${currv}`
-          let valres = dynamicApplySections[currt][currv]
+          let valres = tabApplySections[currt][currv]
           if (urlParams.has(urlname)) {
             let val = urlParams.get(urlname)
             valres = val === "true" ? true : val === "false" ? false : isNaN(val) ? val : parseInt(val)
@@ -164,8 +164,8 @@ export default function PortalNav({ config }) {
       }
     }, {})
 
-    return urlApplySections
-  })
+    return tabApplySections
+  }
 
 
   function updateTabValues(currenttabValues, sections, sectionKey, cardKey) {
@@ -186,7 +186,7 @@ export default function PortalNav({ config }) {
               val.reduce((a, c) => a === undefined ? (c.page && c.field ? (currenttabValues[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
               :
               val
-            //console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
+            console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
             return { ...a, [c]: targetVal }
           }, {})
         }
@@ -198,16 +198,14 @@ export default function PortalNav({ config }) {
     console.log("Update Selected Fired " + sectionKey + " - " + cardKey)
 
     setUrlParams((currentUrlParams) => {
-
       currentUrlParams.set(sectionKey, cardKey)
+      window.history.replaceState(null, null, "?"+currentUrlParams.toString())
       return currentUrlParams
     })
 
     console.log(`updateSelected: sectionKey=${sectionKey} cardKey=${cardKey}`)
-    setSelected({ preset: selected.preset, values: { ...selected.values, [sectionKey]: cardKey } })
+    setSelected(currentSelected => {return { ...currentSelected, values: { ...selected.values, [sectionKey]: cardKey } }})
     setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, sectionKey, cardKey))
-
-    window.history.replaceState(null, null, "?"+urlParams.toString())
   }
 
 
@@ -266,43 +264,36 @@ export default function PortalNav({ config }) {
   }
 
   function presetChanged(preset) {
-    console.log(preset)
+    console.log(`presetChanged preset=${JSON.stringify(preset)}`)
+    // capture old selected cards to remove from the url
+    const oldSelectedCards = Object.keys(selected.values)
+    const newSelected = initSelected(preset)
+    setSelected(newSelected)
 
+    setTabValues(initTabValues(newSelected, {...defaults, deploy: tabValues.deploy}))
     setUrlParams((currentUrlParams) => {
+      // remove old cards
+      for (const key of oldSelectedCards) currentUrlParams.delete(key)
+      // add new
       currentUrlParams.set('preset', preset)
+      window.history.replaceState(null, null, "?"+currentUrlParams.toString())
       return currentUrlParams
     })
-
-    setSelected({
-      preset, values: presets[preset].sections.reduce((a, s) => {
-        return { ...a, [s.key]: urlParams.has(s.key) ? urlParams.get(s.key) : s.cards.find(c => c.default).key }
-      }, {})
-    })
-
-    // Apply selected presets to tab values
-    const tabApplySections = Object.keys(selected.values).reduce((acc, curr) =>
-      updateTabValues(acc, sections, curr, selected.values[curr]),
-      defaults
-    )
-
-    //setTabValues(currentTabValues => updateTabValues(currentTabValues, sections, key, 'standard'))
   }
 
   function mergeState(tab, field, value, previewLink) {
 
     let updatevals
+    let newFields = new Map()
     if (typeof field === "string") {
       updatevals = { [field]: value }
-      urlParams.set(`${tab}.${field}`, value)
+      newFields.set(`${tab}.${field}`, value)
     } else if (typeof field === "function") {
       updatevals = field(tabValues[tab])
       for (let nfield of Object.keys(updatevals)) {
-        urlParams.set(`${tab}.${nfield}`, updatevals[nfield])
+        newFields.set(`${tab}.${nfield}`, updatevals[nfield])
       }
     }
-
-    //maintains the current config in querystring for easy bookmarking
-    window.history.replaceState(null, null, "?" + urlParams.toString())
 
     setTabValues((p) => {
       return {
@@ -313,6 +304,14 @@ export default function PortalNav({ config }) {
         }
       }
     })
+
+    setUrlParams((currentUrlParams) => {
+      // remove old cards
+      for (const [key, value] of newFields.entries()) currentUrlParams.set(key, value)
+      window.history.replaceState(null, null, "?"+currentUrlParams.toString())
+      return currentUrlParams
+    })
+
   }
 
   function getError(page, field) {
@@ -336,6 +335,8 @@ export default function PortalNav({ config }) {
   invalidFn('cluster', 'vmSize', cluster.vmSize === "" , 'Enter node size from list or custom node size above')
   invalidFn('cluster', 'aad_tenant_id', cluster.enable_aad && cluster.use_alt_aad && cluster.aad_tenant_id.length !== 36, 'Enter Valid Directory ID')
   invalidFn('addons', 'registry', net.vnetprivateend && (addons.registry !== 'Premium' && addons.registry !== 'none'), 'Premium tier is required for Private Link, either select Premium, or disable Private Link')
+  // invalidFn('addons', 'registry', addons.registry !== 'Premium' && addons.registry !== 'none' && addons.enableACRTrustPolicy, 'Premium tier is required for ACR Trust Policy')
+  // invalidFn('addons', 'registry', addons.registry !== 'Premium' && addons.registry !== 'none' && addons.acrUntaggedRetentionPolicyEnabled, 'Premium tier is required for ACR Untagged Retention Policy')
   invalidFn('cluster', 'keyVaultKmsByoKeyId', cluster.keyVaultKms === "byoprivate" && !cluster.keyVaultKmsByoKeyId.match('https:\/\/[^]+.vault.azure.net/keys/[^ ]+/[^ ]+$'), 'Enter valid KeyVault Versioned Key ID (https://YOURVAULTNAME.vault.azure.net/keys/YOURKEYNAME/KEYVERSIONSTRING)')
   invalidFn('cluster', 'keyVaultKmsByoRG', cluster.keyVaultKms === "byoprivate" && !cluster.keyVaultKmsByoRG, 'Enter existing KeyVault Resource Group Name')
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'), 'Enter valid Azure Public or Private DNS Zone resourceId')
@@ -375,6 +376,11 @@ export default function PortalNav({ config }) {
   const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const { semanticColors, palette } = dark ? AzureThemeDark : AzureThemeLight
 
+
+  // The sections array within the selected preset, for example [{"key": "ops"...}, {"key": "secure"...}]
+  const { sections } = presets[selected.preset]
+  const featureFlag = urlParams.getAll('feature')
+
   return (
     <ThemeProvider theme={{ semanticColors, palette }}>
       <main id="mainContent" className="wrapper">
@@ -382,7 +388,7 @@ export default function PortalNav({ config }) {
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
 
-          <Presets sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
+          <Presets description={description} icon={icon} sections={sections} selectedValues={selected.values} updateSelected={updateSelected} featureFlag={featureFlag} />
 
           <Separator styles={SeparatorStyle}><span style={{ "color": "rgb(0, 103, 184)" }}>Fine tune & Deploy</span></Separator>
 
