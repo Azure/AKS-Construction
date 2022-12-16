@@ -222,7 +222,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   //PowerShell Post Deployment
   const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
-  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.post_url}  | bash -s -- `) +
+  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.ps1 ` : `curl -sL ${deployRelease.post_url}  | bash -s -- `) +
   (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
   Object.keys(post_params).map(k => {
     const val = post_params[k]
@@ -238,9 +238,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     post_deployPScmd
     :
     '# Private cluster, so use command invoke\n' +
-    `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` +
+    `Invoke-AzAksRunCommand -ResourceGroupName ${deploy.rg} -Name ${aks} -Command "` +
     post_deployPScmd.replaceAll('"', '\`\"') +
-    `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
+    `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.ps1 --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json"' : ''}`
 
 
   const deploycmd =
