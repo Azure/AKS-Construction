@@ -222,7 +222,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   //PowerShell Post Deployment
   const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
-  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.ps1 ` : `curl -sL ${deployRelease.post_url}  | bash -s -- `) +
+  (deploy.selectedTemplate === "local" ? ` .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.ps1 ` : `curl -sL ${deployRelease.post_url}  | bash -s -- `) +
   (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
   Object.keys(post_params).map(k => {
     const val = post_params[k]

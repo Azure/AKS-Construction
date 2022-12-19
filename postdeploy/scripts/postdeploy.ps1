@@ -1,4 +1,6 @@
-
+# TODO in CLuster Code (example to call script):
+#       $script = Invoke-WebRequest https://github.com/Azure/AKS-Construction/releases/download/0.9.6/postdeploy.sh
+#       Invoke-Command -ScriptBlock ([scriptblock]::Create($script)) -ArgumentList "-p ingress=contour -p monitor=oss"
 
 [CmdletBinding()]
 param(
