@@ -101,7 +101,7 @@ jobs:
 
   CostEstimate:
     needs: [ReusableWF, Validation]
-    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.0.0-beta6
+    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.0.0
     #uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowparams
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }}
