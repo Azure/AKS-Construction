@@ -97,7 +97,6 @@ jobs:
 
   Deploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
-    #environment: ${{ github.event.inputs.environment }}
     needs: [ReusableWF, Validation]
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
@@ -108,8 +107,6 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    #outputs:
-    #  AKSNAME: ${{ steps.deployAks.outputs.AKSNAME }}
 
   SmokeTest_SimpleApp:
     runs-on: ubuntu-latest
@@ -167,44 +164,12 @@ jobs:
           curl $pubIp
 
   Cleanup:
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    needs: [Validation, Deploy, SmokeTest_SimpleApp]
-    if: github.event_name != 'workflow_dispatch'
-    steps:
-      - name: Azure Login
-        uses: Azure/login@v1.4.3
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          enable-AzPSSession: true
-          
-      - name: Install Pwsh modules
-        shell: pwsh
-        run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name Az.Accounts
-          Install-Module -Name Az.Resources
-
-      - name: Cleanup
-        shell: pwsh
-        run: |
-          $RG='${{ env.RG }}'
-
-          # Get all ARM resources from all resource groups
-          $rgToPurge = Get-AzResourceGroup -Name $RG
-          try {
-            #Remove all but public ip addresses
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            #Remove public ip addresses
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            #Final run to clean other dependant resources in parent-child graph
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
-          }
-          Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
-          {
-            write-output error
-          }
+    uses: ./.github/workflows/cleanupRg.yml
+    needs: [ReusableWF, SmokeTest_SimpleApp]
+    with:
+      environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      rg: ${{ needs.ReusableWF.outputs.RG }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

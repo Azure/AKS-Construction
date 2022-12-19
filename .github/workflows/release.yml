@@ -30,9 +30,8 @@ jobs:
         run: |
           echo "Targetting Template Release ${{github.event.inputs.templateRelease}}"
   TestWebApp:
-    needs: [SetupWF]
+    needs: [SetupWF, CreateRelease]
     uses: ./.github/workflows/ghpagesTest.yml
-    if:  ${{ github.event.inputs.createRelease == 'false' }}
     with:
       REACT_APP_TEMPLATERELEASE: ${{ needs.SetupWF.outputs.REACT_APP_TEMPLATERELEASE }}
       doAzCmdDeployment: true
@@ -57,6 +56,7 @@ jobs:
         timeout-minutes: 3
         run: |
           cd postdeploy/scripts
+          chmod +x generate-vm-sku-list-v2.sh
           ./generate-vm-sku-list-v2.sh
 
       - name: Build node app with bicep release
@@ -78,7 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Check that the GitHub release doesn't already exist
+      - name: Check that the GitHub release does not already exist
         run: |
           GHJSON=$(gh release view ${{env.templateRelease}} --json name) || GHJSON=""
 
