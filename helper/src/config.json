@@ -104,7 +104,7 @@
             "kvId": "",
             "gitops": "none",
             "containerLogsV2": false,
-            "containerLogsV2Basiclogs": false
+            "containerLogsV2BasicLogs": false
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",

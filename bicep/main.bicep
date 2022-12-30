@@ -843,7 +843,7 @@ param aad_tenant_id string = ''
 param omsagent bool = false
 
 @description('Enables the ContainerLogsV2 table to be of type Basic')
-param containerLogsV2Basiclogs bool = false
+param containerLogsV2BasicLogs bool = false
 
 @description('Enable RBAC using AAD')
 param enableAzureRBAC bool = false
@@ -1518,7 +1518,7 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (cre
 }
 
 
-resource containerLogsV2_Basiclogs 'Microsoft.OperationalInsights/workspaces/tables@2022-10-01' = if(containerLogsV2Basiclogs){
+resource containerLogsV2_Basiclogs 'Microsoft.OperationalInsights/workspaces/tables@2022-10-01' = if(containerLogsV2BasicLogs){
   name: '${aks_law_name}/ContainerLogV2'
   properties: {
     plan: 'Basic'
