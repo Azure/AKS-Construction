@@ -102,7 +102,9 @@
             "csisecret": "none",
             "keyVaultAksCSIPollInterval": "2m",
             "kvId": "",
-            "gitops": "none"
+            "gitops": "none",
+            "containerLogsV2": false,
+            "containerLogsV2Basiclogs": false
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",

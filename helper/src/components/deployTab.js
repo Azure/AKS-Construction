@@ -146,7 +146,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(defaults.addons.blobCSIDriver !== addons.blobCSIDriver && {blobCSIDriver: addons.blobCSIDriver }),
     ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {oidcIssuer: true, workloadIdentity: addons.workloadIdentity }),
     ...(net.networkPlugin === 'azure' && net.networkPluginMode && {networkPluginMode: 'Overlay'}),
-    ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers })
+    ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
+    ...(addons.containerLogsV2Basiclogs && { containerLogsV2Basiclogs: addons.containerLogsV2Basiclogs}),
   }
 
   const post_params = {
@@ -177,6 +178,10 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
       })
     }),
+  }
+
+  const preview_post_params = {
+    ...(addons.containerLogsV2 && { containerLogsV2: addons.containerLogsV2}),
   }
 
   const params2tf = p => Object.keys(p).map(k => {
@@ -216,6 +221,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const deployRelease = deploy.templateVersions.find(t => t.key === deploy.selectedTemplate) || {}
 
+  const preview_post_deploycmd = Object.keys(preview_post_params).map(k => {
+    const val = preview_post_params[k]
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+    return ` \\\n\t-p ${k}=${targetVal}`
+  }).join('')
+
   const post_deploycmd =  `\n\n# Deploy charts into cluster\n` +
   (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.post_url}  | bash -s -- `) +
   (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
@@ -223,7 +234,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     const val = post_params[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
     return ` \\\n\t-p ${k}=${targetVal}`
-  }).join('')
+  }).join('')+
+  (!deploy.disablePreviews ? preview_post_deploycmd : '')
+
 
   const post_deploystr = cluster.apisecurity !== "private" ?
     '# Get credentials for your new AKS cluster & login (interactive)\n' +
@@ -251,7 +264,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
       return ` \\\n\t${k}=${targetVal}`
-    }).join('') + '\n\n' + (Object.keys(post_params).length >0 ? post_deploystr : '')
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deploystr : '')
 
 
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
@@ -379,9 +392,9 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
       <Separator styles={{ root: { marginTop: '30px !important' } }}><div style={{ display: "flex", alignItems: 'center', }}><b style={{ marginRight: '10px' }}>Deploy Cluster</b><Image src="./bicep.png" alt="Built with bicep" /> <p style={{ marginLeft: '10px' }}>powered by Bicep</p></div> </Separator>
 
-      {Object.keys(preview_params).length > 0 &&
+      {(Object.keys(preview_params).length > 0 || Object.keys(preview_post_params).length > 0) &&
         <MessageBar messageBarType={MessageBarType.severeWarning}>
-          <Text variant={'mediumPlus'} >Your deployment contains <b>Preview Features</b> which may require subscription registration and have Azure Region limitations. Please ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b> before running the relevant scripts.<br />Preview Features you have selected: <b>{Object.keys(preview_params).join(', ')}</b>.</Text>
+          <Text variant={'mediumPlus'} >Your deployment contains <b>Preview Features</b> which may require subscription registration and have Azure Region limitations. Please ensure you have registered for these previews, and have installed the <b>'az extension add --name aks-preview'</b> before running the relevant scripts.<br />Preview Features you have selected: <b>{Object.keys(Object.assign(preview_params,preview_post_params)).join(', ')}</b>.</Text>
           <Checkbox
             styles={{ root: { marginTop: "10px" } }}
             label='Include preview features in deployment'

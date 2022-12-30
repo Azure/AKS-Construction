@@ -8,6 +8,14 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { addons, net } = tabValues
     const osmFeatureFlag = featureFlag.includes('osm')
     const wiFeatureFlag = featureFlag.includes('workloadId')
+    function updateDependencyFn(f1, f2, v) {
+        if(v){
+            updateFn(f1, v)
+            updateFn(f2, v)
+        }else{
+            updateFn(f1, v)
+        }
+    }
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -257,6 +265,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         decrementButtonAriaLabel="Decrease value by 1"
                         styles={{ root: { marginTop: '15px'}}}
                     />
+                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.containerLogsV2} onChange={(ev, v) => updateFn("containerLogsV2", v)} label={<Text>Enable the ContainerLogV2 schema (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2">docs</Link>) (*preview)</Text>} />
+                    <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2Basiclogs} onChange={(ev, v) => updateDependencyFn("containerLogsV2Basiclogs", "containerLogsV2", v)} label={<Text>Set Basic Logs for ContainerLogV2 (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1%2Cportal-2">docs</Link>) (*preview)</Text>} />
+
+                    <MessageBar messageBarType={MessageBarType.warning}>Enabling Basic Logs for ContainerLogsV2 has a dependency on the ContainerLogsV2 schema and thus enabling this capability will automatically enable ContainerLogsV2.</MessageBar>
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
 
