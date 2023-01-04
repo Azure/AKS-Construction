@@ -6,23 +6,23 @@ param PoolName string
 param availabilityZones array = []
 
 @description('OS disk type')
-param osDiskType string = 'Ephemeral'
+param osDiskType string
 
 @description('VM SKU')
-param agentVMSize string = 'Standard_DS3_v2'
+param agentVMSize string
 
 @description('Disk size in GB')
-param osDiskSizeGB int = 0
+param osDiskSizeGB int
 
 @description('The number of agents for the user node pool')
-param agentCount int = 3
+param agentCount int
 
 @description('The maximum number of nodes for the user node pool')
-param agentCountMax int = 0
+param agentCountMax int
 var autoScale = agentCountMax > agentCount
 
 @description('The maximum number of pods per node.')
-param maxPods int = 30
+param maxPods int
 
 @description('Any taints that should be applied to the node pool')
 param nodeTaints array = []
@@ -38,7 +38,9 @@ param subnetId string
   'Linux'
   'Windows'
 ])
-param osType string = 'Linux'
+param osType string
+
+param enableNodePublicIP bool
 
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
   name: AksName
@@ -66,5 +68,6 @@ resource nodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10
     }
     nodeTaints: nodeTaints
     nodeLabels: nodeLabels
+    enableNodePublicIP: enableNodePublicIP
   }
 }

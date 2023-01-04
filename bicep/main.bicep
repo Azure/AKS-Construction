@@ -1106,34 +1106,34 @@ var systemPoolBase = {
   ]
 }
 
-var userPoolVmProfile = {
-  vmSize: agentVMSize
-  count: agentCount
-  minCount: autoScale ? agentCount : json('null')
-  maxCount: autoScale ? agentCountMax : json('null')
-  enableAutoScaling: autoScale
-  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
-}
+// var userPoolVmProfile = {
+//   vmSize: agentVMSize
+//   count: agentCount
+//   minCount: autoScale ? agentCount : json('null')
+//   maxCount: autoScale ? agentCountMax : json('null')
+//   enableAutoScaling: autoScale
+//   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
+// }
 
-var agentPoolProfileUser = union({
-  name: nodePoolName
-  mode: 'User'
-  osDiskType: osDiskType
-  osDiskSizeGB: osDiskSizeGB
-  osType: 'Linux'
-  maxPods: maxPods
-  type: 'VirtualMachineScaleSets'
-  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
-  upgradeSettings: {
-    maxSurge: '33%'
-  }
-  enableNodePublicIP: enableNodePublicIP
-}, userPoolVmProfile)
+// var agentPoolProfileUser = union({
+//   name: nodePoolName
+//   mode: 'User'
+//   osDiskType: osDiskType
+//   osDiskSizeGB: osDiskSizeGB
+//   osType: 'Linux'
+//   maxPods: maxPods
+//   type: 'VirtualMachineScaleSets'
+//   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
+//   upgradeSettings: {
+//     maxSurge: '33%'
+//   }
+//   enableNodePublicIP: enableNodePublicIP
+// }, userPoolVmProfile)
 
-var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
+var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])))
 
 
-output userNodePoolName string = nodePoolName
+// output userNodePoolName string = nodePoolName
 output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
@@ -1301,6 +1301,26 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
 }
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+
+param osType string
+var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
+
+module nodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
+  name: 'nodepool'
+  params: {
+    AksName: aks.name
+    PoolName: poolName
+    subnetId: aksSubnetId
+    agentCount: agentCount
+    agentCountMax: 3
+    agentVMSize: agentVMSize
+    maxPods: maxPods
+    osDiskType: osDiskType
+    osType: osType
+    enableNodePublicIP: enableNodePublicIP
+    osDiskSizeGB: osDiskSizeGB
+  }
+}
 
 @description('This output can be directly leveraged when creating a ManagedId Federated Identity')
 output aksOidcFedIdentityProperties object = {
