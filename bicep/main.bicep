@@ -924,7 +924,6 @@ param networkPluginMode string = ''
 @description('Use Cilium dataplane (requires azure networkPlugin)')
 param ebpfDataplane string = ''
 
-
 @allowed([
   ''
   'azure'
