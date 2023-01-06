@@ -42,7 +42,7 @@ data:
           # When the setting is set to false, only the kube events with !normal event type will be collected
           enabled = false
           # When this is enabled (enabled = true), all kube events including normal events will be collected
-       #[log_collection_settings.schema]
+       [log_collection_settings.schema]
           # In the absence of this configmap, default value for containerlog_schema_version is "v1"
           # Supported values for this setting are "v1","v2"
           # See documentation at https://aka.ms/ContainerLogv2 for benefits of v2 schema over v1 schema before opting for "v2" schema
@@ -177,8 +177,14 @@ data:
     #   log_flush_interval_secs = "1"                 # default value is 15
     #   tail_mem_buf_limit_megabytes = "10"           # default value is 10
     #   tail_buf_chunksize_megabytes = "1"            # default value is 32kb (comment out this line for default)
-    #   tail_buf_maxsize_megabytes = "1"              # defautl value is 32kb (comment out this line for default)
+    #   tail_buf_maxsize_megabytes = "1"              # default value is 32kb (comment out this line for default)
     #   tail_ignore_older = "5m"                      # default value same as fluent-bit default i.e.0m
+
+    # On both AKS & Arc K8s enviornments, if Cluster has configured with Forward Proxy then Proxy settings automatically applied and used for the agent
+    # Certain configurations, proxy config should be ignored for example Cluster with AMPLS + Proxy
+    # in such scenarios, use the following config to ignore proxy settings
+    # [agent_settings.proxy_config]
+    #    ignore_proxy_settings = "true"  # if this is not applied, default value is false
 
 metadata:
   name: container-azm-ms-agentconfig
