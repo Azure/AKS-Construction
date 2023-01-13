@@ -21,8 +21,7 @@ param keyVaultIPAllowlist array = []
 
 param logAnalyticsWorkspaceId string = ''
 
-var akvRawName = 'kv-${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
-var akvName = length(akvRawName) > 24 ? substring(akvRawName, 0, 24) : akvRawName
+var akvName = take('kv-${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}',24)
 
 var kvIPRules = [for kvIp in keyVaultIPAllowlist: {
   value: kvIp
