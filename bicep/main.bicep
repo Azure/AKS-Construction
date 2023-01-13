@@ -503,6 +503,7 @@ module acrImport 'br/public:deployment-scripts/import-acr:3.0.1' = if (!empty(re
     acrName: acr.name
     location: location
     images: imageNames
+    managedIdentityName: 'id-acrImport-${resourceName}-${location}'
   }
 }
 
