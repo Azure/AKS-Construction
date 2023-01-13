@@ -497,7 +497,7 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2022-04-01' = if 
 
 param imageNames array = []
 
-module acrImport 'br/public:deployment-scripts/import-acr:2.0.1' = if (!empty(registries_sku) && !empty(imageNames)) {
+module acrImport 'br/public:deployment-scripts/import-acr:3.0.1' = if (!empty(registries_sku) && !empty(imageNames)) {
   name: '${deployment().name}-AcrImportMulti'
   params: {
     acrName: acr.name
