@@ -260,7 +260,7 @@ resource nsgDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = i
 param FlowLogStorageAccountId string = ''
 param FlowLogTrafficAnalytics bool = !empty(FlowLogStorageAccountId)
 module nsgFlow 'networkwatcherflowlog.bicep' = if(!empty(FlowLogStorageAccountId)) {
-  name: '${deployment().name}-flow-${nsgName}'
+  name: take('${deployment().name}-flow-${nsgName}',64)
   scope: resourceGroup('NetworkWatcherRG')
   params: {
     location:location

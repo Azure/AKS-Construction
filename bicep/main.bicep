@@ -49,7 +49,7 @@ resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = 
 var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 4 ? split(byoAKSSubnetId, '/')[4] : '') : ''
 
 module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId) && createAksUai) {
-  name: '${deployment().name}-addAksNetContributor'
+  name: take('${deployment().name}-addAksNetContributor',64)
   scope: resourceGroup(existingAksVnetRG)
   params: {
     byoAKSSubnetId: byoAKSSubnetId
@@ -115,7 +115,7 @@ param CreateNetworkSecurityGroups bool = false
 param CreateNetworkSecurityGroupFlowLogs bool = false
 
 module network './network.bicep' = if (custom_vnet) {
-  name: '${deployment().name}-network'
+  name: take('${deployment().name}-network',64)
   params: {
     resourceName: resourceName
     location: location
@@ -165,7 +165,7 @@ param dnsZoneId string = ''
 var isDnsZonePrivate = !empty(dnsZoneId) ? split(dnsZoneId, '/')[7] == 'privateDnsZones' : false
 
 module dnsZone './dnsZoneRbac.bicep' = if (!empty(dnsZoneId)) {
-  name: '${deployment().name}-addDnsContributor'
+  name: take('${deployment().name}-addDnsContributor',64)
   params: {
     dnsZoneId: dnsZoneId
     vnetId: isDnsZonePrivate ? (!empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/subnets')[0] : (custom_vnet ? network.outputs.vnetId : '')) : ''
@@ -201,7 +201,7 @@ param keyVaultAksCSIPollInterval string = '2m'
 
 @description('Creates a KeyVault for application secrets (eg. CSI)')
 module kv 'keyvault.bicep' = if(keyVaultCreate) {
-  name: '${deployment().name}-keyvaultApps'
+  name: take('${deployment().name}-keyvaultApps',64)
   params: {
     resourceName: resourceName
     keyVaultPurgeProtection: keyVaultPurgeProtection
@@ -223,7 +223,7 @@ var rbacSecretUserSps = union([deployAppGw && appgwKVIntegration ? appGwIdentity
 
 @description('A seperate module is used for RBAC to avoid delaying the KeyVault creation and causing a circular reference.')
 module kvRbac 'keyvaultrbac.bicep' = if (keyVaultCreate) {
-  name: '${deployment().name}-KeyVaultAppsRbac'
+  name: take('${deployment().name}-KeyVaultAppsRbac',64)
   params: {
     keyVaultName: keyVaultCreate ? kv.outputs.keyVaultName : ''
 
@@ -272,7 +272,7 @@ resource kvKmsByo 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = if(!
 
 @description('Creates a new Key vault for a new KMS Key')
 module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
-  name: '${deployment().name}-keyvaultKms-${resourceName}'
+  name: take('${deployment().name}-keyvaultKms-${resourceName}',64)
   params: {
     resourceName: 'kms${resourceName}'
     keyVaultPurgeProtection: keyVaultPurgeProtection
@@ -284,7 +284,7 @@ module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
 }
 
 module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
-  name: '${deployment().name}-keyvaultKmsRbacs-${resourceName}'
+  name: take('${deployment().name}-keyvaultKmsRbacs-${resourceName}',64)
   params: {
     keyVaultName: keyVaultKmsCreate ? kvKms.outputs.keyVaultName : ''
     //We can't create a kms kv and key and do privatelink. Private Link is a BYO scenario
@@ -307,7 +307,7 @@ module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
 }
 
 module kvKmsByoRbac 'keyvaultrbac.bicep' = if(!empty(keyVaultKmsByoKeyId)) {
-  name: '${deployment().name}-keyvaultKmsByoRbacs-${resourceName}'
+  name: take('${deployment().name}-keyvaultKmsByoRbacs-${resourceName}',64)
   scope: resourceGroup(keyVaultKmsByoRG)
   params: {
     keyVaultName: kvKmsByo.name
@@ -324,7 +324,7 @@ module kvKmsByoRbac 'keyvaultrbac.bicep' = if(!empty(keyVaultKmsByoKeyId)) {
 
 @description('It can take time for the RBAC to propagate, this delays the deployment to avoid this problem')
 module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKmsCreateAndPrereqs && kmsRbacWaitSeconds>0) {
-  name: '${deployment().name}-keyvaultKmsRbac-waits-${resourceName}'
+  name: take('${deployment().name}-keyvaultKmsRbac-waits-${resourceName}',64)
   params: {
     waitSeconds: kmsRbacWaitSeconds
     location: location
@@ -336,7 +336,7 @@ module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKms
 
 @description('Adding a key to the keyvault... We can only do this for public key vaults')
 module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreateAndPrereqs) {
-  name: '${deployment().name}-keyvaultKmsKeys-${resourceName}'
+  name: take('${deployment().name}-keyvaultKmsKeys-${resourceName}',64)
   params: {
     keyVaultName: keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : ''
   }
@@ -458,7 +458,7 @@ resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = i
 
 //resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
 module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
-  name: '${deployment().name}-acrprivatepool'
+  name: take('${deployment().name}-acrprivatepool',64)
   params: {
     acrName: acr.name
     acrPoolSubnetId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
@@ -498,7 +498,7 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2022-04-01' = if 
 param imageNames array = []
 
 module acrImport 'br/public:deployment-scripts/import-acr:3.0.1' = if (!empty(registries_sku) && !empty(imageNames)) {
-  name: '${deployment().name}-AcrImportMulti'
+  name: take('${deployment().name}-AcrImport',64)
   params: {
     acrName: acr.name
     location: location
@@ -538,7 +538,7 @@ param certManagerFW bool = false
 param azureFirewallSku string = 'Standard'
 
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
-  name: '${deployment().name}-firewall'
+  name: take('${deployment().name}-firewall',64)
   params: {
     resourceName: resourceName
     location: location
@@ -1328,7 +1328,7 @@ output aksResourceId string = aks.id
 @description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
 var uaiNetworkScopeRbac = enablePrivateCluster && !empty(dnsApiPrivateZoneId) ? 'Vnet' : 'Subnet'
 module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !empty(dnsApiPrivateZoneId) && createAksUai) {
-  name: '${deployment().name}-addPrivateK8sApiDnsContributor'
+  name: take('${deployment().name}-addPrivateK8sApiDnsContributor',64)
   params: {
     vnetId: ''
     dnsZoneId: dnsApiPrivateZoneId
@@ -1485,7 +1485,7 @@ var AlertFrequencyLookup = {
 var AlertFrequency = AlertFrequencyLookup[AksMetricAlertMetricFrequencyModel]
 
 module aksmetricalerts './aksmetricalerts.bicep' = if (createLaw) {
-  name: '${deployment().name}-aksmetricalerts'
+  name: take('${deployment().name}-aksmetricalerts',64)
   scope: resourceGroup()
   params: {
     clusterName: aks.name

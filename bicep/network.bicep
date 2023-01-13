@@ -95,7 +95,7 @@ var fw_subnet = {
 
 /// ---- Firewall VNET config
 module calcAzFwIp './calcAzFwIp.bicep' = if (azureFirewalls) {
-  name: '${deployment().name}-calcAzFwIp'
+  name: take('${deployment().name}-calcAzFwIp',64)
   params: {
     vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
   }
@@ -183,7 +183,7 @@ output appGwSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subn
 output privateLinkSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, private_link_subnet_name)
 
 module aks_vnet_con 'networksubnetrbac.bicep' = if (!empty(aksPrincipleId)) {
-  name: '${deployment().name}-subnetRbac'
+  name: take('${deployment().name}-subnetRbac',64)
   params: {
     servicePrincipalId: aksPrincipleId
     subnetName: aks_subnet_name
@@ -374,7 +374,7 @@ resource flowLogStor 'Microsoft.Storage/storageAccounts@2021-08-01' = if(CreateN
 
 //NSG's
 module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
-  name: '${deployment().name}-nsgAks'
+  name: take('${deployment().name}-nsgAks',64)
   params: {
     location: location
     resourceName: '${aks_subnet_name}-${resourceName}'
@@ -389,7 +389,7 @@ module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
 }
 
 module nsgAcrPool 'nsg.bicep' = if(acrPrivatePool && networkSecurityGroups) {
-  name: '${deployment().name}-nsgAcrPool'
+  name: take('${deployment().name}-nsgAcrPool',64)
   params: {
     location: location
     resourceName: '${acrpool_subnet_name}-${resourceName}'
@@ -404,7 +404,7 @@ module nsgAcrPool 'nsg.bicep' = if(acrPrivatePool && networkSecurityGroups) {
 }
 
 module nsgAppGw 'nsg.bicep' = if(ingressApplicationGateway && networkSecurityGroups) {
-  name: '${deployment().name}-nsgAppGw'
+  name: take('${deployment().name}-nsgAppGw',64)
   params: {
     location: location
     resourceName: '${appgw_subnet_name}-${resourceName}'
@@ -425,7 +425,7 @@ module nsgAppGw 'nsg.bicep' = if(ingressApplicationGateway && networkSecurityGro
 }
 
 module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
-  name: '${deployment().name}-nsgBastion'
+  name: take('${deployment().name}-nsgBastion',64)
   params: {
     location: location
     resourceName: '${bastion_subnet_name}-${resourceName}'
@@ -446,7 +446,7 @@ module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
 }
 
 module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
-  name: '${deployment().name}-nsgPrivateLinks'
+  name: take('${deployment().name}-nsgPrivateLinks',64)
   params: {
     location: location
     resourceName: '${private_link_subnet_name}-${resourceName}'
