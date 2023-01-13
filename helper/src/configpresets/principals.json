@@ -17,6 +17,9 @@
                         },
                         "icon": "Manufacturing",
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
                             "cluster": {
                                 "SystemPoolType": "none",
                                 "autoscale": false,
@@ -57,6 +60,9 @@
                         },
                         "icon": "DeveloperTools",
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
                             "cluster": {
                                 "SystemPoolType": "CostOptimised",
                                 "autoscale": false,
@@ -99,6 +105,9 @@
                         },
                         "icon": "Touch",
                         "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
                             "cluster": {
                                 "SystemPoolType": "CostOptimised",
                                 "autoscale": true,
@@ -148,7 +157,8 @@
                         "icon": "Unlock",
                         "values": {
                             "deploy": {
-                                "keyVaultIPAllowlist": false
+                                "keyVaultIPAllowlist": false,
+                                "workloadDeployCommands": []
                             },
                             "cluster": {
                                 "enable_aad": false,
@@ -220,7 +230,8 @@
                         "icon": "Lock12",
                         "values": {
                             "deploy": {
-                                "keyVaultIPAllowlist": false
+                                "keyVaultIPAllowlist": false,
+                                "workloadDeployCommands": []
                             },
                             "cluster": {
                                 "enable_aad": true,
@@ -324,7 +335,8 @@
                         "icon": "ProtectionCenterLogo32",
                         "values": {
                             "deploy": {
-                                "keyVaultIPAllowlist": true
+                                "keyVaultIPAllowlist": true,
+                                "workloadDeployCommands": []
                             },
                             "cluster": {
                                 "enable_aad": true,
