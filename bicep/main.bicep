@@ -922,6 +922,13 @@ param networkPluginMode string = ''
 
 @allowed([
   ''
+  'cilium'
+])
+@description('Use Cilium dataplane (requires azure networkPlugin)')
+param ebpfDataplane string = ''
+
+@allowed([
+  ''
   'azure'
   'calico'
 ])
@@ -1251,6 +1258,7 @@ var aksProperties = union({
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
     outboundType: aksOutboundTrafficType
+    ebpfDataplane: networkPlugin=='azure' ? ebpfDataplane : ''
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
   autoUpgradeProfile: {upgradeChannel: upgradeChannel}
@@ -1286,7 +1294,7 @@ defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
 keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
