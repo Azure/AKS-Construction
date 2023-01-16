@@ -150,7 +150,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       ...(net.ebpfDataplane && {ebpfDataplane: 'cilium'})
     }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
-    ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs})
+    ...(addons.monitor === "aci" && {
+       ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs})
+    })
   }
 
   const post_params = {
@@ -184,7 +186,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
 
   const preview_post_params = {
-    ...(addons.containerLogsV2 && { containerLogsV2: addons.containerLogsV2}),
+    ...(addons.monitor === "aci" && {
+       ...(addons.containerLogsV2 && { containerLogsV2: addons.containerLogsV2})
+    })
   }
 
   const params2tf = p => Object.keys(p).map(k => {
