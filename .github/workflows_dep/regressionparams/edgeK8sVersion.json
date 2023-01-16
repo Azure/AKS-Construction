@@ -9,7 +9,7 @@
       "value": "Standard_DS3_v2"
     },
     "kubernetesVersion": {
-      "value": "1.23.5"
+      "value": "1.25.4"
     },
     "custom_vnet": {
       "value": true
