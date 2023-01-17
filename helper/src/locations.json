@@ -12,5 +12,8 @@
     { "key": "EastUS2", "text": "East US2" },
     { "key": "WestUS", "text": "West US" },
     { "key": "WestUS2", "text": "West US2" },
-    { "key": "WestCentralUS", "text": "West Central US" }
+    { "key": "WestCentralUS", "text": "West Central US" },
+    { "key": "canada", "text": "Canada", "itemType": 2 },
+    { "key": "CanadaCentral", "text": "Canada Central" },
+    { "key": "CanadaEast", "text": "Canada East" }
     ]
