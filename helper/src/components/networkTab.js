@@ -96,6 +96,15 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             onChange={(ev, v) => UpdateCniOverlay(v)}
                             label="CNI Overlay Network" />
                     </Stack.Item>
+                    <Stack.Item>
+                        <MessageBar messageBarType={MessageBarType.info}>Powered by Cilium is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-powered-by-cilium#prerequisites">preview feature</a> that leverages more efficient use of the linux kernel and other networking features.</MessageBar>
+                        <Checkbox
+                            styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
+                            disabled={net.networkPlugin!=='azure' || net.networkPluginMode===false}
+                            checked={net.ebpfDataplane}
+                            onChange={(ev, v) => updateFn("ebpfDataplane", v)}
+                            label="Cilium powered dataplane" />
+                    </Stack.Item>
                 </Stack>
             </Stack.Item>
 

@@ -391,6 +391,7 @@ export default function PortalNav({ config }) {
   invalidFn('deploy', 'githubrepo', deploy.deployItemKey === 'github' && (!deploy.githubrepo || !deploy.githubrepo.match('https://github.com/[^/ ]+/[^/ ]+$')), 'enter repo URL. eg: https://github.com/org/repo')
   invalidFn('deploy', 'githubrepobranch', deploy.deployItemKey === 'github' && !deploy.githubrepobranch, 'Please enter your application GitHub repo branch the can run the workflow')
   invalidFn('deploy', 'selectedTemplate', !deploy.templateVersions.find(t => t.key === deploy.selectedTemplate), `Invalid release name: ${deploy.selectedTemplate}, ensure all assests are attached`)
+  invalidFn('cluster', 'nodepoolName', !cluster.nodepoolName || cluster.nodepoolName.match(/^[a-z][a-z0-9]*$/i) === null || cluster.nodepoolName.length > 12  , 'The name of a node pool must start with a lowercase letter and can only contain alphanumeric characters. For Linux node pools the length must be between 1 and 12 characters')
 
 
   function _customRenderer(page, link, defaultRenderer) {
