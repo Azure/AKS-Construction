@@ -8,6 +8,26 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
     const { addons, net } = tabValues
     const osmFeatureFlag = featureFlag.includes('osm')
     const wiFeatureFlag = featureFlag.includes('workloadId')
+    function setContainerLogV2BasicLogs(v) {
+        // Function ensures that the ContainerLogV2 schema is
+        // enabled when enabling ContainerLogV2 Basic Logs.
+        if(v){
+            updateFn("containerLogsV2", v)
+            updateFn("containerLogsV2BasicLogs", v)
+        }else{
+            updateFn("containerLogsV2BasicLogs", v)
+        }
+    }
+    function setContainerLogsV2(v){
+        // Function ensures that all the dependencies
+        // of the ContainerLogV2 schema is disabled.
+        if(v){
+            updateFn("containerLogsV2", v)
+        }else{
+            updateFn("containerLogsV2", v)
+            updateFn("containerLogsV2BasicLogs", v)
+        }
+    }
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
 
@@ -257,6 +277,13 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         decrementButtonAriaLabel="Decrease value by 1"
                         styles={{ root: { marginTop: '15px'}}}
                     />
+                    <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2} onChange={(ev, v) => setContainerLogsV2(v)} label={<Text>Enable the ContainerLogV2 schema (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2">docs</Link>) (*preview)</Text>} />
+
+                    <MessageBar messageBarType={MessageBarType.warning}>Enable the ContainerLogV2 (successor for ContainerLog) schema for additional data capture and friendlier schema. Disabling this feature will also disable features that are dependent on it (e.g. Basic Logs).</MessageBar>
+
+                    <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2BasicLogs} onChange={(ev, v) => setContainerLogV2BasicLogs(v)} label={<Text>Set Basic Logs for ContainerLogV2 (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1%2Cportal-2">docs</Link>) (*preview)</Text>} />
+
+                    <MessageBar messageBarType={MessageBarType.warning}>Enable the Basic log data plan to cost optimise on log ingestion at the cost of a lower retention period, some log query operations that are no longer available and no alerts. Enabling Basic Logs for ContainerLogsV2 has a dependency on the ContainerLogsV2 schema and thus enabling this capability will automatically enable ContainerLogsV2. In addition, the ContainerLogsV2 table's retention is fixed at eight days. More information available via the provided docs link.</MessageBar>
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
 
