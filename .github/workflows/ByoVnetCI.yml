@@ -108,7 +108,7 @@ jobs:
       environment: ${{needs.ReusableWF.outputs.Environment}}
       aceVersion: 1.0.0
       templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/0.9.7/main.json
-      templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/${{ github.ref}}/.github/workflows_dep/AksDeploy-ByoVnet.parameters.json
+      templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/${{ GITHUB.REF_NAME}}/.github/workflows_dep/AksDeploy-ByoVnet.parameters.json
       templateParams: ${{ needs.Validation.outputs.PARAMOVERRIDESNOSECRETS}} #${{ needs.Validation.outputs.PARAMOVERRIDES}}
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
