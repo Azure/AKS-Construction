@@ -409,10 +409,20 @@ function CustomVNET({ net, addons, updateFn, invalidArray }) {
                 <Stack {...columnProps}>
 
                     <Stack.Item align="start">
-                        <TextField prefix="Cidr" label="VNET Address space" onChange={(ev, val) => updateFn("vnetAddressPrefix", val)} value={net.vnetAddressPrefix} />
+                        <TextField
+                        prefix="Cidr"
+                        label="VNET Address space"
+                        onChange={(ev, val) => updateFn("vnetAddressPrefix", val)}
+                        value={net.vnetAddressPrefix}
+                        errorMessage={getError(invalidArray, 'vnetAddressPrefix')} />
                     </Stack.Item>
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" label="AKS Nodes subnet" onChange={(ev, val) => updateFn("vnetAksSubnetAddressPrefix", val)} value={net.vnetAksSubnetAddressPrefix} />
+                        <TextField
+                        prefix="Cidr"
+                        label="AKS Nodes subnet"
+                        onChange={(ev, val) => updateFn("vnetAksSubnetAddressPrefix", val)}
+                        value={net.vnetAksSubnetAddressPrefix}
+                        errorMessage={getError(invalidArray, 'vnetAksSubnetAddressPrefix')} />
                     </Stack.Item>
                     {/*
                 <Stack.Item align="center">

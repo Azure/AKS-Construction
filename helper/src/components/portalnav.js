@@ -328,19 +328,23 @@ export default function PortalNav({ config }) {
   }
 
   function isCidrValid(cidr) {
-    var regex=cidr.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}($|\/([1-9]|[12][0-9]))$/)
+    var regex=cidr.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}($|\/(1[6-9]|2[0-6]))$/)
     if(regex === null || regex.length !== 4 || regex[3] === undefined) {
         //cidr range not valid
         return false
     }
     else { return true }
   }
+  const invalidCidrMessage = "Enter a valid CIDR address (/16 - /26)"
+
+  //declare string constant variable
+
 
   function isIPValid(ip) {
       if(ip === undefined || ip === null || ip === '') {
           return true
       }
-      else if (ip.match(/^([0-9]{1,3}\.){3}[0-9]$/) === null) {
+      else if (ip.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}$/) === null) {
           return false
       }
       else {
@@ -375,10 +379,12 @@ export default function PortalNav({ config }) {
       :
       'This template can only deploy Azure Firewall in single VNET with Custom Networking')
   invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") || (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default"), 'When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway')
-  invalidFn('net', 'serviceCidr',  net.vnet_opt === "custom" && !isCidrValid(net.serviceCidr), 'Enter a valid CIDR address')
-  invalidFn('net', 'podCidr', !isCidrValid(net.podCidr), 'Enter a valid CIDR address')
+  invalidFn('net', 'serviceCidr',  net.vnet_opt === "custom" && !isCidrValid(net.serviceCidr), invalidCidrMessage)
+  invalidFn('net', 'podCidr', !isCidrValid(net.podCidr), invalidCidrMessage)
   invalidFn('net', 'dnsServiceIP', !isIPValid(net.dnsServiceIP), 'Enter a valid IP')
-  invalidFn('net', 'privateLinkSubnetAddressPrefix', !isCidrValid(net.privateLinkSubnetAddressPrefix), 'Enter a valid CIDR address')
+  invalidFn('net', 'podCidr', !isCidrValid(net.podCidr), invalidCidrMessage)
+  invalidFn('net', 'vnetAddressPrefix', !isCidrValid(net.vnetAddressPrefix), invalidCidrMessage)
+  invalidFn('net', 'vnetAksSubnetAddressPrefix', !isCidrValid(net.vnetAksSubnetAddressPrefix), invalidCidrMessage)
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7, 'Enter an IP/CIDR, or select \'Public IP with no IP restrictions\' in the \'Cluster API Server Security\' section of the \'Cluster Details\' tab')
   invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19, 'Enter valid cluster name')
 
