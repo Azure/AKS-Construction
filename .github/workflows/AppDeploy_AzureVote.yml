@@ -279,8 +279,16 @@ jobs:
   ManifestApiVersionCheck:
     runs-on: ubuntu-latest
     environment: ${{ inputs.Environment }}
+    env:
+      HELMURI: '${{ inputs.HELMPACKAGEURI }}'
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Download and unpack helm chart
+        run: |
+          curl -O $HELMURI
+          helmChartFileName="${HELMURI##*/}"
+          tar xf $helmChartFileName t
 
       - name: Download Pluto
         uses: FairwindsOps/pluto/github-action@master
