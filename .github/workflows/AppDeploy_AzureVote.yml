@@ -275,3 +275,15 @@ jobs:
         with:
           name: DebugFiles
           path: debug*.json
+
+  ManifestApiVersionCheck:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.Environment }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download Pluto
+        uses: FairwindsOps/pluto/github-action@master
+
+      - name: Use pluto
+        run: pluto detect-files -d pkg/finder/testdata
