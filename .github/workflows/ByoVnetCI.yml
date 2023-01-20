@@ -101,8 +101,8 @@ jobs:
 
   CostEstimate:
     needs: [ReusableWF, Validation]
+    if: github.event_name != 'pull_request' 
     uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.1-beta2
-    #uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowparams
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }}
       environment: ${{needs.ReusableWF.outputs.Environment}}
