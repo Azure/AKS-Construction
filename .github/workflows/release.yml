@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Web App
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job Parameter Checking
         run: |
@@ -66,7 +66,7 @@ jobs:
           REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
 
       - name: Create GitHub pages release artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: HelperApp
           path: helper/build
@@ -76,7 +76,7 @@ jobs:
     name: Create GitHub Release (bicep)
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Check that the GitHub release does not already exist
         run: |
@@ -109,7 +109,7 @@ jobs:
           /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
 
       - name: Create Bicep release artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: CompiledBicep
           path: bicep/compiled/main.json
@@ -134,7 +134,7 @@ jobs:
     name: Add extra release file-artifacts
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Verify File
         run: cat ${{ matrix.files }}
@@ -158,7 +158,7 @@ jobs:
     name: Create extra bicep artifacts
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Set better name of artifact
         id: artifactName
@@ -204,13 +204,13 @@ jobs:
     if: ${{ always() }}
     needs: [BuildWebApp , CreateRelease, CreateExtraBicepArtifacts]
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3.0.2
         with:
           name: HelperApp
           path: helperapp
 
       #Although we don't need this artifact, if it's missing then we can abort this job
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3.0.2
         if: ${{ github.event.inputs.createRelease == 'true' }}
         with:
           name: CompiledBicep
@@ -233,13 +233,13 @@ jobs:
     environment: UI-Deploy-Manual-Approval
     needs: [BuildWebApp , CreateRelease, DeployWebAppToCanary]
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3.0.2
         with:
           name: HelperApp
           path: helperapp
 
       #Although we don't need this artifact, if it's missing then we can abort this job
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3.0.2
         if: ${{ github.event.inputs.createRelease == 'true' }}
         with:
           name: CompiledBicep
