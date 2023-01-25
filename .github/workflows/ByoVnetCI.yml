@@ -625,7 +625,6 @@ jobs:
       Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
       ExistingDnsDomainName: aksc.msftcsu.net
       ExistingDnsDomainRg: aksbicepacc-ci-deployvnet
-      Environment: ${{ github.event.inputs.environment }}
       LatestAkscVersionTag: ${{ steps.AkscTags.outputs.LATEST}}
     steps:
       - name: Dummy step
