@@ -164,7 +164,8 @@
                                 "enable_aad": false,
                                 "AksDisableLocalAccounts": false,
                                 "apisecurity": "none",
-                                "DefenderForContainers": false
+                                "DefenderForContainers": false,
+                                "AksPaidSkuForSLA": false
                             },
                             "addons": {
                                 "networkPolicy": "none",
@@ -237,7 +238,8 @@
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": true,
                                 "apisecurity": "whitelist",
-                                "DefenderForContainers": true
+                                "DefenderForContainers": true,
+                                "AksPaidSkuForSLA": true
                             },
                             "addons": {
                                 "networkPolicy": "azure",
@@ -342,7 +344,8 @@
                                 "enable_aad": true,
                                 "AksDisableLocalAccounts": true,
                                 "apisecurity": "private",
-                                "DefenderForContainers": true
+                                "DefenderForContainers": true,
+                                "AksPaidSkuForSLA": true
                             },
                             "addons": {
                                 "networkPolicy": "azure",
