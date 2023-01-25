@@ -76,7 +76,7 @@ env:
 jobs:
   Well_Architected:
     runs-on: ubuntu-latest
-    if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
+    if:  github.event_name != 'pull_request' || github.event.inputs.doWellArchitected == 'true' ||  contains( github.event.pull_request.labels.*.name, 'test-deploy-byoconfig')
     steps:
       - uses: actions/checkout@v3.3.0
 
@@ -101,7 +101,7 @@ jobs:
 
   CostEstimate:
     needs: [ReusableWF, Validation]
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' ||  contains( github.event.pull_request.labels.*.name, 'test-deploy-byoconfig')
     uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.1-beta2
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }}
