@@ -39,8 +39,8 @@ param byoAKSSubnetId string = ''
 param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
-var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
-resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (createAksUai) {
+var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) || azureFirewalls
+resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
 }
