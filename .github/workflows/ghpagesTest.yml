@@ -31,6 +31,9 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
+    concurrency:
+      cancel-in-progress: true
+      group: FullDeploy${{ !github.event.pull_request.head.repo.fork && ( inputs.doAzCmdDeployment == 'true' || contains( github.event.pull_request.labels.*.name, 'test-deploy-wizard')) }}
     steps:
       - uses: actions/checkout@v3.3.0
 
