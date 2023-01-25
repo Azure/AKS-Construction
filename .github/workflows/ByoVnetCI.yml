@@ -662,7 +662,7 @@ jobs:
     needs: [Deploy, ReusableWF]
     uses: ./.github/workflows/AppDeploy_AzureVote.yml
     with:
-      Environment: ''
+      ENVIRONMENT: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #$RG
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
@@ -677,6 +677,7 @@ jobs:
     needs: [Deploy, ReusableWF, Post-Deploy]
     uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-bumps
     with:
+      ENVIRONMENT: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       REPOREF: "0.9.4"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
@@ -698,6 +699,7 @@ jobs:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr]
     uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-bumps
     with:
+      ENVIRONMENT: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       REPOREF: "0.9.4"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
