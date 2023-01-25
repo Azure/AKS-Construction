@@ -127,7 +127,7 @@ jobs:
       #templateParamFileURL: ${{ needs.ReusableWF.outputs.ParamFilePath }}
       templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/${{ github.ref }}/${{ needs.ReusableWF.outputs.ParamFilePath }}
       templateParams: 'resourceName=costy'
-      
+
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -373,28 +373,6 @@ jobs:
           echo "Sending command $netpolicycmd to $AKSNAME in $RG";
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
-
-  ReusableWF:
-    runs-on: ubuntu-latest
-    needs: [Validation]
-    env:
-      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
-    outputs:
-      RG: ${{ env.RG }}
-      ENVIRONMENT: ${{ steps.CalcEnv.outputs.ENVIRONMENT }}
-      #Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
-    steps:
-      - name: Reusable workflow
-        run: |
-          echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
-          echo "So we need this job to be able to access the value in env.RG"
-          echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
-      - name: Environment Parse
-        id: CalcEnv
-        run: |
-          echo "${{ github.event.inputs.environment }}"
-          GHENV="${{ github.event.inputs.environment }}"
-          echo "ENVIRONMENT=$GHENV" >> $GITHUB_OUTPUT
 
   SmokeTest_KnownGoodApp:
     needs: [ReusableWF, Deploy]
