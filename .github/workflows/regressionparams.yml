@@ -54,6 +54,14 @@ jobs:
           Write-Output $FILELISTJSON
           echo "FILELIST=$FILELISTJSON" >> $GITHUB_OUTPUT
 
+  Debug:
+    runs-on: ubuntu-latest
+    needs: [GetParamFiles]
+    steps:
+      - name: Job parameter check
+        run: |
+          echo files ${{ needs.GetParamFiles.outputs.FILELIST }}
+
   Validation:
     needs: [GetParamFiles]
     strategy:
