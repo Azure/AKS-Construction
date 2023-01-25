@@ -117,6 +117,7 @@
         "postdeploy",
         "privatelink",
         "pwsh",
+        "resourcegroups",
         "routable",
         "seccomp",
         "serviceparams",
