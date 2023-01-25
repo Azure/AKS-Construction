@@ -59,6 +59,7 @@ jobs:
     strategy:
       matrix:
         files: ${{ fromJson(needs.GetParamFiles.outputs.FILELIST) }}
+      max-parallel: 4
 
     runs-on: [ubuntu-latest]
     steps:
