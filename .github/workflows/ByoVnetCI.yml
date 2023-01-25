@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
@@ -110,7 +110,7 @@ jobs:
       RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         if: github.event.inputs.doDebugSteps == 'true'
@@ -174,7 +174,7 @@ jobs:
             echo "::set-output name=NEWRESNAME::$NEWRESNAME"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -192,7 +192,7 @@ jobs:
         if: github.event.inputs.doVerifySteps == 'true'
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -248,7 +248,7 @@ jobs:
           }
 
       - name: Create Parameter file imperative override string
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         id: imperitiveparams
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
@@ -260,7 +260,7 @@ jobs:
             echo "::set-output name=PARAMOVERRIDES::$PARAMOVERRIDES"
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         with:
@@ -275,7 +275,7 @@ jobs:
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS --verbose
 
       - name: What If (GA edge Az cli version) (has issues)
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         id: edgeWhatIf
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
@@ -302,7 +302,7 @@ jobs:
             echo "::set-output name=edgeSuccess::true"
 
       - name: What If (workaround task)
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         continue-on-error: true #Setting to true due to bug in the AzureCLI https://github.com/Azure/azure-cli/issues/19850
         if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
         env:
@@ -416,7 +416,7 @@ jobs:
 
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop' || contains( github.event.pull_request.labels.*.name, 'test-deploy-byoconfig')
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         if: github.event.inputs.doDebugSteps == 'true'
@@ -440,7 +440,7 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -449,7 +449,7 @@ jobs:
 
       - name: Deploy Infrastructure
         id: deployAks
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -483,7 +483,7 @@ jobs:
 
 
       - name: Enable AGIC Addon
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         if: ${{ needs.Deploy.outputs.AGNAME}} != ''
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -642,7 +642,7 @@ jobs:
     env:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Param check
         if: github.event.inputs.doDebugSteps == 'true'
@@ -654,7 +654,7 @@ jobs:
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME }}"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -732,7 +732,7 @@ jobs:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     steps:
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true

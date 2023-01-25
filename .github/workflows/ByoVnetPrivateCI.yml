@@ -79,7 +79,7 @@ jobs:
     environment: ${{ github.event.inputs.environment }}
     if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
@@ -105,7 +105,7 @@ jobs:
       RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
@@ -159,7 +159,7 @@ jobs:
             echo "::set-output name=NEWRESNAME::$NEWRESNAME"
 
       - name: Azure Login
-        uses: Azure/login@v1.4.3
+        uses: Azure/login@v1.4.6
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -169,7 +169,7 @@ jobs:
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         if: github.event.inputs.doDebugSteps == 'true'
         id: activedeps
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -190,7 +190,7 @@ jobs:
             fi
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -198,7 +198,7 @@ jobs:
 
       - name: What If
         if: github.event.inputs.doDebugSteps == 'true'
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -220,7 +220,7 @@ jobs:
       REGION: ${{ needs.Validation.outputs.REGION }}
       RESNAME: ${{ needs.Validation.outputs.RESNAME }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
@@ -247,7 +247,7 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1.4.3
+        uses: Azure/login@v1.4.6
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -256,7 +256,7 @@ jobs:
 
       - name: Deploy Infrastructure
         id:  deployAks
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -291,7 +291,7 @@ jobs:
           sleep $DELAY
 
       - name: Enable AGIC Addon
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -402,7 +402,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
 
       - name: Azure Login
-        uses: Azure/login@v1.4.3
+        uses: Azure/login@v1.4.6
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true

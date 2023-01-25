@@ -70,7 +70,7 @@ jobs:
       AKSNAME: "${{ inputs.AKSNAME}}"
       RG: "${{ inputs.RG }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter inspection
         run: |
@@ -79,7 +79,7 @@ jobs:
           echo "AKS name is ${{ inputs.AKSNAME }}"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -176,7 +176,7 @@ jobs:
           az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"| jq -r ".logs"
 
       - name: Wait for IP
-        env: 
+        env:
           SLEEPSECONDS: 10
         id: waitforip
         run: |
@@ -211,7 +211,7 @@ jobs:
           echo "::set-output name=IPADDRESS::$ipAddress"
 
       - name: Verify App is publicly reachable (from hosted GitHub runner)
-        env: 
+        env:
           SLEEPSECONDS: 10
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
         run: |
@@ -271,7 +271,7 @@ jobs:
 
       - name: Store any generated debug files as artifacts
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: DebugFiles
           path: debug*.json

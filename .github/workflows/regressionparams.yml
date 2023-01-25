@@ -36,7 +36,7 @@ jobs:
       FILELIST: ${{ steps.getfiles.outputs.FILELIST}}
     steps:
       #Get the code files from the repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         run: |
@@ -62,7 +62,7 @@ jobs:
 
     runs-on: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         run: |
@@ -121,7 +121,7 @@ jobs:
           $params | ConvertTo-Json -Depth 4 | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -129,7 +129,7 @@ jobs:
           allow-no-subscriptions: false
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -139,7 +139,7 @@ jobs:
       - name: WhatIf Infrastructure deployment
         if: steps.paramfile.outputs.DOPSRULE == 'true'
         continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |

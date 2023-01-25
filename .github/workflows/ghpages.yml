@@ -47,7 +47,7 @@ jobs:
   Spelling:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - uses: streetsidesoftware/cspell-action@v1.3.4
         name: Spell Check
