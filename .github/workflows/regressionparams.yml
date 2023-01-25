@@ -25,7 +25,7 @@ on:
 env:
   RG: "AksBicepAcc-Ci-HelperValidate" #The resource group we're deploying to.
   ParamDir: ".github/workflows_dep/regressionparams/" #Path to parameter file
-  AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.43.0 #Pinning to a specific AZ CLI version
 
 jobs:
   GetParamFiles:

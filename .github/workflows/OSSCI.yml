@@ -36,7 +36,7 @@ env:
   RG: "AksBicepAcc-Ci-OssCluster" #The resource group we're deploying to.
   RESNAME: "AksOss" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-  AZCLIVERSION: 2.42.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.43.0 #Pinning to a specific AZ CLI version
 
 permissions:
       id-token: write

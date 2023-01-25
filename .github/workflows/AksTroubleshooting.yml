@@ -273,7 +273,7 @@ jobs:
         if: inputs.USERUNCMD == true
         uses: Azure/cli@v1.0.7
         env:
-          AZCLIVERSION: latest #2.30.0
+          AZCLIVERSION: latest
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
