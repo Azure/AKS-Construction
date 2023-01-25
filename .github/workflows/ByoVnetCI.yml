@@ -675,7 +675,7 @@ jobs:
 
   SmokeTest_JavaApp-certmgr:
     needs: [Deploy, ReusableWF, Post-Deploy]
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.4
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-bumps
     with:
       REPOREF: "0.9.4"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
@@ -696,7 +696,7 @@ jobs:
 
   SmokeTest_JavaApp-appgw:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr]
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.4
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-bumps
     with:
       REPOREF: "0.9.4"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
