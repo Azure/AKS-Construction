@@ -52,7 +52,7 @@ jobs:
 
           $FILELISTJSON=get-ChildItem -Path $FilePath -File '*.json' | select-object -ExpandProperty Name | ConvertTo-Json -Compress
           Write-Output $FILELISTJSON
-          echo "::set-output name=FILELIST::$FILELISTJSON"
+          echo "FILELIST=$FILELISTJSON" >> $GITHUB_OUTPUT
 
   Validation:
     needs: [GetParamFiles]
@@ -92,10 +92,10 @@ jobs:
               Write-Output $paramfile.metadata.template
               Write-Output $paramfile.metadata.template.length
 
-              echo "::set-output name=DOPSRULE::true"
+              echo "DOPSRULE=true" >> $GITHUB_OUTPUT
             } else {
               Write-Output "Temnplate value NOT found"
-              echo "::set-output name=DOPSRULE::false"
+              echo "DOPSRULE=false" >> $GITHUB_OUTPUT
             }
           }
 

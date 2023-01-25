@@ -159,7 +159,7 @@ jobs:
 
           pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
           echo $pubIp
-          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
+          echo "SIMWORKLOADIP=$pubIp" >> $GITHUB_OUTPUT
 
           curl $pubIp
 

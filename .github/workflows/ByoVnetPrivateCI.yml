@@ -142,21 +142,21 @@ jobs:
               REGION="${{ github.event.inputs.region }}"
             fi
             echo $REGION
-            echo "::set-output name=REGION::$REGION"
+            echo "REGION=$REGION" >> $GITHUB_OUTPUT
 
             if [ -z "${{ github.event.inputs.ResourceGroup }}" ]
             then
               echo "ResourceGroup parameter not available through GitHub event data, setting to default"
               echo $RG
-              echo "::set-output name=RESOURCEGROUP::$RG"
+              echo "RESOURCEGROUP=$RG" >> $GITHUB_OUTPUT
             else
               echo "Resource Group parameter found in GitHub event (${{ github.event.inputs.ResourceGroup }})"
-              echo "::set-output name=RESOURCEGROUP::${{ github.event.inputs.ResourceGroup }}"
+              echo "RESOURCEGROUP=${{ github.event.inputs.ResourceGroup }}" >> $GITHUB_OUTPUT
             fi
 
             NEWRESNAME="$RESNAME${REGION:0:3}"
             echo "Setting new Resource Name $NEWRESNAME"
-            echo "::set-output name=NEWRESNAME::$NEWRESNAME"
+            echo "NEWRESNAME=$NEWRESNAME" >> $GITHUB_OUTPUT
 
       - name: Azure Login
         uses: Azure/login@v1.4.6
@@ -182,7 +182,7 @@ jobs:
             #echo 'Verbose deployment list'
             #az deployment group list -g $RG --query "[].[properties.provisioningState, name]"
 
-            echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
+            echo "RUNCOUNT=$RUNCOUNT" >> $GITHUB_OUTPUT
 
             if [ "$RUNCOUNT" -ne "0" ]
             then
@@ -267,16 +267,16 @@ jobs:
 
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
-            echo "::set-output name=AKSNAME::$AKSNAME"
+            echo "AKSNAME=$AKSNAME" >> $GITHUB_OUTPUT
 
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
-            echo "::set-output name=AGNAME::$AGNAME"
+            echo "AGNAME=$AGNAME" >> $GITHUB_OUTPUT
 
             LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
-            echo "::set-output name=LANAME::$LANAME"
+            echo "LANAME=$LANAME" >> $GITHUB_OUTPUT
 
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
-            echo "::set-output name=LAWGUID::$LAWGUID"
+            echo "LAWGUID=$LAWGUID" >> $GITHUB_OUTPUT
 
       - name: Post Deploy Delay
         run: |
@@ -353,7 +353,7 @@ jobs:
         run: |
           echo "${{ github.event.inputs.environment }}"
           GHENV="${{ github.event.inputs.environment }}"
-          echo "::set-output name=ENVIRONMENT::$GHENV"
+          echo "ENVIRONMENT=$GHENV" >> $GITHUB_OUTPUT
 
   SmokeTest_KnownGoodApp:
     needs: [SetupWF, Deploy]

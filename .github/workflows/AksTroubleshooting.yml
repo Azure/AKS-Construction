@@ -183,7 +183,7 @@ jobs:
           APPGWPOD=$(echo $PODS | jq -r '.items[] | select(.metadata.name | test("appgw-")).metadata.name')
 
           echo "Found AGIC pod name: $APPGWPOD"
-          echo "::set-output name=APPGWPOD::$APPGWPOD"
+          echo "APPGWPOD=$APPGWPOD" >> $GITHUB_OUTPUT
 
       - name: Describe AGIC Pod
         env:

@@ -159,19 +159,19 @@ jobs:
               REGION="${{ github.event.inputs.region }}"
             fi
             echo $REGION
-            echo "::set-output name=REGION::$REGION"
+            echo "REGION=$REGION" >> $GITHUB_OUTPUT
             if [ -z "${{ github.event.inputs.ResourceGroup }}" ]
             then
               echo "ResourceGroup parameter not available through GitHub event data, setting to default"
               echo $DEFAULTRGNAME
-              echo "::set-output name=RESOURCEGROUP::$DEFAULTRGNAME"
+              echo "RESOURCEGROUP=$DEFAULTRGNAME" >> $GITHUB_OUTPUT
             else
               echo "Resource Group parameter found in GitHub event (${{ github.event.inputs.ResourceGroup }})"
-              echo "::set-output name=RESOURCEGROUP::${{ github.event.inputs.ResourceGroup }}"
+              echo "RESOURCEGROUP=${{ github.event.inputs.ResourceGroup }}" >> $GITHUB_OUTPUT
             fi
             NEWRESNAME="$RESNAME${REGION:0:3}"
             echo "Setting new Resource Name $NEWRESNAME"
-            echo "::set-output name=NEWRESNAME::$NEWRESNAME"
+            echo "NEWRESNAME=$NEWRESNAME" >> $GITHUB_OUTPUT
 
       - name: Azure Login
         uses: Azure/login@v1.4.6
@@ -208,7 +208,7 @@ jobs:
             #echo 'Verbose deployment list'
             #az deployment group list -g $RG --query "[].[properties.provisioningState, name]"
 
-            echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for condition
+            echo "RUNCOUNT=$RUNCOUNT" >> $GITHUB_OUTPUT
 
       - name: Verify AKS Preview Features are available in target Subscription
         if: github.event.inputs.doVerifySteps == 'true'
@@ -257,7 +257,7 @@ jobs:
           inlineScript: |
             PARAMOVERRIDES="resourceName=$RESNAME location=${{ steps.params.outputs.REGION}} byoAKSSubnetId=${{ secrets.ByoAksSubnetId }} byoAGWSubnetId=${{ secrets.ByoAgwSubnetId }} dnsZoneId=${{ secrets.BYODNSZONEID }}"
             echo $PARAMOVERRIDES
-            echo "::set-output name=PARAMOVERRIDES::$PARAMOVERRIDES"
+            echo "PARAMOVERRIDES=$PARAMOVERRIDES" >> $GITHUB_OUTPUT
 
       - name: Validate Infrastructure deployment
         uses: Azure/cli@v1.0.7
@@ -299,7 +299,7 @@ jobs:
 
             cat $WHATIFPATH
 
-            echo "::set-output name=edgeSuccess::true"
+            echo "edgeSuccess=true" >> $GITHUB_OUTPUT
 
       - name: What If (workaround task)
         uses: Azure/cli@v1.0.7
@@ -464,22 +464,22 @@ jobs:
 
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
-            echo "::set-output name=AKSNAME::$AKSNAME"
+            echo "AKSNAME=$AKSNAME" >> $GITHUB_OUTPUT
 
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
-            echo "::set-output name=AGNAME::$AGNAME"
+            echo "AGNAME=$AGNAME" >> $GITHUB_OUTPUT
 
             AKVNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.keyVaultName.value" -o tsv)
-            echo "::set-output name=AKVNAME::$AKVNAME"
+            echo "AKVNAME=$AKVNAME" >> $GITHUB_OUTPUT
 
             LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
-            echo "::set-output name=LANAME::$LANAME" #outputting for conditon
+            echo "LANAME=$LANAME" >> $GITHUB_OUTPUT
 
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
-            echo "::set-output name=LAWGUID::$LAWGUID" #outputting for conditon
+            echo "LAWGUID=$LAWGUID" >> $GITHUB_OUTPUT
 
             ACRNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.containerRegistryName.value" -o tsv)
-            echo "::set-output name=ACRNAME::$ACRNAME" #outputting for conditon
+            echo "ACRNAME=$ACRNAME" >> $GITHUB_OUTPUT
 
 
       - name: Enable AGIC Addon

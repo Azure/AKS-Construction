@@ -133,8 +133,8 @@ jobs:
           helmsetparams="ingress.enabled=${ingress},ingress.class=${ingressClass},ingress.appGwPrivateIp=$privateIp,front.service.azureLbInternal=$privateIp,front.service.type=\"$serviceType\""
 
           #Set step outputs, which are used in subsequent steps to ensure the app is working
-          if [ $ingress == false ]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi
-          if [ $privateIp == false ]; then echo "::set-output name=ISPUBLIC::true"; else echo "::set-output name=ISPUBLIC::false";  fi
+          if [ $ingress == false ]; then echo "RESTYPE=svc" >> $GITHUB_OUTPUT; else echo "RESTYPE=ing" >> $GITHUB_OUTPUT;  fi
+          if [ $privateIp == false ]; then echo "ISPUBLIC=true" >> $GITHUB_OUTPUT; else echo "ISPUBLIC=false" >> $GITHUB_OUTPUT;  fi
 
           #Helm Dry Run
           command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMURI --set $helmsetparams --dry-run"
@@ -208,7 +208,7 @@ jobs:
             fi
           done
 
-          echo "::set-output name=IPADDRESS::$ipAddress"
+          echo "IPADDRESS=$ipAddress" >> $GITHUB_OUTPUT
 
       - name: Verify App is publicly reachable (from hosted GitHub runner)
         env:
