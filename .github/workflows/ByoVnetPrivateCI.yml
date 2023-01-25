@@ -333,7 +333,7 @@ jobs:
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
 
-  SetupWF:
+  ReusableWF:
     runs-on: ubuntu-latest
     needs: [Validation]
     env:
@@ -356,11 +356,11 @@ jobs:
           echo "ENVIRONMENT=$GHENV" >> $GITHUB_OUTPUT
 
   SmokeTest_KnownGoodApp:
-    needs: [SetupWF, Deploy]
+    needs: [ReusableWF, Deploy]
     uses: ./.github/workflows/AppDeploy_AzureVote.yml
     with:
-      Environment: ${{ needs.SetupWF.outputs.ENVIRONMENT }}
-      RG: ${{ needs.SetupWF.outputs.RG }}
+      Environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: azure-vote-public
@@ -371,12 +371,12 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Troubleshoot:
-    needs: [Deploy, SmokeTest_KnownGoodApp, SetupWF]
+    needs: [Deploy, SmokeTest_KnownGoodApp, ReusableWF]
     uses: ./.github/workflows/AksTroubleshooting.yml
     if: always()
     with:
       environment: ${{ github.event.inputs.environment }}
-      RG: ${{ needs.SetupWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       LANAME: ${{ needs.Deploy.outputs.LANAME}}
@@ -386,54 +386,13 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Infra_Destroy:
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    needs: [Validation, Deploy, Troubleshoot, SmokeTest_KnownGoodApp, Well_Architected]
-    env:
-      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
+    uses: ./.github/workflows/cleanupRg.yml
     if: github.event_name == 'schedule'
-    steps:
-      - name: Job parameter check
-        if: github.event.inputs.doVerifySteps == 'true'
-        run: |
-          echo "RG is: $RG"
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-
-      - name: Azure Login
-        uses: Azure/login@v1.4.6
-        with:
-          creds:  ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-
-      - name: Install Pwsh modules
-        shell: pwsh
-        run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name Az.Accounts
-          Install-Module -Name Az.Resources
-
-      - name: Cleanup
-        shell: pwsh
-        run: |
-          $RG='${{ env.RG }}'
-
-          # Get all ARM resources from all resource groups
-          $rgToPurge = Get-AzResourceGroup -Name $RG
-          try {
-            #Remove all but public ip addresses
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            #Remove public ip addresses
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            #Final run to clean other dependant resources in parent-child graph
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
-          }
-          Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
-          {
-            write-output error
-          }
+    needs: [ReusableWF, Validation, Deploy, Troubleshoot, SmokeTest_KnownGoodApp, Well_Architected]
+    with:
+      environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      rg: ${{ needs.ReusableWF.outputs.RESOURCEGROUP }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
