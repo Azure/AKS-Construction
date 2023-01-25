@@ -69,7 +69,7 @@ jobs:
       templateVersion: "0.9.3-preview3"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
-      templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_ enableTelemetry=${{ VARS.ENABLETELEMETRY == 'true' }}
       postScriptParams: "ingress=contour,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,certClusterIssuer=letsencrypt-staging,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanacnt"
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -116,7 +116,7 @@ jobs:
       templateVersion: "0.9.3-preview3"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
-      templateParams: resourceName=az-nginx agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      templateParams: resourceName=az-nginx agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_ enableTelemetry=${{ VARS.ENABLETELEMETRY == 'true' }}
       postScriptParams: "ingress=nginx,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanangx"
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -163,7 +163,7 @@ jobs:
       templateVersion: "0.9.3-preview3"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
-      templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_ enableTelemetry=${{ VARS.ENABLETELEMETRY == 'true' }}
       postScriptParams: "ingress=traefik,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,certClusterIssuer=letsencrypt-staging,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanatrae"
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
