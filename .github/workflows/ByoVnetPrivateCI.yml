@@ -9,7 +9,7 @@ on:
       environment:
         description: 'Which environment to deploy to'
         required: true
-        default: "azurecirgs"
+        default: "csu"
         type: environment
       ResourceGroup:
         description: 'Which Resource Group to deploy to'
@@ -85,12 +85,53 @@ jobs:
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
       - name: PSRule - Analyze Azure parameter file
-        uses: Microsoft/ps-rule@main
+        uses: Microsoft/ps-rule@v2.3.2
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.Azure'
           inputType: repository
           inputPath: "${{ env.ParamFilePath }}"
+
+  ReusableWF:
+    runs-on: ubuntu-latest
+    env:
+      RG: ${{ github.event.inputs.ResourceGroup }}
+    outputs:
+      RG: ${{ github.event.inputs.ResourceGroup }}
+      Environment: ${{ github.event.inputs.environment }}
+      ParamFilePath: ${{ env.ParamFilePath }}
+      LatestAkscVersionTag: ${{ steps.AkscTags.outputs.LATEST}}
+    steps:
+      - name: Dummy step
+        run: echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
+      - name: Explain more
+        run: echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
+      - name: Job parameter inspection
+        run: |
+          echo "RG: $RG"
+      - name: Get latest AKSC version
+        id: AkscTags
+        run: |
+          LATEST=$(curl https://api.github.com/repos/Azure/AKS-Construction/releases/latest | jq '.tag_name' -r)
+          echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
+
+  CostEstimate:
+    needs: [ReusableWF]
+    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.0.0
+    if: false #Workflow isn't reliably working at the moment. Need to give the project a PR.
+    with:
+      rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      environment: ${{needs.ReusableWF.outputs.Environment}}
+      aceVersion: 1.0.0
+      templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/${{ needs.ReusableWF.outputs.LatestAkscVersionTag }}/main.json
+      #templateParamFileURL: ${{ needs.ReusableWF.outputs.ParamFilePath }}
+      templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/${{ github.ref }}/${{ needs.ReusableWF.outputs.ParamFilePath }}
+      templateParams: 'resourceName=costy'
+      
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   Validation:
     runs-on: ubuntu-latest
