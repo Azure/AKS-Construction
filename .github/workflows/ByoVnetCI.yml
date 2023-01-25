@@ -64,6 +64,10 @@ on:
         type: boolean
         required: false
 
+permissions:
+      id-token: write
+      contents: read
+
 concurrency: ci-${{ github.ref }}
 
 env:
