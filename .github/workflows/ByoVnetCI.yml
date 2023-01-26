@@ -106,7 +106,8 @@ jobs:
   CostEstimate:
     needs: [ReusableWF, Validation]
     if: github.event_name != 'pull_request' ||  contains( github.event.pull_request.labels.*.name, 'test-deploy-byoconfig')
-    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.1-beta2
+    #uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.1-beta2
+    uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowpolish
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }}
       environment: ${{needs.ReusableWF.outputs.Environment}}
