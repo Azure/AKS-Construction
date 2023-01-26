@@ -117,8 +117,9 @@ jobs:
 
   CostEstimate:
     needs: [ReusableWF]
-    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.0.0
-    if: false #Workflow isn't reliably working at the moment. Need to give the project a PR.
+    #uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.0.0
+    uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowpolish
+    #if: false #Workflow isn't reliably working at the moment. Need to give the project a PR.
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       environment: ${{needs.ReusableWF.outputs.Environment}}
@@ -126,7 +127,6 @@ jobs:
       templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/${{ needs.ReusableWF.outputs.LatestAkscVersionTag }}/main.json
       #templateParamFileURL: ${{ needs.ReusableWF.outputs.ParamFilePath }}
       templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/${{ github.ref }}/${{ needs.ReusableWF.outputs.ParamFilePath }}
-      templateParams: 'resourceName=costy'
 
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
