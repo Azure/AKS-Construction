@@ -15,6 +15,10 @@ test('test', async ({ page }) => {
   await page.click('#azResourceGroup')
   await page.fill('#azResourceGroup', 'Automation-Actions-AksPublishCI')
 
+  //Opt out of telemetry
+  await page.waitForSelector('#akscTelemetryOpt')
+  await page.check('#akscTelemetryOpt')
+
   //Save the contents of the az cmd box to file
   const clitextboxrevisted = await page.$('[data-testid="deploy-deploycmd"]')
   const azcmdManagedPrivate =await clitextboxrevisted.innerText();
