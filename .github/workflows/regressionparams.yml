@@ -52,7 +52,9 @@ jobs:
 
           $FILELISTJSON=get-ChildItem -Path $FilePath -File '*.json' | select-object -ExpandProperty Name | ConvertTo-Json -Compress
           Write-Output $FILELISTJSON
-          echo "FILELIST=$FILELISTJSON" >> $GITHUB_OUTPUT
+          #echo "FILELIST=$FILELISTJSON" >> $GITHUB_OUTPUT
+          echo "FILELIST=$FILELISTJSON" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+
 
   Debug:
     runs-on: ubuntu-latest
