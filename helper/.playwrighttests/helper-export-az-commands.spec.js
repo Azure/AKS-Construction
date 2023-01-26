@@ -17,7 +17,7 @@ test('test', async ({ page }) => {
 
   //Opt out of telemetry
   await page.waitForSelector('#akscTelemetryOpt')
-  await page.check('#akscTelemetryOpt')
+  await page.uncheck('#akscTelemetryOpt')
 
   //Save the contents of the az cmd box to file
   const clitextboxrevisted = await page.$('[data-testid="deploy-deploycmd"]')
