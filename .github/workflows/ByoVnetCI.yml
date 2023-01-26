@@ -349,27 +349,6 @@ jobs:
 
             cat $WHATIFPATH
 
-      - name: What If (No Secrets param string, used for Cost Estimate)
-        uses: Azure/cli@v1.0.7
-        env:
-          RG: ${{ steps.params.outputs.RESOURCEGROUP }}
-        continue-on-error: true
-        with:
-          azcliversion: ${{ env.AZCLIVERSION }} #latest
-          inlineScript: |
-            DEPNAME='${{ env.DEPNAME }}'
-            WHATIFPATH='whatif.json'
-            PARAMS='${{ steps.imperitiveparams.outputs.PARAMOVERRIDESNOSECRETS}}'
-
-            az deployment group what-if --no-pretty-print -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS > $WHATIFPATH
-
-            if [[ -f $WHATIFPATH ]]
-            then
-                echo "The WhatIf json file was created"
-            fi
-
-            cat $WHATIFPATH
-
       - name: What If (workaround task)
         uses: Azure/cli@v1.0.7
         continue-on-error: true #Setting to true due to bug in the AzureCLI https://github.com/Azure/azure-cli/issues/19850
