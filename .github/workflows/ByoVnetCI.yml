@@ -659,10 +659,11 @@ jobs:
 
   SmokeTest_JavaApp-certmgr:
     needs: [Deploy, ReusableWF, Post-Deploy]
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-bumps
+    #uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-bumps
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.2
     with:
       ENVIRONMENT: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
-      REPOREF: "0.9.4"
+      REPOREF: "0.9.2"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
@@ -675,17 +676,18 @@ jobs:
       FORCEHELMCLEANINSTALL: true
       UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == 'true' }}
     secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      # AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      # AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      # AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 
   SmokeTest_JavaApp-appgw:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr]
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-bumps
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.2
     with:
       ENVIRONMENT: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
-      REPOREF: "0.9.4"
+      REPOREF: "0.9.2"
       RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       DNSDOMAIN: ${{needs.ReusableWF.outputs.ExistingDnsDomainName}}
@@ -698,9 +700,10 @@ jobs:
       FORCEHELMCLEANINSTALL: true
       UNINSTALLAFTERVERIFY: ${{ needs.ReusableWF.outputs.Uninstall == true }}
     secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      # AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      # AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      # AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 
   DeployVerify:
