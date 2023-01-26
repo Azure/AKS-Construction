@@ -174,7 +174,7 @@ jobs:
               default {  $ARTIFACTNAME = $filepath.replace("/","-").replace('-main.bicep','.bicep').replace('.bicep','.json') }
           }
           echo $ARTIFACTNAME
-          echo "ARTIFACTNAME=$ARTIFACTNAME" >> $GITHUB_OUTPUT
+          echo "ARTIFACTNAME=$ARTIFACTNAME" >> $Env:GITHUB_OUTPUT
 
       - name: Install Bicep
         run: az bicep install
