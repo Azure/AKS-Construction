@@ -62,6 +62,7 @@ on:
       - 'bicep/*'
       - ".github/workflows/ByoVnetPrivateCI.yml"
 
+
   schedule:
     # At 11:00pm, every Tuesday week
     - cron: '0 23 * * 2'
@@ -95,10 +96,10 @@ jobs:
   ReusableWF:
     runs-on: ubuntu-latest
     env:
-      RG: ${{ github.event.inputs.ResourceGroup }}
+      RG: ${{ github.event.inputs.ResourceGroup != '' && github.event.inputs.ResourceGroup || 'AksBicepAcc-Ci-PrivateCluster' }}
     outputs:
-      RG: ${{ github.event.inputs.ResourceGroup }}
-      Environment: ${{ github.event.inputs.environment }}
+      RG: ${{ github.event.inputs.ResourceGroup != '' && github.event.inputs.ResourceGroup || 'AksBicepAcc-Ci-PrivateCluster' }}
+      Environment: ${{ github.event.inputs.Environment != '' && github.event.inputs.Environment || 'csu' }}
       ParamFilePath: ${{ env.ParamFilePath }}
       LatestAkscVersionTag: ${{ steps.AkscTags.outputs.LATEST}}
     steps:
