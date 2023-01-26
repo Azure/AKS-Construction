@@ -38,6 +38,7 @@
             "privateClusterDnsMethod": "system",
             "dnsApiPrivateZoneId":"",
             "autoscale": true,
+            "osType": "Linux",
             "upgradeChannel": "none",
             "SystemPoolType": "CostOptimised",
             "nodepoolName": "npuser01",

@@ -208,6 +208,27 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         </Stack>
                     </Stack.Item>
                 </Stack>
+
+                <Stack horizontal tokens={{ childrenGap: 55 }}>
+                    <Stack.Item>
+                    <Label >OS Type</Label>
+                        <ChoiceGroup selectedKey={cluster.osType} onChange={(ev, { key }) => {  sliderUpdateFn({osType: key}) }}
+                            disabled={cluster.SystemPoolType==='none'}
+                            options={[
+                                {
+                                    "data-testid":'Linux',
+                                    key: 'Linux',
+                                    iconProps: { iconName: 'FollowUser' },
+                                    text: 'Linux'
+                                }, {
+                                    "data-testid":'Windows',
+                                    key: 'Windows',
+                                    iconProps: { iconName: 'ScaleVolume' },
+                                    text: 'Windows'
+                                }
+                            ]} />
+                    </Stack.Item>
+                </Stack>
             </Stack>
 
             <Separator className="notopmargin" />

@@ -1093,6 +1093,8 @@ var systemPoolPresets = {
 
 var systemPoolBase = {
   name:  JustUseSystemPool ? nodePoolName : 'npsystem'
+  vmSize: agentVMSize
+  count: agentCount
   mode: 'System'
   osType: 'Linux'
   maxPods: 30
