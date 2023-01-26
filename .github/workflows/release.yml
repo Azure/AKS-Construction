@@ -202,7 +202,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy Web App to Canary Pages
     if: ${{ always() }}
-    needs: [BuildWebApp , CreateRelease, CreateExtraBicepArtifacts]
+    needs: [BuildWebApp , CreateRelease, CreateExtraBicepArtifacts, TestWebApp]
     steps:
       - uses: actions/download-artifact@v3.0.2
         with:
