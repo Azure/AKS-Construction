@@ -391,7 +391,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             { deploy.keyVaultIPAllowlist && net.vnetprivateend && <MessageBar messageBarType={MessageBarType.info}> <Text >"Add current IP to KeyVault firewall" will enable KeyVaults  PublicNetworkAccess property</Text></MessageBar> }
 
             <Stack.Item>
-              <Checkbox id="akscTelemetryOpt" checked={deploy.enableTelemetry} onChange={(ev, v) => updateFn("enableTelemetry", v)} label="Enable telemetry feedback to Microsoft" />
+              <Checkbox inputProps={{ "data-testid": "akscTelemetryOpt-Checkbox"}} checked={deploy.enableTelemetry} onChange={(ev, v) => updateFn("enableTelemetry", v)} label="Enable telemetry feedback to Microsoft" />
             </Stack.Item>
         </Stack>
 
