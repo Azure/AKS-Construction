@@ -50,11 +50,11 @@ jobs:
         run: |
           $FilePath="${{ env.ParamDir }}"
 
-          #$FILELISTJSON=get-ChildItem -Path $FilePath -File '*.json' | select-object -ExpandProperty Name | ConvertTo-Json -Compress
-          $FILELIST=get-ChildItem -Path $FilePath -File '*.json' | select-object -ExpandProperty Name
-          $FILELISTJSON=[psobject] @{FileList = $FILELIST} | ConvertTo-Json -Compress
+          $FILELISTJSON=get-ChildItem -Path $FilePath -File '*.json' | select-object -ExpandProperty Name | ConvertTo-Json -Compress
+          #$FILELIST=get-ChildItem -Path $FilePath -File '*.json' | select-object -ExpandProperty Name
+          #$FILELISTJSON=[psobject] @{FileList = $FILELIST} | ConvertTo-Json -Compress
           Write-Output $FILELISTJSON
-          echo "FILELIST=$FILELISTJSON" >> $GITHUB_OUTPUT
+          echo "FILELIST=$FILELISTJSON" >> $Env:GITHUB_OUTPUT
           #echo "FILELIST=$FILELISTJSON" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
 
 
