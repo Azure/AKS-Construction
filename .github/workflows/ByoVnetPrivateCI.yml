@@ -117,9 +117,9 @@ jobs:
 
   CostEstimate:
     needs: [ReusableWF]
+    if: github.event_name != 'pull_request' || contains( github.event.pull_request.labels.*.name, 'test-deploy-privateconfig')
     #uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.0.0
     uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowpolish
-    #if: false #Workflow isn't reliably working at the moment. Need to give the project a PR.
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       environment: ${{needs.ReusableWF.outputs.Environment}}
