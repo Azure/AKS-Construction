@@ -57,7 +57,8 @@
                                 "agentCount": 2,
                                 "maxCount": 4,
                                 "upgradeChannel": "none",
-                                "DefenderForContainers": true
+                                "DefenderForContainers": true,
+                                "AksPaidSkuForSLA": false
                             },
                             "addons": {
                                 "networkPolicy": "none",
@@ -143,7 +144,8 @@
                                 "apisecurity": "private",
                                 "autoscale": true,
                                 "upgradeChannel": "none",
-                                "DefenderForContainers": true
+                                "DefenderForContainers": true,
+                                "AksPaidSkuForSLA": true
                             },
                             "addons": {
                                 "networkPolicy": "azure",
@@ -229,7 +231,8 @@
                                 "apisecurity": "private",
                                 "autoscale": true,
                                 "upgradeChannel": "none",
-                                "DefenderForContainers": true
+                                "DefenderForContainers": true,
+                                "AksPaidSkuForSLA": true
                             },
                             "addons": {
                                 "networkPolicy": "azure",

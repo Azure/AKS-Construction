@@ -70,7 +70,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             selectedKey={cluster.AksPaidSkuForSLA}
                             options={[
                                 { key: false, text: 'Free clusters with a service level objective (SLO) of 99.5%' },
-                                { key: true, text: 'Uptime SLA guarantees 99.95% availability of the Kubernetes API server endpoint for clusters that use Availability Zones' }
+                                { key: true, text: 'Uptime SLA guarantees 99.95% availability of the Kubernetes API server endpoint' }
                             ]}
                             onChange={(ev, { key }) => updateFn("AksPaidSkuForSLA", key)}
                         />
