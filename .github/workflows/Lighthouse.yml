@@ -7,6 +7,11 @@ on:
 
   workflow_dispatch:
 
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/Lighthouse.yml"
+
 env:
   websiteUrl: 'https://azure.github.io/AKS-Construction'
   outputdir: ${{ github.workspace }}/lighthouseOut
