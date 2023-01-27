@@ -92,6 +92,25 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     </Stack.Item>
                 </Stack>
 
+                <Stack.Item>
+                    <Label >OS Type</Label>
+                        <ChoiceGroup selectedKey={cluster.osType} onChange={(ev, { key }) => {  sliderUpdateFn({osType: key}) }}
+                            disabled={cluster.SystemPoolType==='none'}
+                            options={[
+                                {
+                                    "data-testid":'Linux',
+                                    key: 'Linux',
+                                    iconProps: { iconName: 'FollowUser' },
+                                    text: 'Linux'
+                                }, {
+                                    "data-testid":'Windows',
+                                    key: 'Windows',
+                                    iconProps: { iconName: 'ScaleVolume' },
+                                    text: 'Windows'
+                                }
+                            ]} />
+                    </Stack.Item>
+
                 <Stack horizontal tokens={{ childrenGap: 150 }}>
                     <Stack.Item>
                         <Label >Scale Type</Label>
@@ -128,6 +147,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         errorMessage={getError(invalidArray, 'nodepoolName')}
                         value={cluster.nodepoolName} />
                     </Stack.Item>
+
                 </Stack>
 
                 <Stack horizontal tokens={{ childrenGap: 55 }}>
@@ -209,26 +229,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     </Stack.Item>
                 </Stack>
 
-                <Stack horizontal tokens={{ childrenGap: 55 }}>
-                    <Stack.Item>
-                    <Label >OS Type</Label>
-                        <ChoiceGroup selectedKey={cluster.osType} onChange={(ev, { key }) => {  sliderUpdateFn({osType: key}) }}
-                            disabled={cluster.SystemPoolType==='none'}
-                            options={[
-                                {
-                                    "data-testid":'Linux',
-                                    key: 'Linux',
-                                    iconProps: { iconName: 'FollowUser' },
-                                    text: 'Linux'
-                                }, {
-                                    "data-testid":'Windows',
-                                    key: 'Windows',
-                                    iconProps: { iconName: 'ScaleVolume' },
-                                    text: 'Windows'
-                                }
-                            ]} />
-                    </Stack.Item>
-                </Stack>
             </Stack>
 
             <Separator className="notopmargin" />
