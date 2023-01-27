@@ -1108,30 +1108,6 @@ var systemPoolBase = {
   ]
 }
 
-// var userPoolVmProfile = {
-//   vmSize: agentVMSize
-//   count: agentCount
-//   minCount: autoScale ? agentCount : json('null')
-//   maxCount: autoScale ? agentCountMax : json('null')
-//   enableAutoScaling: autoScale
-//   availabilityZones: !empty(availabilityZones) ? availabilityZones : null
-// }
-
-// var agentPoolProfileUser = union({
-//   name: nodePoolName
-//   mode: 'User'
-//   osDiskType: osDiskType
-//   osDiskSizeGB: osDiskSizeGB
-//   osType: 'Linux'
-//   maxPods: maxPods
-//   type: 'VirtualMachineScaleSets'
-//   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
-//   upgradeSettings: {
-//     maxSurge: '33%'
-//   }
-//   enableNodePublicIP: enableNodePublicIP
-// }, userPoolVmProfile)
-
 var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])))
 
 
