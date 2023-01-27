@@ -55,18 +55,23 @@ jobs:
       PARAMFILE: ${{ env.ParamFilePath }}
       ExistingDnsDomainName: aksc.msftcsu.net
       ExistingDnsDomainRg: aksbicepacc-ci-deployvnet
-
+      LatestAkscVersionTag: ${{ steps.AkscTags.outputs.LATEST}}
     steps:
       - name: Dummy step
         run: echo "Resuable workflows can't be directly reference ENV/INPUTS (yet), so we need this job to proxy"
-
+      - name: Get latest AKSC version
+        id: AkscTags
+        run: |
+          LATEST=$(curl https://api.github.com/repos/Azure/AKS-Construction/releases/latest | jq '.tag_name' -r)
+          echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
+          
   ContourDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.ingressController == 'Contour' || github.event.inputs.ingressController == 'All') || github.event_name != 'workflow_dispatch'
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
-      templateVersion: "0.9.3-preview3"
+      templateVersion: ${{ needs.ReusableWF.outputs.LatestAkscVersionTag }} #"0.9.3-preview3"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
       templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
@@ -113,7 +118,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.ingressController == 'Nginx' || github.event.inputs.ingressController == 'All') || github.event_name != 'workflow_dispatch'
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
-      templateVersion: "0.9.3-preview3"
+      templateVersion: ${{ needs.ReusableWF.outputs.LatestAkscVersionTag }} #"0.9.3-preview3"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
       templateParams: resourceName=az-nginx agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
@@ -160,7 +165,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.ingressController == 'Traefik' || github.event.inputs.ingressController == 'All') || github.event_name != 'workflow_dispatch'
     with:
       environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
-      templateVersion: "0.9.3-preview3"
+      templateVersion: ${{ needs.ReusableWF.outputs.LatestAkscVersionTag }} #"0.9.3-preview3"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
       templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
