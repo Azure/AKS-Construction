@@ -18,7 +18,7 @@ param osDiskSizeGB int
 param agentCount int
 
 @description('The maximum number of nodes for the user node pool')
-param agentCountMax int
+param agentCountMax int = 3
 var autoScale = agentCountMax > agentCount
 
 @description('The maximum number of pods per node.')
@@ -46,7 +46,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = 
   name: AksName
 }
 
-resource nodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10-01' = {
+resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10-01' = {
   parent: aks
   name: PoolName
   properties: {

@@ -1111,7 +1111,7 @@ var systemPoolBase = {
 var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])))
 
 
-// output userNodePoolName string = nodePoolName
+output userNodePoolName string = nodePoolName
 output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 
 var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
@@ -1283,14 +1283,14 @@ output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.i
 param osType string
 var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
 
-module nodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
-  name: 'nodepool'
+module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
+  name: 'userNodePool'
   params: {
     AksName: aks.name
     PoolName: poolName
     subnetId: aksSubnetId
     agentCount: agentCount
-    agentCountMax: 3
+    agentCountMax: agentCountMax
     agentVMSize: agentVMSize
     maxPods: maxPods
     osDiskType: osDiskType
