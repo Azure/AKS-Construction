@@ -39,6 +39,7 @@
             "dnsApiPrivateZoneId":"",
             "autoscale": true,
             "osType": "Linux",
+            "osSKU": "Ubuntu",
             "upgradeChannel": "none",
             "SystemPoolType": "CostOptimised",
             "nodepoolName": "npuser01",

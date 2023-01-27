@@ -11,7 +11,7 @@ const optionRootClass = mergeStyles({
 
 export var VMs = vmSKUs
 
-export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
+export default function ({ defaults, tabValues, updateFn, featureFlag, invalidArray }) {
     const { net, addons, cluster, deploy } = tabValues
     const defenderFeatureFlag = featureFlag.includes('defender')
 
@@ -46,16 +46,25 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 updatevals = {...updatevals, agentCount: AGENT_COUNT_MAX }
             }
 
-            //clear when changing computeType
-            //if (newp.computeType)
-            //{
-              // updatevals = {...updatevals, vmSize: null}
-            //}
-
             return updatevals
         })
     }
 
+    function UpdateOsType(v) {
+        //update the OSType property, where this fn was called from
+        updateFn("osType", v)
+
+        //provide windows node pool optimised settings
+        if (v==='Windows') {
+            updateFn("nodepoolName", "npwin1")
+            updateFn("vmSize", "Standard_DS4_v2")
+            updateFn("osSKU", "Windows2019")
+         } else {
+            updateFn("nodepoolName", defaults.cluster.nodepoolName)
+            updateFn("vmSize", defaults.cluster.vmSize)
+            updateFn("osSKU", defaults.cluster.osSKU)
+         }
+    }
 
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
@@ -92,9 +101,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     </Stack.Item>
                 </Stack>
 
-                <Stack.Item>
-                    <Label >OS Type</Label>
-                        <ChoiceGroup selectedKey={cluster.osType} onChange={(ev, { key }) => {  sliderUpdateFn({osType: key}) }}
+                <Stack horizontal tokens={{ childrenGap: 150 }}>
+                    <Stack.Item>
+                        <Label>User Pool - OS Type</Label>
+                        <ChoiceGroup selectedKey={cluster.osType} onChange={(ev, { key }) => {  UpdateOsType(key) }}
                             disabled={cluster.SystemPoolType==='none'}
                             options={[
                                 {
@@ -110,6 +120,22 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                 }
                             ]} />
                     </Stack.Item>
+                    <Stack.Item>
+                        <Label>OS SKU</Label>
+                        <Dropdown
+                            selectedKey={cluster.osSKU}
+                            onChange={(ev, { key }) => updateFn("osSKU", key)}
+                            options={[
+                                { key: 'Ubuntu', text: 'Ubuntu', disabled:cluster.osType!=='Linux' },
+                                { key: 'Windows2019', text: 'Windows Server 2019', disabled:cluster.osType!=='Windows' },
+                                { key: 'Windows2022', text: 'Windows Server 2022', disabled:cluster.osType!=='Windows' }
+                            ]}
+                            styles={{ dropdown: { width: "100%" } }}
+                        />
+                    </Stack.Item>
+                </Stack>
+
+
 
                 <Stack horizontal tokens={{ childrenGap: 150 }}>
                     <Stack.Item>
@@ -141,7 +167,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         <TextField
                         placeholder='npuser01'
                         label="Node pool name"
-                        maxLength={12}
+                        maxLength={cluster.osType==='Windows' ? 6 : 12}
                         onChange={(ev, val) => updateFn('nodepoolName', val)}
                         required
                         errorMessage={getError(invalidArray, 'nodepoolName')}
@@ -179,10 +205,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     </Stack.Item>
 
                     <Stack.Item>
-                        <Label >Virtual Machine Node Selection</Label>
+                        <Label>Virtual Machine Node Selection</Label>
                         <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: 500 } }}>
                             <Dropdown
-
                                 selectedKey={cluster.vmSize}
                                 onChange={(ev, { key }) => updateFn("vmSize", key)}
                                 placeholder="Select VM Size"

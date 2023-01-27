@@ -1280,7 +1280,9 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
 
-param osType string
+param osType string = 'Linux'
+param osSKU string = 'Ubuntu'
+
 var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
 
 module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
@@ -1295,6 +1297,7 @@ module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
     maxPods: maxPods
     osDiskType: osDiskType
     osType: osType
+    osSKU: osSKU
     enableNodePublicIP: enableNodePublicIP
     osDiskSizeGB: osDiskSizeGB
   }

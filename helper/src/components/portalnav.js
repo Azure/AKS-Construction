@@ -397,7 +397,7 @@ export default function PortalNav({ config }) {
               <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} urlParams={urlParams} featureFlag={featureFlag} />
             </PivotItem>
             <PivotItem headerText={tabLabels.cluster} itemKey="cluster" onRenderItemLink={(a, b) => _customRenderer('cluster', a, b)} >
-              <ClusterTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
+              <ClusterTab defaults={defaults} tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
             </PivotItem>
             <PivotItem headerText={tabLabels.addons} itemKey="addons" onRenderItemLink={(a, b) => _customRenderer('addons', a, b)} >
               <AddonsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value, previewLink) => mergeState("addons", field, value, previewLink)} invalidArray={invalidArray['addons']} />

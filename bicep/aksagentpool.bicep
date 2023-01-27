@@ -40,7 +40,13 @@ param subnetId string
 ])
 param osType string
 
+param osSKU string
+
 param enableNodePublicIP bool
+
+param autoTaintWindows bool = false
+
+var taints = autoTaintWindows ? union(nodeTaints, ['sku=Windows:NoSchedule']) : nodeTaints
 
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
   name: AksName
@@ -58,6 +64,7 @@ resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@202
     enableAutoScaling: autoScale
     availabilityZones: !empty(availabilityZones) ? availabilityZones : null
     osDiskType: osDiskType
+    osSKU: osSKU
     osDiskSizeGB: osDiskSizeGB
     osType: osType
     maxPods: maxPods
@@ -66,7 +73,7 @@ resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@202
     upgradeSettings: {
       maxSurge: '33%'
     }
-    nodeTaints: nodeTaints
+    nodeTaints: taints
     nodeLabels: nodeLabels
     enableNodePublicIP: enableNodePublicIP
   }
