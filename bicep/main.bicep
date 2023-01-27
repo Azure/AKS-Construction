@@ -39,7 +39,7 @@ param byoAKSSubnetId string = ''
 param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
-var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) || azureFirewalls
+var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
 resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
@@ -119,6 +119,7 @@ module network './network.bicep' = if (custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
+    networkPluginIsKubenet: networkPlugin=='kubenet'
     vnetAddressPrefix: vnetAddressPrefix
     aksPrincipleId: createAksUai ? aksUai.properties.principalId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
@@ -516,7 +517,7 @@ module acrImport 'br/public:deployment-scripts/import-acr:2.0.1' = if (!empty(re
 |  |     |  | |  |\  \----.|  |____    \    /\    / /  _____  \  |  `----.|  `----.
 |__|     |__| | _| `._____||_______|    \__/  \__/ /__/     \__\ |_______||_______|*/
 
-@description('Create an Azure Firewall')
+@description('Create an Azure Firewall, requires custom_vnet')
 param azureFirewalls bool = false
 
 @description('Add application rules to the firewall for certificate management.')
