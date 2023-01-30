@@ -14,3 +14,11 @@ Specifically it shows;
 az group create -n win-demo -l northeurope
 az deployment group create -n win-demo -g win-demo -f ./samples/windows/main.bicep
 ```
+
+### Inspecting the deployed resources
+
+![deployed resources](winResourcesDeployed.png)
+
+### Inspecting the created nodepools
+
+![aks node pools](winNodePools.png)
