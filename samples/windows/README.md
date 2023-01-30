@@ -19,6 +19,6 @@ az deployment group create -n win-demo -g win-demo -f ./samples/windows/main.bic
 
 ![deployed resources](winResourcesDeployed.png)
 
-### Inspecting the created nodepools
+### Inspecting the created node pools
 
 ![aks node pools](winNodePools.png)
