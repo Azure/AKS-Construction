@@ -1280,7 +1280,10 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
 
+@allowed(['Linux','Windows'])
 param osType string = 'Linux'
+
+@allowed(['Ubuntu','Windows2019','Windows2022'])
 param osSKU string = 'Ubuntu'
 
 var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
