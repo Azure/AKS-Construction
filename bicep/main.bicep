@@ -40,7 +40,7 @@ param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
 var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
-resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (createAksUai) {
+resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
 }
@@ -119,6 +119,7 @@ module network './network.bicep' = if (custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
+    networkPluginIsKubenet: networkPlugin=='kubenet'
     vnetAddressPrefix: vnetAddressPrefix
     aksPrincipleId: createAksUai ? aksUai.properties.principalId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
@@ -516,7 +517,7 @@ module acrImport 'br/public:deployment-scripts/import-acr:2.0.1' = if (!empty(re
 |  |     |  | |  |\  \----.|  |____    \    /\    / /  _____  \  |  `----.|  `----.
 |__|     |__| | _| `._____||_______|    \__/  \__/ /__/     \__\ |_______||_______|*/
 
-@description('Create an Azure Firewall')
+@description('Create an Azure Firewall, requires custom_vnet')
 param azureFirewalls bool = false
 
 @description('Add application rules to the firewall for certificate management.')
@@ -842,6 +843,9 @@ param aad_tenant_id string = ''
 @description('Create, and use a new Log Analytics workspace for AKS logs')
 param omsagent bool = false
 
+@description('Enables the ContainerLogsV2 table to be of type Basic')
+param containerLogsV2BasicLogs bool = false
+
 @description('Enable RBAC using AAD')
 param enableAzureRBAC bool = false
 
@@ -916,6 +920,13 @@ param networkPlugin string = 'azure'
 ])
 @description('The network plugin type')
 param networkPluginMode string = ''
+
+@allowed([
+  ''
+  'cilium'
+])
+@description('Use Cilium dataplane (requires azure networkPlugin)')
+param ebpfDataplane string = ''
 
 @allowed([
   ''
@@ -1226,6 +1237,7 @@ var aksProperties = union({
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
     outboundType: aksOutboundTrafficType
+    ebpfDataplane: networkPlugin=='azure' ? ebpfDataplane : ''
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
   autoUpgradeProfile: {upgradeChannel: upgradeChannel}
@@ -1261,7 +1273,7 @@ defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
 keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-05-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
@@ -1516,6 +1528,17 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (cre
       dailyQuotaGb: logDataCap
     }} : {}
   )
+}
+
+
+resource containerLogsV2_Basiclogs 'Microsoft.OperationalInsights/workspaces/tables@2022-10-01' = if(containerLogsV2BasicLogs){
+  name: '${aks_law_name}/ContainerLogV2'
+  properties: {
+    plan: 'Basic'
+  }
+  dependsOn: [
+    aks
+  ]
 }
 
 //This role assignment enables AKS->LA Fast Alerting experience

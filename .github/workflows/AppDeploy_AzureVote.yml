@@ -70,7 +70,7 @@ jobs:
       AKSNAME: "${{ inputs.AKSNAME}}"
       RG: "${{ inputs.RG }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter inspection
         run: |
@@ -79,7 +79,7 @@ jobs:
           echo "AKS name is ${{ inputs.AKSNAME }}"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -133,8 +133,8 @@ jobs:
           helmsetparams="ingress.enabled=${ingress},ingress.class=${ingressClass},ingress.appGwPrivateIp=$privateIp,front.service.azureLbInternal=$privateIp,front.service.type=\"$serviceType\""
 
           #Set step outputs, which are used in subsequent steps to ensure the app is working
-          if [ $ingress == false ]; then echo "::set-output name=RESTYPE::svc"; else echo "::set-output name=RESTYPE::ing";  fi
-          if [ $privateIp == false ]; then echo "::set-output name=ISPUBLIC::true"; else echo "::set-output name=ISPUBLIC::false";  fi
+          if [ $ingress == false ]; then echo "RESTYPE=svc" >> $GITHUB_OUTPUT; else echo "RESTYPE=ing" >> $GITHUB_OUTPUT;  fi
+          if [ $privateIp == false ]; then echo "ISPUBLIC=true" >> $GITHUB_OUTPUT; else echo "ISPUBLIC=false" >> $GITHUB_OUTPUT;  fi
 
           #Helm Dry Run
           command="helm upgrade --namespace $NAMESP --create-namespace --install $APPNAME $HELMURI --set $helmsetparams --dry-run"
@@ -176,7 +176,7 @@ jobs:
           az aks command invoke -g $RG -n $AKSNAME -o json --command "${command}"| jq -r ".logs"
 
       - name: Wait for IP
-        env: 
+        env:
           SLEEPSECONDS: 10
         id: waitforip
         run: |
@@ -208,10 +208,10 @@ jobs:
             fi
           done
 
-          echo "::set-output name=IPADDRESS::$ipAddress"
+          echo "IPADDRESS=$ipAddress" >> $GITHUB_OUTPUT
 
       - name: Verify App is publicly reachable (from hosted GitHub runner)
-        env: 
+        env:
           SLEEPSECONDS: 10
         if: ${{ steps.installapp.outputs.ISPUBLIC}} = 'true'
         run: |
@@ -271,7 +271,7 @@ jobs:
 
       - name: Store any generated debug files as artifacts
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: DebugFiles
           path: debug*.json

@@ -24,7 +24,8 @@
                                 "SystemPoolType": "none",
                                 "autoscale": false,
                                 "upgradeChannel": "none",
-                                "DefenderForContainers": false
+                                "DefenderForContainers": false,
+                                "AksPaidSkuForSLA": false
                             },
                             "addons": {
                                 "registry": "none",
@@ -66,7 +67,8 @@
                             "cluster": {
                                 "SystemPoolType": "CostOptimised",
                                 "autoscale": false,
-                                "upgradeChannel": "none"
+                                "upgradeChannel": "none",
+                                "AksPaidSkuForSLA": false
                             },
                             "addons": {
                                 "registry": "none",
@@ -111,7 +113,8 @@
                             "cluster": {
                                 "SystemPoolType": "CostOptimised",
                                 "autoscale": true,
-                                "upgradeChannel": "stable"
+                                "upgradeChannel": "stable",
+                                "AksPaidSkuForSLA": true
                             },
                             "addons": {
                                 "registry": [
