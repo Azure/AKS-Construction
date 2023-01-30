@@ -25,7 +25,7 @@ on:
 env:
   RG: "AksBicepAcc-Ci-HelperValidate" #The resource group we're deploying to.
   ParamDir: ".github/workflows_dep/regressionparams/" #Path to parameter file
-  AZCLIVERSION: 2.30.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.43.0 #Pinning to a specific AZ CLI version
 
 jobs:
   GetParamFiles:
@@ -36,7 +36,7 @@ jobs:
       FILELIST: ${{ steps.getfiles.outputs.FILELIST}}
     steps:
       #Get the code files from the repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         run: |
@@ -52,17 +52,18 @@ jobs:
 
           $FILELISTJSON=get-ChildItem -Path $FilePath -File '*.json' | select-object -ExpandProperty Name | ConvertTo-Json -Compress
           Write-Output $FILELISTJSON
-          echo "::set-output name=FILELIST::$FILELISTJSON"
+          echo "FILELIST=$FILELISTJSON" >> $Env:GITHUB_OUTPUT
 
   Validation:
     needs: [GetParamFiles]
     strategy:
       matrix:
         files: ${{ fromJson(needs.GetParamFiles.outputs.FILELIST) }}
+      max-parallel: 4
 
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         run: |
@@ -92,10 +93,10 @@ jobs:
               Write-Output $paramfile.metadata.template
               Write-Output $paramfile.metadata.template.length
 
-              echo "::set-output name=DOPSRULE::true"
+              echo "DOPSRULE=true" >> $GITHUB_OUTPUT
             } else {
               Write-Output "Temnplate value NOT found"
-              echo "::set-output name=DOPSRULE::false"
+              echo "DOPSRULE=false" >> $GITHUB_OUTPUT
             }
           }
 
@@ -121,7 +122,7 @@ jobs:
           $params | ConvertTo-Json -Depth 4 | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -129,7 +130,7 @@ jobs:
           allow-no-subscriptions: false
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -139,7 +140,7 @@ jobs:
       - name: WhatIf Infrastructure deployment
         if: steps.paramfile.outputs.DOPSRULE == 'true'
         continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |

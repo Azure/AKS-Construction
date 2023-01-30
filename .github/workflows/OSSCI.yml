@@ -36,7 +36,7 @@ env:
   RG: "AksBicepAcc-Ci-OssCluster" #The resource group we're deploying to.
   RESNAME: "AksOss" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-  AZCLIVERSION: 2.42.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.43.0 #Pinning to a specific AZ CLI version
 
 permissions:
       id-token: write
@@ -74,7 +74,7 @@ jobs:
       templateVersion: ${{ needs.ReusableWF.outputs.LatestAkscVersionTag }} #"0.9.3-preview3"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
-      templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      templateParams: resourceName=az-contour agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_ enableTelemetry=${{ VARS.ENABLETELEMETRY == 'true' }}
       postScriptParams: "ingress=contour,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,certClusterIssuer=letsencrypt-staging,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanacnt"
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -121,7 +121,7 @@ jobs:
       templateVersion: ${{ needs.ReusableWF.outputs.LatestAkscVersionTag }} #"0.9.3-preview3"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
-      templateParams: resourceName=az-nginx agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      templateParams: resourceName=az-nginx agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_ enableTelemetry=${{ VARS.ENABLETELEMETRY == 'true' }}
       postScriptParams: "ingress=nginx,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanangx"
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -168,7 +168,7 @@ jobs:
       templateVersion: ${{ needs.ReusableWF.outputs.LatestAkscVersionTag }} #"0.9.3-preview3"
       rg: ${{ needs.ReusableWF.outputs.RG }}
       resourceName: azcontour
-      templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_
+      templateParams: resourceName=az-traefik agentCount=2 JustUseSystemPool=true custom_vnet=true enable_aad=true enableAzureRBAC=true adminPrincipalId=_USER_OBJECT_ID_ registries_sku=Standard acrPushRolePrincipalId=_USER_OBJECT_ID_ networkPolicy=azure azurepolicy=audit dnsZoneId=_DNS_ZONE_ID_ keyVaultAksCSI=true keyVaultCreate=true keyVaultOfficerRolePrincipalId=_USER_OBJECT_ID_ enableTelemetry=${{ VARS.ENABLETELEMETRY == 'true' }}
       postScriptParams: "ingress=traefik,ingressEveryNode=true,dnsZoneId=_DNS_ZONE_ID_,certEmail=gdogg@microsoft.com,certClusterIssuer=letsencrypt-staging,monitor=oss,enableMonitorIngress=true,grafanaHostname=grafanatrae"
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -207,44 +207,12 @@ jobs:
           curl --insecure -vvI $APPURL 2>&1 | awk 'BEGIN { cert=0 } /^\* SSL connection/ { cert=1 } /^\*/ { if (cert) print }'
 
   Cleanup:
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    uses: ./.github/workflows/cleanupRg.yml
     needs: [ContourGrafanaVerify, NginxGrafanaVerify, TraefikGrafanaVerify]
-    if: false #github.event_name != 'workflow_dispatch'
-    steps:
-      - name: Azure Login
-        uses: Azure/login@v1.4.6
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          enable-AzPSSession: true
-
-      - name: Install Pwsh modules
-        shell: pwsh
-        run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name Az.Accounts
-          Install-Module -Name Az.Resources
-
-      - name: Cleanup
-        shell: pwsh
-        run: |
-          $RG='${{ env.RG }}'
-
-          # Get all ARM resources from all resource groups
-          $rgToPurge = Get-AzResourceGroup -Name $RG
-          try {
-            #Remove all but public ip addresses
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            #Remove public ip addresses
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            #Final run to clean other dependant resources in parent-child graph
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
-          }
-          Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
-          {
-            write-output error
-          }
+    with:
+      environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      rg: ${{ needs.ReusableWF.outputs.RG }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

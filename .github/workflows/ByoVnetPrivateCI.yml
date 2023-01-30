@@ -62,6 +62,7 @@ on:
       - 'bicep/*'
       - ".github/workflows/ByoVnetPrivateCI.yml"
 
+
   schedule:
     # At 11:00pm, every Tuesday week
     - cron: '0 23 * * 2'
@@ -69,7 +70,7 @@ on:
 env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-Private.parameters.json"
   DEPNAME: 'DepPriv${{ github.run_number }}'
-  AZCLIVERSION: 2.36.0 #2.30.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.43.0 #2.36.0 #2.30.0 #Pinning to a specific AZ CLI version
 
 concurrency: ci-${{ github.event.inputs.environment }}-${{ github.ref }}
 
@@ -79,7 +80,7 @@ jobs:
     environment: ${{ github.event.inputs.environment }}
     if:  github.event_name == 'pull_request' || github.event.inputs.doWellArchitected == 'true'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
@@ -95,10 +96,10 @@ jobs:
   ReusableWF:
     runs-on: ubuntu-latest
     env:
-      RG: ${{ github.event.inputs.ResourceGroup }}
+      RG: ${{ github.event.inputs.ResourceGroup != '' && github.event.inputs.ResourceGroup || 'AksBicepAcc-Ci-PrivateCluster' }}
     outputs:
-      RG: ${{ github.event.inputs.ResourceGroup }}
-      Environment: ${{ github.event.inputs.environment }}
+      RG: ${{ github.event.inputs.ResourceGroup != '' && github.event.inputs.ResourceGroup || 'AksBicepAcc-Ci-PrivateCluster' }}
+      Environment: ${{ github.event.inputs.Environment != '' && github.event.inputs.Environment || 'csu' }}
       ParamFilePath: ${{ env.ParamFilePath }}
       LatestAkscVersionTag: ${{ steps.AkscTags.outputs.LATEST}}
     steps:
@@ -117,17 +118,17 @@ jobs:
 
   CostEstimate:
     needs: [ReusableWF]
-    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.0.0
-    if: false #Workflow isn't reliably working at the moment. Need to give the project a PR.
+    if: github.event_name != 'pull_request' || contains( github.event.pull_request.labels.*.name, 'test-deploy-privateconfig')
+    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@main
+    #uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowpolish
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       environment: ${{needs.ReusableWF.outputs.Environment}}
-      aceVersion: 1.0.0
+      aceVersion: 1.1-beta2
       templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/${{ needs.ReusableWF.outputs.LatestAkscVersionTag }}/main.json
       #templateParamFileURL: ${{ needs.ReusableWF.outputs.ParamFilePath }}
-      templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/${{ github.ref }}/${{ needs.ReusableWF.outputs.ParamFilePath }}
-      templateParams: 'resourceName=costy'
-      
+      templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}/${{ needs.ReusableWF.outputs.ParamFilePath }}
+
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -146,7 +147,7 @@ jobs:
       RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
@@ -183,24 +184,24 @@ jobs:
               REGION="${{ github.event.inputs.region }}"
             fi
             echo $REGION
-            echo "::set-output name=REGION::$REGION"
+            echo "REGION=$REGION" >> $GITHUB_OUTPUT
 
             if [ -z "${{ github.event.inputs.ResourceGroup }}" ]
             then
               echo "ResourceGroup parameter not available through GitHub event data, setting to default"
               echo $RG
-              echo "::set-output name=RESOURCEGROUP::$RG"
+              echo "RESOURCEGROUP=$RG" >> $GITHUB_OUTPUT
             else
               echo "Resource Group parameter found in GitHub event (${{ github.event.inputs.ResourceGroup }})"
-              echo "::set-output name=RESOURCEGROUP::${{ github.event.inputs.ResourceGroup }}"
+              echo "RESOURCEGROUP=${{ github.event.inputs.ResourceGroup }}" >> $GITHUB_OUTPUT
             fi
 
             NEWRESNAME="$RESNAME${REGION:0:3}"
             echo "Setting new Resource Name $NEWRESNAME"
-            echo "::set-output name=NEWRESNAME::$NEWRESNAME"
+            echo "NEWRESNAME=$NEWRESNAME" >> $GITHUB_OUTPUT
 
       - name: Azure Login
-        uses: Azure/login@v1.4.3
+        uses: Azure/login@v1.4.6
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -210,7 +211,7 @@ jobs:
       - name: Verify any active Azure Resource Group Deployments #These can mess up our deployment
         if: github.event.inputs.doDebugSteps == 'true'
         id: activedeps
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -223,7 +224,7 @@ jobs:
             #echo 'Verbose deployment list'
             #az deployment group list -g $RG --query "[].[properties.provisioningState, name]"
 
-            echo "::set-output name=RUNCOUNT::$RUNCOUNT" #outputting for conditon
+            echo "RUNCOUNT=$RUNCOUNT" >> $GITHUB_OUTPUT
 
             if [ "$RUNCOUNT" -ne "0" ]
             then
@@ -231,7 +232,7 @@ jobs:
             fi
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -239,7 +240,7 @@ jobs:
 
       - name: What If
         if: github.event.inputs.doDebugSteps == 'true'
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -261,7 +262,7 @@ jobs:
       REGION: ${{ needs.Validation.outputs.REGION }}
       RESNAME: ${{ needs.Validation.outputs.RESNAME }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         if: github.event.inputs.doVerifySteps == 'true'
@@ -288,7 +289,7 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1.4.3
+        uses: Azure/login@v1.4.6
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -297,27 +298,27 @@ jobs:
 
       - name: Deploy Infrastructure
         id:  deployAks
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
-            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME location=$REGION --name $DEPNAME --verbose
+            az deployment group create -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p resourceName=$RESNAME location=$REGION enableTelemetry=${{ VARS.ENABLETELEMETRY == 'true' }} --name $DEPNAME --verbose
 
             DEPSTATUS=$(az deployment operation group list --resource-group $RG --name $DEPNAME) #--query "[?properties.provisioningState=='Failed']"
             echo $DEPSTATUS
 
             #outputs
             AKSNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.aksClusterName.value" -o tsv)
-            echo "::set-output name=AKSNAME::$AKSNAME"
+            echo "AKSNAME=$AKSNAME" >> $GITHUB_OUTPUT
 
             AGNAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.applicationGatewayName.value" -o tsv)
-            echo "::set-output name=AGNAME::$AGNAME"
+            echo "AGNAME=$AGNAME" >> $GITHUB_OUTPUT
 
             LANAME=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsName.value" -o tsv)
-            echo "::set-output name=LANAME::$LANAME"
+            echo "LANAME=$LANAME" >> $GITHUB_OUTPUT
 
             LAWGUID=$(az deployment group show -n $DEPNAME -g $RG --query "properties.outputs.logAnalyticsGuid.value" -o tsv)
-            echo "::set-output name=LAWGUID::$LAWGUID"
+            echo "LAWGUID=$LAWGUID" >> $GITHUB_OUTPUT
 
       - name: Post Deploy Delay
         run: |
@@ -332,7 +333,7 @@ jobs:
           sleep $DELAY
 
       - name: Enable AGIC Addon
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -374,34 +375,12 @@ jobs:
           cmdOut=$(az aks command invoke -g $RG -n $AKSNAME -o json --command "${netpolicycmd}");
           echo $cmdOut;
 
-  SetupWF:
-    runs-on: ubuntu-latest
-    needs: [Validation]
-    env:
-      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
-    outputs:
-      RG: ${{ env.RG }}
-      ENVIRONMENT: ${{ steps.CalcEnv.outputs.ENVIRONMENT }}
-      #Uninstall: ${{ github.event.inputs.doSmokeTestUninstall }}
-    steps:
-      - name: Reusable workflow
-        run: |
-          echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
-          echo "So we need this job to be able to access the value in env.RG"
-          echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
-      - name: Environment Parse
-        id: CalcEnv
-        run: |
-          echo "${{ github.event.inputs.environment }}"
-          GHENV="${{ github.event.inputs.environment }}"
-          echo "::set-output name=ENVIRONMENT::$GHENV"
-
   SmokeTest_KnownGoodApp:
-    needs: [SetupWF, Deploy]
+    needs: [ReusableWF, Deploy]
     uses: ./.github/workflows/AppDeploy_AzureVote.yml
     with:
-      Environment: ${{ needs.SetupWF.outputs.ENVIRONMENT }}
-      RG: ${{ needs.SetupWF.outputs.RG }}
+      Environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      RG: ${{ needs.ReusableWF.outputs.RG }}
       AKSNAME: ${{ needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       APPNAME: azure-vote-public
@@ -412,12 +391,12 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Troubleshoot:
-    needs: [Deploy, SmokeTest_KnownGoodApp, SetupWF]
+    needs: [Deploy, SmokeTest_KnownGoodApp, ReusableWF]
     uses: ./.github/workflows/AksTroubleshooting.yml
     if: always()
     with:
       environment: ${{ github.event.inputs.environment }}
-      RG: ${{ needs.SetupWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
+      RG: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       AKSNAME: ${{needs.Deploy.outputs.AKSNAME}}
       AGNAME: ${{ needs.Deploy.outputs.AGNAME}}
       LANAME: ${{ needs.Deploy.outputs.LANAME}}
@@ -427,54 +406,13 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Infra_Destroy:
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    needs: [Validation, Deploy, Troubleshoot, SmokeTest_KnownGoodApp, Well_Architected]
-    env:
-      RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
+    uses: ./.github/workflows/cleanupRg.yml
     if: github.event_name == 'schedule'
-    steps:
-      - name: Job parameter check
-        if: github.event.inputs.doVerifySteps == 'true'
-        run: |
-          echo "RG is: $RG"
-          echo "Param file path is: ${{ env.ParamFilePath }}"
-          echo "Resource name is ${{ env.RESNAME }}"
-          echo "Deployment name is ${{ env.DEPNAME }}"
-
-      - name: Azure Login
-        uses: Azure/login@v1.4.3
-        with:
-          creds:  ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: false
-
-      - name: Install Pwsh modules
-        shell: pwsh
-        run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name Az.Accounts
-          Install-Module -Name Az.Resources
-
-      - name: Cleanup
-        shell: pwsh
-        run: |
-          $RG='${{ env.RG }}'
-
-          # Get all ARM resources from all resource groups
-          $rgToPurge = Get-AzResourceGroup -Name $RG
-          try {
-            #Remove all but public ip addresses
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            #Remove public ip addresses
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-
-            #Final run to clean other dependant resources in parent-child graph
-            Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
-          }
-          Catch #we're wanting to suppress failures in this step. If it fails to clean, the nightly automation will catch it.
-          {
-            write-output error
-          }
+    needs: [ReusableWF, Validation, Deploy, Troubleshoot, SmokeTest_KnownGoodApp, Well_Architected]
+    with:
+      environment: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
+      rg: ${{ needs.ReusableWF.outputs.RESOURCEGROUP }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

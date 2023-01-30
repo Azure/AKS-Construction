@@ -26,13 +26,16 @@ on:
         required: true
 
 env:
-  AZCLIVERSION: 2.34.1 #2.29.2 #2.26.0 #latest
+  AZCLIVERSION: 2.43.0 #2.34.1 #2.29.2 #2.26.0 #latest
 
 jobs:
   Validation:
     runs-on: ubuntu-latest
+    concurrency:
+      cancel-in-progress: true
+      group: FullDeploy${{ !github.event.pull_request.head.repo.fork && ( inputs.doAzCmdDeployment == 'true' || contains( github.event.pull_request.labels.*.name, 'test-deploy-wizard')) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Build and start node app (targeting Bicep in MAIN)
         if: inputs.REACT_APP_TEMPLATERELEASE == ''
@@ -109,7 +112,7 @@ jobs:
 
       - name: Persist exported Az Commands for visibility
         if: ${{ github.event.pull_request.head.repo.fork }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: AzCmds
           path: helper/azcmd-*.sh
@@ -137,7 +140,7 @@ jobs:
 
       - name: Azure Login
         if: ${{ !github.event.pull_request.head.repo.fork }}
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -146,7 +149,7 @@ jobs:
       #TODO: If/When we capture more AZ CMD's, then we'll want to iterate over files beginning with "azcmd"
       - name: Verify AZ Commands
         if: ${{ !github.event.pull_request.head.repo.fork }}
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         env:
           azcmdpath: "helper/azcmd-managed-private.sh"
         with:
@@ -167,7 +170,7 @@ jobs:
 
       - name: Full deploy test AZ Commands
         if: ${{ !github.event.pull_request.head.repo.fork && ( inputs.doAzCmdDeployment == 'true' || contains( github.event.pull_request.labels.*.name, 'test-deploy-wizard')) }}
-        uses: Azure/cli@v1.0.6
+        uses: Azure/cli@v1.0.7
         env:
           azcmdpath: "helper/azcmd-managed-private.sh"
         with:
@@ -186,14 +189,14 @@ jobs:
             #az deploymentg group delete -n ghpages  -g $RG
 
       - name: Persist test failure screengrabs as artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         if: failure()
         with:
           name: TestFailScreengrabs
           path: helper/failscreengrabs/*.png
 
       - name: Persist always screengrabs as artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         if: always()
         with:
           name: Screengrabs

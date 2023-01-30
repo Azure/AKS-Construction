@@ -100,7 +100,7 @@ jobs:
         run: mkdir jsonout
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v1.4.6
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -177,7 +177,7 @@ jobs:
 
       - name: Save Json output as Artifact
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: Json out
           path: jsonout/*.json
@@ -227,7 +227,7 @@ jobs:
 
     name: Create extra bicep artifacts
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Set better name of artifact
         id: artifactName
@@ -243,7 +243,7 @@ jobs:
               default {  $ARTIFACTNAME = $filepath.replace("/","-").replace('-main.bicep','.bicep').replace('.bicep','.json') }
           }
           echo $ARTIFACTNAME
-          echo "::set-output name=ARTIFACTNAME::$ARTIFACTNAME"
+          echo "ARTIFACTNAME=$ARTIFACTNAME" >> $Env:GITHUB_OUTPUT
 
       - name: Install Bicep
         run: az bicep install
@@ -281,7 +281,7 @@ jobs:
 
     name: Add extra release file-artifacts
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Verify File
         run: cat ${{ matrix.files }}
