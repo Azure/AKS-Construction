@@ -5,7 +5,7 @@ import { adv_stackstyle, hasError, getError } from './common'
 
 
 export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
-    const { addons, net } = tabValues
+    const { cluster, addons, net } = tabValues
     const osmFeatureFlag = featureFlag.includes('osm')
     const wiFeatureFlag = featureFlag.includes('workloadId')
     return (
@@ -67,6 +67,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Label required={true}>
                     Ingress Controllers: Securely expose your applications via Layer 7 HTTP(S) proxies
                 </Label>
+                {cluster.osType==='Windows' && addons.ingress !== 'none' &&
+                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.warning}>Windows OS: Not all Ingress Controllers support deployment on Windows Nodes, it is common to run another Linux nodepool for Kubernetes resources that do have Windows compatability. See the <a href="https://github.com/Azure/AKS-Construction/tree/main/samples/windows">AKS Construction samples directory for a triple nodepool sample.</a></MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.ingress}
