@@ -135,7 +135,7 @@ jobs:
   Validation:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    if: ${{!github.event.pull_request.head.repo.fork}} && ${{!github.event.pull_request.draft}}
+    if: ${{ !github.event.pull_request.head.repo.fork && !github.event.pull_request.draft }}
     outputs:
       RESOURCEGROUP: ${{ steps.params.outputs.RESOURCEGROUP}}
       REGION: ${{ steps.params.outputs.REGION}}
@@ -155,8 +155,7 @@ jobs:
           echo "EventTrigger name is ${{github.event_name}}"
           echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
           echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
-          echo "PR draft :  ${{github.event.pull_request.draft}}"
-          echo "Global Condition :  ${{env.GLOBCONDITION}}"
+          echo "PR draft :  ${{github.event.pull_request.draft}}"  
           echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
           echo "doDebugSteps is ${{ github.event.inputs.doDebugSteps }}"
           echo "doVerifySteps is ${{ github.event.inputs.doVerifySteps }}"
