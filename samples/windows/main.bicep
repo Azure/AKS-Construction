@@ -37,9 +37,11 @@ module aks '../../bicep/main.bicep' = {
     azurepolicy: 'audit'
     agentCount:1
     agentCountMax:3
-    JustUseSystemPool: true
+    JustUseSystemPool: false
     SystemPoolType: 'CostOptimised'
     byoAKSSubnetId: vnet.properties.subnets[0].id
+    osType: 'Linux'
+    osSKU: 'Ubuntu'
   }
 }
 
@@ -51,9 +53,11 @@ module windowsNodePool '../../bicep/aksagentpool.bicep' = {
     subnetId: vnet.properties.subnets[0].id
     agentCount: 1
     agentCountMax: 3
-    agentVMSize: 'Standard_B2s'
+    agentVMSize: 'Standard_D4s_v3'
     maxPods: 10
     osDiskType: 'Managed'
     osType: 'Windows'
+    osSKU: 'Windows2019'
+    autoTaintWindows: true
   }
 }
