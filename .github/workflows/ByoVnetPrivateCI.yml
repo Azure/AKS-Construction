@@ -156,7 +156,7 @@ jobs:
       - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
-        if: github.event.inputs.doVerifySteps == 'true'
+        if: github.event.inputs.doVerifySteps !== 'false'
         run: |
           echo "RG is: $RG"
           echo "Param file path is: ${{ env.ParamFilePath }}"
@@ -164,6 +164,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "EventTrigger name is ${{github.event_name}}"
           echo "Default Deny is ${{ github.event.inputs.defaultdeny }}"
+          echo '${{ toJSON(github.event) }}'
 
       - name: Arm Parameter file check
         if: github.event.inputs.doDebugSteps == 'true'
