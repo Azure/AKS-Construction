@@ -144,7 +144,7 @@ jobs:
   Validation:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    if: ${{ !github.event.pull_request.head.repo.fork }}
+    if: ${{ !github.event.pull_request.head.repo.fork && !github.event.pull_request.draft }}
     env: #Default values if GitHub event obj is empty (eg. Initiated by PR)
       RG: 'AksBicepAcc-Ci-PrivateCluster'
       RESNAME: 'Prv'
