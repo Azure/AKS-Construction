@@ -165,6 +165,8 @@ module aksNodePools '../../bicep/aksagentpool.bicep'  = [for pool in extraAksNod
     agentVMSize: 'Standard_B2s'
     maxPods: 10
     osDiskType: 'Managed'
+    osType: 'Linux'
+    osSKU: 'Ubuntu'
     // nodeTaints: [
     //   '${nodeTaintKey}=${pool}:${nodeTaintEffect}'
     // ]

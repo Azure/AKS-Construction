@@ -6,19 +6,19 @@ param PoolName string
 param availabilityZones array = []
 
 @description('OS disk type')
-param osDiskType string = 'Ephemeral'
+param osDiskType string
 
 @description('VM SKU')
-param agentVMSize string = 'Standard_DS3_v2'
+param agentVMSize string
 
 @description('Disk size in GB')
 param osDiskSizeGB int = 0
 
 @description('The number of agents for the user node pool')
-param agentCount int = 3
+param agentCount int = 1
 
 @description('The maximum number of nodes for the user node pool')
-param agentCountMax int = 0
+param agentCountMax int = 3
 var autoScale = agentCountMax > agentCount
 
 @description('The maximum number of pods per node.')
@@ -34,17 +34,25 @@ param nodeLabels object = {}
 param subnetId string
 
 @description('OS Type for the node pool')
-@allowed([
-  'Linux'
-  'Windows'
-])
-param osType string = 'Linux'
+@allowed(['Linux','Windows'])
+param osType string
+
+@allowed(['Ubuntu','Windows2019','Windows2022'])
+param osSKU string
+
+@description('Assign a public IP per node')
+param enableNodePublicIP bool = false
+
+@description('Apply a default sku taint to Windows node pools')
+param autoTaintWindows bool = false
+
+var taints = autoTaintWindows ? union(nodeTaints, ['sku=Windows:NoSchedule']) : nodeTaints
 
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
   name: AksName
 }
 
-resource nodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10-01' = {
+resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10-01' = {
   parent: aks
   name: PoolName
   properties: {
@@ -56,6 +64,7 @@ resource nodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10
     enableAutoScaling: autoScale
     availabilityZones: !empty(availabilityZones) ? availabilityZones : null
     osDiskType: osDiskType
+    osSKU: osSKU
     osDiskSizeGB: osDiskSizeGB
     osType: osType
     maxPods: maxPods
@@ -64,7 +73,8 @@ resource nodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10
     upgradeSettings: {
       maxSurge: '33%'
     }
-    nodeTaints: nodeTaints
+    nodeTaints: taints
     nodeLabels: nodeLabels
+    enableNodePublicIP: enableNodePublicIP
   }
 }
