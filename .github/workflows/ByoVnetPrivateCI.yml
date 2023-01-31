@@ -52,16 +52,21 @@ on:
         type: boolean
         required: false
 
-  push:
-    paths:
-      - 'bicep/*'
+# Push trigger is excessive, we already trigger in PR.
+#  push:
+#    paths:
+#      - 'bicep/*'
 
   pull_request:
     branches: [ main ]
     paths:
       - 'bicep/*'
       - ".github/workflows/ByoVnetPrivateCI.yml"
-
+    types: #Type filtering should stop CI/CD running on draft status workflows
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
 
   schedule:
     # At 11:00pm, every Tuesday week
