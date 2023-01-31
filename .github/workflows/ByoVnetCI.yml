@@ -111,7 +111,7 @@ jobs:
         with:
           modules: 'PSRule.Rules.CAF'
           inputPath: "${{ env.ParamFilePath }}"
-          prerelease: true
+          prerelease: false
 
   CostEstimate:
     needs: [ReusableWF, Validation]
