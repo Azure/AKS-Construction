@@ -97,6 +97,7 @@ jobs:
           modules: 'PSRule.Rules.Azure'
           inputType: repository
           inputPath: "${{ env.ParamFilePath }}"
+          prerelease: true
 
   ReusableWF:
     runs-on: ubuntu-latest
