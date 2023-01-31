@@ -4,12 +4,6 @@ name: InfraCI - ByoVnet cluster
 # 2. IAM Owner on the Vnet (we're making role assignments)
 
 on:
-  push:
-    paths:
-      #- ".github/workflows/ByoVnetCI.yml"
-      - ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
-      - "bicep/*"
-
   pull_request:
     branches: [main]
     paths:
