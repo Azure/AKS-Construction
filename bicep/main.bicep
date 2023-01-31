@@ -1104,6 +1104,8 @@ var systemPoolPresets = {
 
 var systemPoolBase = {
   name:  JustUseSystemPool ? nodePoolName : 'npsystem'
+  vmSize: agentVMSize
+  count: agentCount
   mode: 'System'
   osType: 'Linux'
   maxPods: 30
@@ -1117,31 +1119,7 @@ var systemPoolBase = {
   ]
 }
 
-var userPoolVmProfile = {
-  vmSize: agentVMSize
-  count: agentCount
-  minCount: autoScale ? agentCount : json('null')
-  maxCount: autoScale ? agentCountMax : json('null')
-  enableAutoScaling: autoScale
-  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
-}
-
-var agentPoolProfileUser = union({
-  name: nodePoolName
-  mode: 'User'
-  osDiskType: osDiskType
-  osDiskSizeGB: osDiskSizeGB
-  osType: 'Linux'
-  maxPods: maxPods
-  type: 'VirtualMachineScaleSets'
-  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
-  upgradeSettings: {
-    maxSurge: '33%'
-  }
-  enableNodePublicIP: enableNodePublicIP
-}, userPoolVmProfile)
-
-var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
+var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])))
 
 
 output userNodePoolName string = nodePoolName
@@ -1313,6 +1291,34 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
 }
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+
+@allowed(['Linux','Windows'])
+@description('The User Node pool OS')
+param osType string = 'Linux'
+
+@allowed(['Ubuntu','Windows2019','Windows2022'])
+@description('The User Node pool OS SKU')
+param osSKU string = 'Ubuntu'
+
+var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
+
+module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
+  name: 'userNodePool'
+  params: {
+    AksName: aks.name
+    PoolName: poolName
+    subnetId: aksSubnetId
+    agentCount: agentCount
+    agentCountMax: agentCountMax
+    agentVMSize: agentVMSize
+    maxPods: maxPods
+    osDiskType: osDiskType
+    osType: osType
+    osSKU: osSKU
+    enableNodePublicIP: enableNodePublicIP
+    osDiskSizeGB: osDiskSizeGB
+  }
+}
 
 @description('This output can be directly leveraged when creating a ManagedId Federated Identity')
 output aksOidcFedIdentityProperties object = {

@@ -37,6 +37,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         || ( cluster.SystemPoolType === 'none' && (cluster.nodepoolName.toLowerCase() !== defaults.cluster.systemNodepoolName && cluster.nodepoolName.toLowerCase() !== defaults.cluster.nodepoolName )))
         && { nodePoolName: cluster.nodepoolName }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
+    ...(cluster.osType !== defaults.cluster.osType && { osType: cluster.osType}),
+    ...(cluster.osSKU !== defaults.cluster.osSKU && { osSKU: cluster.osSKU}),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
          custom_vnet: true,
