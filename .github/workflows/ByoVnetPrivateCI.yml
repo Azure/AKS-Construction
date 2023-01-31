@@ -164,6 +164,7 @@ jobs:
           echo "EventTrigger name is ${{github.event_name}}"
           echo "Event action type is ${{github.event.action}}"
           echo "Event state is ${{github.event.pull_request.state}}"
+          echo "Event PR is draft ${{github.event.pull_request.draft}}
           echo "Default Deny is ${{ github.event.inputs.defaultdeny }}"
 
       - name: Arm Parameter file check
