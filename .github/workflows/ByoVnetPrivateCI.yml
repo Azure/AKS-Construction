@@ -162,8 +162,8 @@ jobs:
           echo "Resource name is ${{ env.RESNAME }}"
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "EventTrigger name is ${{github.event_name}}"
+          echo "Event action type is ${{github.event.action}}"
           echo "Default Deny is ${{ github.event.inputs.defaultdeny }}"
-          echo '${{ toJSON(github.event) }}'
 
       - name: Arm Parameter file check
         if: github.event.inputs.doDebugSteps == 'true'
