@@ -156,7 +156,6 @@ jobs:
       - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
-        if: github.event.inputs.doVerifySteps !== 'false'
         run: |
           echo "RG is: $RG"
           echo "Param file path is: ${{ env.ParamFilePath }}"
