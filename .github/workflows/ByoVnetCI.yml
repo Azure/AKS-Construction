@@ -94,6 +94,7 @@ jobs:
         with:
           modules: 'PSRule.Rules.Azure'
           inputPath: "${{ env.ParamFilePath }}"
+          version: 'main'
 
       # In addition to the Well Architected analysis, we can also leverage the CAF rules
       # Run analysis against PSRule for Cloud Adoption Framework
@@ -103,6 +104,7 @@ jobs:
         with:
           modules: 'PSRule.Rules.CAF'
           inputPath: "${{ env.ParamFilePath }}"
+          version: 'main'
 
   CostEstimate:
     needs: [ReusableWF, Validation]
