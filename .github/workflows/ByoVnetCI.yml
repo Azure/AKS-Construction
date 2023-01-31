@@ -78,7 +78,6 @@ permissions:
 concurrency: ci-${{ github.ref }}
 
 env:
-  GLOBCONDITION: ${{!github.event.pull_request.head.repo.fork}} && ${{!github.event.pull_request.draft}}
   AZCLIVERSION: 2.43.0 #2.30.0 #2.29.2 #2.26.0 #latest
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "Byov"
@@ -136,9 +135,9 @@ jobs:
   Validation:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    if: ${{ env.GLOBCONDITION }}
+    if: ${{!github.event.pull_request.head.repo.fork}} && ${{!github.event.pull_request.draft}}
     outputs:
-      RESOURCEGROUP:  ${{ steps.params.outputs.RESOURCEGROUP}}
+      RESOURCEGROUP: ${{ steps.params.outputs.RESOURCEGROUP}}
       REGION: ${{ steps.params.outputs.REGION}}
       RESNAME: ${{ steps.params.outputs.NEWRESNAME}}
       PARAMOVERRIDES: ${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}} #This won't work if the string includes any SECRETS!!!
