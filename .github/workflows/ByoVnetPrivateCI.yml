@@ -163,7 +163,7 @@ jobs:
           echo "Deployment name is ${{ env.DEPNAME }}"
           echo "EventTrigger name is ${{github.event_name}}"
           echo "Event action type is ${{github.event.action}}"
-          echo "Event state is ${{github.event.state}}"
+          echo "Event state is ${{github.event.pull_request.state}}"
           echo "Default Deny is ${{ github.event.inputs.defaultdeny }}"
 
       - name: Arm Parameter file check
