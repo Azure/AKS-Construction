@@ -78,6 +78,7 @@ permissions:
 concurrency: ci-${{ github.ref }}
 
 env:
+  GLOBCONDITION: ${{!github.event.pull_request.head.repo.fork}} && ${{!github.event.pull_request.draft}}
   AZCLIVERSION: 2.43.0 #2.30.0 #2.29.2 #2.26.0 #latest
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "Byov"
@@ -156,6 +157,7 @@ jobs:
           echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
           echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
           echo "PR draft :  ${{github.event.pull_request.draft}}"
+          echo "Global Condition :  ${{env.GLOBCONDITION}}"
           echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
           echo "doDebugSteps is ${{ github.event.inputs.doDebugSteps }}"
           echo "doVerifySteps is ${{ github.event.inputs.doVerifySteps }}"
