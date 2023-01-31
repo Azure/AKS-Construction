@@ -19,7 +19,12 @@ on:
     paths:
       - "bicep/*"
       - ".github/workflows/StandardCI.yml"
-
+    types: #Type filtering should stop CI/CD running on draft status workflows
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      
   #Run on a weekly schedule
   schedule:
     # At 11:00pm, every Tuesday week
@@ -40,6 +45,7 @@ concurrency: "StanCI-${{ github.event.inputs.Environment != '' && github.event.i
 jobs:
   ReusableWF:
     runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.head.repo.fork && !github.event.pull_request.draft }}
     outputs:
       RG: ${{ env.RG }}
       ENVIRONMENT: ${{ github.event.inputs.Environment }}
@@ -53,7 +59,7 @@ jobs:
   Validation:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    if: ${{ !github.event.pull_request.head.repo.fork }}
+    if: ${{ !github.event.pull_request.head.repo.fork && !github.event.pull_request.draft }}
 
     steps:
       #Get the code files from the repo
