@@ -102,6 +102,7 @@ jobs:
 
   ReusableWF:
     runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.draft }}
     env:
       RG: ${{ github.event.inputs.ResourceGroup != '' && github.event.inputs.ResourceGroup || 'AksBicepAcc-Ci-PrivateCluster' }}
     outputs:
