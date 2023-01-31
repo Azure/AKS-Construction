@@ -88,7 +88,8 @@ jobs:
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
       - name: PSRule for Azure - Well Architected
-        uses: microsoft/ps-rule@v2.7.0
+        #uses: microsoft/ps-rule@v2.7.0
+        uses: microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.Azure'
@@ -97,7 +98,7 @@ jobs:
       # In addition to the Well Architected analysis, we can also leverage the CAF rules
       # Run analysis against PSRule for Cloud Adoption Framework
       - name: PSRule for CAF
-        uses: microsoft/ps-rule@v2.7.0
+        uses: microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.CAF'
