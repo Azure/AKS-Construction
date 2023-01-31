@@ -401,7 +401,7 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
   Troubleshoot:
-    needs: [Validation, Deploy, SmokeTest_KnownGoodApp, ReusableWF]
+    needs: [Deploy, SmokeTest_KnownGoodApp, ReusableWF]
     uses: ./.github/workflows/AksTroubleshooting.yml
     if: always()
     with:
