@@ -4,18 +4,25 @@ name: InfraCI - ByoVnet cluster
 # 2. IAM Owner on the Vnet (we're making role assignments)
 
 on:
-  push:
-    paths:
-      #- ".github/workflows/ByoVnetCI.yml"
-      - ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
-      - "bicep/*"
+# Triggering on push causes a problem with the Azure Login Federated Identity Subject Claim.
+# Disabling this trigger as having Push + PR is OTT
+#  push:
+#    paths:
+#      #- ".github/workflows/ByoVnetCI.yml"
+#      - ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
+#      - "bicep/*"
 
   pull_request:
     branches: [main]
     paths:
       - "bicep/*"
       - ".github/workflows/ByoVnetCI.yml"
-
+    types: #Type filtering should stop CI/CD running on draft status workflows
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      
   #Running on a schedule helps trap issues like Kubernetes versions not being available in the region, or Well Architected recommendations changing
   schedule:
     # At 11:00pm, every Wednesday week
