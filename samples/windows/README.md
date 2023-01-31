@@ -22,3 +22,8 @@ az deployment group create -n win-demo -g win-demo -f ./samples/windows/main.bic
 ### Inspecting the created node pools
 
 ![aks node pools](winNodePools.png)
+
+## References
+
+- [Windows AKS Baseline](https://github.com/Azure/aks-baseline-windows)
+- [Windows on AKS FAQ](https://learn.microsoft.com/azure/aks/windows-faq?tabs=azure-cli)
