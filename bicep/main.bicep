@@ -1293,9 +1293,11 @@ output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
 
 @allowed(['Linux','Windows'])
+@description('The User Node pool OS')
 param osType string = 'Linux'
 
 @allowed(['Ubuntu','Windows2019','Windows2022'])
+@description('The User Node pool OS SKU')
 param osSKU string = 'Ubuntu'
 
 var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
