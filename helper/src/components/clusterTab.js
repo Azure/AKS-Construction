@@ -58,7 +58,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
         if (v==='Windows') {
             updateFn("nodepoolName", "npwin1")
             updateFn("vmSize", "Standard_DS4_v2")
-            updateFn("osSKU", "Windows2019")
+            updateFn("osSKU", "Windows2022")
          } else {
             updateFn("nodepoolName", defaults.cluster.nodepoolName)
             updateFn("vmSize", defaults.cluster.vmSize)
@@ -127,7 +127,6 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                             onChange={(ev, { key }) => updateFn("osSKU", key)}
                             options={[
                                 { key: 'Ubuntu', text: 'Ubuntu', disabled:cluster.osType!=='Linux' },
-                                { key: 'Windows2019', text: 'Windows Server 2019', disabled:cluster.osType!=='Windows' },
                                 { key: 'Windows2022', text: 'Windows Server 2022', disabled:cluster.osType!=='Windows' }
                             ]}
                             styles={{ dropdown: { width: "100%" } }}
