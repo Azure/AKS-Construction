@@ -22,7 +22,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-      
+
   #Running on a schedule helps trap issues like Kubernetes versions not being available in the region, or Well Architected recommendations changing
   schedule:
     # At 11:00pm, every Wednesday week
@@ -117,8 +117,7 @@ jobs:
   CostEstimate:
     needs: [ReusableWF, Validation]
     if: github.event_name != 'pull_request' ||  contains( github.event.pull_request.labels.*.name, 'test-deploy-byoconfig')
-    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@main
-    #uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowpolish
+    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.1
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }}
       environment: ${{needs.ReusableWF.outputs.Environment}}
@@ -155,7 +154,7 @@ jobs:
           echo "EventTrigger name is ${{github.event_name}}"
           echo "PR contains bug :  ${{contains(github.event.pull_request.labels.*.name, 'bug')}}"
           echo "PR labels :  ${{github.event.pull_request.labels.*.name}}"
-          echo "PR draft :  ${{github.event.pull_request.draft}}"  
+          echo "PR draft :  ${{github.event.pull_request.draft}}"
           echo "AZCLIVERSION is ${{ env.AZCLIVERSION }}"
           echo "doDebugSteps is ${{ github.event.inputs.doDebugSteps }}"
           echo "doVerifySteps is ${{ github.event.inputs.doVerifySteps }}"
