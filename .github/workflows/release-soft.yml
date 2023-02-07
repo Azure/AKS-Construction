@@ -66,6 +66,18 @@ jobs:
             exit 1
           fi
 
+      - name: Verify NO changes to Helper dependencies file
+        run: |
+          bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat helper/src/dependencies.json)
+          if [ -z "$bicepChanges" ]
+          then
+            echo No Changes In Helper dependencies file found
+          else
+            echo Helper dependencies file Changes Detected, exiting
+            echo $bicepChanges
+            exit 1
+          fi
+
       - name: Verify changes to the helper directory
         run: |
           bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat helper/)
