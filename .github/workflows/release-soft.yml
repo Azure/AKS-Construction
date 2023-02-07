@@ -13,10 +13,10 @@ on:
 jobs:
   VerifySoftPossible:
     runs-on: ubuntu-latest
+    name: Is Soft Release Possible
     outputs:
       LatestAkscVersionTag: ${{ steps.AkscTags.outputs.LATEST}}
     steps:
-      #- uses: actions/checkout@v3.3.0
       - uses: actions/checkout@v3.3.0
         with:
           fetch-depth: 0
@@ -27,7 +27,7 @@ jobs:
           LATEST=$(curl https://api.github.com/repos/Azure/AKS-Construction/releases/latest | jq '.tag_name' -r)
           echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
 
-      - name: Output diff from main to the latest release
+      - name: Output git diff from main to the latest release
         run: git diff ${{ steps.AkscTags.outputs.LATEST }} --stat
 
       - name: Verify NO changes to bicep directory
@@ -38,6 +38,7 @@ jobs:
             echo No Changes In Bicep directory found
           else
             echo Bicep Changes Detected, exiting
+            echo $bicepChanges
             exit 1
           fi
 
