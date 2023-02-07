@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [main]
+    branches: [main, gb-softrelease]
 
 jobs:
   VerifySoftPossible:
@@ -38,6 +38,30 @@ jobs:
             echo No Changes In Bicep directory found
           else
             echo Bicep Changes Detected, exiting
+            echo $bicepChanges
+            exit 1
+          fi
+
+      - name: Verify NO changes to postdeploy directory
+        run: |
+          bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat postdeploy/)
+          if [ -z "$bicepChanges" ]
+          then
+            echo No Changes In postdeploy directory found
+          else
+            echo postdeploy Changes Detected, exiting
+            echo $bicepChanges
+            exit 1
+          fi
+
+      - name: Verify NO changes to Helper config file
+        run: |
+          bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat helper/src/config.json)
+          if [ -z "$bicepChanges" ]
+          then
+            echo No Changes In Helper config file found
+          else
+            echo Helper config file Changes Detected, exiting
             echo $bicepChanges
             exit 1
           fi
