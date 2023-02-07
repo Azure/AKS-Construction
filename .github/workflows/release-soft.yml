@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [main, gb-softrelease]
+    branches: [main]
 
 jobs:
   VerifySoftPossible:
