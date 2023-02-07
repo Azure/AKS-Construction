@@ -16,7 +16,10 @@ jobs:
     outputs:
       LatestAkscVersionTag: ${{ steps.AkscTags.outputs.LATEST}}
     steps:
+      #- uses: actions/checkout@v3.3.0
       - uses: actions/checkout@v3.3.0
+        with:
+          fetch-depth: 0
 
       - name: Get latest AKSC version
         id: AkscTags
@@ -109,7 +112,6 @@ jobs:
   DeployWebAppToCanary:
     runs-on: ubuntu-latest
     name: Deploy Web App to Canary-Page branch
-    if: ${{ always() }}
     needs: [BuildWebApp , TestWebApp, VerifySoftPossible]
     env:
       templateRelease: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
