@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [main]
+    branches: [main, gb-softrelease]
 
 jobs:
   VerifySoftPossible:
@@ -53,19 +53,8 @@ jobs:
             echo $bicepChanges
           fi
 
-  SetupWF:
-    runs-on: ubuntu-latest
-    outputs:
-      REACT_APP_TEMPLATERELEASE: ${{ github.event.inputs.templateRelease }}
-    steps:
-      - name: Reusable workflow
-        run: |
-          echo "Resuable workflows can't be directly passed ENV/INPUTS (yet)"
-          echo "So we need this job to be able to access the value in env.RG"
-          echo "see https://github.community/t/reusable-workflow-env-context-not-available-in-jobs-job-id-with/206111"
-
   TestWebApp:
-    needs: [SetupWF, VerifySoftPossible]
+    needs: [VerifySoftPossible]
     uses: ./.github/workflows/ghpagesTest.yml
     with:
       REACT_APP_TEMPLATERELEASE: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
