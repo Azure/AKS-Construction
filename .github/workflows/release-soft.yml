@@ -50,6 +50,7 @@ jobs:
             exit 1
           else
             echo Helper Changes Detected - Soft release possible
+            echo $bicepChanges
           fi
 
   SetupWF:
