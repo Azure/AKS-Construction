@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy Web App to Prod Pages
     if: ${{ always() && github.ref == 'refs/heads/main'}}
-    environment: UI-Deploy-Manual-Approval #To enable true CD, we need to remove this line.
+    environment: UI-Deploy-Soft-Release
     needs: [BuildWebApp , DeployWebAppToCanary, VerifySoftPossible]
     env:
       templateRelease: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
