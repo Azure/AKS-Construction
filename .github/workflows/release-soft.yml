@@ -33,7 +33,7 @@ jobs:
       - name: Verify NO changes to bicep directory
         run: |
           bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat bicep/)
-          if [ -z $bicepChanges ]
+          if [ -z "$bicepChanges" ]
           then
             echo No Changes In Bicep directory found
           else
@@ -44,7 +44,7 @@ jobs:
       - name: Verify changes to the helper directory
         run: |
           bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat helper/)
-          if [ -z $bicepChanges ]
+          if [ -z "$bicepChanges" ]
           then
             echo No Changes In Helper directory found, existing
             exit 1
