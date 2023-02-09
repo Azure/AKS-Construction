@@ -493,6 +493,10 @@ gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 on:
   workflow_dispatch:
 
+permissions:
+      id-token: write
+      contents: read
+
 jobs:
   reusable_workflow_job:
     uses: Azure/AKS-Construction/.github/workflows/AKSC_Deploy.yml@${deploy.selectedTemplate}
