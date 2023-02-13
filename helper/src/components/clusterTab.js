@@ -395,6 +395,13 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                     ]}
                     onChange={(ev, { key }) => updateFn("apisecurity", key)}
                 />
+                {cluster.osType === "windows" && cluster.apisecurity === "private" &&
+                    <MessageBar messageBarType={MessageBarType.error}>
+                        Private clusters leverage the AKS Run Command for post deploy actions.
+                        Windows nodes are unable to use the AKS Run Command feature.
+                        Please select a different API Server Security or Node OS option.
+                    </MessageBar>
+                }
             </Stack.Item>
             <Stack.Item align="start" styles={{ root: { marginLeft: '100px',maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
                 <Label style={{ marginBottom: "0px" }}>Private dns zone mode for private cluster.</Label>

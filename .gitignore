@@ -7,3 +7,4 @@ samples/peered-vnet/*.json
 bicep/main.json
 helper/localsite.html
 helper/prodsite.html
+helper/build/**
