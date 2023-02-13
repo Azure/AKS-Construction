@@ -1125,7 +1125,7 @@ var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array
 output userNodePoolName string = nodePoolName
 output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 
-var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
+var aksSkuTier = AksPaidSkuForSLA ? 'Standard' : 'Free'
 
 var aks_addons = union({
   azurepolicy: {
@@ -1273,7 +1273,7 @@ defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
 keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-01-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
@@ -1281,8 +1281,8 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
     type: 'SystemAssigned'
   }
   sku: {
-    name: 'Basic'
-    tier: akssku
+    name: 'Base'
+    tier: aksSkuTier
   }
   dependsOn: [
     privateDnsZoneRbac
