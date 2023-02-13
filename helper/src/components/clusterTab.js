@@ -74,12 +74,12 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
 
                 <Stack horizontal tokens={{ childrenGap: 55 }}>
                     <Stack.Item>
-                        <Label >Uptime SLA <Link target='_' href='https://docs.microsoft.com/azure/aks/uptime-sla'>docs</Link></Label>
+                        <Label>API Server Uptime SLA <Link target='_' href='https://docs.microsoft.com/azure/aks/uptime-sla'>docs</Link></Label>
                         <ChoiceGroup
                             selectedKey={cluster.AksPaidSkuForSLA}
                             options={[
                                 { key: false, text: 'Free clusters with a service level objective (SLO) of 99.5%' },
-                                { key: true, text: 'Uptime SLA: 99.9% availability for the Kubernetes API server for clusters without Availability zones.' }
+                                { key: true, text: 'Kubernetes API server uptime SLA: 99.95% when using Availability zones, otherwise 99.9%.' }
                             ]}
                             onChange={(ev, { key }) => updateFn("AksPaidSkuForSLA", key)}
                         />
