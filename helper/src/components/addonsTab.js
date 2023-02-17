@@ -531,6 +531,26 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 />
             </Stack.Item>
 
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    SGX Device Plugin
+                    (<a target="_new" href="https://learn.microsoft.com/azure/confidential-computing/confidential-node-pool-aks">docs</a>)
+                </Label>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: "10px" } }}>
+                    Enabling this option installs the SGX Device Plugin, but will require a node pool using a VM SKU that supports SGX (DCsv2/DCSv3/DCdsv3). Choose `SGX Enclave` for the compute on the cluster tab.
+                </MessageBar>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-sgx-checkbox" }}
+                    checked={addons.sgxPlugin}
+                    onChange={(ev, v) => updateFn("sgxPlugin", v)}
+                    label="Install the sgxPlugin"
+                />
+            </Stack.Item>
+
         </Stack>
     );
 }
