@@ -222,12 +222,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   //PowerShell Post Deployment
   const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
-  (deploy.selectedTemplate === "local" ? ` .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.ps1 ` : `curl -sL ${deployRelease.post_url}  | bash -s -- `) +
-  (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
+  (deploy.selectedTemplate === "local" ? ` .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.ps1 ` : `& $([scriptblock]::Create((New-Object Net.WebClient).DownloadString("${deployRelease.post_url}")))`) +
+  (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : ` -releace_version="${deployRelease.base_download_url}"`) +
   Object.keys(post_params).map(k => {
     const val = post_params[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-    return ` \`\n\t-p ${k}=${targetVal}`
+    return ` \`\n\t-${k}=${targetVal}`
   }).join('')
 
   const post_deployPSstr = cluster.apisecurity !== "private" ?
