@@ -1150,9 +1150,7 @@ var aks_addons = union({
   }
   ACCSGXDevicePlugin: {
     enabled: sgxPlugin
-    config: {
-      ACCSGXQuoteHelperEnabled: false
-    }
+    config: {}
   }
 }, createLaw && omsagent ? {
   omsagent: {
