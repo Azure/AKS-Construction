@@ -230,14 +230,14 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const deployRelease = deploy.templateVersions.find(t => t.key === deploy.selectedTemplate) || {}
 
-  //Bash
-  const preview_post_deployBashcmd = Object.keys(preview_post_params).map(k => {
+  //Bash (Remember to align any changes with Powershell)
+  const preview_post_deployBASHcmd = Object.keys(preview_post_params).map(k => {
     const val = preview_post_params[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
     return ` \\\n\t-p ${k}=${targetVal}`
   }).join('')
 
-  const post_deployBashcmd =  `\n\n# Deploy charts into cluster\n` +
+  const post_deployBASHcmd =  `\n\n# Deploy charts into cluster\n` +
   (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.postBash_url}  | bash -s -- `) +
   (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
   Object.keys(post_params).map(k => {
@@ -245,17 +245,17 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
     return ` \\\n\t-p ${k}=${targetVal}`
   }).join('')+
-  (!deploy.disablePreviews ? preview_post_deployBashcmd : '')
+  (!deploy.disablePreviews ? preview_post_deployBASHcmd : '')
 
-  const post_deployBashstr = cluster.apisecurity !== "private" ?
+  const post_deployBASHstr = cluster.apisecurity !== "private" ?
     '# Get credentials for your new AKS cluster & login (interactive)\n' +
     `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
     'kubectl get nodes' +
-    post_deployBashcmd
+    post_deployBASHcmd
     :
     '# Private cluster, so use command invoke\n' +
     `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` +
-    post_deployBashcmd.replaceAll('"', '\\"') +
+    post_deployBASHcmd.replaceAll('"', '\\"') +
     `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
 
   const networkWatcher = net.nsg && net.nsgFlowLogs !== defaults.net.nsgFlowLogs ?
@@ -264,7 +264,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands && deploy.workloadDeployCommands.length>0 ? deploy.workloadDeployCommands.map(w => w).join('\n').replace(/\$RESOURCEGROUP/g,deploy.rg).replace(/\$AKSNAME/g, aks) : ''
 
-  const deployBashcmd =
+  const deployBASHcmd =
     `# Create Resource Group\n` +
     `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` + networkWatcher +
     `# Deploy template with in-line parameters\n` +
@@ -273,9 +273,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
       return ` \\\n\t${k}=${targetVal}`
-    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deployBashstr : '')
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deployBASHstr : '')
 
-    //Powershell
+    //Powershell (Remember to align any changes with Bash)
     const preview_post_deployPScmd = Object.keys(preview_post_params).map(k => {
       const val = preview_post_params[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
@@ -481,7 +481,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             </Stack.Item>
           </Stack>
 
-          <CodeBlock hideSave={true} lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployBashcmd} testId={'deploy-deploycmd'}/>
+          <CodeBlock hideSave={true} lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployBASHcmd} testId={'deploy-deploycmd'}/>
 
           { cardSpecificWorkloadDeployCmd.length > 0 &&
             <CodeBlock hideSave={true} lang="Workload Deployment shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={cardSpecificWorkloadDeployCmd} testId={'deploy-deploycmd'}/>
