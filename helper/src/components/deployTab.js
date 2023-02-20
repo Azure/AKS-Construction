@@ -497,7 +497,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           <Stack.Item>
             <Label >Powershell and Azure CLI commands to deploy your fully operational environment</Label>
             <Text>
-              Requires <Link target="_bl" href="https://learn.microsoft.com/en-us/powershell/azure/install-az-ps?view=azps-8.3.0">AZ CLI PowerShell Module </Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+              Requires <Link target="_bl" href="https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.3">PowerShell (7 or greater) </Link>,  <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
             </Text>
           </Stack.Item>
 
