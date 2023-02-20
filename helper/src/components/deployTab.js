@@ -230,6 +230,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const deployRelease = deploy.templateVersions.find(t => t.key === deploy.selectedTemplate) || {}
 
+
   //Bash (Remember to align any changes with Powershell)
   const preview_post_deployBASHcmd = Object.keys(preview_post_params).map(k => {
     const val = preview_post_params[k]
@@ -238,7 +239,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }).join('')
 
   const post_deployBASHcmd =  `\n\n# Deploy charts into cluster\n` +
-  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.postBash_url}  | bash -s -- `) +
+  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.postBASH_url}  | bash -s -- `) +
   (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
   Object.keys(post_params).map(k => {
     const val = post_params[k]
@@ -382,6 +383,13 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
   const ghOrg = deploy.githubrepo.replace(/.*com\//, "").replace(/\/.*/, '')
   const ghRepo = deploy.githubrepo.replace(/.*\//, '')
+
+  //PowerShell is disabled generally due to a missing postdeploy.ps1 script missing in the release
+  if (deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" && deploy.deployItemKey === "deployPSArmCli")
+  {
+    deploy.deployItemKey = "deployArmCli"
+  }
+
   console.log (`deploy.deployItemKey=${deploy.deployItemKey}`)
   return (
 
@@ -491,7 +499,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           }
         </PivotItem>
 
-        <PivotItem headerText="PowerShell" itemKey="deployPSArmCli" itemIcon="PasteAsCode" >
+        <PivotItem headerText="PowerShell" itemKey="deployPSArmCli" itemIcon="PasteAsCode" headerButtonProps={{disabled: deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" ? true : false , 'style': {color: deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" ? "grey" : "white"}}} >
 
         <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
           <Stack.Item>
@@ -516,7 +524,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           </Stack.Item>
         </Stack>
 
-        <CodeBlock hideSave={true} lang="PowerShell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployPScmd} testId={'deploy-deploycmd'}/>
+        <CodeBlock hideSave={true} lang="PowerShell script" error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployPScmd} testId={'deploy-deploycmd'}/>
 
         { urlParams.toString() !== "" &&
           <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
