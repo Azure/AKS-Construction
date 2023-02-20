@@ -503,7 +503,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
         <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
           <Stack.Item>
-            <Label >Powershell and Azure CLI commands to deploy your fully operational environment</Label>
+            <Label >PowerShell and Azure CLI commands to deploy your fully operational environment<br></br> PowerShell disabled is <i>postdeploy.ps1</i> not in selected Template Version</Label>
             <Text>
               Requires <Link target="_bl" href="https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.3">PowerShell (7 or greater) </Link>,  <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
             </Text>
