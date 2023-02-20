@@ -1,7 +1,8 @@
-# TODO in CLuster Code (example to call script):
-#       $script = Invoke-WebRequest https://github.com/Azure/AKS-Construction/releases/download/0.9.6/postdeploy.sh
-#       Invoke-Command -ScriptBlock ([scriptblock]::Create($script)) -ArgumentList "-p ingress=contour -p monitor=oss"
-# POWERSHELL 7 Required
+# ---------------------------------------------------------------------------
+# NOTE: This needs to be kept in sync with the postdeploy.sb (Bash) script
+# ---------------------------------------------------------------------------
+# POWERSHELL 7+ Required
+# ---------------------------------------------------------------------------
 [CmdletBinding()]
 param(
     [ValidateSet('appgw','contour','nginx', 'traefik', ErrorMessage = "{0} is not in supported ingress options {1}")]
