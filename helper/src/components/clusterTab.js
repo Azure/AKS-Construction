@@ -129,7 +129,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                                 { key: 'Ubuntu', text: 'Ubuntu', disabled:cluster.osType!=='Linux' },
                                 { key: 'Windows2022', text: 'Windows Server 2022', disabled:cluster.osType!=='Windows' }
                             ]}
-                            styles={{ dropdown: { width: "100%" } }}
+                            styles={{ dropdown: { width: "100%", minWidth: "200px" } }}
                         />
                     </Stack.Item>
                 </Stack>
@@ -387,6 +387,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                 <ChoiceGroup
                     selectedKey={cluster.apisecurity}
                     styles={{ root: { marginLeft: '50px' } }}
+                    errorMessage={getError(invalidArray, 'apisecurity')}
                     options={[
                         { key: 'none', text: 'Public IP with no IP restrictions' },
                         { key: 'whitelist', text: 'Create allowed IP ranges (defaults to IP address of machine running the script)' },
@@ -395,12 +396,8 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                     ]}
                     onChange={(ev, { key }) => updateFn("apisecurity", key)}
                 />
-                {cluster.osType === "windows" && cluster.apisecurity === "private" &&
-                    <MessageBar messageBarType={MessageBarType.error}>
-                        Private clusters leverage the AKS Run Command for post deploy actions.
-                        Windows nodes are unable to use the AKS Run Command feature.
-                        Please select a different API Server Security or Node OS option.
-                    </MessageBar>
+                {hasError(invalidArray, 'apisecurity') &&
+                    <MessageBar styles={{ root: { marginLeft: '50px', width:'700px', marginTop: '10px !important'}}} messageBarType={MessageBarType.error}>{getError(invalidArray, 'apisecurity')}</MessageBar>
                 }
             </Stack.Item>
             <Stack.Item align="start" styles={{ root: { marginLeft: '100px',maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
