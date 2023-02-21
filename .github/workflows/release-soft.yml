@@ -1,0 +1,183 @@
+name: Soft Release Non-Breaking Changes (CD)
+# This workflow compares the changes in main to the latest release;
+# If there are changes to the /helper directory but not /bicep then a Soft Release of the Helper is possible
+# As part of the soft release process, a full test will be run to ensure that it will work
+# Then CD of main to the production web site will be completed
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches: [main]
+
+jobs:
+  VerifySoftPossible:
+    runs-on: ubuntu-latest
+    name: Is Soft Release Possible
+    outputs:
+      LatestAkscVersionTag: ${{ steps.AkscTags.outputs.LATEST}}
+    steps:
+      - uses: actions/checkout@v3.3.0
+        with:
+          fetch-depth: 0
+
+      - name: Get latest AKSC version
+        id: AkscTags
+        run: |
+          LATEST=$(curl https://api.github.com/repos/Azure/AKS-Construction/releases/latest | jq '.tag_name' -r)
+          echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
+
+      - name: Output git diff from main to the latest release
+        run: git diff ${{ steps.AkscTags.outputs.LATEST }} --stat
+
+      - name: Verify NO changes to bicep directory
+        run: |
+          bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat bicep/)
+          if [ -z "$bicepChanges" ]
+          then
+            echo No Changes In Bicep directory found
+          else
+            echo Bicep Changes Detected, exiting
+            echo $bicepChanges
+            exit 1
+          fi
+
+      - name: Verify NO changes to postdeploy directory
+        run: |
+          bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat postdeploy/)
+          if [ -z "$bicepChanges" ]
+          then
+            echo No Changes In postdeploy directory found
+          else
+            echo postdeploy Changes Detected, exiting
+            echo $bicepChanges
+            exit 1
+          fi
+
+      - name: Verify NO changes to Helper config file
+        run: |
+          bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat helper/src/config.json)
+          if [ -z "$bicepChanges" ]
+          then
+            echo No Changes In Helper config file found
+          else
+            echo Helper config file Changes Detected, exiting
+            echo $bicepChanges
+            exit 1
+          fi
+
+      - name: Verify NO changes to Helper dependencies file
+        run: |
+          bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat helper/src/dependencies.json)
+          if [ -z "$bicepChanges" ]
+          then
+            echo No Changes In Helper dependencies file found
+          else
+            echo Helper dependencies file Changes Detected, exiting
+            echo $bicepChanges
+            exit 1
+          fi
+
+      - name: Verify changes to the helper directory
+        run: |
+          bicepChanges=$(git diff ${{ steps.AkscTags.outputs.LATEST }} --stat helper/)
+          if [ -z "$bicepChanges" ]
+          then
+            echo No Changes In Helper directory found, existing
+            exit 1
+          else
+            echo Helper Changes Detected - Soft release possible
+            echo $bicepChanges
+          fi
+
+  TestWebApp:
+    needs: [VerifySoftPossible]
+    uses: ./.github/workflows/ghpagesTest.yml
+    with:
+      REACT_APP_TEMPLATERELEASE: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
+      doAzCmdDeployment: true
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+  BuildWebApp:
+    runs-on: ubuntu-latest
+    name: Build Web App Artifact
+    needs: VerifySoftPossible
+    env:
+      templateRelease: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
+    steps:
+      - uses: actions/checkout@v3.3.0
+
+      - name: Job Parameter Checking
+        run: |
+          echo "GitHub Ref: ${{ github.ref }}"
+
+      - name: Azure Login
+        uses: Azure/login@v1.4.6
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build VM Sku json file
+        timeout-minutes: 3
+        run: |
+          cd postdeploy/scripts
+          chmod +x generate-vm-sku-list-v2.sh
+          ./generate-vm-sku-list-v2.sh
+
+      - name: Build node app with bicep release
+        run: |
+          cd helper
+          npm install
+          REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
+
+      - name: Create GitHub pages release artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: HelperApp
+          path: helper/build
+
+  DeployWebAppToCanary:
+    runs-on: ubuntu-latest
+    name: Deploy Web App to Canary-Page branch
+    needs: [BuildWebApp , TestWebApp, VerifySoftPossible]
+    env:
+      templateRelease: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
+    steps:
+      - uses: actions/download-artifact@v3.0.2
+        with:
+          name: HelperApp
+          path: helperapp
+
+      - name: Deploy to GitHub Pages Canary
+        uses: crazy-max/ghaction-github-pages@v3.1.0
+        with:
+          target_branch: gh-pages-canary
+          commit_message: Pages Release. Canary ${{env.templateRelease}}
+          build_dir: helperapp
+          keep_history: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  DeployWebAppToProd:
+    runs-on: ubuntu-latest
+    name: Deploy Web App to Prod Pages
+    if: ${{ always() && github.ref == 'refs/heads/main'}}
+    environment: UI-Deploy-Soft-Release
+    needs: [BuildWebApp , DeployWebAppToCanary, VerifySoftPossible]
+    env:
+      templateRelease: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
+    steps:
+      - uses: actions/download-artifact@v3.0.2
+        with:
+          name: HelperApp
+          path: helperapp
+
+      - name: Deploy to GitHub Pages Prod
+        uses: crazy-max/ghaction-github-pages@v3.1.0
+        with:
+          target_branch: gh-pages
+          commit_message: Pages Release. Prod ${{env.templateRelease}}
+          build_dir: helperapp
+          keep_history: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
