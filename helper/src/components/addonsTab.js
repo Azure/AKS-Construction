@@ -106,7 +106,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
                 {hasError(invalidArray, 'ingress') &&
-                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '100px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
+                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
                 }
             </Stack.Item>
 
