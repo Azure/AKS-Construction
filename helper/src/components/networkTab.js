@@ -59,17 +59,20 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
             <Stack.Item>
                 <Label required={true}>Network Plugin</Label>
-                <MessageBar>Typically, only use "kubenet" networking if you need to limit your non-routable IP usage on your network (use network calculator)
-                </MessageBar>
+                <MessageBar>Typically, only use "kubenet" networking if you need to limit your non-routable IP usage on your network (use network calculator)</MessageBar>
+                {hasError(invalidArray, 'networkPlugin') &&
+                    <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'networkPlugin')}</MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={net.networkPlugin}
                     options={[
-                        { key: 'kubenet', text: 'Use "kubenet" basic networking, so your PODs DO NOT receive VNET IPs' },
+                        { key: 'kubenet', text: 'Use "kubenet" basic networking, so your PODs DO NOT receive VNET IPs', disabled:cluster.osType==='Windows' },
                         { key: 'azure', text: 'Use "CNI" for fastest container networking, but using more IPs' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPlugin", key)}
+                    errorMessage={getError(invalidArray, 'networkPlugin')}
                 />
             </Stack.Item>
 

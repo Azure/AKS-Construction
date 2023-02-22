@@ -58,7 +58,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
         if (v==='Windows') {
             updateFn("nodepoolName", "npwin1")
             updateFn("vmSize", "Standard_DS4_v2")
-            updateFn("osSKU", "Windows2019")
+            updateFn("osSKU", "Windows2022")
          } else {
             updateFn("nodepoolName", defaults.cluster.nodepoolName)
             updateFn("vmSize", defaults.cluster.vmSize)
@@ -127,10 +127,9 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                             onChange={(ev, { key }) => updateFn("osSKU", key)}
                             options={[
                                 { key: 'Ubuntu', text: 'Ubuntu', disabled:cluster.osType!=='Linux' },
-                                { key: 'Windows2019', text: 'Windows Server 2019', disabled:cluster.osType!=='Windows' },
                                 { key: 'Windows2022', text: 'Windows Server 2022', disabled:cluster.osType!=='Windows' }
                             ]}
-                            styles={{ dropdown: { width: "100%" } }}
+                            styles={{ dropdown: { width: "100%", minWidth: "200px" } }}
                         />
                     </Stack.Item>
                 </Stack>
@@ -388,6 +387,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                 <ChoiceGroup
                     selectedKey={cluster.apisecurity}
                     styles={{ root: { marginLeft: '50px' } }}
+                    errorMessage={getError(invalidArray, 'apisecurity')}
                     options={[
                         { key: 'none', text: 'Public IP with no IP restrictions' },
                         { key: 'whitelist', text: 'Create allowed IP ranges (defaults to IP address of machine running the script)' },
@@ -396,6 +396,9 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                     ]}
                     onChange={(ev, { key }) => updateFn("apisecurity", key)}
                 />
+                {hasError(invalidArray, 'apisecurity') &&
+                    <MessageBar styles={{ root: { marginLeft: '50px', width:'700px', marginTop: '10px !important'}}} messageBarType={MessageBarType.error}>{getError(invalidArray, 'apisecurity')}</MessageBar>
+                }
             </Stack.Item>
             <Stack.Item align="start" styles={{ root: { marginLeft: '100px',maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
                 <Label style={{ marginBottom: "0px" }}>Private dns zone mode for private cluster.</Label>
