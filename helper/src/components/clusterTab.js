@@ -366,7 +366,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
 
                             />
 
-                            <Checkbox checked={cluster.enableAzureRBAC} onChange={(ev, val) => updateFn("enableAzureRBAC", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Azure RBAC for Kubernetes Authorization <Link target='_' href='https://docs.microsoft.com/azure/aks/manage-azure-rbac'>docs</Link>**</Text>} />
+                            <Checkbox checked={cluster.enableAzureRBAC} onChange={(ev, val) => updateFn("enableAzureRBAC", val)} onRenderLabel={() => <Text styles={{ root: { color: 'gray' } }}>Azure RBAC for Kubernetes Authorization <Link target='_' href='https://docs.microsoft.com/azure/aks/manage-azure-rbac'>docs</Link>**</Text>} />
 
                             {!cluster.enableAzureRBAC &&
                                 <>
@@ -377,7 +377,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                                 </>
                             }
 
-                            <Checkbox inputProps={{ "data-testid": "cluster-localaccounts-Checkbox"}} disabled={!cluster.enableAzureRBAC} checked={cluster.AksDisableLocalAccounts} onChange={(ev, val) => updateFn("AksDisableLocalAccounts", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Disable Local Kubernetes Accounts <Link target='_' href='https://docs.microsoft.com/azure/aks/managed-aad#disable-local-accounts'>docs</Link>**</Text>} />
+                            <Checkbox inputProps={{ "data-testid": "cluster-localaccounts-Checkbox"}} disabled={!cluster.enableAzureRBAC} checked={cluster.AksDisableLocalAccounts} onChange={(ev, val) => updateFn("AksDisableLocalAccounts", val)} onRenderLabel={() => <Text styles={{ root: { color: 'gray' } }}>Disable Local Kubernetes Accounts <Link target='_' href='https://docs.microsoft.com/azure/aks/managed-aad#disable-local-accounts'>docs</Link>**</Text>} />
 
                         </Stack>
                     }
