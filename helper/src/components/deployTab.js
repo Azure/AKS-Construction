@@ -119,6 +119,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon}),
     ...(addons.daprAddon !== defaults.addons.daprAddon && { daprAddon: addons.daprAddon }),
     ...(addons.daprAddonHA !== defaults.addons.daprAddonHA && { daprAddonHA: addons.daprAddonHA }),
+    ...(addons.sgxPlugin !== defaults.addons.sgxPlugin && { sgxPlugin: addons.sgxPlugin })
   }
 
   const preview_params = {

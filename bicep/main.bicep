@@ -855,6 +855,9 @@ param kedaAddon bool = false
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false
 
+@description('Enables SGX Confidential Compute plugin')
+param sgxPlugin bool = false
+
 @description('Enables the Blob CSI driver')
 param blobCSIDriver bool = false
 
@@ -1143,6 +1146,10 @@ var aks_addons = union({
   }
   openServiceMesh: {
     enabled: openServiceMeshAddon
+    config: {}
+  }
+  ACCSGXDevicePlugin: {
+    enabled: sgxPlugin
     config: {}
   }
 }, createLaw && omsagent ? {

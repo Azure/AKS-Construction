@@ -198,6 +198,12 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                                     iconProps: { iconName: 'Game' },
                                     text: 'GPU Workloads',
                                     disabled: true
+                                },
+                                {
+                                    key: 'sgx',
+                                    iconProps: { iconName: 'LaptopSecure' },
+                                    text: 'SGX Enclave',
+                                    disabled: false
                                 }
                             ]}
                             />
