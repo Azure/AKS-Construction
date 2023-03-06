@@ -174,7 +174,7 @@ var subnets = union(
 output debugSubnets array = subnets
 
 var vnetName = 'vnet-${resourceName}'
-resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
   name: vnetName
   location: location
   properties: {
@@ -328,7 +328,7 @@ var publicIpAddressName = 'pip-${bastionHostName}'
 ])
 param bastionSku string = 'Standard'
 
-resource bastionPip 'Microsoft.Network/publicIPAddresses@2021-03-01' = if(bastion) {
+resource bastionPip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if(bastion) {
   name: publicIpAddressName
   location: location
   sku: {

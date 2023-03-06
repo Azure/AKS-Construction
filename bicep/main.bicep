@@ -266,7 +266,7 @@ var kmsRbacWaitSeconds=30
 @description('This indicates if the deploying user has provided their PrincipalId in order for the key to be created')
 var keyVaultKmsCreateAndPrereqs = keyVaultKmsCreate && !empty(keyVaultKmsOfficerRolePrincipalId) && privateLinks == false
 
-resource kvKmsByo 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = if(!empty(keyVaultKmsByoName)) {
+resource kvKmsByo 'Microsoft.KeyVault/vaults@2022-07-01' existing = if(!empty(keyVaultKmsByoName)) {
   name: keyVaultKmsByoName
   scope: resourceGroup(keyVaultKmsByoRG)
 }
@@ -393,7 +393,7 @@ param acrUntaggedRetentionPolicy int = 30
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
-resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!empty(registries_sku)) {
+resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = if (!empty(registries_sku)) {
   name: acrName
   location: location
   sku: {
@@ -605,7 +605,7 @@ resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
-resource appgwpip 'Microsoft.Network/publicIPAddresses@2021-02-01' = if (deployAppGw) {
+resource appgwpip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if (deployAppGw) {
   name: 'pip-agw-${resourceName}'
   location: location
   sku: {
@@ -743,7 +743,7 @@ var appgwProperties = union({
 } : {})
 
 // 'identity' is always set until this is fixed: https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appgw 'Microsoft.Network/applicationGateways@2021-02-01' = if (deployAppGw) {
+resource appgw 'Microsoft.Network/applicationGateways@2022-07-01' = if (deployAppGw) {
   name: appgwName
   location: location
   zones: !empty(availabilityZones) ? availabilityZones : []
@@ -1281,7 +1281,7 @@ defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
 keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2022-11-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
@@ -1357,7 +1357,7 @@ module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !e
 var policySetBaseline = '/providers/Microsoft.Authorization/policySetDefinitions/a8640138-9b0a-4a28-b8cb-1666c838647d'
 var policySetRestrictive = '/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00'
 
-resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
+resource aks_policies 'Microsoft.Authorization/policyAssignments@2022-06-01' = if (!empty(azurepolicy)) {
   name: '${resourceName}-${azurePolicyInitiative}'
   location: location
   properties: {
@@ -1402,7 +1402,7 @@ resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2022
 
 param fluxGitOpsAddon bool = false
 
-resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-preview' = if(fluxGitOpsAddon) {
+resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' = if(fluxGitOpsAddon) {
   name: 'flux'
   scope: aks
   properties: {
@@ -1425,7 +1425,7 @@ param daprAddon bool = false
 @description('Enable high availability (HA) mode for the Dapr control plane')
 param daprAddonHA bool = false
 
-resource daprExtension 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-preview' = if(daprAddon) {
+resource daprExtension 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' = if(daprAddon) {
     name: 'dapr'
     scope: aks
     properties: {

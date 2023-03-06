@@ -1,10 +1,10 @@
 param keyVaultName string
 
-resource kv 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
+resource kv 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
   name: keyVaultName
 }
 
-resource kvKmsKey 'Microsoft.KeyVault/vaults/keys@2021-11-01-preview' = {
+resource kvKmsKey 'Microsoft.KeyVault/vaults/keys@2022-07-01' = {
   name: 'kmskey'
   parent: kv
   properties: {
