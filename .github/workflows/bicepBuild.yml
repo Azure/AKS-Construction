@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: ContextCheck
         shell: pwsh
@@ -46,7 +46,7 @@ jobs:
 
           /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
         if: github.event_name != 'push'
         name: Git Checkout target
         with:

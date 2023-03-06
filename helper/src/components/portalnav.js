@@ -327,6 +327,31 @@ export default function PortalNav({ config }) {
     }
   }
 
+  function isCidrValid(cidr) {
+    var regex=cidr.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}($|\/(1[6-9]|2[0-6]))$/)
+    if(regex === null || regex.length !== 4 || regex[3] === undefined) {
+        //cidr range not valid
+        return false
+    }
+    else { return true }
+  }
+  const invalidCidrMessage = "Enter a valid CIDR address (/16 - /26)"
+
+  //declare string constant variable
+
+
+  function isIPValid(ip) {
+      if(ip === undefined || ip === null || ip === '') {
+          return true
+      }
+      else if (ip.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}$/) === null) {
+          return false
+      }
+      else {
+          return true
+      }
+  }
+
   const { deploy, cluster, net, addons } = tabValues
 
   console.log(`PortalNav: Evaluating configruation warnings...`)
@@ -341,10 +366,12 @@ export default function PortalNav({ config }) {
   invalidFn('cluster', 'keyVaultKmsByoRG', cluster.keyVaultKms === "byoprivate" && !cluster.keyVaultKmsByoRG, 'Enter existing KeyVault Resource Group Name')
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'), 'Enter valid Azure Public or Private DNS Zone resourceId')
   invalidFn('cluster', 'dnsApiPrivateZoneId', cluster.apisecurity === 'private' && cluster.privateClusterDnsMethod === 'privateDnsZone' && !cluster.dnsApiPrivateZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/privateDnsZones/[^/ ]+.azmk8s.io$'), 'Enter valid Azure Private DNS Zone resourceId')
+  invalidFn('cluster', 'apisecurity', cluster.apisecurity === 'private' && cluster.osType === 'Windows', 'Private clusters leverage the AKS Run Command for post deploy actions. Windows nodes are unable to use the AKS Run Command feature. Please select a different API Server Security or Node OS option')
   invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'), 'Enter valid email for certificate generation')
   invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'), 'Enter valid Azure KeyVault resourceId')
   invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}.){3}[0-9]{1,3}$'), 'Enter valid IP address')
   invalidFn('addons', 'appgwKVIntegration', addons.ingress === "appgw" && addons.appgwKVIntegration && addons.csisecret !== 'akvNew', 'KeyVault integration requires the \'CSI Secrets\' \'Yes, Provision a new KeyVault\' option to be selected')
+  invalidFn('addons', 'ingress', cluster.osType === "Windows" && addons.ingress !== "appgw" && addons.ingress !== "none", 'Neither the Windows nodepool or the system pool will be able to run your selected Ingress Controller. To support this Ingress Controller, add another linux nodepool post cluster creation.')
   invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'), 'Enter a valid Subnet Id where AKS nodes will be installed')
   invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'), 'Enter a valid Subnet Id where Application Gateway is installed')
   invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.afw || net.vnetprivateend), 'Cannot use default networking of you select Firewall or Private Link')
@@ -354,6 +381,13 @@ export default function PortalNav({ config }) {
       :
       'This template can only deploy Azure Firewall in single VNET with Custom Networking')
   invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") || (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default"), 'When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway')
+  invalidFn('net', 'serviceCidr',  net.vnet_opt === "custom" && !isCidrValid(net.serviceCidr), invalidCidrMessage)
+  invalidFn('net', 'podCidr', !isCidrValid(net.podCidr), invalidCidrMessage)
+  invalidFn('net', 'dnsServiceIP', !isIPValid(net.dnsServiceIP), 'Enter a valid IP')
+  invalidFn('net', 'podCidr', !isCidrValid(net.podCidr), invalidCidrMessage)
+  invalidFn('net', 'vnetAddressPrefix', !isCidrValid(net.vnetAddressPrefix), invalidCidrMessage)
+  invalidFn('net', 'vnetAksSubnetAddressPrefix', !isCidrValid(net.vnetAksSubnetAddressPrefix), invalidCidrMessage)
+  invalidFn('net', 'networkPlugin', net.networkPlugin === "kubenet" && cluster.osType === "Windows" , "Windows nodepools do not support kubenet networking")
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7, 'Enter an IP/CIDR, or select \'Public IP with no IP restrictions\' in the \'Cluster API Server Security\' section of the \'Cluster Details\' tab')
   invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19, 'Enter valid cluster name')
 
@@ -398,7 +432,7 @@ export default function PortalNav({ config }) {
               <DeployTab defaults={defaults} tabValues={tabValues} updateFn={(field, value) => mergeState("deploy", field, value)} invalidArray={invalidArray['deploy']} invalidTabs={Object.keys(invalidArray).filter(t => invalidArray[t].length > 0).map(k => `'${tabLabels[k]}'`)} urlParams={urlParams} featureFlag={featureFlag} />
             </PivotItem>
             <PivotItem headerText={tabLabels.cluster} itemKey="cluster" onRenderItemLink={(a, b) => _customRenderer('cluster', a, b)} >
-              <ClusterTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
+              <ClusterTab defaults={defaults} tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
             </PivotItem>
             <PivotItem headerText={tabLabels.addons} itemKey="addons" onRenderItemLink={(a, b) => _customRenderer('addons', a, b)} >
               <AddonsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value, previewLink) => mergeState("addons", field, value, previewLink)} invalidArray={invalidArray['addons']} />

@@ -40,7 +40,7 @@ param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
 var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
-resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (createAksUai) {
+resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
 }
@@ -119,6 +119,7 @@ module network './network.bicep' = if (custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
+    networkPluginIsKubenet: networkPlugin=='kubenet'
     vnetAddressPrefix: vnetAddressPrefix
     aksPrincipleId: createAksUai ? aksUai.properties.principalId : ''
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
@@ -517,7 +518,7 @@ module acrImport 'br/public:deployment-scripts/import-acr:3.0.1' = if (!empty(re
 |  |     |  | |  |\  \----.|  |____    \    /\    / /  _____  \  |  `----.|  `----.
 |__|     |__| | _| `._____||_______|    \__/  \__/ /__/     \__\ |_______||_______|*/
 
-@description('Create an Azure Firewall')
+@description('Create an Azure Firewall, requires custom_vnet')
 param azureFirewalls bool = false
 
 @description('Add application rules to the firewall for certificate management.')
@@ -832,7 +833,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.24.6'
+param kubernetesVersion string = '1.24.9'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -854,6 +855,9 @@ param kedaAddon bool = false
 
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false
+
+@description('Enables SGX Confidential Compute plugin')
+param sgxPlugin bool = false
 
 @description('Enables the Blob CSI driver')
 param blobCSIDriver bool = false
@@ -1104,6 +1108,8 @@ var systemPoolPresets = {
 
 var systemPoolBase = {
   name:  JustUseSystemPool ? nodePoolName : 'npsystem'
+  vmSize: agentVMSize
+  count: agentCount
   mode: 'System'
   osType: 'Linux'
   maxPods: 30
@@ -1117,31 +1123,7 @@ var systemPoolBase = {
   ]
 }
 
-var userPoolVmProfile = {
-  vmSize: agentVMSize
-  count: agentCount
-  minCount: autoScale ? agentCount : json('null')
-  maxCount: autoScale ? agentCountMax : json('null')
-  enableAutoScaling: autoScale
-  availabilityZones: !empty(availabilityZones) ? availabilityZones : null
-}
-
-var agentPoolProfileUser = union({
-  name: nodePoolName
-  mode: 'User'
-  osDiskType: osDiskType
-  osDiskSizeGB: osDiskSizeGB
-  osType: 'Linux'
-  maxPods: maxPods
-  type: 'VirtualMachineScaleSets'
-  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
-  upgradeSettings: {
-    maxSurge: '33%'
-  }
-  enableNodePublicIP: enableNodePublicIP
-}, userPoolVmProfile)
-
-var agentPoolProfiles = JustUseSystemPool ? array(union(systemPoolBase, userPoolVmProfile)) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])), array(agentPoolProfileUser))
+var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])))
 
 
 output userNodePoolName string = nodePoolName
@@ -1165,6 +1147,10 @@ var aks_addons = union({
   }
   openServiceMesh: {
     enabled: openServiceMeshAddon
+    config: {}
+  }
+  ACCSGXDevicePlugin: {
+    enabled: sgxPlugin
     config: {}
   }
 }, createLaw && omsagent ? {
@@ -1313,6 +1299,34 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
 }
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+
+@allowed(['Linux','Windows'])
+@description('The User Node pool OS')
+param osType string = 'Linux'
+
+@allowed(['Ubuntu','Windows2019','Windows2022'])
+@description('The User Node pool OS SKU')
+param osSKU string = 'Ubuntu'
+
+var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
+
+module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
+  name: 'userNodePool'
+  params: {
+    AksName: aks.name
+    PoolName: poolName
+    subnetId: aksSubnetId
+    agentCount: agentCount
+    agentCountMax: agentCountMax
+    agentVMSize: agentVMSize
+    maxPods: maxPods
+    osDiskType: osDiskType
+    osType: osType
+    osSKU: osSKU
+    enableNodePublicIP: enableNodePublicIP
+    osDiskSizeGB: osDiskSizeGB
+  }
+}
 
 @description('This output can be directly leveraged when creating a ManagedId Federated Identity')
 output aksOidcFedIdentityProperties object = {

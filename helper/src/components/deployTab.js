@@ -37,6 +37,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         || ( cluster.SystemPoolType === 'none' && (cluster.nodepoolName.toLowerCase() !== defaults.cluster.systemNodepoolName && cluster.nodepoolName.toLowerCase() !== defaults.cluster.nodepoolName )))
         && { nodePoolName: cluster.nodepoolName }),
     ...(cluster.autoscale && { agentCountMax: cluster.maxCount }),
+    ...(cluster.osType !== defaults.cluster.osType && { osType: cluster.osType}),
+    ...(cluster.osSKU !== defaults.cluster.osSKU && { osSKU: cluster.osSKU}),
     ...(cluster.osDiskType === "Managed" && { osDiskType: cluster.osDiskType, ...(cluster.osDiskSizeGB > 0 && { osDiskSizeGB: cluster.osDiskSizeGB }) }),
     ...(net.vnet_opt === "custom" && {
          custom_vnet: true,
@@ -117,6 +119,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon}),
     ...(addons.daprAddon !== defaults.addons.daprAddon && { daprAddon: addons.daprAddon }),
     ...(addons.daprAddonHA !== defaults.addons.daprAddonHA && { daprAddonHA: addons.daprAddonHA }),
+    ...(addons.sgxPlugin !== defaults.addons.sgxPlugin && { sgxPlugin: addons.sgxPlugin })
   }
 
   const preview_params = {
@@ -391,7 +394,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             { deploy.keyVaultIPAllowlist && net.vnetprivateend && <MessageBar messageBarType={MessageBarType.info}> <Text >"Add current IP to KeyVault firewall" will enable KeyVaults  PublicNetworkAccess property</Text></MessageBar> }
 
             <Stack.Item>
-              <Checkbox checked={deploy.enableTelemetry} onChange={(ev, v) => updateFn("enableTelemetry", v)} label="Enable telemetry feedback to Microsoft" />
+              <Checkbox inputProps={{ "data-testid": "akscTelemetryOpt-Checkbox"}} checked={deploy.enableTelemetry} onChange={(ev, v) => updateFn("enableTelemetry", v)} label="Enable telemetry feedback to Microsoft" />
             </Stack.Item>
         </Stack>
 
@@ -490,6 +493,10 @@ gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 
 on:
   workflow_dispatch:
+
+permissions:
+      id-token: write
+      contents: read
 
 jobs:
   reusable_workflow_job:

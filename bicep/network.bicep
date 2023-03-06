@@ -1,6 +1,7 @@
 param resourceName string
 param location string = resourceGroup().location
 
+param networkPluginIsKubenet bool = false
 param aksPrincipleId string = ''
 
 param vnetAddressPrefix string
@@ -109,9 +110,8 @@ var fwmgmt_subnet = {
   }
 }
 
-
 var routeFwTableName = 'rt-afw-${resourceName}'
-resource vnet_udr 'Microsoft.Network/routeTables@2021-02-01' = if (azureFirewalls) {
+resource vnet_udr 'Microsoft.Network/routeTables@2022-07-01' = if (azureFirewalls) {
   name: routeFwTableName
   location: location
   properties: {
@@ -125,6 +125,19 @@ resource vnet_udr 'Microsoft.Network/routeTables@2021-02-01' = if (azureFirewall
         }
       }
     ]
+  }
+}
+
+var contributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+
+@description('Required for kubenet networking.')
+resource vnet_udr_rbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (azureFirewalls && !empty(aksPrincipleId) && networkPluginIsKubenet) {
+  scope: vnet_udr
+  name: guid(vnet_udr.id, aksPrincipleId, contributorRoleId)
+  properties: {
+    principalId: aksPrincipleId
+    roleDefinitionId: contributorRoleId
+    principalType: 'ServicePrincipal'
   }
 }
 

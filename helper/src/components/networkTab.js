@@ -59,17 +59,20 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
             <Stack.Item>
                 <Label required={true}>Network Plugin</Label>
-                <MessageBar>Typically, only use "kubenet" networking if you need to limit your non-routable IP usage on your network (use network calculator)
-                </MessageBar>
+                <MessageBar>Typically, only use "kubenet" networking if you need to limit your non-routable IP usage on your network (use network calculator)</MessageBar>
+                {hasError(invalidArray, 'networkPlugin') &&
+                    <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'networkPlugin')}</MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={net.networkPlugin}
                     options={[
-                        { key: 'kubenet', text: 'Use "kubenet" basic networking, so your PODs DO NOT receive VNET IPs' },
+                        { key: 'kubenet', text: 'Use "kubenet" basic networking, so your PODs DO NOT receive VNET IPs', disabled:cluster.osType==='Windows' },
                         { key: 'azure', text: 'Use "CNI" for fastest container networking, but using more IPs' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPlugin", key)}
+                    errorMessage={getError(invalidArray, 'networkPlugin')}
                 />
             </Stack.Item>
 
@@ -214,7 +217,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     onChange={(ev, v) => updateFn("afw", v)}
                     label="Implement Azure Firewall & UDR next hop" />
 
-                {net.azureFirewallsSku=='Basic' &&
+                {net.azureFirewallsSku==='Basic' &&
                     <MessageBar styles={{ root: { marginLeft: '50px', width:'500px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Basic SKU is currently a preview service <Link href="https://learn.microsoft.com/en-gb/azure/firewall/deploy-firewall-basic-portal-policy#prerequisites">(*preview)</Link></MessageBar>
                 }
                 <Dropdown
@@ -345,7 +348,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
             </Stack.Item>
 
             {net.vnet_opt === 'custom' ?
-                <CustomVNET addons={addons} net={net} updateFn={updateFn} />
+                <CustomVNET addons={addons} net={net} updateFn={updateFn} invalidArray={invalidArray} />
                 : net.vnet_opt === 'byo' &&
                 <BYOVNET addons={addons} net={net} updateFn={updateFn} invalidArray={invalidArray} />
             }
@@ -353,19 +356,33 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
     )
 }
 
-function PodServiceNetwork({ net, updateFn }) {
+function PodServiceNetwork({ net, updateFn, invalidArray }) {
     return (
         <Stack {...columnProps}>
             <Label>Kubernetes Networking Configuration</Label>
             <Stack.Item styles={{root: {width: '380px'}}} align="start">
-                <TextField  prefix="Cidr" label="POD Network" disabled={net.networkPlugin !== 'kubenet' && !net.cniDynamicIpAllocation && !net.networkPluginMode} onChange={(ev, val) => updateFn("podCidr", val)} value={net.networkPlugin === 'kubenet' || net.cniDynamicIpAllocation || net.networkPluginMode ? net.podCidr : "Using CNI, POD IPs from subnet"} />
+                <TextField
+                prefix="Cidr" label="POD Network"
+                disabled={net.networkPlugin !== 'kubenet' && !net.cniDynamicIpAllocation && !net.networkPluginMode}
+                onChange={(ev, val) => updateFn("podCidr", val)}
+                value={net.networkPlugin === 'kubenet' || net.cniDynamicIpAllocation || net.networkPluginMode ? net.podCidr : "Using CNI, POD IPs from subnet"}
+                maxLength={18}
+                errorMessage={net.networkPlugin === 'kubenet' || net.cniDynamicIpAllocation || net.networkPluginMode ? getError(invalidArray, 'podCidr') : ''} />
             </Stack.Item>
             <Stack.Item styles={{root: {width: '380px'}}} align="start">
-                <TextField prefix="Cidr" label="Service Network" onChange={(ev, val) => updateFn("serviceCidr", val)} value={net.serviceCidr} />
+                <TextField
+                prefix="Cidr" label="Service Network"
+                onChange={(ev, val) => updateFn("serviceCidr", val)}
+                value={net.serviceCidr}
+                errorMessage={getError(invalidArray, 'serviceCidr')} />
                 <MessageBar messageBarType={MessageBarType.warning}>Address space that isn't in use elsewhere in your network environment <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
             </Stack.Item>
             <Stack.Item styles={{root: {width: '380px'}}} align="start">
-                <TextField prefix="IP" label="DNS Service IP" onChange={(ev, val) => updateFn("dnsServiceIP", val)} value={net.dnsServiceIP} />
+                <TextField
+                prefix="IP" label="DNS Service IP"
+                onChange={(ev, val) => updateFn("dnsServiceIP", val)}
+                value={net.dnsServiceIP}
+                errorMessage={getError(invalidArray, 'dnsServiceIP')} />
                 <MessageBar messageBarType={MessageBarType.warning}>Ensure its an address within the Service CIDR above <a target="_target" href="https://docs.microsoft.com/en-us/azure/aks/configure-kubenet#create-an-aks-cluster-in-the-virtual-network">docs</a></MessageBar>
             </Stack.Item>
 
@@ -389,14 +406,14 @@ function BYOVNET({ net, addons, updateFn, invalidArray }) {
             <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets these requirements <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">here</Link></MessageBar>
 
             <Separator/>
-            <PodServiceNetwork net={net} updateFn={updateFn} />
+            <PodServiceNetwork net={net} updateFn={updateFn} invalidArray={invalidArray} />
 
         </Stack>
     )
 }
 
 
-function CustomVNET({ net, addons, updateFn }) {
+function CustomVNET({ net, addons, updateFn, invalidArray }) {
     return (
         <Stack styles={adv_stackstyle}>
             <Label>Custom Network VNET & Kubernetes Network Configuration</Label>
@@ -404,10 +421,20 @@ function CustomVNET({ net, addons, updateFn }) {
                 <Stack {...columnProps}>
 
                     <Stack.Item align="start">
-                        <TextField prefix="Cidr" label="VNET Address space" onChange={(ev, val) => updateFn("vnetAddressPrefix", val)} value={net.vnetAddressPrefix} />
+                        <TextField
+                        prefix="Cidr"
+                        label="VNET Address space"
+                        onChange={(ev, val) => updateFn("vnetAddressPrefix", val)}
+                        value={net.vnetAddressPrefix}
+                        errorMessage={getError(invalidArray, 'vnetAddressPrefix')} />
                     </Stack.Item>
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" label="AKS Nodes subnet" onChange={(ev, val) => updateFn("vnetAksSubnetAddressPrefix", val)} value={net.vnetAksSubnetAddressPrefix} />
+                        <TextField
+                        prefix="Cidr"
+                        label="AKS Nodes subnet"
+                        onChange={(ev, val) => updateFn("vnetAksSubnetAddressPrefix", val)}
+                        value={net.vnetAksSubnetAddressPrefix}
+                        errorMessage={getError(invalidArray, 'vnetAksSubnetAddressPrefix')} />
                     </Stack.Item>
                     {/*
                 <Stack.Item align="center">
@@ -419,7 +446,7 @@ function CustomVNET({ net, addons, updateFn }) {
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" disabled={!net.afw || net.azureFirewallsSku!=='Basic'} label="Azure Firewall management subnet" onChange={(ev, val) => updateFn("vnetFirewallManagementSubnetAddressPrefix", val)} value={net.afw ? (net.azureFirewallsSku=='Basic' ? net.vnetFirewallManagementSubnetAddressPrefix : 'Management subnet for Basic SKU') : "No Firewall requested"} />
+                        <TextField prefix="Cidr" disabled={!net.afw || net.azureFirewallsSku!=='Basic'} label="Azure Firewall management subnet" onChange={(ev, val) => updateFn("vnetFirewallManagementSubnetAddressPrefix", val)} value={net.afw ? (net.azureFirewallsSku==='Basic' ? net.vnetFirewallManagementSubnetAddressPrefix : 'Management subnet for Basic SKU') : "No Firewall requested"} />
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
@@ -436,12 +463,17 @@ function CustomVNET({ net, addons, updateFn }) {
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" disabled={!net.vnetprivateend} label="Private Endpoint subnet" onChange={(ev, val) => updateFn("privateLinkSubnetAddressPrefix", val)} value={net.vnetprivateend ? net.privateLinkSubnetAddressPrefix : "No Private Endpoints requested"} />
+                        <TextField
+                        prefix="Cidr" disabled={!net.vnetprivateend}
+                        label="Private Endpoint subnet"
+                        onChange={(ev, val) => updateFn("privateLinkSubnetAddressPrefix", val)}
+                        value={net.vnetprivateend ? net.privateLinkSubnetAddressPrefix : "No Private Endpoints requested"}
+                        errorMessage={net.vnetprivateend && getError(invalidArray, 'privateLinkSubnetAddressPrefix')} />
                     </Stack.Item>
 
                 </Stack>
 
-                <PodServiceNetwork net={net} updateFn={updateFn} />
+                <PodServiceNetwork net={net} updateFn={updateFn} invalidArray={invalidArray} />
             </Stack>
 
             <Separator styles={{ root: { marginTop: '20px !important' } }}/>

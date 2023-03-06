@@ -19,7 +19,12 @@ on:
     paths:
       - "bicep/*"
       - ".github/workflows/StandardCI.yml"
-
+    types: #Type filtering should stop CI/CD running on draft status workflows
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      
   #Run on a weekly schedule
   schedule:
     # At 11:00pm, every Tuesday week
@@ -29,7 +34,7 @@ env:
   ParamFilePath: "https://raw.githubusercontent.com/Azure/AKS-Construction/main/.github/workflows_dep/AksDeploy-Basic.parameters.json" # ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-  AZCLIVERSION: 2.38.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.43.0 #Pinning to a specific AZ CLI version
 
 permissions:
       id-token: write
@@ -40,6 +45,7 @@ concurrency: "StanCI-${{ github.event.inputs.Environment != '' && github.event.i
 jobs:
   ReusableWF:
     runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.head.repo.fork && !github.event.pull_request.draft }}
     outputs:
       RG: ${{ env.RG }}
       ENVIRONMENT: ${{ github.event.inputs.Environment }}
@@ -53,11 +59,11 @@ jobs:
   Validation:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    if: ${{ !github.event.pull_request.head.repo.fork }}
+    if: ${{ !github.event.pull_request.head.repo.fork && !github.event.pull_request.draft }}
 
     steps:
       #Get the code files from the repo
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Job parameter check
         run: |
@@ -81,14 +87,14 @@ jobs:
           }
 
       - name: Azure Login
-        uses: Azure/login@v1.4.3
+        uses: Azure/login@v1.4.6
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@1.0.4
+        uses: Azure/cli@v1.0.7
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -113,10 +119,10 @@ jobs:
     environment: ${{ github.event.inputs.environment }}
     needs: [Deploy]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
 
       - name: Azure Login
-        uses: Azure/login@v1.4.3
+        uses: Azure/login@v1.4.6
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -159,7 +165,7 @@ jobs:
 
           pubIp=$(kubectl get svc -n $NAMESP -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}')
           echo $pubIp
-          echo "::set-output name=SIMWORKLOADIP::$pubIp" #outputting for conditon
+          echo "SIMWORKLOADIP=$pubIp" >> $GITHUB_OUTPUT
 
           curl $pubIp
 

@@ -82,3 +82,8 @@ code {
     height: 60px;
     margin-top: 20px
 }
+
+
+a {
+    color: #9370DB !important;
+}

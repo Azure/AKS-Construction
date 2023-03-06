@@ -5,7 +5,7 @@ import { adv_stackstyle, hasError, getError } from './common'
 
 
 export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
-    const { addons, net } = tabValues
+    const { cluster, addons, net } = tabValues
     const osmFeatureFlag = featureFlag.includes('osm')
     const wiFeatureFlag = featureFlag.includes('workloadId')
     function setContainerLogV2BasicLogs(v) {
@@ -87,6 +87,11 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Label required={true}>
                     Ingress Controllers: Securely expose your applications via Layer 7 HTTP(S) proxies
                 </Label>
+                {cluster.osType==='Windows' && addons.ingress !== 'none' &&
+                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.warning}>
+                        Please Note: If you're using Windows Nodes not all Ingress Controllers will support this OS, please check the Ingress Controller documentation and change the OS or Ingress Controller as required.
+                    </MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.ingress}
@@ -101,7 +106,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
                 {hasError(invalidArray, 'ingress') &&
-                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '100px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
+                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
                 }
             </Stack.Item>
 
@@ -523,6 +528,27 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     checked={addons.daprAddonHA}
                     onChange={(ev, v) => updateFn("daprAddonHA", v)}
                     label="Enable high availability mode"
+                />
+            </Stack.Item>
+
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Confidential Computing
+                    (<a target="_new" href="https://learn.microsoft.com/azure/confidential-computing/confidential-enclave-nodes-aks-get-started">docs</a>)
+                </Label>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: "10px" } }}>
+                    Enabling this option installs the SGX Device Plugin, but will require a node pool using a VM SKU that supports SGX. Choose `SGX Enclave` for the compute on the cluster tab.
+                </MessageBar>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-sgx-checkbox" }}
+                    checked={addons.sgxPlugin}
+                    onChange={(ev, v) => updateFn("sgxPlugin", v)}
+                    label="Install the sgxPlugin on compatible VM node pools"
+                    disabled={cluster.computeType !== 'sgx'}
                 />
             </Stack.Item>
 

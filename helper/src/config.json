@@ -9,7 +9,7 @@
     "defaults": {
         "deploy": {
             "enableTelemetry": true,
-            "kubernetesVersion": "1.24.6",
+            "kubernetesVersion": "1.24.9",
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
@@ -38,6 +38,8 @@
             "privateClusterDnsMethod": "system",
             "dnsApiPrivateZoneId":"",
             "autoscale": true,
+            "osType": "Linux",
+            "osSKU": "Ubuntu",
             "upgradeChannel": "none",
             "SystemPoolType": "CostOptimised",
             "nodepoolName": "npuser01",
@@ -104,7 +106,8 @@
             "kvId": "",
             "gitops": "none",
             "containerLogsV2": false,
-            "containerLogsV2BasicLogs": false
+            "containerLogsV2BasicLogs": false,
+            "sgxPlugin": false
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",

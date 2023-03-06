@@ -11,7 +11,7 @@ const optionRootClass = mergeStyles({
 
 export var VMs = vmSKUs
 
-export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
+export default function ({ defaults, tabValues, updateFn, featureFlag, invalidArray }) {
     const { net, addons, cluster, deploy } = tabValues
     const defenderFeatureFlag = featureFlag.includes('defender')
 
@@ -46,16 +46,25 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 updatevals = {...updatevals, agentCount: AGENT_COUNT_MAX }
             }
 
-            //clear when changing computeType
-            //if (newp.computeType)
-            //{
-              // updatevals = {...updatevals, vmSize: null}
-            //}
-
             return updatevals
         })
     }
 
+    function UpdateOsType(v) {
+        //update the OSType property, where this fn was called from
+        updateFn("osType", v)
+
+        //provide windows node pool optimised settings
+        if (v==='Windows') {
+            updateFn("nodepoolName", "npwin1")
+            updateFn("vmSize", "Standard_DS4_v2")
+            updateFn("osSKU", "Windows2022")
+         } else {
+            updateFn("nodepoolName", defaults.cluster.nodepoolName)
+            updateFn("vmSize", defaults.cluster.vmSize)
+            updateFn("osSKU", defaults.cluster.osSKU)
+         }
+    }
 
     return (
         <Stack tokens={{ childrenGap: 15 }} styles={adv_stackstyle}>
@@ -70,7 +79,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             selectedKey={cluster.AksPaidSkuForSLA}
                             options={[
                                 { key: false, text: 'Free clusters with a service level objective (SLO) of 99.5%' },
-                                { key: true, text: 'Uptime SLA guarantees 99.95% availability of the Kubernetes API server endpoint for clusters that use Availability Zones' }
+                                { key: true, text: 'Uptime SLA: 99.9% availability for the Kubernetes API server for clusters without Availability zones.' }
                             ]}
                             onChange={(ev, { key }) => updateFn("AksPaidSkuForSLA", key)}
                         />
@@ -83,7 +92,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         <ChoiceGroup
                             selectedKey={cluster.SystemPoolType}
                             options={[
-                                { "data-testid":'cluster-systempool-none', key: 'none', text: 'No separate system pool: Use a single pool for System and User workloads' },
+                                { "data-testid":'cluster-systempool-none', key: 'none', text: 'No separate system pool: Use a single Linux pool for System and User workloads' },
                                 { "data-testid":'cluster-systempool-Cost-Optimised', key: 'CostOptimised', text: 'CostOptimised: use low-cost Burstable VMs, with 1-3 node autoscale' },
                                 { "data-testid":'cluster-systempool-Standard', key: 'Standard', text: 'Standard: use standard 4-core VMs, with 2-3 node autoscale' }
                             ]}
@@ -91,6 +100,41 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         />
                     </Stack.Item>
                 </Stack>
+
+                <Stack horizontal tokens={{ childrenGap: 150 }}>
+                    <Stack.Item>
+                        <Label>User Pool - OS Type</Label>
+                        <ChoiceGroup selectedKey={cluster.osType} onChange={(ev, { key }) => {  UpdateOsType(key) }}
+                            disabled={cluster.SystemPoolType==='none'}
+                            options={[
+                                {
+                                    "data-testid":'Linux',
+                                    key: 'Linux',
+                                    iconProps: { iconName: 'Server' },
+                                    text: 'Linux'
+                                }, {
+                                    "data-testid":'Windows',
+                                    key: 'Windows',
+                                    iconProps: { iconName: 'WindowsLogo' },
+                                    text: 'Windows'
+                                }
+                            ]} />
+                    </Stack.Item>
+                    <Stack.Item>
+                        <Label>OS SKU</Label>
+                        <Dropdown
+                            selectedKey={cluster.osSKU}
+                            onChange={(ev, { key }) => updateFn("osSKU", key)}
+                            options={[
+                                { key: 'Ubuntu', text: 'Ubuntu', disabled:cluster.osType!=='Linux' },
+                                { key: 'Windows2022', text: 'Windows Server 2022', disabled:cluster.osType!=='Windows' }
+                            ]}
+                            styles={{ dropdown: { width: "100%", minWidth: "200px" } }}
+                        />
+                    </Stack.Item>
+                </Stack>
+
+
 
                 <Stack horizontal tokens={{ childrenGap: 150 }}>
                     <Stack.Item>
@@ -122,12 +166,13 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         <TextField
                         placeholder='npuser01'
                         label="Node pool name"
-                        maxLength={12}
+                        maxLength={cluster.osType==='Windows' ? 6 : 12}
                         onChange={(ev, val) => updateFn('nodepoolName', val)}
                         required
                         errorMessage={getError(invalidArray, 'nodepoolName')}
                         value={cluster.nodepoolName} />
                     </Stack.Item>
+
                 </Stack>
 
                 <Stack horizontal tokens={{ childrenGap: 55 }}>
@@ -153,16 +198,21 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                     iconProps: { iconName: 'Game' },
                                     text: 'GPU Workloads',
                                     disabled: true
+                                },
+                                {
+                                    key: 'sgx',
+                                    iconProps: { iconName: 'LaptopSecure' },
+                                    text: 'SGX Enclave',
+                                    disabled: false
                                 }
                             ]}
                             />
                     </Stack.Item>
 
                     <Stack.Item>
-                        <Label >Virtual Machine Node Selection</Label>
+                        <Label>Virtual Machine Node Selection</Label>
                         <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: 500 } }}>
                             <Dropdown
-
                                 selectedKey={cluster.vmSize}
                                 onChange={(ev, { key }) => updateFn("vmSize", key)}
                                 placeholder="Select VM Size"
@@ -208,6 +258,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         </Stack>
                     </Stack.Item>
                 </Stack>
+
             </Stack>
 
             <Separator className="notopmargin" />
@@ -315,7 +366,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
                             />
 
-                            <Checkbox checked={cluster.enableAzureRBAC} onChange={(ev, val) => updateFn("enableAzureRBAC", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Azure RBAC for Kubernetes Authorization <Link target='_' href='https://docs.microsoft.com/azure/aks/manage-azure-rbac'>docs</Link>**</Text>} />
+                            <Checkbox checked={cluster.enableAzureRBAC} onChange={(ev, val) => updateFn("enableAzureRBAC", val)} onRenderLabel={() => <Text styles={{ root: { color: 'gray' } }}>Azure RBAC for Kubernetes Authorization <Link target='_' href='https://docs.microsoft.com/azure/aks/manage-azure-rbac'>docs</Link>**</Text>} />
 
                             {!cluster.enableAzureRBAC &&
                                 <>
@@ -326,7 +377,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                                 </>
                             }
 
-                            <Checkbox inputProps={{ "data-testid": "cluster-localaccounts-Checkbox"}} disabled={!cluster.enableAzureRBAC} checked={cluster.AksDisableLocalAccounts} onChange={(ev, val) => updateFn("AksDisableLocalAccounts", val)} onRenderLabel={() => <Text styles={{ root: { color: 'black' } }}>Disable Local Kubernetes Accounts <Link target='_' href='https://docs.microsoft.com/azure/aks/managed-aad#disable-local-accounts'>docs</Link>**</Text>} />
+                            <Checkbox inputProps={{ "data-testid": "cluster-localaccounts-Checkbox"}} disabled={!cluster.enableAzureRBAC} checked={cluster.AksDisableLocalAccounts} onChange={(ev, val) => updateFn("AksDisableLocalAccounts", val)} onRenderLabel={() => <Text styles={{ root: { color: 'gray' } }}>Disable Local Kubernetes Accounts <Link target='_' href='https://docs.microsoft.com/azure/aks/managed-aad#disable-local-accounts'>docs</Link>**</Text>} />
 
                         </Stack>
                     }
@@ -342,6 +393,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <ChoiceGroup
                     selectedKey={cluster.apisecurity}
                     styles={{ root: { marginLeft: '50px' } }}
+                    errorMessage={getError(invalidArray, 'apisecurity')}
                     options={[
                         { key: 'none', text: 'Public IP with no IP restrictions' },
                         { key: 'whitelist', text: 'Create allowed IP ranges (defaults to IP address of machine running the script)' },
@@ -350,6 +402,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     ]}
                     onChange={(ev, { key }) => updateFn("apisecurity", key)}
                 />
+                {hasError(invalidArray, 'apisecurity') &&
+                    <MessageBar styles={{ root: { marginLeft: '50px', width:'700px', marginTop: '10px !important'}}} messageBarType={MessageBarType.error}>{getError(invalidArray, 'apisecurity')}</MessageBar>
+                }
             </Stack.Item>
             <Stack.Item align="start" styles={{ root: { marginLeft: '100px',maxWidth: '700px', display: (cluster.apisecurity === "private" ? "block" : "none") } }} >
                 <Label style={{ marginBottom: "0px" }}>Private dns zone mode for private cluster.</Label>
