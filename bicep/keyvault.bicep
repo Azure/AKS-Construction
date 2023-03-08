@@ -51,7 +51,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
     enableSoftDelete: keyVaultSoftDelete
-    enablePurgeProtection: keyVaultPurgeProtection ? true : json('null')
+    enablePurgeProtection: keyVaultPurgeProtection ? true : null
   }
 }
 

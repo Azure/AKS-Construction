@@ -40,7 +40,7 @@ param byoAGWSubnetId string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
 var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
-resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = if (createAksUai) {
+resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
 }
@@ -409,7 +409,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = if (!
       retentionPolicy: acrUntaggedRetentionPolicyEnabled ? {
         status: 'enabled'
         days: acrUntaggedRetentionPolicy
-      } : json('null')
+      } : null
     }
     publicNetworkAccess: privateLinks /* && empty(acrIPWhitelist)*/ ? 'Disabled' : 'Enabled'
     zoneRedundancy: acrZoneRedundancyEnabled
@@ -597,7 +597,7 @@ var appGWenableWafFirewall = appGWsku=='Standard_v2' ? false : appGWenableFirewa
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed:
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (deployAppGw) {
+resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = if (deployAppGw) {
   name: 'id-appgw-${resourceName}'
   location: location
 }
@@ -1114,7 +1114,7 @@ var systemPoolBase = {
   osType: 'Linux'
   maxPods: 30
   type: 'VirtualMachineScaleSets'
-  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
+  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : null
   upgradeSettings: {
     maxSurge: '33%'
   }
