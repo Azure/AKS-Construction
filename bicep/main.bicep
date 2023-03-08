@@ -1545,7 +1545,8 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (cre
 
 
 resource containerLogsV2_Basiclogs 'Microsoft.OperationalInsights/workspaces/tables@2022-10-01' = if(containerLogsV2BasicLogs){
-  name: '${aks_law_name}/ContainerLogV2'
+  name: 'ContainerLogV2'
+  parent: aks_law
   properties: {
     plan: 'Basic'
   }
