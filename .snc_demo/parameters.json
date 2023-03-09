@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
       "resourceName": {
-        "value": "snc-demo-tn-aks"
+        "value": "snc-demo"
       },
       "upgradeChannel": {
         "value": "stable"

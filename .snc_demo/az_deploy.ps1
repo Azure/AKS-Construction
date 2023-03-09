@@ -13,7 +13,7 @@ az account list -o table --all --query "[].{TenantID: tenantId, Subscription: na
 $path_root = "C:\Users\Thanh.Ngo\OneDrive - Applied Information Sciences\Repos\AKS-Construction"
 $template_file = "$path_root\bicep\main.bicep"
 $param_file = "$path_root\.snc_demo\parameters.json"
-$rg_name = "snc-demo-tn-rg"
+$rg_name = "snc-demo-rg"
 $loc = "EastUS2"
 
 ## Create resource group

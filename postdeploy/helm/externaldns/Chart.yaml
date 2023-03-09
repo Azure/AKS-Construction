@@ -1,6 +1,0 @@
-apiVersion: v2
-name: externaldns
-description: A Helm chart for externaldns
-type: application
-version: 0.3.0 #chart version
-appVersion: "v0.11.0" #your app version (used as an image tag)
