@@ -409,7 +409,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
       retentionPolicy: acrUntaggedRetentionPolicyEnabled ? {
         status: 'enabled'
         days: acrUntaggedRetentionPolicy
-      } : json('null')
+      } : null
     }
     publicNetworkAccess: privateLinks /* && empty(acrIPWhitelist)*/ ? 'Disabled' : 'Enabled'
     zoneRedundancy: acrZoneRedundancyEnabled
@@ -832,7 +832,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.24.9'
+param kubernetesVersion string = '1.25.5'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -1113,7 +1113,7 @@ var systemPoolBase = {
   osType: 'Linux'
   maxPods: 30
   type: 'VirtualMachineScaleSets'
-  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
+  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : null
   upgradeSettings: {
     maxSurge: '33%'
   }
@@ -1541,7 +1541,8 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (cre
 
 
 resource containerLogsV2_Basiclogs 'Microsoft.OperationalInsights/workspaces/tables@2022-10-01' = if(containerLogsV2BasicLogs){
-  name: '${aks_law_name}/ContainerLogV2'
+  parent: aks_law
+  name: 'ContainerLogV2'
   properties: {
     plan: 'Basic'
   }
