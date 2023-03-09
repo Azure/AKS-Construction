@@ -1,0 +1,89 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "resourceName": {
+        "value": "snc-demo-tn-aks"
+      },
+      "upgradeChannel": {
+        "value": "stable"
+      },
+      "AksPaidSkuForSLA": {
+        "value": true
+      },
+      "agentCountMax": {
+        "value": 2
+      },
+      "custom_vnet": {
+        "value": true
+      },
+      "bastion": {
+        "value": true
+      },
+      "enable_aad": {
+        "value": true
+      },
+      "AksDisableLocalAccounts": {
+        "value": true
+      },
+      "enableAzureRBAC": {
+        "value": true
+      },
+      "registries_sku": {
+        "value": "Premium"
+      },
+      "azureFirewalls": {
+        "value": true
+      },
+      "privateLinks": {
+        "value": true
+      },
+      "keyVaultIPAllowlist": {
+        "value": [
+          "108.51.155.64/32"
+        ]
+      },
+      "enableTelemetry": {
+        "value": false
+      },
+      "omsagent": {
+        "value": true
+      },
+      "retentionInDays": {
+        "value": 30
+      },
+      "networkPolicy": {
+        "value": "azure"
+      },
+      "azurepolicy": {
+        "value": "deny"
+      },
+      "enablePrivateCluster": {
+        "value": true
+      },
+      "ingressApplicationGateway": {
+        "value": true
+      },
+      "appGWcount": {
+        "value": 0
+      },
+      "appGWsku": {
+        "value": "WAF_v2"
+      },
+      "appGWmaxCount": {
+        "value": 2
+      },
+      "appgwKVIntegration": {
+        "value": true
+      },
+      "keyVaultAksCSI": {
+        "value": true
+      },
+      "keyVaultCreate": {
+        "value": true
+      },
+      "acrPrivatePool": {
+        "value": true
+      }
+    }
+  }
