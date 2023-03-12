@@ -1,4 +1,9 @@
-on: [push]
+on:
+  push:
+    branches:
+      - tn-test
+  workflow_dispatch:
+
 name: Azure ARM
 jobs:
   build-and-deploy:
@@ -22,4 +27,3 @@ jobs:
         template: ./main.bicep
         parameters: 'storagePrefix=mystore storageSKU=Standard_LRS'
         failOnStdErr: false
-        
