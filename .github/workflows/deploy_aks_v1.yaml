@@ -18,6 +18,13 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    - name: Create resource group
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.80
+        inlineScript: |
+          az group create --name ${{ secrets.AZURE_RG }} --location ${{ secrets.AZURE_LOCATION }}
+
       # Deploy Bicep file
     - name: deploy
       uses: azure/arm-deploy@v1
@@ -25,5 +32,5 @@ jobs:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ secrets.AZURE_RG }}
         template: ./main.bicep
-        parameters: 'storagePrefix=mystore storageSKU=Standard_LRS'
+        parameters: ../.snc_demo/parameters.json
         failOnStdErr: false
