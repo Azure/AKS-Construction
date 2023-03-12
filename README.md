@@ -6,22 +6,27 @@ Building a complete Kubernetes operational environment is hard work! __AKS Const
 
 ## QuickStart
 
-* #### **Step 1**
-  Navigate to the AKS Construction [**helper**](https://azure.github.io/AKS-Construction/)
+* ### __Step 1__
 
-* #### **Step 2** Select your Requirements (optional)
+  Navigate to the AKS Construction [__helper__](https://azure.github.io/AKS-Construction/)
+
+* ### __Step 2__ Select your Requirements (optional)
+
   Select your base `Operational` and `Security` Principles using the presets that have been designed from our field experience
 
   ![presets](docs/images/helper-presets.jpg)
-  <br/>
-  > **Note**
-  > If following Azure's **Landing Zone** methodology, select `Enterprise Scale` from the dropdown, then select your environment type
+  
+  > __Note__
+  > If following Azure's __Landing Zone__ methodology, select `Enterprise Scale` from the dropdown, then select your environment type
 
-* #### **Step 3** Fine tune (optional)
+* ### __Step 3__ Fine tune (optional)
+
   Use the tabs to fine tune your cluster requirements
 
   ![fine tune](docs/images/helper-tabs.jpg)
-* #### **Step 4** Deploy
+
+* ### __Step 4__ Deploy
+
   In the `Deploy` tab, choose how you will deploy your new cluster, and follow the instructions
 
   ![deploy](docs/images/helper-deploy.jpg)
@@ -82,7 +87,7 @@ Guide | Description
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+the rights to use your contribution. For details, visit <https://cla.opensource.microsoft.com>.
 
 When you submit a pull request, a CLA bot will automatically determine whether you need to provide
 a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
