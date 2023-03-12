@@ -32,5 +32,5 @@ jobs:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ secrets.AZURE_RG }}
         template: ./bicep/main.bicep
-        parameters: ../.snc_demo/parameters.json
+        parameters: ./.snc_demo/parameters.json
         failOnStdErr: false
