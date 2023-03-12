@@ -18,12 +18,13 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Create resource group
-      uses: azure/CLI@v1
+      # Create Resource Group
+    - name: create-rg
+      uses: azure/azure-cli@v1
       with:
         azcliversion: 2.0.80
         inlineScript: |
-          az group create --name ${{ secrets.AZURE_RG }} --location ${{ secrets.AZURE_LOCATION }} --subscription ${{ secrets.AZURE_SUBSCRIPTION }}
+          az group create --name ${{ secrets.AZURE_RG }} --location ${{ secrets.AZURE_LOCATION }}
 
       # Deploy Bicep file
     - name: deploy
