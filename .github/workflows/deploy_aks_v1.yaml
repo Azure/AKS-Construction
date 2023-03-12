@@ -23,8 +23,7 @@ jobs:
       with:
         azcliversion: 2.0.80
         inlineScript: |
-          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION }}
-          az group create --name ${{ secrets.AZURE_RG }} --location ${{ secrets.AZURE_LOCATION }}
+          az group create --name ${{ secrets.AZURE_RG }} --location ${{ secrets.AZURE_LOCATION }} --subscription ${{ secrets.AZURE_SUBSCRIPTION }}
 
       # Deploy Bicep file
     - name: deploy
