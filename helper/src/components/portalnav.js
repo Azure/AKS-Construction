@@ -109,9 +109,9 @@ export default function PortalNav({ config }) {
   const { tabLabels, defaults, presets } = config
   const [pivotkey, setPivotkey] = useState(Object.keys(tabLabels)[0])
   useAITracking("PortalNav", tabLabels[pivotkey])
-
   const [urlParams, setUrlParams] = useState(new URLSearchParams(window.location.search))
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
+  useAITracking("PageNav", urlParams.get('preset') || 'defaultOps')
   // The selected cards within the sections for the chosen preset, for example { "ops": "normal", "secure": "high" }
   const [selected, setSelected] = useState(initSelected(urlParams.get('preset') || 'defaultOps'))
   // The tabValues, for example { "deploy": { "clusterName": "az234"}}
@@ -196,7 +196,7 @@ export default function PortalNav({ config }) {
 
   function updateSelected(sectionKey, cardKey) {
     console.log("Update Selected Fired " + sectionKey + " - " + cardKey)
-
+    appInsights.trackEvent({name: "SelectionCard." + sectionKey + "." + cardKey});
     setUrlParams((currentUrlParams) => {
       currentUrlParams.set(sectionKey, cardKey)
       window.history.replaceState(null, null, "?"+currentUrlParams.toString())
@@ -282,9 +282,9 @@ export default function PortalNav({ config }) {
   }
 
   function mergeState(tab, field, value, previewLink) {
-
     let updatevals
     let newFields = new Map()
+    appInsights.trackEvent({name: "FieldSelected." + tab + "." + field + "." + value});
     if (typeof field === "string") {
       updatevals = { [field]: value }
       newFields.set(`${tab}.${field}`, value)

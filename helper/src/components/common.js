@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {CommandBarButton} from '@fluentui/react'
+import { appInsights } from '../index.js'
 
 export function arrayAdd(array, key) {
     return array.includes(key) ? array : array.concat(key)
@@ -25,6 +26,7 @@ export function CodeBlock({deploycmd, testId, lang, filename, error, hideSave}) 
     const [ copied, setCopied ] = useState(false)
 
     function copyIt() {
+        appInsights.trackEvent({name: "Button.Deploy.Copy"});
         navigator.clipboard.writeText(deploycmd)
         setCopied(true)
         setTimeout(() => setCopied(false), 1000)
