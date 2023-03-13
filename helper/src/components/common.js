@@ -26,13 +26,16 @@ export function CodeBlock({deploycmd, testId, lang, filename, error, hideSave}) 
     const [ copied, setCopied ] = useState(false)
 
     function copyIt() {
-        appInsights.trackEvent({name: "Button.Deploy.Copy"});
+        console.log("AI:- Button.Copy." + testId)
+        appInsights.trackEvent({name: "Button.Copy."+ testId});
         navigator.clipboard.writeText(deploycmd)
         setCopied(true)
         setTimeout(() => setCopied(false), 1000)
     }
 
     function downloadIt(){
+        console.log("AI:- Button.Save." + testId)
+        appInsights.trackEvent({name: "Button.Save."+ testId});
         function dataUrl(data) {return "data:x-application/text," + escape(deploycmd);}
         window.open(dataUrl());
     }

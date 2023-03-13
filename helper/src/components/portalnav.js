@@ -116,6 +116,9 @@ export default function PortalNav({ config }) {
   const [selected, setSelected] = useState(initSelected(urlParams.get('preset') || 'defaultOps'))
   // The tabValues, for example { "deploy": { "clusterName": "az234"}}
   const [tabValues, setTabValues] = useState(initTabValues(selected, defaults, true))
+  // Field Selections - Used to keep track of the last FieldSelections monitored by App Insights to prevent logging the same entry continuously
+  const [tabState, setTab] = useState("");
+  const [fieldState, setField] = useState("");
 
   function initSelected (currentPreset) {
     return {
@@ -195,8 +198,8 @@ export default function PortalNav({ config }) {
   }
 
   function updateSelected(sectionKey, cardKey) {
-    console.log("Update Selected Fired " + sectionKey + " - " + cardKey)
-    appInsights.trackEvent({name: "SelectionCard." + sectionKey + "." + cardKey});
+    console.log("AI:- Card update fired " + sectionKey + " - " + cardKey)
+    appInsights.trackEvent({name: "Card." + sectionKey + "." + cardKey});
     setUrlParams((currentUrlParams) => {
       currentUrlParams.set(sectionKey, cardKey)
       window.history.replaceState(null, null, "?"+currentUrlParams.toString())
@@ -284,7 +287,13 @@ export default function PortalNav({ config }) {
   function mergeState(tab, field, value, previewLink) {
     let updatevals
     let newFields = new Map()
-    appInsights.trackEvent({name: "FieldSelected." + tab + "." + field + "." + value});
+    if(tabState !== tab || fieldState !== field){
+      console.log("AI:- Field Selected " + tab + "-" + field)
+      appInsights.trackEvent({name: "FieldSelected." + tab + "." + field});
+    }
+
+    setTab(tab)
+    setField(field)
     if (typeof field === "string") {
       updatevals = { [field]: value }
       newFields.set(`${tab}.${field}`, value)

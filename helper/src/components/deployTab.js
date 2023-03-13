@@ -466,7 +466,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
               </Stack.Item>
             </Stack>
 
-            <CodeBlock key="github-auth" lang="shell script" hideSave={true} error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
+            <CodeBlock testId={'deploy-github-shellscript'} key="github-auth" lang="shell script" hideSave={true} error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
 az group create -l WestEurope -n ${deploy.rg}
 
 app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | tr ' ' "\\n"))
@@ -489,7 +489,7 @@ gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 <Separator></Separator>
 
             <Text style={{marginTop: '20px'}}>Add the following code to a new file in your repos <code>.github/workflows</code> folder, this will call the AKS-Construction reusable workflow.  NOTE: This example creates a manually triggered Action</Text>
-            <CodeBlock  lang="github actions"  deploycmd={`name: Deploy AKS-Construction
+            <CodeBlock testId={'deploy-github-actions'} lang="github actions"  deploycmd={`name: Deploy AKS-Construction
 
 on:
   workflow_dispatch:
