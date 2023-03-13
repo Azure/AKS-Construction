@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
       "resourceName": {
-        "value": "snc-demo"
+        "value": "dev-cst-gva"
       },
       "upgradeChannel": {
         "value": "stable"

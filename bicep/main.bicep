@@ -41,7 +41,7 @@ param byoAGWSubnetId string = ''
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
 var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
 resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = if (createAksUai) {
-  name: 'id-aks-${resourceName}'
+  name: '${resourceName}-aks-uai'
   location: location
 }
 
@@ -273,9 +273,9 @@ resource kvKmsByo 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = if(!
 
 @description('Creates a new Key vault for a new KMS Key')
 module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
-  name: 'keyvaultKms-${resourceName}'
+  name: '${resourceName}-kvKms'
   params: {
-    resourceName: 'kms${resourceName}'
+    resourceName: '${resourceName}-kms-kv'
     keyVaultPurgeProtection: keyVaultPurgeProtection
     keyVaultSoftDelete: keyVaultSoftDelete
     location: location
@@ -285,7 +285,7 @@ module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
 }
 
 module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
-  name: 'keyvaultKmsRbacs-${resourceName}'
+  name: '${resourceName}-kvKmsRbacs'
   params: {
     keyVaultName: keyVaultKmsCreate ? kvKms.outputs.keyVaultName : ''
     //We can't create a kms kv and key and do privatelink. Private Link is a BYO scenario
@@ -308,7 +308,7 @@ module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
 }
 
 module kvKmsByoRbac 'keyvaultrbac.bicep' = if(!empty(keyVaultKmsByoKeyId)) {
-  name: 'keyvaultKmsByoRbacs-${resourceName}'
+  name: '${resourceName}-keyvaultKmsByoRbacs'
   scope: resourceGroup(keyVaultKmsByoRG)
   params: {
     keyVaultName: kvKmsByo.name
@@ -325,7 +325,7 @@ module kvKmsByoRbac 'keyvaultrbac.bicep' = if(!empty(keyVaultKmsByoKeyId)) {
 
 @description('It can take time for the RBAC to propagate, this delays the deployment to avoid this problem')
 module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKmsCreateAndPrereqs && kmsRbacWaitSeconds>0) {
-  name: 'keyvaultKmsRbac-waits-${resourceName}'
+  name: '${resourceName}-keyvaultKmsRbac-waits'
   params: {
     waitSeconds: kmsRbacWaitSeconds
     location: location
@@ -337,7 +337,7 @@ module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKms
 
 @description('Adding a key to the keyvault... We can only do this for public key vaults')
 module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreateAndPrereqs) {
-  name: 'keyvaultKmsKeys-${resourceName}'
+  name: '${resourceName}-keyvaultKmsKeys'
   params: {
     keyVaultName: keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : ''
   }
@@ -391,7 +391,7 @@ param acrUntaggedRetentionPolicyEnabled bool = false
 @description('The number of days to retain untagged manifests for')
 param acrUntaggedRetentionPolicy int = 30
 
-var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
+var acrName = '${replace(resourceName, '-', '')}acr${uniqueString(resourceGroup().id, resourceName)}'
 
 resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!empty(registries_sku)) {
   name: acrName
@@ -597,15 +597,15 @@ var appGWenableWafFirewall = appGWsku=='Standard_v2' ? false : appGWenableFirewa
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed:
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
 resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (deployAppGw) {
-  name: 'id-appgw-${resourceName}'
+  name: '${resourceName}-agw-uai'
   location: location
 }
 
-var appgwName = 'agw-${resourceName}'
+var appgwName = '${resourceName}-agw-001'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
 resource appgwpip 'Microsoft.Network/publicIPAddresses@2021-02-01' = if (deployAppGw) {
-  name: 'pip-agw-${resourceName}'
+  name: '${resourceName}-agw-pip-001'
   location: location
   sku: {
     name: 'Standard'
@@ -1281,7 +1281,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 )
 
 resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
-  name: 'aks-${resourceName}'
+  name: '${resourceName}-aks-001'
   location: location
   properties: aksProperties
   identity: createAksUai ? aks_identity : {
@@ -1523,7 +1523,7 @@ param retentionInDays int = 30
 @description('The Log Analytics daily data cap (GB) (0=no limit)')
 param logDataCap int = 0
 
-var aks_law_name = 'log-${resourceName}'
+var aks_law_name = '${resourceName}-aks-law'
 
 var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecurityGroups || defenderForContainers)
 

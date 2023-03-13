@@ -8,11 +8,11 @@ param workspaceId string
 param appGWcount int
 param appGWmaxCount int
 
-var appgwName = 'agw-${resourceName}'
+var appgwName = '${resourceName}-agw-001'
 var appgwResourceId = resourceId('Microsoft.Network/applicationGateways', '${appgwName}')
 
 resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = {
-  name: 'pip-agw-${resourceName}'
+  name: '${resourceName}-agw-pip-001'
   location: location
   sku: {
     name: 'Standard'

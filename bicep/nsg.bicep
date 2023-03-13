@@ -4,7 +4,7 @@ param workspaceId string = ''
 param workspaceResourceId string = ''
 param workspaceRegion string = resourceGroup().location
 
-var nsgName = 'nsg-${resourceName}'
+var nsgName = '${resourceName}-nsg-001'
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
   name: nsgName

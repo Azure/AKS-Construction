@@ -110,7 +110,7 @@ var fwmgmt_subnet = {
   }
 }
 
-var routeFwTableName = 'rt-afw-${resourceName}'
+var routeFwTableName = '${resourceName}-afw-rt'
 resource vnet_udr 'Microsoft.Network/routeTables@2022-07-01' = if (azureFirewalls) {
   name: routeFwTableName
   location: location
@@ -173,7 +173,7 @@ var subnets = union(
 )
 output debugSubnets array = subnets
 
-var vnetName = 'vnet-${resourceName}'
+var vnetName = '${resourceName}-vnet-001'
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   name: vnetName
   location: location
@@ -205,12 +205,12 @@ module aks_vnet_con 'networksubnetrbac.bicep' = if (!empty(aksPrincipleId)) {
 }
 
 /*   --------------------------------------------------------------------------  Private Link for ACR      */
-var privateLinkAcrName = 'pl-acr-${resourceName}'
+var privateLinkAcrName = '${resourceName}-acr-pep'
 resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-08-01' = if (!empty(privateLinkAcrId)) {
   name: privateLinkAcrName
   location: location
   properties: {
-    customNetworkInterfaceName: 'nic-${privateLinkAcrName}'
+    customNetworkInterfaceName: '${privateLinkAcrName}-nic'
     privateLinkServiceConnections: [
       {
         name: 'Acr-Connection'
@@ -233,7 +233,7 @@ resource privateDnsAcr 'Microsoft.Network/privateDnsZones@2020-06-01' = if (!emp
   location: 'global'
 }
 
-var privateDnsAcrLinkName = 'vnet-dnscr-${resourceName}'
+var privateDnsAcrLinkName = '${resourceName}-vnet-dns-acr'
 resource privateDnsAcrLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (!empty(privateLinkAcrId))  {
   parent: privateDnsAcr
   name: privateDnsAcrLinkName
@@ -252,7 +252,7 @@ resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
   properties: {
     privateDnsZoneConfigs: [
       {
-        name: 'vnet-pl-acr'
+        name: 'vnet-pep-acr'
         properties: {
           privateDnsZoneId: privateDnsAcr.id
         }
@@ -263,12 +263,12 @@ resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
 
 
 /*   --------------------------------------------------------------------------  Private Link for KeyVault      */
-var privateLinkAkvName = 'pl-akv-${resourceName}'
+var privateLinkAkvName = '${resourceName}-akv-pep'
 resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-08-01' = if (!empty(privateLinkAkvId)) {
   name: privateLinkAkvName
   location: location
   properties: {
-    customNetworkInterfaceName: 'nic-${privateLinkAkvName}'
+    customNetworkInterfaceName: '${privateLinkAkvName}-nic'
     privateLinkServiceConnections: [
       {
         name: 'Akv-Connection'
@@ -291,7 +291,7 @@ resource privateDnsAkv 'Microsoft.Network/privateDnsZones@2020-06-01' = if (!emp
   location: 'global'
 }
 
-var privateDnsAkvLinkName = 'vnet-dnscr-${resourceName}'
+var privateDnsAkvLinkName = '${resourceName}-vnet-dns-acr'
 resource privateDnsAkvLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (!empty(privateLinkAkvId))  {
   parent: privateDnsAkv
   name: privateDnsAkvLinkName
@@ -319,8 +319,8 @@ resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
   }
 }
 
-param bastionHostName string = 'bas-${resourceName}'
-var publicIpAddressName = 'pip-${bastionHostName}'
+param bastionHostName string = '${resourceName}-bst'
+var publicIpAddressName = '${bastionHostName}-pip-001'
 
 @allowed([
   'Standard'
@@ -371,7 +371,7 @@ resource log 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = if
 
 param CreateNsgFlowLogs bool = false
 
-var flowLogStorageRawName = replace(toLower('stflow${resourceName}${uniqueString(resourceGroup().id, resourceName)}'),'-','')
+var flowLogStorageRawName = replace(toLower('${resourceName}stflow${uniqueString(resourceGroup().id, resourceName)}'),'-','')
 var flowLogStorageName = length(flowLogStorageRawName) > 24 ? substring(flowLogStorageRawName, 0, 24) : flowLogStorageRawName
 resource flowLogStor 'Microsoft.Storage/storageAccounts@2021-08-01' = if(CreateNsgFlowLogs && networkSecurityGroups) {
   name: flowLogStorageName
@@ -390,7 +390,7 @@ module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
   name: 'nsgAks'
   params: {
     location: location
-    resourceName: '${aks_subnet_name}-${resourceName}'
+    resourceName: '${resourceName}-${aks_subnet_name}'
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -405,7 +405,7 @@ module nsgAcrPool 'nsg.bicep' = if(acrPrivatePool && networkSecurityGroups) {
   name: 'nsgAcrPool'
   params: {
     location: location
-    resourceName: '${acrpool_subnet_name}-${resourceName}'
+    resourceName: '${resourceName}-${acrpool_subnet_name}'
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -420,7 +420,7 @@ module nsgAppGw 'nsg.bicep' = if(ingressApplicationGateway && networkSecurityGro
   name: 'nsgAppGw'
   params: {
     location: location
-    resourceName: '${appgw_subnet_name}-${resourceName}'
+    resourceName: '${resourceName}-${appgw_subnet_name}'
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -441,7 +441,7 @@ module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
   name: 'nsgBastion'
   params: {
     location: location
-    resourceName: '${bastion_subnet_name}-${resourceName}'
+    resourceName: '${resourceName}-${bastion_subnet_name}'
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -462,7 +462,7 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   name: 'nsgPrivateLinks'
   params: {
     location: location
-    resourceName: '${private_link_subnet_name}-${resourceName}'
+    resourceName: '${resourceName}-${private_link_subnet_name}'
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -485,7 +485,7 @@ resource natGwIp 'Microsoft.Network/publicIPAddresses@2021-08-01' =  [for i in r
   }
 }]
 
-var natGwName = 'ng-${resourceName}'
+var natGwName = '${resourceName}-nat-gw'
 resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
   name: natGwName
   location: location

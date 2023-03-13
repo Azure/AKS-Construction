@@ -10,8 +10,8 @@ param acrAgentPoolSubnetAddressPrefix string = ''
 param availabilityZones array = []
 param fwSku string
 
-var firewallPublicIpName = 'pip-afw-${resourceName}'
-var firewallManagementPublicIpName = 'pip-mgmt-afw-${resourceName}'
+var firewallPublicIpName = '${resourceName}-afw-pip-001'
+var firewallManagementPublicIpName = '${resourceName}-afw-pip-002'
 
 var managementIpConfig = {
   name: 'MgmtIpConf'
@@ -90,7 +90,7 @@ resource fwDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
 @description('Whitelist dnsZone name (required by cert-manager validation process)')
 param appDnsZoneName string = ''
 
-var fw_name = 'afw-${resourceName}'
+var fw_name = '${resourceName}-afw-001'
 resource fw 'Microsoft.Network/azureFirewalls@2022-01-01' = {
   name: fw_name
   location: location
@@ -123,7 +123,7 @@ resource fw 'Microsoft.Network/azureFirewalls@2022-01-01' = {
 }
 
 resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
-  name: 'afwp-${resourceName}'
+  name: '${resourceName}-afw-pol-001'
   location: location
   properties: {
     sku: {
