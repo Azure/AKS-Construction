@@ -354,9 +354,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     selectedKey={addons.networkPolicy}
                     options={[
                         { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { "data-testid":'addons-netpolicy-calico', key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { "data-testid":'addons-netpolicy-azure', key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
-
+                        { "data-testid":'addons-netpolicy-calico', disabled: net.ebpfDataplane, key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
+                        { "data-testid":'addons-netpolicy-azure', disabled: net.ebpfDataplane, key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
+                        { "data-testid":'addons-netpolicy-cilium', disabled: true, key: 'cilium', text: 'The Cilium ebpf backplane will leverage the Cilium Network Policy, it cannot be selected independently or explicitly.' }
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPolicy", key)}
                 />
