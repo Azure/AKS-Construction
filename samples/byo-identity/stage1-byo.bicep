@@ -8,7 +8,7 @@ resource byoId 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
 }
 
 @description('Creating the network resources for the AKS cluster')
-module byoNetwork 'networkforbyo.bicep' = {
+module byoNetwork '../networkforbyo.bicep' = {
   name: 'byoNetwork'
   params: {
     location: location
@@ -17,7 +17,7 @@ module byoNetwork 'networkforbyo.bicep' = {
 }
 
 @description('Creates the correct RBAC for the BYO resources')
-module rbac '../bicep/aksnetcontrib.bicep' = {
+module rbac '../../bicep/aksnetcontrib.bicep' = {
   name: 'addAksNetContributor'
   params: {
     byoAKSSubnetId: byoNetwork.outputs.aksSubnetId
@@ -26,13 +26,5 @@ module rbac '../bicep/aksnetcontrib.bicep' = {
   }
 }
 
-@description('Creating the AKS cluster, referncing the *BYO* resources')
-module aks '../bicep/main.bicep' = {
-  name: resourceName
-  params: {
-    resourceName: resourceName
-    location: location
-    byoUaiName: byoId.name
-    byoAKSSubnetId: byoNetwork.outputs.aksSubnetId
-  }
-}
+output byoAksSubnetId string = byoNetwork.outputs.aksSubnetId
+output byoIdName string = byoId.name
