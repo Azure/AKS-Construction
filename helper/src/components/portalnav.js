@@ -188,7 +188,7 @@ export default function PortalNav({ config }) {
               val.reduce((a, c) => a === undefined ? (c.page && c.field ? (currenttabValues[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
               :
               val
-            console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
+            //console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
             return { ...a, [c]: targetVal }
           }, {})
         }
@@ -289,6 +289,7 @@ export default function PortalNav({ config }) {
     if(lastAIUpdated.tab !== tab || lastAIUpdated.field !== field){
       //console.log("AI:- Field Selected " + tab + "-" + field)
       appInsights.trackEvent({name: "FieldSelected." + tab + "." + field});
+      setLastAIUpdated({tab: tab, field: field})
     }
 
     if (typeof field === "string") {
@@ -301,7 +302,6 @@ export default function PortalNav({ config }) {
       }
     }
 
-    setLastAIUpdated({tab: tab, field: field})
     setTabValues((p) => {
       return {
         ...p,
