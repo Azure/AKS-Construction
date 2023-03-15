@@ -38,12 +38,21 @@ param byoAKSSubnetId string = ''
 @description('Full resource id path of an existing subnet to use for Application Gateway')
 param byoAGWSubnetId string = ''
 
+@description('The name of an existing User Assigned Identity to use for AKS (in the same resouce group), requires rbac assignments to be done outside of this template')
+param byoUaiName string = ''
+
 //--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
-var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
+var createAksUai = (custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)) && empty(byoUaiName)
 resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
 }
+
+resource byoAksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' existing = if (!empty(byoUaiName)) {
+  name: byoUaiName
+}
+
+var aksPrincipalId = !empty(byoUaiName) ? byoAksUai.properties.principalId : createAksUai ? aksUai.properties.principalId : ''
 
 //----------------------------------------------------- BYO Vnet
 var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 4 ? split(byoAKSSubnetId, '/')[4] : '') : ''
@@ -121,7 +130,7 @@ module network './network.bicep' = if (custom_vnet) {
     location: location
     networkPluginIsKubenet: networkPlugin=='kubenet'
     vnetAddressPrefix: vnetAddressPrefix
-    aksPrincipleId: createAksUai ? aksUai.properties.principalId : ''
+    aksPrincipleId: aksPrincipalId
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     ingressApplicationGateway: ingressApplicationGateway
     vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
@@ -294,7 +303,7 @@ module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
     // ]
     //This allows the Aks Cluster to access the key vault key
     rbacCryptoUserSps: [
-      createAksUai ? aksUai.properties.principalId : ''
+      aksPrincipalId
     ]
     //This allows the Deploying user to create the key vault key
     rbacCryptoOfficerUsers: [
@@ -314,11 +323,11 @@ module kvKmsByoRbac 'keyvaultrbac.bicep' = if(!empty(keyVaultKmsByoKeyId)) {
     keyVaultName: kvKmsByo.name
     //Contribuor allows AKS to create the private link
     rbacKvContributorSps : [
-      createAksUai && privateLinks ? aksUai.properties.principalId : ''
+      privateLinks ? aksPrincipalId : ''
     ]
     //This allows the Aks Cluster to access the key vault key
     rbacCryptoUserSps: [
-      createAksUai ? aksUai.properties.principalId : ''
+      aksPrincipalId
     ]
   }
 }
@@ -1181,7 +1190,7 @@ var aks_addons1 = ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
 var aks_identity = {
   type: 'UserAssigned'
   userAssignedIdentities: {
-    '${aksUai.id}': {}
+    '${createAksUai ? aksUai.id : !empty(byoUaiName) ? byoAksUai.id : '' }': {}
   }
 }
 
@@ -1349,7 +1358,7 @@ module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !e
   params: {
     vnetId: ''
     dnsZoneId: dnsApiPrivateZoneId
-    principalId: createAksUai ? aksUai.properties.principalId : ''
+    principalId: aksPrincipalId
   }
 }
 
