@@ -109,13 +109,15 @@ export default function PortalNav({ config }) {
   const { tabLabels, defaults, presets } = config
   const [pivotkey, setPivotkey] = useState(Object.keys(tabLabels)[0])
   useAITracking("PortalNav", tabLabels[pivotkey])
-
   const [urlParams, setUrlParams] = useState(new URLSearchParams(window.location.search))
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
   // The selected cards within the sections for the chosen preset, for example { "ops": "normal", "secure": "high" }
   const [selected, setSelected] = useState(initSelected(urlParams.get('preset') || 'defaultOps'))
+  useAITracking("PageNav", selected.preset)
   // The tabValues, for example { "deploy": { "clusterName": "az234"}}
   const [tabValues, setTabValues] = useState(initTabValues(selected, defaults, true))
+  // Field Selections - Used to keep track of the last FieldSelections monitored by App Insights to prevent logging the same entry continuously
+  const [lastAIUpdated, setLastAIUpdated] = useState ({tab: null, field: null})
 
   function initSelected (currentPreset) {
     return {
@@ -169,9 +171,9 @@ export default function PortalNav({ config }) {
 
 
   function updateTabValues(currenttabValues, sections, sectionKey, cardKey) {
-    console.log(`updateTabValues`)
+    //console.log(`updateTabValues`)
     const card_values = sections.find(s => s.key === sectionKey).cards.find(c => c.key === cardKey).values
-    console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
+    //console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
     return Object.keys(card_values).reduce((acc, curr) => {
       return {
         ...acc,
@@ -186,7 +188,7 @@ export default function PortalNav({ config }) {
               val.reduce((a, c) => a === undefined ? (c.page && c.field ? (currenttabValues[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
               :
               val
-            console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
+            //console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
             return { ...a, [c]: targetVal }
           }, {})
         }
@@ -195,8 +197,8 @@ export default function PortalNav({ config }) {
   }
 
   function updateSelected(sectionKey, cardKey) {
-    console.log("Update Selected Fired " + sectionKey + " - " + cardKey)
-
+    //console.log("AI:- Card update fired " + sectionKey + " - " + cardKey)
+    appInsights.trackEvent({name: "Card." + sectionKey + "." + cardKey});
     setUrlParams((currentUrlParams) => {
       currentUrlParams.set(sectionKey, cardKey)
       window.history.replaceState(null, null, "?"+currentUrlParams.toString())
@@ -282,9 +284,14 @@ export default function PortalNav({ config }) {
   }
 
   function mergeState(tab, field, value, previewLink) {
-
     let updatevals
     let newFields = new Map()
+    if(lastAIUpdated.tab !== tab || lastAIUpdated.field !== field){
+      //console.log("AI:- Field Selected " + tab + "-" + field)
+      appInsights.trackEvent({name: "FieldSelected." + tab + "." + field});
+      setLastAIUpdated({tab: tab, field: field})
+    }
+
     if (typeof field === "string") {
       updatevals = { [field]: value }
       newFields.set(`${tab}.${field}`, value)
