@@ -171,9 +171,9 @@ export default function PortalNav({ config }) {
 
 
   function updateTabValues(currenttabValues, sections, sectionKey, cardKey) {
-    console.log(`updateTabValues`)
+    //console.log(`updateTabValues`)
     const card_values = sections.find(s => s.key === sectionKey).cards.find(c => c.key === cardKey).values
-    console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
+    //console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
     return Object.keys(card_values).reduce((acc, curr) => {
       return {
         ...acc,
@@ -197,7 +197,7 @@ export default function PortalNav({ config }) {
   }
 
   function updateSelected(sectionKey, cardKey) {
-    console.log("AI:- Card update fired " + sectionKey + " - " + cardKey)
+    //console.log("AI:- Card update fired " + sectionKey + " - " + cardKey)
     appInsights.trackEvent({name: "Card." + sectionKey + "." + cardKey});
     setUrlParams((currentUrlParams) => {
       currentUrlParams.set(sectionKey, cardKey)
@@ -287,7 +287,7 @@ export default function PortalNav({ config }) {
     let updatevals
     let newFields = new Map()
     if(lastAIUpdated.tab !== tab || lastAIUpdated.field !== field){
-      console.log("AI:- Field Selected " + tab + "-" + field)
+      //console.log("AI:- Field Selected " + tab + "-" + field)
       appInsights.trackEvent({name: "FieldSelected." + tab + "." + field});
     }
 
