@@ -111,9 +111,9 @@ export default function PortalNav({ config }) {
   useAITracking("PortalNav", tabLabels[pivotkey])
   const [urlParams, setUrlParams] = useState(new URLSearchParams(window.location.search))
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
-  useAITracking("PageNav", urlParams.get('preset') || 'defaultOps')
   // The selected cards within the sections for the chosen preset, for example { "ops": "normal", "secure": "high" }
   const [selected, setSelected] = useState(initSelected(urlParams.get('preset') || 'defaultOps'))
+  useAITracking("PageNav", selected.preset)
   // The tabValues, for example { "deploy": { "clusterName": "az234"}}
   const [tabValues, setTabValues] = useState(initTabValues(selected, defaults, true))
   // Field Selections - Used to keep track of the last FieldSelections monitored by App Insights to prevent logging the same entry continuously
