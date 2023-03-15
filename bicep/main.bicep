@@ -723,6 +723,7 @@ var appgwProperties = union({
       name: 'appGwRoutingRuleName'
       properties: {
         ruleType: 'Basic'
+        priority: '1'
         httpListener: {
           id: '${appgwResourceId}/httpListeners/hlisten'
         }
