@@ -117,8 +117,7 @@ export default function PortalNav({ config }) {
   // The tabValues, for example { "deploy": { "clusterName": "az234"}}
   const [tabValues, setTabValues] = useState(initTabValues(selected, defaults, true))
   // Field Selections - Used to keep track of the last FieldSelections monitored by App Insights to prevent logging the same entry continuously
-  const [tabState, setTab] = useState("");
-  const [fieldState, setField] = useState("");
+  const [lastAIUpdated, setLastAIUpdated] = useState ({tab: null, field: null})
 
   function initSelected (currentPreset) {
     return {
@@ -287,13 +286,11 @@ export default function PortalNav({ config }) {
   function mergeState(tab, field, value, previewLink) {
     let updatevals
     let newFields = new Map()
-    if(tabState !== tab || fieldState !== field){
+    if(lastAIUpdated.tab !== tab || lastAIUpdated.field !== field){
       console.log("AI:- Field Selected " + tab + "-" + field)
       appInsights.trackEvent({name: "FieldSelected." + tab + "." + field});
     }
 
-    setTab(tab)
-    setField(field)
     if (typeof field === "string") {
       updatevals = { [field]: value }
       newFields.set(`${tab}.${field}`, value)
@@ -304,6 +301,7 @@ export default function PortalNav({ config }) {
       }
     }
 
+    setLastAIUpdated({tab: tab, field: field})
     setTabValues((p) => {
       return {
         ...p,
