@@ -348,18 +348,23 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             <Separator className="notopmargin" />
             <Stack.Item align="start">
                 <Label >Cluster East-West traffic restrictions (Network Policies)</Label>
-                <MessageBar>Control which components can communicate with each other. The principle of least privilege should be applied to how traffic can flow between pods in an Azure Kubernetes Service (AKS) cluster</MessageBar>
+                <MessageBar>Control which components can communicate with each other. The principle of least privilege should be applied to how traffic can flow between pods in an Azure Kubernetes Service (AKS) cluster.</MessageBar>
+                {hasError(invalidArray, 'networkPolicy') &&
+                    <MessageBar messageBarType={MessageBarType.error} styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }}>{getError(invalidArray, 'networkPolicy')}</MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.networkPolicy}
+                    errorMessage={getError(invalidArray, 'networkPolicy')}
                     options={[
                         { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { "data-testid":'addons-netpolicy-calico', disabled: net.ebpfDataplane, key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { "data-testid":'addons-netpolicy-azure', disabled: net.ebpfDataplane, key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { "data-testid":'addons-netpolicy-cilium', disabled: true, key: 'cilium', text: 'The Cilium ebpf backplane will leverage the Cilium Network Policy, it cannot be selected independently or explicitly.' }
+                        { "data-testid":'addons-netpolicy-calico', disabled: net.ebpfDataplane, key: 'calico', text: 'Use Calico to implement intra-cluster traffic restrictions' },
+                        { "data-testid":'addons-netpolicy-azure', disabled: net.ebpfDataplane, key: 'azure', text: 'Use Azure NPM to implement intra-cluster traffic restrictions ' },
+                        { "data-testid":'addons-netpolicy-cilium', key: 'cilium', text: 'Use Cilium to implement intra-cluster traffic restrictions (requires Cilium backplane for CNI).' }
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPolicy", key)}
                 />
+
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.networkPolicy === "none" ? "none" : "block") } }} >
