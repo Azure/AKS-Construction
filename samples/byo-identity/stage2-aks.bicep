@@ -3,7 +3,7 @@ param byoIdName string
 param byoAksSubnetId string
 param location string = resourceGroup().location
 
-@description('Creating the AKS cluster, referncing the *BYO* resources')
+@description('Creating the AKS cluster, referencing  the *BYO* resources')
 module aks '../../bicep/main.bicep' = {
   name: resourceName
   params: {

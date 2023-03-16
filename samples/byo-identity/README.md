@@ -10,3 +10,9 @@ Stage | Purpose | Team | Azure RBAC role
 [2](stage2-aks.bicep) | Creating the AKS cluster | Dev team | Contributor
 [3](stage3-acrrbac.bicep) | Allowing the AKS cluster access to the Container Registry | Admin | Owner
 [4](stage4-aksrbac.bicep) | Allowing the Dev Team permission to the AKS Cluster to create Kubernetes objects (deployments etc) | Admin | Owner
+
+To illustrate these 4 stages being sequenced, [main.bicep](main.bicep) shows creating a single end to end deployment.
+
+```bash
+az deployment group create -g <your-resource-group> -f main.bicep -p resourceName=kubenv developerAadId=$(az ad signed-in-user show --query id --out tsv)
+```

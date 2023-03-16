@@ -1,5 +1,6 @@
 param resourceName string
 param location string = resourceGroup().location
+param developerAadId string
 
 module stage1 'stage1-byo.bicep' = {
   name: 'stage1'
@@ -24,5 +25,13 @@ module stage3 'stage3-acrrbac.bicep' = {
   params: {
     acrName: stage2.outputs.acrName
     aksName: stage2.outputs.aksName
+  }
+}
+
+module stage4 'stage4-aksrbac.bicep' = {
+  name: 'stage4'
+  params: {
+    aksName: stage2.outputs.aksName
+    aadUserObjectId: deployingUser
   }
 }
