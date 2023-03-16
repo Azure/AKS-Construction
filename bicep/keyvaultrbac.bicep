@@ -48,7 +48,7 @@ var keyVaultCryptoUserRole = subscriptionResourceId('Microsoft.Authorization/rol
 var keyVaultCryptoOfficerRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '14b46e9e-c2b7-41b4-b07b-48a6ebf60603')
 var keyVaultCryptoServiceEncrpytionRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions','e147488a-f6f5-4113-8e2d-b22465e65bf6')
 
-resource kv 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
+resource kv 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
   name: keyVaultName
 }
 

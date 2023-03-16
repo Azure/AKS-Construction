@@ -109,13 +109,15 @@ export default function PortalNav({ config }) {
   const { tabLabels, defaults, presets } = config
   const [pivotkey, setPivotkey] = useState(Object.keys(tabLabels)[0])
   useAITracking("PortalNav", tabLabels[pivotkey])
-
   const [urlParams, setUrlParams] = useState(new URLSearchParams(window.location.search))
   const [invalidArray, setInvalidArray] = useState(() => Object.keys(defaults).reduce((a, c) => { return { ...a, [c]: [] } }, {}))
   // The selected cards within the sections for the chosen preset, for example { "ops": "normal", "secure": "high" }
   const [selected, setSelected] = useState(initSelected(urlParams.get('preset') || 'defaultOps'))
+  useAITracking("PageNav", selected.preset)
   // The tabValues, for example { "deploy": { "clusterName": "az234"}}
   const [tabValues, setTabValues] = useState(initTabValues(selected, defaults, true))
+  // Field Selections - Used to keep track of the last FieldSelections monitored by App Insights to prevent logging the same entry continuously
+  const [lastAIUpdated, setLastAIUpdated] = useState ({tab: null, field: null})
 
   function initSelected (currentPreset) {
     return {
@@ -169,9 +171,9 @@ export default function PortalNav({ config }) {
 
 
   function updateTabValues(currenttabValues, sections, sectionKey, cardKey) {
-    console.log(`updateTabValues`)
+    //console.log(`updateTabValues`)
     const card_values = sections.find(s => s.key === sectionKey).cards.find(c => c.key === cardKey).values
-    console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
+    //console.log(`updateTabValues: sectionKey=${sectionKey} cardKey=${cardKey}, setting tabs ${JSON.stringify(Object.keys(card_values))}`)
     return Object.keys(card_values).reduce((acc, curr) => {
       return {
         ...acc,
@@ -186,7 +188,7 @@ export default function PortalNav({ config }) {
               val.reduce((a, c) => a === undefined ? (c.page && c.field ? (currenttabValues[c.page][c.field] === c.value ? c.set : undefined) : c.set) : a, undefined)
               :
               val
-            console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
+            //console.log(`updateTabValues: setting tab=${curr}, field=${c} val=${JSON.stringify(val)} targetVal=${JSON.stringify(targetVal)}`)
             return { ...a, [c]: targetVal }
           }, {})
         }
@@ -195,8 +197,8 @@ export default function PortalNav({ config }) {
   }
 
   function updateSelected(sectionKey, cardKey) {
-    console.log("Update Selected Fired " + sectionKey + " - " + cardKey)
-
+    //console.log("AI:- Card update fired " + sectionKey + " - " + cardKey)
+    appInsights.trackEvent({name: "Card." + sectionKey + "." + cardKey});
     setUrlParams((currentUrlParams) => {
       currentUrlParams.set(sectionKey, cardKey)
       window.history.replaceState(null, null, "?"+currentUrlParams.toString())
@@ -282,9 +284,14 @@ export default function PortalNav({ config }) {
   }
 
   function mergeState(tab, field, value, previewLink) {
-
     let updatevals
     let newFields = new Map()
+    if(lastAIUpdated.tab !== tab || lastAIUpdated.field !== field){
+      //console.log("AI:- Field Selected " + tab + "-" + field)
+      appInsights.trackEvent({name: "FieldSelected." + tab + "." + field});
+      setLastAIUpdated({tab: tab, field: field})
+    }
+
     if (typeof field === "string") {
       updatevals = { [field]: value }
       newFields.set(`${tab}.${field}`, value)
@@ -366,10 +373,12 @@ export default function PortalNav({ config }) {
   invalidFn('cluster', 'keyVaultKmsByoRG', cluster.keyVaultKms === "byoprivate" && !cluster.keyVaultKmsByoRG, 'Enter existing KeyVault Resource Group Name')
   invalidFn('addons', 'dnsZoneId', addons.dns && !addons.dnsZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/(dnszones|privateDnsZones)/[^/ ]+$'), 'Enter valid Azure Public or Private DNS Zone resourceId')
   invalidFn('cluster', 'dnsApiPrivateZoneId', cluster.apisecurity === 'private' && cluster.privateClusterDnsMethod === 'privateDnsZone' && !cluster.dnsApiPrivateZoneId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/privateDnsZones/[^/ ]+.azmk8s.io$'), 'Enter valid Azure Private DNS Zone resourceId')
+  invalidFn('cluster', 'apisecurity', cluster.apisecurity === 'private' && cluster.osType === 'Windows', 'Private clusters leverage the AKS Run Command for post deploy actions. Windows nodes are unable to use the AKS Run Command feature. Please select a different API Server Security or Node OS option')
   invalidFn('addons', 'certEmail', addons.certMan && !addons.certEmail.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'), 'Enter valid email for certificate generation')
   invalidFn('addons', 'kvId', addons.csisecret === "akvExist" && !addons.kvId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.KeyVault/vaults/[^/ ]+$'), 'Enter valid Azure KeyVault resourceId')
   invalidFn('addons', 'appgw_privateIpAddress', addons.ingress === "appgw" && addons.appgw_privateIp && !addons.appgw_privateIpAddress.match('^(?:[0-9]{1,3}.){3}[0-9]{1,3}$'), 'Enter valid IP address')
   invalidFn('addons', 'appgwKVIntegration', addons.ingress === "appgw" && addons.appgwKVIntegration && addons.csisecret !== 'akvNew', 'KeyVault integration requires the \'CSI Secrets\' \'Yes, Provision a new KeyVault\' option to be selected')
+  invalidFn('addons', 'ingress', cluster.osType === "Windows" && addons.ingress !== "appgw" && addons.ingress !== "none", 'Neither the Windows nodepool or the system pool will be able to run your selected Ingress Controller. To support this Ingress Controller, add another linux nodepool post cluster creation.')
   invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'), 'Enter a valid Subnet Id where AKS nodes will be installed')
   invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'), 'Enter a valid Subnet Id where Application Gateway is installed')
   invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.afw || net.vnetprivateend), 'Cannot use default networking of you select Firewall or Private Link')
@@ -385,6 +394,8 @@ export default function PortalNav({ config }) {
   invalidFn('net', 'podCidr', !isCidrValid(net.podCidr), invalidCidrMessage)
   invalidFn('net', 'vnetAddressPrefix', !isCidrValid(net.vnetAddressPrefix), invalidCidrMessage)
   invalidFn('net', 'vnetAksSubnetAddressPrefix', !isCidrValid(net.vnetAksSubnetAddressPrefix), invalidCidrMessage)
+  invalidFn('net', 'networkPlugin', net.networkPlugin === "kubenet" && cluster.osType === "Windows" , "Windows nodepools do not support kubenet networking")
+  invalidFn('addons', 'networkPolicy', (!net.ebpfDataplane && addons.networkPolicy === "cilium") || (net.ebpfDataplane && (addons.networkPolicy === "calico" || addons.networkPolicy === "azure")), net.ebpfDataplane ? "Cilium epbf backplane is incompatible with Azure NPM and Calico" : "Cilium network policy requires the CNI Cilium epbf to be enabled")
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7, 'Enter an IP/CIDR, or select \'Public IP with no IP restrictions\' in the \'Cluster API Server Security\' section of the \'Cluster Details\' tab')
   invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19, 'Enter valid cluster name')
 

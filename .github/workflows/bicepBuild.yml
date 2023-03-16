@@ -30,6 +30,7 @@ jobs:
       - name: Install Bicep
         shell: pwsh
         run: |
+          az config set bicep.use_binary_from_path=False
           az bicep install
 
       - name: Bicep build

@@ -98,6 +98,12 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 
 Azure Subscriptions use resource providers to be able to create Azure Services. Sometimes it can be the case that core RP's are not properly registered in your subscription. Take time to read the error message, and follow the steps to resolve. [https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli](https://docs.microsoft.com/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-cli)
 
+In the case of Microsoft.OperationsManagement not being registered, you'd run this az cli command to register the provider;
+
+```bash
+az provider register --namespace Microsoft.OperationsManagement
+az provider show --namespace Microsoft.OperationsManagement --query registrationState -o tsv
+```
 
 ## Trademarks
 

@@ -9,7 +9,7 @@
     "defaults": {
         "deploy": {
             "enableTelemetry": true,
-            "kubernetesVersion": "1.23.12",
+            "kubernetesVersion": "1.24.9",
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
@@ -106,7 +106,8 @@
             "kvId": "",
             "gitops": "none",
             "containerLogsV2": false,
-            "containerLogsV2BasicLogs": false
+            "containerLogsV2BasicLogs": false,
+            "sgxPlugin": false
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",

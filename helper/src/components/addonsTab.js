@@ -106,7 +106,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
                 {hasError(invalidArray, 'ingress') &&
-                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '100px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
+                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
                 }
             </Stack.Item>
 
@@ -348,18 +348,23 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             <Separator className="notopmargin" />
             <Stack.Item align="start">
                 <Label >Cluster East-West traffic restrictions (Network Policies)</Label>
-                <MessageBar>Control which components can communicate with each other. The principle of least privilege should be applied to how traffic can flow between pods in an Azure Kubernetes Service (AKS) cluster</MessageBar>
+                <MessageBar>Control which components can communicate with each other. The principle of least privilege should be applied to how traffic can flow between pods in an Azure Kubernetes Service (AKS) cluster.</MessageBar>
+                {hasError(invalidArray, 'networkPolicy') &&
+                    <MessageBar messageBarType={MessageBarType.error} styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }}>{getError(invalidArray, 'networkPolicy')}</MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.networkPolicy}
+                    errorMessage={getError(invalidArray, 'networkPolicy')}
                     options={[
                         { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { "data-testid":'addons-netpolicy-calico', key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { "data-testid":'addons-netpolicy-azure', key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
-
+                        { "data-testid":'addons-netpolicy-calico', disabled: net.ebpfDataplane, key: 'calico', text: 'Use Calico to implement intra-cluster traffic restrictions' },
+                        { "data-testid":'addons-netpolicy-azure', disabled: net.ebpfDataplane, key: 'azure', text: 'Use Azure NPM to implement intra-cluster traffic restrictions ' },
+                        { "data-testid":'addons-netpolicy-cilium', key: 'cilium', text: 'Use Cilium to implement intra-cluster traffic restrictions (requires Cilium backplane for CNI).' }
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPolicy", key)}
                 />
+
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.networkPolicy === "none" ? "none" : "block") } }} >
@@ -528,6 +533,27 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     checked={addons.daprAddonHA}
                     onChange={(ev, v) => updateFn("daprAddonHA", v)}
                     label="Enable high availability mode"
+                />
+            </Stack.Item>
+
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Confidential Computing
+                    (<a target="_new" href="https://learn.microsoft.com/azure/confidential-computing/confidential-enclave-nodes-aks-get-started">docs</a>)
+                </Label>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: "10px" } }}>
+                    Enabling this option installs the SGX Device Plugin, but will require a node pool using a VM SKU that supports SGX. Choose `SGX Enclave` for the compute on the cluster tab.
+                </MessageBar>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-sgx-checkbox" }}
+                    checked={addons.sgxPlugin}
+                    onChange={(ev, v) => updateFn("sgxPlugin", v)}
+                    label="Install the sgxPlugin on compatible VM node pools"
+                    disabled={cluster.computeType !== 'sgx'}
                 />
             </Stack.Item>
 

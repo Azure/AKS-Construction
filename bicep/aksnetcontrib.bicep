@@ -15,15 +15,15 @@ var networkContributorRole = subscriptionResourceId('Microsoft.Authorization/rol
 var existingAksSubnetName = !empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/')[10] : ''
 var existingAksVnetName = !empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/')[8] : ''
 
-resource existingvnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing =  {
+resource existingvnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing =  {
   name: existingAksVnetName
 }
-resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = {
+resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' existing = {
   parent: existingvnet
   name: existingAksSubnetName
 }
 
-resource subnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (rbacAssignmentScope == 'subnet') {
+resource subnetRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (rbacAssignmentScope == 'subnet') {
   name:  guid(user_identity_principalId, networkContributorRole, existingAksSubnetName)
   scope: existingAksSubnet
   properties: {
@@ -33,7 +33,7 @@ resource subnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview'
   }
 }
 
-resource existingVnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (rbacAssignmentScope != 'subnet') {
+resource existingVnetRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (rbacAssignmentScope != 'subnet') {
   name:  guid(user_identity_principalId, networkContributorRole, existingAksVnetName)
   scope: existingvnet
   properties: {
