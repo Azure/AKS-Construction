@@ -395,7 +395,7 @@ export default function PortalNav({ config }) {
   invalidFn('net', 'vnetAddressPrefix', !isCidrValid(net.vnetAddressPrefix), invalidCidrMessage)
   invalidFn('net', 'vnetAksSubnetAddressPrefix', !isCidrValid(net.vnetAksSubnetAddressPrefix), invalidCidrMessage)
   invalidFn('net', 'networkPlugin', net.networkPlugin === "kubenet" && cluster.osType === "Windows" , "Windows nodepools do not support kubenet networking")
-  invalidFn('addons', 'networkPolicy', (!net.ebpfDataplane && addons.networkPolicy === "cilium") || (net.ebpfDataplane && (addons.networkPolicy === "calico" || addons.networkPolicy === "azure")), "Cilium network policy requires the CNI Cilium epbf to be enabled")
+  invalidFn('addons', 'networkPolicy', (!net.ebpfDataplane && addons.networkPolicy === "cilium") || (net.ebpfDataplane && (addons.networkPolicy === "calico" || addons.networkPolicy === "azure")), net.ebpfDataplane ? "Cilium epbf backplane is incompatible with Azure NPM and Calico" : "Cilium network policy requires the CNI Cilium epbf to be enabled")
   invalidFn('deploy', 'apiips', cluster.apisecurity === 'whitelist' && deploy.apiips.length < 7, 'Enter an IP/CIDR, or select \'Public IP with no IP restrictions\' in the \'Cluster API Server Security\' section of the \'Cluster Details\' tab')
   invalidFn('deploy', 'clusterName', !deploy.clusterName || deploy.clusterName.match(/^[a-z0-9][_\-a-z0-9]+[a-z0-9]$/i) === null || deploy.clusterName.length > 19, 'Enter valid cluster name')
 
