@@ -938,6 +938,7 @@ param ebpfDataplane string = ''
   ''
   'azure'
   'calico'
+  'cilium'
 ])
 @description('The network policy to use.')
 param networkPolicy string = ''
