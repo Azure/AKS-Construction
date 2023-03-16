@@ -25,7 +25,7 @@ var managementIpConfig = {
   }
 }
 
-resource fw_pip 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
+resource fw_pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
   name: firewallPublicIpName
   location: location
   sku: {
@@ -38,7 +38,7 @@ resource fw_pip 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
   }
 }
 
-resource fwManagementIp_pip 'Microsoft.Network/publicIPAddresses@2021-03-01' = if(fwSku=='Basic') {
+resource fwManagementIp_pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if(fwSku=='Basic') {
   name: firewallManagementPublicIpName
   location: location
   sku: {

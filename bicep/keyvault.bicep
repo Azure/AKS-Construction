@@ -21,14 +21,13 @@ param keyVaultIPAllowlist array = []
 
 param logAnalyticsWorkspaceId string = ''
 
-var akvRawName = 'kv-${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
-var akvName = length(akvRawName) > 24 ? substring(akvRawName, 0, 24) : akvRawName
+var akvName = take('kv-${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}',24)
 
 var kvIPRules = [for kvIp in keyVaultIPAllowlist: {
   value: kvIp
 }]
 
-resource kv 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
+resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
   name: akvName
   location: location
   properties: {
@@ -52,7 +51,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: false
     enableSoftDelete: keyVaultSoftDelete
-    enablePurgeProtection: keyVaultPurgeProtection ? true : json('null')
+    enablePurgeProtection: keyVaultPurgeProtection ? true : null
   }
 }
 
