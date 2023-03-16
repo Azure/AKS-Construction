@@ -15,7 +15,7 @@ module aks '../../bicep/main.bicep' = {
 }
 
 resource byoAcr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
-  name: 'acr-${resourceName}'
+  name: 'cr${resourceName}'
   location: location
   sku: {
     name: 'Standard'
