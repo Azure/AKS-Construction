@@ -59,8 +59,8 @@ resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@202
     mode: 'User'
     vmSize: agentVMSize
     count: agentCount
-    minCount: autoScale ? agentCount : json('null')
-    maxCount: autoScale ? agentCountMax : json('null')
+    minCount: autoScale ? agentCount : null
+    maxCount: autoScale ? agentCountMax : null
     enableAutoScaling: autoScale
     availabilityZones: !empty(availabilityZones) ? availabilityZones : null
     osDiskType: osDiskType
@@ -69,7 +69,7 @@ resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@202
     osType: osType
     maxPods: maxPods
     type: 'VirtualMachineScaleSets'
-    vnetSubnetID: !empty(subnetId) ? subnetId : json('null')
+    vnetSubnetID: !empty(subnetId) ? subnetId : null
     upgradeSettings: {
       maxSurge: '33%'
     }

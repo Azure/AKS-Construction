@@ -25,7 +25,7 @@ resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = {
 var frontendPublicIpConfig = {
   properties: {
     publicIPAddress: {
-      id: '${appgwpip.id}'
+      id: appgwpip.id
     }
   }
   name: 'appGatewayFrontendIP'
