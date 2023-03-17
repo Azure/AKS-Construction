@@ -17,4 +17,4 @@ To illustrate these 4 stages being sequenced, [main.bicep](main.bicep) shows cre
 az deployment group create -g <your-resource-group> -f main.bicep -p resourceName=kubenv developerAadId=$(az ad signed-in-user show --query id --out tsv)
 ```
 
-> The AKS Construction bicep creates many Role Assignments depending on what features have been selected. This sample shows a working configuration where the core deployment is compatible with Contributor RBAC, success will depend on the feature combination that you are trying to deploy. It will not work for all combinations.
+> The AKS Construction bicep creates many Role Assignments depending on what features have been selected. This sample shows a working configuration where the core deployment is compatible with Contributor RBAC, success will depend on the feature combination that you are trying to deploy. It will not work for all feature combinations.
