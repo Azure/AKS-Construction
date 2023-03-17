@@ -1074,7 +1074,7 @@ param enableNodePublicIP bool = false
 
 param warIngressNginx bool = false
 
-@description('The name of the resource group to create the AKS cluster managed resources in')
+@description('The name of the NEW resource group to create the AKS cluster managed resources in')
 param managedNodeResourceGroup string = ''
 
 
