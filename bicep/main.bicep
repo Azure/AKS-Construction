@@ -1073,6 +1073,18 @@ param enableNodePublicIP bool = false
 
 param warIngressNginx bool = false
 
+@description('The name of the NEW resource group to create the AKS cluster managed resources in')
+param managedNodeResourceGroup string = ''
+
+
+// Preview feature requires: az feature register --namespace "Microsoft.ContainerService" --name "NRGLockdownPreview"
+@allowed([
+  'ReadOnly'
+  'Unrestricted'
+])
+@description('The restriction level applied to the cluster node resource group')
+param restrictionLevelNodeResourceGroup string = 'Unrestricted'
+
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   CostOptimised : {
@@ -1278,10 +1290,14 @@ var aksProperties = union({
       enabled: fileCSIDriver
     }
   }
+  nodeResourceGroupProfile: {
+    restrictionLevel: restrictionLevelNodeResourceGroup
+  }
 },
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
-keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {}
+keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {},
+!empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {}
 )
 
 resource aks 'Microsoft.ContainerService/managedClusters@2022-11-02-preview' = {
