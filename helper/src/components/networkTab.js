@@ -169,7 +169,8 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             options={[
                                 { key: 'loadBalancer', text: 'Load Balancer'  },
                                 { key: 'managedNATGateway', text: 'Managed NAT Gateway' },
-                                { key: 'userAssignedNATGateway', text: 'Assigned NAT Gateway'}
+                                { key: 'userAssignedNATGateway', text: 'Assigned NAT Gateway'},
+                                { key: 'userDefinedRouting', text: 'User Defined Routing'}
                             ]}
                             onChange={(ev, { key }) => updateFn("aksOutboundTrafficType", key)}
                         />
