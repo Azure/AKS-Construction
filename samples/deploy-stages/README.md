@@ -1,8 +1,8 @@
-# BYO Identity
+# Deployment Stages
 
-It's common in non-sandbox enterprise environments that the deploying team does not have significant privileges in the Azure subscription.
+It's common in non-sandbox enterprise environments that the deploying team does not have significant privileges in the Azure subscription. This causes friction because the AKS Construction Helper assumes that the Deploying User has full permissions in the deploying environment.
 
-In these circumstances we need to split the AKS environment Deployment into stages, with different teams having the responsibility of running specific deployments depending on their access level.
+In these circumstances we need to split the AKS environment deployment into stages, with different teams having the responsibility of running specific deployments depending on their access level.
 
 Stage | Purpose | Team | Azure RBAC role
 ----- | ------- | ---- | ---------------
@@ -16,3 +16,5 @@ To illustrate these 4 stages being sequenced, [main.bicep](main.bicep) shows cre
 ```bash
 az deployment group create -g <your-resource-group> -f main.bicep -p resourceName=kubenv developerAadId=$(az ad signed-in-user show --query id --out tsv)
 ```
+
+> The AKS Construction bicep creates many Role Assignments depending on what features have been selected. This sample shows a working configuration where the AKS Construction codebase is compatible with Contributor RBAC, success will depend on the feature combination that you are trying to deploy.
