@@ -6,10 +6,10 @@ In these circumstances we need to split the AKS environment deployment into stag
 
 Stage | Purpose | Team | Azure RBAC role
 ----- | ------- | ---- | ---------------
-[1](stage1-byo.bicep) | Creating the cluster identity and assigning the network subnet access | Network/Admin | Owner
-[2](stage2-aks.bicep) | Creating the AKS cluster | Dev team | Contributor
-[3](stage3-acrrbac.bicep) | Allowing the AKS cluster access to the Container Registry | Admin | Owner
-[4](stage4-aksrbac.bicep) | Allowing the Dev Team permission to the AKS Cluster to create Kubernetes objects (deployments etc) | Admin | Owner
+[1](stage1-byo.bicep) Prerequisites | Creating the cluster identity and assigning the network subnet access | Network/Admin | Owner
+[2](stage2-aks.bicep) AKS Construct | Creating the AKS cluster | Dev team | Contributor
+[3](stage3-acrrbac.bicep) Az RBAC | Allowing the AKS cluster access to the Container Registry | Admin | Owner
+[4](stage4-aksrbac.bicep) K8S RBAC | Allowing the Dev Team permission to the AKS Cluster to create Kubernetes objects (deployments etc) | Admin | Owner
 
 To illustrate these 4 stages being sequenced, [main.bicep](main.bicep) shows creating a single end to end deployment.
 
