@@ -389,7 +389,7 @@ export default function PortalNav({ config }) {
       'This template can only deploy Azure Firewall in single VNET with Custom Networking')
   invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") || (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default") || (net.aksOutboundTrafficType === 'userDefinedRouting' && net.vnet_opt === "defult"),
      net.aksOutboundTrafficType === 'userDefinedRouting' ?
-      'When using User Defined Routing, only custom and BYON networking is supported.'
+      'When using User Defined Routing, only custom and Bring your Own networking is supported.'
       :
       'When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway')
   invalidFn('net', 'serviceCidr',  net.vnet_opt === "custom" && !isCidrValid(net.serviceCidr), invalidCidrMessage)
