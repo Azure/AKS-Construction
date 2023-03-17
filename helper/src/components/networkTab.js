@@ -183,7 +183,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             label="Create NAT Gateway for AKS Subnet (Custom VNet Only)"
                         />
                         <Slider
-                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.vnet_opt === 'byo'}
+                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.aksOutboundTrafficType==='userDefinedRouting' || net.vnet_opt === 'byo'}
                             buttonProps={{ "data-testid": "net-natGwIp-slider"}}
                             styles={{ root: { width: 450 } }}
                             label={'Nat Gateway Ip Count'} min={1}  max={16} step={1}
@@ -192,7 +192,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                         />
 
                         <Slider
-                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.vnet_opt === 'byo'}
+                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.aksOutboundTrafficType==='userDefinedRouting' || net.vnet_opt === 'byo'}
                             buttonProps={{ "data-testid": "net-natGwTimeout-slider"}}
                             styles={{ root: { width: 450 } }}
                             label={'Nat Gateway Idle Timeout (Minutes)'} min={5}  max={120} step={1}
@@ -213,8 +213,8 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                 <Checkbox
                     styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
                     disabled={net.vnet_opt !== 'custom'}
-                    errorMessage={getError(invalidArray, 'afw')}
-                    checked={net.afw}
+                    errorMessage={getError(invalidArray, 'afw(')}
+                    checked={net.afw ||(net.aksOutboundTrafficType==='userDefinedRouting' && net.vnet_opt === 'custom') }
                     onChange={(ev, v) => updateFn("afw", v)}
                     label="Implement Azure Firewall & UDR next hop" />
 

@@ -387,8 +387,11 @@ export default function PortalNav({ config }) {
       'Please de-select, when using Bring your own VNET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)'
       :
       'This template can only deploy Azure Firewall in single VNET with Custom Networking')
-  invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") || (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default"), 'When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway')
-  invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'userDeinedRouting' && net.vnet_opt !== "byo"), 'When using User Defined Routing, only Bring your Own networking is supported.')
+  invalidFn('net', 'aksOutboundTrafficType', (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") || (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default") || (net.aksOutboundTrafficType === 'userDefinedRouting' && net.vnet_opt === "defult"),
+     net.aksOutboundTrafficType === 'userDefinedRouting' ?
+      'When using User Defined Routing, only custom and BYON networking is supported.'
+      :
+      'When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway')
   invalidFn('net', 'serviceCidr',  net.vnet_opt === "custom" && !isCidrValid(net.serviceCidr), invalidCidrMessage)
   invalidFn('net', 'podCidr', !isCidrValid(net.podCidr), invalidCidrMessage)
   invalidFn('net', 'dnsServiceIP', !isIPValid(net.dnsServiceIP), 'Enter a valid IP')
