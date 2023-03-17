@@ -41,14 +41,14 @@ param byoAGWSubnetId string = ''
 @description('The name of an existing User Assigned Identity to use for AKS (in the same resouce group), requires rbac assignments to be done outside of this template')
 param byoUaiName string = ''
 
-//--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
+//--- Custom, BYO networking and PrivateApiZones requires AKS User Identity
 var createAksUai = (custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)) && empty(byoUaiName)
-resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = if (createAksUai) {
+resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
 }
 
-resource byoAksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' existing = if (!empty(byoUaiName)) {
+resource byoAksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = if (!empty(byoUaiName)) {
   name: byoUaiName
 }
 
