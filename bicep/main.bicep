@@ -38,7 +38,7 @@ param byoAKSSubnetId string = ''
 @description('Full resource id path of an existing subnet to use for Application Gateway')
 param byoAGWSubnetId string = ''
 
-@description('The name of an existing User Assigned Identity to use for AKS (in the same resouce group), requires rbac assignments to be done outside of this template')
+@description('The name of an existing User Assigned Identity to use for the AKS Control Plane (in the same resouce group), requires rbac assignments to be done outside of this template')
 param byoUaiName string = ''
 
 //--- Custom, BYO networking and PrivateApiZones requires AKS User Identity
@@ -1191,13 +1191,6 @@ var aks_addons1 = ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   }
 }) : aks_addons
 
-var aks_identity = {
-  type: 'UserAssigned'
-  userAssignedIdentities: {
-    '${createAksUai ? aksUai.id : !empty(byoUaiName) ? byoAksUai.id : '' }': {}
-  }
-}
-
 @description('Sets the private dns zone id if provided')
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
 output aksPrivateDnsZone string = aksPrivateDnsZone
@@ -1297,7 +1290,17 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-11-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
-  identity: createAksUai ? aks_identity : {
+  identity: createAksUai ? {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${aksUai.id}': {}
+    }
+  } : !empty(byoUaiName) ? {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${byoAksUai.id}': {}
+    }
+  } : {
     type: 'SystemAssigned'
   }
   sku: {
