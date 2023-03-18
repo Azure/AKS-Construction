@@ -112,6 +112,48 @@ resource ruleInternetHttps 'Microsoft.Network/networkSecurityGroups/securityRule
   }
 }
 
+param ruleInAllowVnetHttp bool = false
+resource ruleVnetHttp 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleInAllowVnetHttp) {
+  parent: nsg
+  name: 'Allow_Vbet_Http'
+  properties: {
+    protocol: 'Tcp'
+    sourcePortRange: '*'
+    sourceAddressPrefix: 'VirtualNetwork'
+    destinationAddressPrefix: 'VirtualNetwork'
+    access: 'Allow'
+    priority: 220
+    direction: 'Inbound'
+    sourcePortRanges: []
+    destinationPortRanges: [
+      '80'
+    ]
+    sourceAddressPrefixes: []
+    destinationAddressPrefixes: []
+  }
+}
+
+param ruleInAllowVnetHttps bool = false
+resource ruleVnetHttps 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleInAllowVnetHttps) {
+  parent: nsg
+  name: 'Allow_Vbet_Https'
+  properties: {
+    protocol: 'Tcp'
+    sourcePortRange: '*'
+    sourceAddressPrefix: 'VirtualNetwork'
+    destinationAddressPrefix: 'VirtualNetwork'
+    access: 'Allow'
+    priority: 230
+    direction: 'Inbound'
+    sourcePortRanges: []
+    destinationPortRanges: [
+      '443'
+    ]
+    sourceAddressPrefixes: []
+    destinationAddressPrefixes: []
+  }
+}
+
 param ruleInAllowBastionHostComms bool = false
 resource ruleBastionHost 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleInAllowBastionHostComms) {
   parent: nsg

@@ -40,12 +40,15 @@ param natGatewayPublicIps int = 2
 param natGatewayIdleTimeoutMins int = 30
 
 //Bastion
-param bastion bool =false
+param bastion bool = false
 param bastionSubnetAddressPrefix string = ''
+
+//Ingress
+param ingressSubnet bool = false
+param ingressSubnetAddressPrefix string = ''
 
 @description('Used by the Bastion Public IP')
 param availabilityZones array = []
-
 
 var bastion_subnet_name = 'AzureBastionSubnet'
 var bastion_baseSubnet = {
@@ -55,6 +58,15 @@ var bastion_baseSubnet = {
   }
 }
 var bastion_subnet = bastion && networkSecurityGroups ? union(bastion_baseSubnet, nsgBastion.outputs.nsgSubnetObj) : bastion_baseSubnet
+
+var ingress_subnet_name = 'clusteringressservices-sn'
+var ingress_baseSubnet = {
+  name: ingress_subnet_name
+  properties: {
+    addressPrefix: ingressSubnetAddressPrefix
+  }
+}
+var ingress_subnet = ingressSubnet && networkSecurityGroups ? union(ingress_baseSubnet, nsgIngress.outputs.nsgSubnetObj) : ingress_baseSubnet
 
 var acrpool_subnet_name = 'acrpool-sn'
 var acrpool_baseSubnet = {
@@ -168,6 +180,7 @@ var subnets = union(
   privateLinks ? array(private_link_subnet) : [],
   acrPrivatePool ? array(acrpool_subnet) : [],
   bastion ? array(bastion_subnet) : [],
+  ingressSubnet ? array(ingress_subnet) : [],
   ingressApplicationGateway ? array(appgw_subnet) : [],
   azureFirewallsManagementSeperation ? array(fwmgmt_subnet) : []
 )
@@ -469,6 +482,22 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   }
   dependsOn: [
     nsgBastion
+  ]
+}
+
+module nsgIngress 'nsg.bicep' = if(ingressSubnet && networkSecurityGroups) {
+  name: take('${deployment().name}-nsgIngress',64)
+  params: {
+    location: location
+    resourceName: '${ingress_subnet_name}-${resourceName}'
+    workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
+    workspaceRegion:  !empty(workspaceName) ? log.location : ''
+    workspaceResourceId:  !empty(workspaceName) ? log.id : ''
+    ruleInAllowVnetHttp: true
+    ruleInAllowVnetHttps: true
+  }
+  dependsOn: [
+    nsgPrivateLinks
   ]
 }
 

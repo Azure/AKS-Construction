@@ -76,6 +76,12 @@ param vnetAppGatewaySubnetAddressPrefix string = '10.240.5.0/24'
 
 @minLength(9)
 @maxLength(18)
+@description('A dedicated ingress subnet allows consistent IP addresses to be used for private DNS reference by the Ingress Controller(s).')
+param ingressSubnetAddressPrefix string = '10.240.4.0/28'
+param ingressSubnet bool = false
+
+@minLength(9)
+@maxLength(18)
 @description('The address range for the ACR in your custom vnet')
 param acrAgentPoolSubnetAddressPrefix string = '10.240.4.64/26'
 
@@ -135,6 +141,8 @@ module network './network.bicep' = if (custom_vnet) {
     privateLinkAkvId: privateLinks && keyVaultCreate ? kv.outputs.keyVaultId : ''
     acrPrivatePool: acrPrivatePool
     acrAgentPoolSubnetAddressPrefix: acrAgentPoolSubnetAddressPrefix
+    ingressSubnet: ingressSubnet
+    ingressSubnetAddressPrefix: ingressSubnetAddressPrefix
     bastion: bastion
     bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
     availabilityZones: availabilityZones
