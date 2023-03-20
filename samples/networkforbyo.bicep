@@ -5,7 +5,7 @@ param vnetAksSubnetAddressPrefix string = '10.240.0.0/22'
 param vnetAppGatewaySubnetAddressPrefix string = '10.240.4.0/26'
 param privateLinks bool = true
 param privateLinkSubnetAddressPrefix string = '10.240.4.192/26'
-param privateLinkAcrId string
+param privateLinkAcrId string = ''
 
 module network '../bicep/network.bicep' = {
   name: 'network'
@@ -22,3 +22,5 @@ module network '../bicep/network.bicep' = {
     privateLinkAcrId: privateLinkAcrId
   }
 }
+
+output aksSubnetId string = network.outputs.aksSubnetId
