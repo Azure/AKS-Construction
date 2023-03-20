@@ -154,7 +154,8 @@
                                 "ingress": "appgw",
                                 "monitor": "aci",
                                 "csisecret": "akvNew",
-                                "appgwKVIntegration": true
+                                "appgwKVIntegration": true,
+                                "ingressUsePublicIp": false
                             },
                             "net": {
                                 "vnetprivateend": true,

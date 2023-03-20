@@ -110,8 +110,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 }
             </Stack.Item>
 
-            <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.ingress === "none" ? "none" : "block") } }} >
-                <Stack tokens={{ childrenGap: 15 }}>
+            <Stack.Item align="left" styles={{ root: { maxWidth: '700px', display: (addons.ingress === "none" ? "none" : "block") } }} >
+                <Stack tokens={{ childrenGap: 15, padding:`0px 0px 0px 100px` }} >
                     {addons.ingress === "nginx" && false &&
                         <MessageBar messageBarType={MessageBarType.warning}>You requested a high security cluster & nginx public ingress. Please ensure you follow this information after deployment <Link target="_ar1" href="https://docs.microsoft.com/en-us/azure/firewall/integrate-lb#public-load-balancer">Asymmetric routing</Link></MessageBar>
                     }
@@ -119,8 +119,13 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         <MessageBar messageBarType={MessageBarType.warning}>You requested a high security cluster. The DNS and Certificate options are disabled as they require additional egress application firewall rules for image download and webhook requirements. You can apply these rules and install the helm chart after provisioning</MessageBar>
                     }
 
-                    {addons.ingress === "appgw" && (
+                    {(addons.ingress === "nginx" || addons.ingress === "contour" || addons.ingress === "traefik") &&
+                        <>
+                            <Checkbox checked={addons.ingressUsePublicIp} onChange={(ev, v) => updateFn("ingressUsePublicIp", v)} label={<Text>Expose Ingress directly to internet</Text>} />
+                        </>
+                    }
 
+                    {addons.ingress === "appgw" && (
                         net.vnet_opt === 'default' ?
                             <MessageBar messageBarType={MessageBarType.warning}>Using default networking, so addon will provision default Application Gateway instance, for more options, select custom networking in the network tab</MessageBar>
                             :
@@ -199,9 +204,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             </>)
                     }
 
-                    {(addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "traefik") &&
+                    {net.afw && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "traefik") &&
+                        <MessageBar messageBarType={MessageBarType.warning}>Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configuration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule to Azure Firewall </Link></MessageBar>
+                    }
+
+                    {addons.ingressUsePublicIp && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "traefik") &&
                         <>
-                            <MessageBar messageBarType={MessageBarType.warning}>Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configuration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule to Azure Firewall </Link></MessageBar>
                             <Checkbox inputProps={{ "data-testid": "addons-dns"}} checked={addons.dns} onChange={(ev, v) => updateFn("dns", v)} label={
                                 <Text>Create FQDN URLs for your applications using
                                     <Link target="_t1" href="https://github.com/kubernetes-sigs/external-dns"> <b>external-dns</b> </Link>
@@ -220,14 +228,6 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                             }
                         </>
                     }
-
-                    {/* {(addons.ingress === "nginx" || addons.ingress === "contour" || addons.ingress === "traefik") &&
-                        <>
-                            <MessageBar messageBarType={MessageBarType.warning}>Leverage PrivateIP's from a specific subnet</MessageBar>
-                            <Checkbox checked={addons.ingressSubnet} onChange={(ev, v) => updateFn("ingressUsePrivateIP", v)} label={<Text>Use Private IP addresses (requires custom/byo networking</Text>} />
-                            <TextField disabled={!addons.ingressUsePrivateIP && net.vnet_opt !== 'byo' } value={addons.ingressControllerByoSubnetName} onChange={(ev, v) => updateFn("ingressControllerByoSubnetName", v)} label={<Text style={{ fontWeight: 600 }}>BYO Subnet name</Text>} />
-                        </>
-                    } */}
 
                     {(addons.ingress === "nginx" || addons.ingress === "contour") &&
                         <Checkbox checked={addons.ingressEveryNode} onChange={(ev, v) => updateFn("ingressEveryNode", v)} label={<Text>Run proxy on every node (deploy as Daemonset)</Text>} />

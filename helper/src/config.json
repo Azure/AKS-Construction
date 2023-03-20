@@ -107,7 +107,8 @@
             "gitops": "none",
             "containerLogsV2": false,
             "containerLogsV2BasicLogs": false,
-            "sgxPlugin": false
+            "sgxPlugin": false,
+            "ingressUsePublicIp": true
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",

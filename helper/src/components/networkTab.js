@@ -217,8 +217,11 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                 {hasError(invalidArray, 'afw') &&
                     <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'afw')}</MessageBar>
                 }
+                {net.afw && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "appgw" || addons.ingress === "traefik") &&
+                    <MessageBar messageBarType={MessageBarType.warning} >Using a in-cluster ingress option with Azure Firewall will require additional asymmetric routing configuration post-deployment, please see <Link target="_target" href="https://docs.microsoft.com/azure/aks/limit-egress-traffic#add-a-dnat-rule-to-azure-firewall">Add a DNAT rule</Link></MessageBar>
+                }
                 <Checkbox
-                    styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
+                    styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
                     disabled={net.vnet_opt !== 'custom'}
                     errorMessage={getError(invalidArray, 'afw')}
                     checked={net.afw}
@@ -444,11 +447,6 @@ function CustomVNET({ net, addons, updateFn, invalidArray }) {
                         value={net.vnetAksSubnetAddressPrefix}
                         errorMessage={getError(invalidArray, 'vnetAksSubnetAddressPrefix')} />
                     </Stack.Item>
-                    {/*
-                <Stack.Item align="center">
-                  <TextField prefix="Cidr" label="LoadBalancer Services subnet" onChange={(ev, val) => updateFn("ilbsub", val)} value={net.ilbsub} />
-                </Stack.Item>
-                */}
                     <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" disabled={!net.afw} label="Azure Firewall subnet" onChange={(ev, val) => updateFn("vnetFirewallSubnetAddressPrefix", val)} value={net.afw ? net.vnetFirewallSubnetAddressPrefix : "No Firewall requested"} />
                     </Stack.Item>

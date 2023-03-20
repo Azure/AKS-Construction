@@ -381,7 +381,7 @@ export default function PortalNav({ config }) {
   invalidFn('addons', 'ingress', cluster.osType === "Windows" && addons.ingress !== "appgw" && addons.ingress !== "none", 'Neither the Windows nodepool or the system pool will be able to run your selected Ingress Controller. To support this Ingress Controller, add another linux nodepool post cluster creation.')
   invalidFn('net', 'byoAKSSubnetId', net.vnet_opt === 'byo' && !net.byoAKSSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'), 'Enter a valid Subnet Id where AKS nodes will be installed')
   invalidFn('net', 'byoAGWSubnetId', net.vnet_opt === 'byo' && addons.ingress === 'appgw' && !net.byoAGWSubnetId.match('^/subscriptions/[^/ ]+/resourceGroups/[^/ ]+/providers/Microsoft.Network/virtualNetworks/[^/ ]+/subnets/[^/ ]+$'), 'Enter a valid Subnet Id where Application Gateway is installed')
-  invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.afw || net.vnetprivateend), 'Cannot use default networking of you select Firewall or Private Link')
+  invalidFn('net', 'vnet_opt', net.vnet_opt === "default" && (net.afw || net.vnetprivateend || net.bastion || net.ingressSubnet) , 'Cannot use default networking of you select Firewall, Bastion, Ingress Subnet or Private Link')
   invalidFn('net', 'afw', net.afw && net.vnet_opt !== "custom",
     net.vnet_opt === "byo" ?
       'Please de-select, when using Bring your own VNET, configure a firewall as part of your own VNET setup, (in a subnet or peered network)'

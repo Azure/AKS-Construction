@@ -385,7 +385,8 @@
                                     }
                                 ],
                                 "azurepolicy": "deny",
-                                "csisecret": "akvNew"
+                                "csisecret": "akvNew",
+                                "ingressUsePublicIp": false
                             },
                             "net": {
                                 "vnet_opt": "custom",
