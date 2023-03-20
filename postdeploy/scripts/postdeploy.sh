@@ -4,6 +4,8 @@
 set -e
 
 ingress=""
+ingressServiceSubnet=""
+ingressServiceInternal="false"
 monitor=""
 enableMonitorIngress="false"
 grafanaHostname="grafana"
@@ -303,6 +305,10 @@ if [ "$ingress" = "traefik" ]; then
 
     traefik_namespace="ingress-basic"
     traefik_helm_release_name="traefik"
+    
+    #TODO: Add azure load balancer hints for internal ingress subnet
+    # service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    # service.beta.kubernetes.io/azure-load-balancer-internal-subnet: $ingressServiceSubnet
 
     echo "# ------------------------------------------------"
     echo "#                 Install Traefik Ingress Controller"
