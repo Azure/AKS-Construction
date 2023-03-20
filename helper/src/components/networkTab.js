@@ -152,6 +152,14 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
             <Separator className="notopmargin" />
 
+            <Stack.Item>
+                <Label>Create a dedicated subnet for Ingress Controller Private IP's</Label>
+                <MessageBar messageBarType={MessageBarType.info}>This provides a separate subnet for exposing Ingress to the cluster. This can be useful when you are using private DNS, or if a dedicated IP address range that isn't adjacent to IP's is required, or when your network team prefer cluster ingress is from a defined subnet. This is not required when using Azure Application Gateway as your Ingress Controller as it already has a dedicated subnet.</MessageBar>
+                <Checkbox inputProps={{ "data-testid": "network-ingressSubnet-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }} disabled={false} checked={net.ingressSubnet} onChange={(ev, v) => updateFn("ingressSubnet", v)} label="Create subnet for Ingress Controller" />
+            </Stack.Item>
+
+            <Separator className="notopmargin" />
+
             <Stack.Item >
                 <Label>AKS Traffic Egress</Label>
 
@@ -456,6 +464,10 @@ function CustomVNET({ net, addons, updateFn, invalidArray }) {
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
                         <TextField prefix="Cidr" disabled={!net.vnetprivateend || addons.registry === "none" || !addons.acrPrivatePool  } label="ACR Private Agent Pool subnet" onChange={(ev, val) => updateFn("acrAgentPoolSubnetAddressPrefix", val)} value={net.vnetprivateend && addons.registry !== "none" && addons.acrPrivatePool  ? net.acrAgentPoolSubnetAddressPrefix : "No Agent Pool requested"} />
+                    </Stack.Item>
+
+                    <Stack.Item style={{ marginLeft: "20px"}}>
+                        <TextField prefix="Cidr" disabled={!net.ingressSubnet} label="Ingress subnet" onChange={(ev, val) => updateFn("ingressSubnetAddressPrefix", val)} value={net.ingressSubnet ? net.ingressSubnetAddressPrefix : "No ingress subnet requested"} />
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
