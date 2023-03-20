@@ -174,6 +174,10 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...( addons.certMan && {
           ingress: addons.ingress,
           certEmail: addons.certEmail
+        }),
+        ...( net.ingressSubnet && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik") && {
+          ingressServiceInternal: true,
+          ingressServiceSubnet: net.ingressSubnetName
         })
       }),
     ...(cluster.apisecurity === "private" && (addons.ingress === "contour" || (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId) ) && {

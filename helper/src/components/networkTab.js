@@ -154,7 +154,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
             <Stack.Item>
                 <Label>Create a dedicated subnet for Ingress Controller Private IP's</Label>
-                <MessageBar messageBarType={MessageBarType.info}>This provides a separate subnet for exposing Ingress to the cluster. This can be useful when you are using private DNS, or if a dedicated IP address range that isn't adjacent to IP's is required, or when your network team prefer cluster ingress is from a defined subnet. This is not required when using Azure Application Gateway as your Ingress Controller as it already has a dedicated subnet.</MessageBar>
+                <MessageBar messageBarType={MessageBarType.info}>This provides a separate subnet for exposing Ingress to the cluster. This can be useful when you are using private DNS, if a dedicated IP address range that isn't adjacent to IP's is required, or when your network team prefer cluster ingress is from a defined subnet. This is not required when using Azure Application Gateway as your Ingress Controller as it already has a dedicated subnet.</MessageBar>
                 <Checkbox inputProps={{ "data-testid": "network-ingressSubnet-Checkbox"}} styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }} disabled={false} checked={net.ingressSubnet} onChange={(ev, v) => updateFn("ingressSubnet", v)} label="Create subnet for Ingress Controller" />
             </Stack.Item>
 

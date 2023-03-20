@@ -221,6 +221,14 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         </>
                     }
 
+                    {/* {(addons.ingress === "nginx" || addons.ingress === "contour" || addons.ingress === "traefik") &&
+                        <>
+                            <MessageBar messageBarType={MessageBarType.warning}>Leverage PrivateIP's from a specific subnet</MessageBar>
+                            <Checkbox checked={addons.ingressSubnet} onChange={(ev, v) => updateFn("ingressUsePrivateIP", v)} label={<Text>Use Private IP addresses (requires custom/byo networking</Text>} />
+                            <TextField disabled={!addons.ingressUsePrivateIP && net.vnet_opt !== 'byo' } value={addons.ingressControllerByoSubnetName} onChange={(ev, v) => updateFn("ingressControllerByoSubnetName", v)} label={<Text style={{ fontWeight: 600 }}>BYO Subnet name</Text>} />
+                        </>
+                    } */}
+
                     {(addons.ingress === "nginx" || addons.ingress === "contour") &&
                         <Checkbox checked={addons.ingressEveryNode} onChange={(ev, v) => updateFn("ingressEveryNode", v)} label={<Text>Run proxy on every node (deploy as Daemonset)</Text>} />
                     }
