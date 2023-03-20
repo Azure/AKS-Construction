@@ -98,7 +98,8 @@
                                 "vnet_opt": "custom",
                                 "afw": true,
                                 "azureFirewallSku": "Premium",
-                                "nsg": true
+                                "nsg": true,
+                                "ingressSubnet": true
                             }
                         }
                     },
@@ -192,7 +193,8 @@
                                 "afw": true,
                                 "azureFirewallSku": "Premium",
                                 "nsg": true,
-                                "nsgFlowLogs": true
+                                "nsgFlowLogs": true,
+                                "ingressSubnet": true
                             }
                         }
                     }

@@ -128,6 +128,7 @@
             "byoAGWSubnetId": "",
             "vnetAddressPrefix": "10.240.0.0/16",
             "vnetAksSubnetAddressPrefix": "10.240.0.0/22",
+            "ingressSubnet": false,
             "ingressSubnetName": "clusteringressservices-sn",
             "vnetAppGatewaySubnetAddressPrefix": "10.240.5.0/24",
             "acrAgentPoolSubnetAddressPrefix": "10.240.4.64/26",

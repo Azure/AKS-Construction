@@ -86,6 +86,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...((net.vnet_opt === "custom" || net.vnet_opt === "byo") && defaults.net.cniDynamicIpAllocation !== net.cniDynamicIpAllocation && { cniDynamicIpAllocation: true }),
     ...(net.vnet_opt === "custom" && net.cniDynamicIpAllocation && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
+    ...(net.vnet_opt === "custom" && defaults.net.ingressSubnet !== net.ingressSubnet && { ingressSubnet: net.ingressSubnet }),
     ...(cluster.availabilityZones === "yes" && { availabilityZones: ['1', '2', '3'] }),
     ...(cluster.apisecurity === "whitelist" && deploy.clusterIPWhitelist && apiips_array.length > 0 && { authorizedIPRanges: apiips_array }),
     ...(defaults.net.maxPods !== net.maxPods && { maxPods: net.maxPods }),
@@ -175,9 +176,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
           ingress: addons.ingress,
           certEmail: addons.certEmail
         }),
-        ...( net.ingressSubnet && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik") && {
-          ingressServiceInternal: true,
-          ingressServiceSubnet: net.ingressSubnetName
+        ...( !addons.ingressUsePublicIp && (addons.ingress === "contour" || addons.ingress === "nginx" || addons.ingress === "traefik") && {
+          ingressServiceInternal: !addons.ingressUsePublicIp,
+          ...(net.ingressSubnet && net.vnet_opt === "custom" && { ingressServiceSubnet: net.ingressSubnetName})
         })
       }),
     ...(cluster.apisecurity === "private" && (addons.ingress === "contour" || (addons.ingress !== "none" && addons.dns &&  addons.dnsZoneId) ) && {

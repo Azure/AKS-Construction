@@ -291,6 +291,7 @@ if [ "$ingress" = "nginx" ]; then
         --set controller.metrics.serviceMonitor.enabled=${ingress_metrics_enabled} \
         --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \
         --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \
+        --set service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-internal"=\"${ingressServiceInternal}" \
         --namespace ${nginx_namespace}
 fi
 
@@ -305,8 +306,9 @@ if [ "$ingress" = "traefik" ]; then
 
     traefik_namespace="ingress-basic"
     traefik_helm_release_name="traefik"
-    
+
     #TODO: Add azure load balancer hints for internal ingress subnet
+    #https://learn.microsoft.com/en-us/azure/aks/load-balancer-standard#customizations-via-kubernetes-annotations
     # service.beta.kubernetes.io/azure-load-balancer-internal: "true"
     # service.beta.kubernetes.io/azure-load-balancer-internal-subnet: $ingressServiceSubnet
 
