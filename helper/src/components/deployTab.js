@@ -27,6 +27,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
   const params = {
     resourceName: deploy.clusterName,
+    ...(deploy.managedNodeResourceGroup !== defaults.deploy.managedNodeResourceGroup && { managedNodeResourceGroup: deploy.managedNodeResourceGroup }),
     ...(deploy.kubernetesVersion !== defaults.deploy.kubernetesVersion && {kubernetesVersion: deploy.kubernetesVersion}),
     ...(cluster.agentCount !== defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
     ...(cluster.upgradeChannel !== defaults.cluster.upgradeChannel && { upgradeChannel: cluster.upgradeChannel }),
@@ -359,6 +360,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
           <TextField label="Cluster Name" onChange={(ev, val) => updateFn('clusterName', val)} required errorMessage={getError(invalidArray, 'clusterName')} value={deploy.clusterName} />
           <TextField id="azResourceGroup" label="Resource Group" onChange={(ev, val) => updateFn('rg', val)} required errorMessage={getError(invalidArray, 'rg')} value={deploy.rg} />
+          <TextField id="managedNodeResourceGroup" label="Managed Resource Group Name (optional)" onChange={(ev, val) => updateFn('managedNodeResourceGroup', val)} maxLength={80} value={deploy.managedNodeResourceGroup} />
           <TextField label="Kubernetes version" prefix="Current GA Version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
 
           <Dropdown
