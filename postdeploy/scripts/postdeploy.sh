@@ -27,7 +27,7 @@ while getopts "p:g:n:r:" opt; do
     p )
         IFS=',' read -ra params <<< "$OPTARG"
         for i in "${params[@]}"; do
-            if [[ $i =~ (ingress|monitor|enableMonitorIngress|grafanaHostname|ingressEveryNode|dnsZoneId|denydefaultNetworkPolicy|certEmail|certClusterIssuer|acrName|KubeletId|TenantId|containerLogsV2)=([^ ]*) ]]; then
+            if [[ $i =~ (ingress|monitor|enableMonitorIngress|grafanaHostname|ingressEveryNode|ingressServiceInternal|dnsZoneId|denydefaultNetworkPolicy|certEmail|certClusterIssuer|acrName|KubeletId|TenantId|containerLogsV2)=([^ ]*) ]]; then
                 echo "set ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
                 declare ${BASH_REMATCH[1]}=${BASH_REMATCH[2]}
             else
@@ -107,6 +107,7 @@ if [ "$show_usage" ]; then
     echo "     enableMonitorIngress=<true> - Enable Ingress for prometheus"
     echo "     grafanaHostname=<true> - Specify a hostname for the grafana dashboard"
     echo "     ingressEveryNode=<true> - Enable cluster AutoScaler with max nodes"
+    echo "     ingressServiceInternal=<true> - Leverage private IP's on the Azure Load Balancer"
     echo "     denydefaultNetworkPolicy=<true> - Deploy deny all network police"
     echo "     dnsZoneId=<Azure DNS Zone resourceId> - Enable cluster AutoScaler with max nodes"
     echo "     certEmail=<email for certman certificates> - Enables cert-manager"
@@ -269,7 +270,6 @@ fi
 
 
 if [ "$ingress" = "nginx" ]; then
-
     ingress_controller_kind="Deployment"
     ingress_externalTrafficPolicy="Cluster"
     if [ "$ingressEveryNode" ]; then
@@ -291,8 +291,8 @@ if [ "$ingress" = "nginx" ]; then
         --set controller.metrics.serviceMonitor.enabled=${ingress_metrics_enabled} \
         --set controller.metrics.serviceMonitor.namespace=${prometheus_namespace} \
         --set controller.metrics.serviceMonitor.additionalLabels.release=${prometheus_helm_release_name} \
-        --set service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-internal"=\"${ingressServiceInternal}" \
-        --namespace ${nginx_namespace}
+        --set service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-internal"=\"${ingressServiceInternal}\" \
+        --namespace ${nginx_namespace} --dry-run
 fi
 
 if [ "$ingress" = "traefik" ]; then
