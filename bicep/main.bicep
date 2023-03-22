@@ -1357,6 +1357,7 @@ module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
     osSKU: osSKU
     enableNodePublicIP: enableNodePublicIP
     osDiskSizeGB: osDiskSizeGB
+    availabilityZones: availabilityZones
   }
 }
 
