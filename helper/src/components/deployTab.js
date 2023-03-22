@@ -287,7 +287,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  required_providers {\n` +
     `    azurerm = {\n` +
     `      source = "hashicorp/azurerm"\n` +
-    `      version = "~>3.6"\n` +
+    `      version = "~>3.48"\n` +
     `    }\n` +
     `  }\n` +
     `}\n\n` +
