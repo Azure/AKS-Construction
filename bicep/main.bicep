@@ -1083,6 +1083,7 @@ param enableNodePublicIP bool = false
 
 param warIngressNginx bool = false
 
+@maxLength(80)
 @description('The name of the NEW resource group to create the AKS cluster managed resources in')
 param managedNodeResourceGroup string = ''
 
@@ -1357,6 +1358,7 @@ module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
     osSKU: osSKU
     enableNodePublicIP: enableNodePublicIP
     osDiskSizeGB: osDiskSizeGB
+    availabilityZones: availabilityZones
   }
 }
 
