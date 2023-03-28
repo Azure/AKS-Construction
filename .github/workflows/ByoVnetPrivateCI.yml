@@ -18,7 +18,7 @@ on:
         required: false
       region:
         description: 'Resource Deployment Region'
-        default: 'UKWest'
+        default: 'EastUs'
         options:
           - "WestEurope"
           - "NorthEurope"
