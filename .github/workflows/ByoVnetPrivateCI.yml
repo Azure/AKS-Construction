@@ -127,12 +127,12 @@ jobs:
   CostEstimate:
     needs: [ReusableWF]
     if: github.event_name != 'pull_request' || contains( github.event.pull_request.labels.*.name, 'test-deploy-privateconfig')
-    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.2-beta2
+    uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@1.1
     #uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowpolish
     with:
       rg: ${{ needs.ReusableWF.outputs.RG }} #Automation-Actions-AksDeployCI #'${{ env.RG }}' There seems to be an issue passing Env variables in reusable workflows
       environment: ${{needs.ReusableWF.outputs.Environment}}
-      aceVersion: 1.2-beta2
+      aceVersion: 1.1
       templateFileURL: https://github.com/Azure/AKS-Construction/releases/download/${{ needs.ReusableWF.outputs.LatestAkscVersionTag }}/main.json
       #templateParamFileURL: ${{ needs.ReusableWF.outputs.ParamFilePath }}
       templateParamFileURL: https://raw.githubusercontent.com/Azure/AKS-Construction/${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}/${{ needs.ReusableWF.outputs.ParamFilePath }}
