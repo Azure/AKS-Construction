@@ -1207,6 +1207,9 @@ var aks_addons1 = ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
 @description('Sets the private dns zone id if provided')
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
 output aksPrivateDnsZone string = aksPrivateDnsZone
+output privateFQDN string = !empty(aks.properties.privateFQDN) ? aks.properties.privateFQDN : ''
+// Dropping cluster name at start of privateFQDN to get private dns zone name.
+output aksPrivateDnsZoneName string =  !empty(aks.properties.privateFQDN) ? join(skip(split(aks.properties.privateFQDN, '.'),1),'.') : ''
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS-Construction/issues/344')
 var managedNATGatewayProfile =  {
