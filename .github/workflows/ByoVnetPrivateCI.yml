@@ -36,6 +36,11 @@ on:
         default: false
         type: boolean
         required: false
+      doCostEstimate:
+        description: 'Perform a template Cost Estimate'
+        default: false
+        type: boolean
+        required: false
       doDebugSteps:
         description: 'Run informational steps'
         default: true
@@ -126,7 +131,7 @@ jobs:
 
   CostEstimate:
     needs: [ReusableWF]
-    if: github.event_name != 'pull_request' || contains( github.event.pull_request.labels.*.name, 'test-deploy-privateconfig')
+    if: github.event.inputs.doCostEstimate == 'true'
     uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@main
     #uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowpolish
     with:
