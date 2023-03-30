@@ -102,6 +102,7 @@
             "enableMonitorIngress": false,
             "retentionInDays": 30,
             "createAksMetricAlerts": true,
+            "enableSysLog": false,
             "csisecret": "none",
             "keyVaultAksCSIPollInterval": "2m",
             "kvId": "",
