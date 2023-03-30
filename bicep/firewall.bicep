@@ -319,6 +319,33 @@ resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-
             }
           ] : [])
       }
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'AksWorkloadEgress'
+        priority: 500
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+            {
+              name: 'GitHub'
+              ruleType: 'ApplicationRule'
+              protocols: [
+                {
+                  port: 443
+                  protocolType: 'Https'
+                }
+              ]
+              targetFqdns: [
+                'github.com'
+                'raw.githubusercontent.com'
+              ]
+              sourceAddresses: [
+                vnetAksSubnetAddressPrefix
+              ]
+            }
+          ]
+      }
     ]
   }
 }
