@@ -1495,6 +1495,8 @@ param AksDiagCategories array = [
   'guard'
 ]
 
+param enableSysLog bool = false
+
 resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  if (createLaw && omsagent)  {
   name: 'aksDiags'
   scope: aks
@@ -1510,6 +1512,102 @@ resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  
         enabled: true
       }
     ]
+  }
+}
+
+resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
+  name: 'MSCI-${location}-${aks.name}'
+  location: location
+  kind: 'Linux'
+  properties: {
+    dataFlows: [
+      {
+        destinations: [
+          'ciworkspace'
+        ]
+        streams: [
+          'Microsoft-Syslog'
+          'Microsoft-ContainerInsights-Group-Default'
+        ]
+      }
+    ]
+    dataSources: {
+      extensions: [
+        {
+          streams: [
+            'Microsoft-ContainerInsights-Group-Default'
+          ]
+          extensionName: 'ContainerInsights'
+          extensionSettings: {
+            dataCollectionSettings: {
+              interval : '1m'
+              namespaceFilteringMode: 'Off'
+            }
+          }
+          name: 'ContainerInsightsExtension'
+        }
+      ]
+      syslog: [
+        {
+          facilityNames: [
+            'auth'
+            'authpriv'
+            'cron'
+            'daemon'
+            'mark'
+            'kern'
+            'local0'
+            'local1'
+            'local2'
+            'local3'
+            'local4'
+            'local5'
+            'local6'
+            'local7'
+            'lpr'
+            'mail'
+            'news'
+            'syslog'
+            'user'
+            'uucp'
+          ]
+          logLevels: [
+            'Debug'
+            'Info'
+            'Notice'
+            'Warning'
+            'Error'
+            'Critical'
+            'Alert'
+            'Emergency'
+          ]
+          name: 'sysLogsDataSource'
+
+          streams: ['Microsoft-Syslog']
+        }
+      ]
+    }
+    destinations: {
+      logAnalytics: [
+        {
+          name: 'ciworkspace'
+          workspaceResourceId: aks_law.id
+        }
+      ]
+    }
+  }
+}
+
+// resource aks 'Microsoft.ContainerService/managedClusters@2022-11-02-preview' existing = {
+//   name: 'aks-az-k8s-f3pi'
+// }
+
+resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2021-09-01-preview' = {
+  name: 'test6'
+  scope: aks
+  properties: {
+    dataCollectionRuleId: sysLog.id
+    description: 'Association of data collection rule. Deleting this association will break the data collection for this AKS Cluster.'
   }
 }
 
