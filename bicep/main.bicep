@@ -1495,6 +1495,7 @@ param AksDiagCategories array = [
   'guard'
 ]
 
+@description('Enable SysLogs and send to log analytics')
 param enableSysLog bool = false
 
 resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  if (createLaw && omsagent)  {
@@ -1598,12 +1599,8 @@ resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if
   }
 }
 
-// resource aks 'Microsoft.ContainerService/managedClusters@2022-11-02-preview' existing = {
-//   name: 'aks-az-k8s-f3pi'
-// }
-
 resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2021-09-01-preview' = {
-  name: 'test6'
+  name: '${aks.name}-${aks_law.name}-association'
   scope: aks
   properties: {
     dataCollectionRuleId: sysLog.id

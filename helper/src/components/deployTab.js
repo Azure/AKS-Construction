@@ -155,9 +155,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
     ...(addons.monitor === "aci" && {
-       ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs})
-    }),
-    ...(addons.monitor === "aci" && addons.enableSysLog !== defaults.addons.enableSysLog && {enableSysLog: addons.enableSysLog })
+       ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs}),
+       ...(addons.enableSysLog !== defaults.addons.enableSysLog && {enableSysLog: addons.enableSysLog })
+    })
   }
 
   const post_params = {
