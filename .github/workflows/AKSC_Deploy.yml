@@ -88,7 +88,7 @@ jobs:
         templateParams: "${{ inputs.templateParams}}"
       run: |
         echo "Replacing params with secrets in param string $templateParams"
-      
+
         if [[ "$templateParams" == *"_USER_OBJECT_ID_"* ]]; then
           echo "Token _USER_OBJECT_ID_ found for secret reference replacement"
 
@@ -122,7 +122,7 @@ jobs:
         templateParams: ${{ steps.paramPrep.outputs.templateParams}} #"${{ inputs.templateParams}}"
       run: |
         echo "Creating deployment ${{ inputs.resourceName }} using params $templateParams and AKSC ${{ inputs.templateVersion }}"
-        
+
         DeployOut=($(az deployment group create -g ${{ inputs.rg }} -n ${{ inputs.resourceName }} --template-uri https://github.com/Azure/AKS-Construction/releases/download/${{ inputs.templateVersion }}/main.json --query "[properties.outputs.aksClusterName.value,properties.outputs.containerRegistryName.value]" -o tsv --parameters ${{ inputs.templateParamFile}} automatedDeployment=true $templateParams))
 
         aksClusterName=${DeployOut[0]}
@@ -132,7 +132,7 @@ jobs:
 
         echo "aksClusterName returned from az deployment = $aksClusterName"
         echo "containerRegistryName returned from az deployment = $containerRegistryName"
-        
+
         echo "AKSNAME=$aksClusterName" >> $GITHUB_OUTPUT
         echo "ACRNAME=$containerRegistryName" >> $GITHUB_OUTPUT
         echo "AKVNAME=$keyvaultName" >> $GITHUB_OUTPUT
@@ -150,7 +150,7 @@ jobs:
     - name: Kubelogin
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == false
       env:
-        kubeloginversion: 'v0.0.20'
+        kubeloginversion: 'v0.0.28'
       run: |
         az aks get-credentials -n ${{ steps.deployAks.outputs.AKSNAME }} -g ${{ inputs.rg }} --overwrite-existing
 
