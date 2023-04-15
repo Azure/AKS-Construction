@@ -6,6 +6,9 @@ param aksPrincipleId string = ''
 
 param vnetAddressPrefix string
 param vnetAksSubnetAddressPrefix string
+param vnetPodAddressPrefix string
+
+param cniDynamicIpAllocation bool = false
 
 //Nsg
 param workspaceName string = ''
@@ -160,10 +163,33 @@ var aks_baseSubnet =  {
     }: {})
 }
 
+var aks_podSubnet_name = 'aks-sn-pods'
+var aks_podSubnet =  {
+  name: aks_podSubnet_name
+  properties: union({
+      addressPrefix: vnetPodAddressPrefix
+    }, privateLinks ? {
+      privateEndpointNetworkPolicies: 'Disabled'
+      privateLinkServiceNetworkPolicies: 'Enabled'
+    } : {}, natGateway ? {
+      natGateway: {
+        id: natGw.id
+      }
+    } : {}, azureFirewalls ? {
+      routeTable: {
+        id: vnet_udr.id //resourceId('Microsoft.Network/routeTables', routeFwTableName)
+      }
+    }: {})
+}
+
 var aks_subnet = networkSecurityGroups ? union(aks_baseSubnet, nsgAks.outputs.nsgSubnetObj) : aks_baseSubnet
+var aks_podsubnet = networkSecurityGroups ? union(aks_podSubnet, nsgAks.outputs.nsgSubnetObj) : aks_podSubnet
+
+
 
 var subnets = union(
   array(aks_subnet),
+  cniDynamicIpAllocation ? array(aks_podsubnet) : [],
   azureFirewalls ? array(fw_subnet) : [],
   privateLinks ? array(private_link_subnet) : [],
   acrPrivatePool ? array(acrpool_subnet) : [],
@@ -189,6 +215,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
 output vnetId string = vnet.id
 output vnetName string = vnet.name
 output aksSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, aks_subnet_name)
+output aksPodSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, aks_podSubnet_name)
 output fwSubnetId string = azureFirewalls ? '${vnet.id}/subnets/${fw_subnet_name}' : ''
 output fwMgmtSubnetId string = azureFirewallsManagementSeperation ? '${vnet.id}/subnets/${fwmgmt_subnet_name}' : ''
 output acrPoolSubnetId string = acrPrivatePool ? '${vnet.id}/subnets/${acrpool_subnet_name}' : ''
