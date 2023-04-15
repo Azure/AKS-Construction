@@ -404,7 +404,8 @@ function BYOVNET({ net, addons, updateFn, invalidArray }) {
             <TextField value={net.byoAKSSubnetId} onChange={(ev, v) => updateFn("byoAKSSubnetId", v)} errorMessage={getError(invalidArray, 'byoAKSSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing AKS Nodes subnet ResourceId</Text>} />
 
             <Separator className="notopmargin" />
-
+            <TextField disabled={!net.cniDynamicIpAllocation} value={net.byoAKSPodSubnetId} onChange={(ev, v) => updateFn("byoAKSPodSubnetId", v)} errorMessage={getError(invalidArray, 'byoAKSPodSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing AKS Pods subnet ResourceId</Text>} />
+            <Separator/>
 
             <TextField disabled={addons.ingress !== 'appgw'} value={net.byoAGWSubnetId} onChange={(ev, v) => updateFn("byoAGWSubnetId", v)} errorMessage={getError(invalidArray, 'byoAGWSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing Application Gateway subnet ResourceId</Text>} />
             <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets these requirements <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">here</Link></MessageBar>
