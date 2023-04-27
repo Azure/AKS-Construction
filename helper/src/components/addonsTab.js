@@ -292,6 +292,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
 
+                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableSysLog} onChange={(ev, v) => updateFn("enableSysLog", v)} label={<Text> Enable collection of syslogs in Container Insights and send them to the Log Analytics workspace (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-syslog">docs *preview</Link>) </Text>} />
                 </Stack.Item>
             }
 

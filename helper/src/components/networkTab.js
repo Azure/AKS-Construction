@@ -158,6 +158,9 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                 <Stack horizontal tokens={{ childrenGap: 50 }}>
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.info}>NAT Gateway allows more traffic flows than a Load Balancer.<a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
+                        {net.aksOutboundTrafficType==='userDefinedRouting' && net.vnet_opt === 'byo' &&
+                          <MessageBar styles={{ root: { width:'400px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Ensure that the AKS Subnet is configured with a UDR and that your Virtual Network Appliance is <Link href="https://learn.microsoft.com/azure/aks/limit-egress-traffic">properly configured</Link> to allow necessary traffic</MessageBar>
+                        }
                         {hasError(invalidArray, 'aksOutboundTrafficType') &&
                             <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'aksOutboundTrafficType')}</MessageBar>
                         }
@@ -169,7 +172,8 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             options={[
                                 { key: 'loadBalancer', text: 'Load Balancer'  },
                                 { key: 'managedNATGateway', text: 'Managed NAT Gateway' },
-                                { key: 'userAssignedNATGateway', text: 'Assigned NAT Gateway'}
+                                { key: 'userAssignedNATGateway', text: 'Assigned NAT Gateway'},
+                                { key: 'userDefinedRouting', text: 'User Defined Routing'}
                             ]}
                             onChange={(ev, { key }) => updateFn("aksOutboundTrafficType", key)}
                         />
@@ -182,7 +186,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             label="Create NAT Gateway for AKS Subnet (Custom VNet Only)"
                         />
                         <Slider
-                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.vnet_opt === 'byo'}
+                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.aksOutboundTrafficType==='userDefinedRouting' || net.vnet_opt === 'byo'}
                             buttonProps={{ "data-testid": "net-natGwIp-slider"}}
                             styles={{ root: { width: 450 } }}
                             label={'Nat Gateway Ip Count'} min={1}  max={16} step={1}
@@ -191,7 +195,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                         />
 
                         <Slider
-                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.vnet_opt === 'byo'}
+                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.aksOutboundTrafficType==='userDefinedRouting' || net.vnet_opt === 'byo'}
                             buttonProps={{ "data-testid": "net-natGwTimeout-slider"}}
                             styles={{ root: { width: 450 } }}
                             label={'Nat Gateway Idle Timeout (Minutes)'} min={5}  max={120} step={1}
@@ -210,9 +214,9 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'afw')}</MessageBar>
                 }
                 <Checkbox
-                    styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
+                    styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
                     disabled={net.vnet_opt !== 'custom'}
-                    errorMessage={getError(invalidArray, 'afw')}
+                    errorMessage={getError(invalidArray, 'afw(')}
                     checked={net.afw}
                     onChange={(ev, v) => updateFn("afw", v)}
                     label="Implement Azure Firewall & UDR next hop" />

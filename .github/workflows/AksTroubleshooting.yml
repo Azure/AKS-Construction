@@ -151,16 +151,20 @@ jobs:
 
       - name: Kubelogin
         if: inputs.USERUNCMD == false
+        timeout-minutes: 2
         env:
-          kubeloginversion: 'v0.0.13'
+          kubeloginversion: 'v0.0.28'
         run: |
           wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
           unzip kubelogin-linux-amd64.zip
           sudo mv bin/linux_amd64/kubelogin /usr/bin
           kubelogin convert-kubeconfig -l azurecli
 
+          kubectl get nodes
+
       - name: Get Agic pod name
         id: agicpodname
+        timeout-minutes: 1
         env:
           NAMESP: "kube-system"
           AGICLABEL: "app=ingress-appgw"
@@ -262,7 +266,7 @@ jobs:
       - name: Kubelogin
         if: inputs.USERUNCMD == false
         env:
-          kubeloginversion: 'v0.0.13'
+          kubeloginversion: 'v0.0.28'
         run: |
           wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
           unzip kubelogin-linux-amd64.zip
