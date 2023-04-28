@@ -844,7 +844,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.24.9'
+param kubernetesVersion string = '1.25.6'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -1307,7 +1307,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 !empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-11-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-02-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
@@ -1520,7 +1520,7 @@ resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  
   }
 }
 
-resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
+resource sysLog 'Microsoft.Insights/dataCollectionRules@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
   name: 'MSCI-${location}-${aks.name}'
   location: location
   kind: 'Linux'
@@ -1603,7 +1603,7 @@ resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if
   }
 }
 
-resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
+resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
   name: '${aks.name}-${aks_law.name}-association'
   scope: aks
   properties: {
@@ -1756,7 +1756,7 @@ var telemetryId = '3c1e2fc6-1c4b-44f9-8694-25d00ae30a3a-${location}'
     |__|     |_______||_______||_______||__|  |__| |_______|    |__|     | _| `._____|   |__|        |_______/ |_______|| _|      |_______| \______/      |__|     |__|  |__| |_______||__| \__|     |__|     */
 
 //  Telemetry Deployment
-resource telemetrydeployment 'Microsoft.Resources/deployments@2021-04-01' = if (enableTelemetry) {
+resource telemetrydeployment 'Microsoft.Resources/deployments@2022-09-01' = if (enableTelemetry) {
   name: telemetryId
   properties: {
     mode: 'Incremental'
