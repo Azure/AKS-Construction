@@ -1155,7 +1155,7 @@ var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array
 output userNodePoolName string = nodePoolName
 output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 
-var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
+var akssku = AksPaidSkuForSLA ? 'Standard' : 'Free'
 
 var aks_addons = union({
   azurepolicy: {
@@ -1325,7 +1325,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2023-02-02-preview' = {
     type: 'SystemAssigned'
   }
   sku: {
-    name: 'Basic'
+    name: 'Base'
     tier: akssku
   }
   dependsOn: [
