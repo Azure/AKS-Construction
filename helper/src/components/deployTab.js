@@ -65,8 +65,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ]})
     }),
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
-    ...(net.afw && net.azureFirewallsSku !== defaults.net.azureFirewallsSku && { azureFirewallsSku: net.azureFirewallsSku}),
-    ...(net.afw && net.vnetFirewallManagementSubnetAddressPrefix !== defaults.net.vnetFirewallManagementSubnetAddressPrefix && net.azureFirewallsSku==="Basic" && { vnetFirewallManagementSubnetAddressPrefix: net.vnetFirewallManagementSubnetAddressPrefix}),
+    ...(net.afw && net.azureFirewallSku !== defaults.net.azureFirewallSku && { azureFirewallSku: net.azureFirewallSku}),
+    ...(net.afw && net.vnetFirewallManagementSubnetAddressPrefix !== defaults.net.vnetFirewallManagementSubnetAddressPrefix && net.azureFirewallSku==="Basic" && { vnetFirewallManagementSubnetAddressPrefix: net.vnetFirewallManagementSubnetAddressPrefix}),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
         privateLinks: true,
         ...(addons.csisecret === 'akvNew' && deploy.keyVaultIPAllowlist  && apiips_array.length > 0 && {keyVaultIPAllowlist: apiips_array }),

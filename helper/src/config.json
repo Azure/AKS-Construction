@@ -113,7 +113,7 @@
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",
-            "azureFirewallsSku": "Standard",
+            "azureFirewallSku": "Standard",
             "maxPods": 30,
             "cniDynamicIpAllocation": false,
             "networkPluginMode": false,
