@@ -135,7 +135,7 @@ module network './network.bicep' = if (custom_vnet) {
     ingressApplicationGateway: ingressApplicationGateway
     vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
     azureFirewalls: azureFirewalls
-    azureFirewallsSku: azureFirewallSku
+    azureFirewallSku: azureFirewallSku
     vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
     vnetFirewallManagementSubnetAddressPrefix: vnetFirewallManagementSubnetAddressPrefix
     privateLinks: privateLinks
