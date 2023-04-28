@@ -221,14 +221,14 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     onChange={(ev, v) => updateFn("afw", v)}
                     label="Implement Azure Firewall & UDR next hop" />
 
-                {net.azurefirewallsku==='Basic' &&
+                {net.azureFirewallSku==='Basic' &&
                     <MessageBar styles={{ root: { marginLeft: '50px', width:'500px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Basic SKU is currently a preview service <Link href="https://learn.microsoft.com/en-gb/azure/firewall/deploy-firewall-basic-portal-policy#prerequisites">(*preview)</Link></MessageBar>
                 }
                 <Dropdown
                     styles={{ root: { marginLeft: '50px', width: '200px', marginTop: '10 !important' } }}
                     disabled={!net.afw}
                     label="Firewall SKU"
-                    onChange={(ev, { key }) => updateFn("azurefirewallsku", key)} selectedKey={net.azurefirewallsku}
+                    onChange={(ev, { key }) => updateFn("azureFirewallSku", key)} selectedKey={net.azureFirewallSku}
                     options={[
                         { key: 'Basic', text: 'Basic' },
                         { key: 'Standard', text: 'Standard' },
@@ -450,7 +450,7 @@ function CustomVNET({ net, addons, updateFn, invalidArray }) {
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" disabled={!net.afw || net.azurefirewallsku!=='Basic'} label="Azure Firewall management subnet" onChange={(ev, val) => updateFn("vnetFirewallManagementSubnetAddressPrefix", val)} value={net.afw ? (net.azurefirewallsku==='Basic' ? net.vnetFirewallManagementSubnetAddressPrefix : 'Management subnet for Basic SKU') : "No Firewall requested"} />
+                        <TextField prefix="Cidr" disabled={!net.afw || net.azureFirewallSku!=='Basic'} label="Azure Firewall management subnet" onChange={(ev, val) => updateFn("vnetFirewallManagementSubnetAddressPrefix", val)} value={net.afw ? (net.azureFirewallSku==='Basic' ? net.vnetFirewallManagementSubnetAddressPrefix : 'Management subnet for Basic SKU') : "No Firewall requested"} />
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
