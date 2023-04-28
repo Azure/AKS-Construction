@@ -131,7 +131,7 @@ resource vnet_udr 'Microsoft.Network/routeTables@2022-07-01' = if (azureFirewall
       {
         name: 'AKSNodesEgress'
         properties: {
-          addressPrefix: '0.0.0.0/1'
+          addressPrefix: '0.0.0.0/0'
           nextHopType: 'VirtualAppliance'
           nextHopIpAddress: azureFirewalls ? calcAzFwIp.outputs.FirewallPrivateIp : null
         }

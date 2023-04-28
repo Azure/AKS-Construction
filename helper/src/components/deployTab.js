@@ -27,6 +27,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
   const params = {
     resourceName: deploy.clusterName,
+    ...(deploy.managedNodeResourceGroup !== defaults.deploy.managedNodeResourceGroup && { managedNodeResourceGroup: deploy.managedNodeResourceGroup }),
     ...(deploy.kubernetesVersion !== defaults.deploy.kubernetesVersion && {kubernetesVersion: deploy.kubernetesVersion}),
     ...(cluster.agentCount !== defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
     ...(cluster.upgradeChannel !== defaults.cluster.upgradeChannel && { upgradeChannel: cluster.upgradeChannel }),
@@ -107,7 +108,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
       })
     }),
-    ...(net.vnet_opt === "byo" && {
+    ...(net.vnet_opt !== "default" && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
     }),
     ...(cluster.keyVaultKms !== defaults.cluster.keyVaultKms && {
@@ -155,7 +156,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
     ...(addons.monitor === "aci" && {
-       ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs})
+       ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs}),
+       ...(addons.enableSysLog !== defaults.addons.enableSysLog && {enableSysLog: addons.enableSysLog })
     })
   }
 
@@ -200,7 +202,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
 
   const params2tf = p => Object.keys(p).map(k => {
-    return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? '{value=data.azurerm_client_config.current.client_id}' : `{value=var.${k}}`}\n`
+    return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? '{value=data.azurerm_client_config.current.object_id}' : `{value=var.${k}}`}\n`
   }).join('')
 
   const params2TfVar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
@@ -287,11 +289,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const deployTfProviders =
     `#providers.tf\n\n` +
     `terraform {\n` +
-    `  required_version = ">=1.1.9"\n` +
+    `  required_version = ">=1.3.2"\n` +
     `  required_providers {\n` +
     `    azurerm = {\n` +
     `      source = "hashicorp/azurerm"\n` +
-    `      version = "~>3.6"\n` +
+    `      version = "~>3.48"\n` +
     `    }\n` +
     `  }\n` +
     `}\n\n` +
@@ -316,14 +318,17 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  name = "AKS-C"\n` +
     `  resource_group_name = azurerm_resource_group.rg.name\n` +
     `  deployment_mode = "Incremental"\n` +
-    `  template_content = data.http.aksc_release.body\n` +
+    `  template_content = data.http.aksc_release.response_body\n` +
     `  parameters_content = jsonencode({\n` +
     params2tf(finalParams) +
     `  })\n` +
     `}`
 
   const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  type=string\n  default="${deploy.rg}"\n}\nvariable location {\n  type=string\n  default="${deploy.location}"\n}` + params2TfVar(finalParams)
-  const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}`
+  const deployTfOutput = `#outputs.tf\n\n` +
+    `output aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}\n` +
+    `output userClientId {\n  value = data.azurerm_client_config.current.client_id\n  description = "Current User ClientId"\n}\n` +
+    `output userObjectId {\n  value = data.azurerm_client_config.current.object_id\n  description = "Current User ObjectId"\n}`
 
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
@@ -364,6 +369,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
           <TextField label="Cluster Name" onChange={(ev, val) => updateFn('clusterName', val)} required errorMessage={getError(invalidArray, 'clusterName')} value={deploy.clusterName} />
           <TextField id="azResourceGroup" label="Resource Group" onChange={(ev, val) => updateFn('rg', val)} required errorMessage={getError(invalidArray, 'rg')} value={deploy.rg} />
+          <TextField id="managedNodeResourceGroup" label="Managed Resource Group Name (optional)" onChange={(ev, val) => updateFn('managedNodeResourceGroup', val)} maxLength={80} value={deploy.managedNodeResourceGroup} />
           <TextField label="Kubernetes version" prefix="Current GA Version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
 
           <Dropdown

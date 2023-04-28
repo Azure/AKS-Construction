@@ -18,7 +18,7 @@ on:
         required: false
       region:
         description: 'Resource Deployment Region'
-        default: 'UKWest'
+        default: 'EastUs'
         options:
           - "WestEurope"
           - "NorthEurope"
@@ -33,6 +33,11 @@ on:
         required: false
       doWellArchitected:
         description: 'Perform the Well Architected Framework assesment'
+        default: false
+        type: boolean
+        required: false
+      doCostEstimate:
+        description: 'Perform a template Cost Estimate'
         default: false
         type: boolean
         required: false
@@ -126,7 +131,7 @@ jobs:
 
   CostEstimate:
     needs: [ReusableWF]
-    if: github.event_name != 'pull_request' || contains( github.event.pull_request.labels.*.name, 'test-deploy-privateconfig')
+    if: github.event.inputs.doCostEstimate == 'true'
     uses: TheCloudTheory/arm-estimator/.github/workflows/estimateFromUrl.yml@main
     #uses: Gordonby/arm-estimator/.github/workflows/estimateFromUrl.yml@gb-workflowpolish
     with:
