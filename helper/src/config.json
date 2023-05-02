@@ -10,7 +10,7 @@
         "deploy": {
             "enableTelemetry": true,
             "managedNodeResourceGroup": "",
-            "kubernetesVersion": "1.24.9",
+            "kubernetesVersion": "1.25.6",
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
@@ -113,7 +113,7 @@
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",
-            "azureFirewallsSku": "Standard",
+            "azureFirewallSku": "Standard",
             "maxPods": 30,
             "cniDynamicIpAllocation": false,
             "networkPluginMode": false,
