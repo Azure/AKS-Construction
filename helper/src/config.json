@@ -126,6 +126,7 @@
             "enableNodePublicIP": false,
             "vnet_opt": "default",
             "byoAKSSubnetId": "",
+            "byoAKSPodSubnetId": "",
             "byoAGWSubnetId": "",
             "vnetAddressPrefix": "10.240.0.0/16",
             "vnetAksSubnetAddressPrefix": "10.240.0.0/22",

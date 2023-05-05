@@ -35,6 +35,9 @@ param custom_vnet bool = false
 @description('Full resource id path of an existing subnet to use for AKS')
 param byoAKSSubnetId string = ''
 
+@description('Full resource id path of an existing pod subnet to use for AKS')
+param byoAKSPodSubnetId string = ''
+
 @description('Full resource id path of an existing subnet to use for Application Gateway')
 param byoAGWSubnetId string = ''
 
@@ -62,6 +65,7 @@ module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId) && cre
   scope: resourceGroup(existingAksVnetRG)
   params: {
     byoAKSSubnetId: byoAKSSubnetId
+    byoAKSPodSubnetId: byoAKSPodSubnetId
     user_identity_principalId: createAksUai ? aksUai.properties.principalId : ''
     rbacAssignmentScope: uaiNetworkScopeRbac
   }
@@ -130,6 +134,8 @@ module network './network.bicep' = if (custom_vnet) {
     location: location
     networkPluginIsKubenet: networkPlugin=='kubenet'
     vnetAddressPrefix: vnetAddressPrefix
+    vnetPodAddressPrefix: cniDynamicIpAllocation ? podCidr : ''
+    cniDynamicIpAllocation: cniDynamicIpAllocation
     aksPrincipleId: aksPrincipalId
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     ingressApplicationGateway: ingressApplicationGateway
@@ -161,6 +167,7 @@ output CustomVnetId string = custom_vnet ? network.outputs.vnetId : ''
 output CustomVnetPrivateLinkSubnetId string = custom_vnet ? network.outputs.privateLinkSubnetId : ''
 
 var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
+var aksPodSubnetId = custom_vnet ? network.outputs.aksPodSubnetId : byoAKSPodSubnetId
 var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
 
 
@@ -1141,6 +1148,7 @@ var systemPoolBase = {
   maxPods: 30
   type: 'VirtualMachineScaleSets'
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : null
+  podSubnetID: !empty(aksPodSubnetId) ? aksPodSubnetId : null
   upgradeSettings: {
     maxSurge: '33%'
   }
@@ -1352,6 +1360,7 @@ module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
     AksName: aks.name
     PoolName: poolName
     subnetId: aksSubnetId
+    podSubnetID: !empty(aksPodSubnetId) ? aksPodSubnetId : ''
     agentCount: agentCount
     agentCountMax: agentCountMax
     agentVMSize: agentVMSize
