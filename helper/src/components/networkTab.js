@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Image, ImageFit, Link, Separator, TextField, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, Slider, Dropdown } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
+import { PreviewDialog } from './previewDialog';
 
 const columnProps = {
     tokens: { childrenGap: 20 },
@@ -98,6 +99,13 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             checked={net.networkPluginMode}
                             onChange={(ev, v) => UpdateCniOverlay(v)}
                             label="CNI Overlay Network" />
+                            {
+                                net.networkPluginMode &&
+                                (
+                                    <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters"} />
+                                )
+
+                            }
                     </Stack.Item>
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.info}>Powered by Cilium is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-powered-by-cilium#prerequisites">preview feature</a> that leverages more efficient use of the linux kernel and other networking features.</MessageBar>
@@ -107,6 +115,12 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             checked={net.ebpfDataplane}
                             onChange={(ev, v) => updateFn("ebpfDataplane", v)}
                             label="Cilium powered dataplane" />
+                            {
+                                net.ebpfDataplane &&
+                                (
+                                    <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/azure-cni-powered-by-cilium#prerequisites"} />
+                                )
+                            }
                     </Stack.Item>
                 </Stack>
             </Stack.Item>
