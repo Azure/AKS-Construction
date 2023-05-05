@@ -163,7 +163,7 @@ var aks_baseSubnet =  {
     }: {})
 }
 
-var aks_podSubnet_name = 'aks-sn-pods'
+var aks_podSubnet_name = 'aks-pods-sn'
 var aks_podSubnet =  {
   name: aks_podSubnet_name
   properties: union({
