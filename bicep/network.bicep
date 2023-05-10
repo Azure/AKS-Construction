@@ -367,7 +367,7 @@ resource bastionPip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if(bastio
   }
 }
 
-resource bastionHost 'Microsoft.Network/bastionHosts@2021-05-01' = if(bastion) {
+resource bastionHost 'Microsoft.Network/bastionHosts@2022-11-01' = if(bastion) {
   name: bastionHostName
   location: location
   sku: {

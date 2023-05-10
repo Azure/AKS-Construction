@@ -18,7 +18,7 @@ resource networkWatcher 'Microsoft.Network/networkWatchers@2022-01-01' = {
   properties: {}
 }
 
-resource nsgFlowLogs 'Microsoft.Network/networkWatchers/flowLogs@2021-05-01' = {
+resource nsgFlowLogs 'Microsoft.Network/networkWatchers/flowLogs@2022-11-01' = {
   name: name
   parent: networkWatcher
   location: location

@@ -1315,7 +1315,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 !empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-02-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-03-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
