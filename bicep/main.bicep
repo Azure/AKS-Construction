@@ -292,7 +292,7 @@ resource kvKmsByo 'Microsoft.KeyVault/vaults@2022-07-01' existing = if(!empty(ke
 module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
   name: take('${deployment().name}-keyvaultKms-${resourceName}',64)
   params: {
-    resourceName: 'kms${resourceName}'
+    resourceName: take('kms${resourceName}',20)
     keyVaultPurgeProtection: keyVaultPurgeProtection
     keyVaultSoftDelete: keyVaultSoftDelete
     location: location
@@ -1315,7 +1315,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 !empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-02-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-03-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties

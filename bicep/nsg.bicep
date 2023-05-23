@@ -6,7 +6,7 @@ param workspaceRegion string = resourceGroup().location
 
 var nsgName = 'nsg-${resourceName}'
 
-resource nsg 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
+resource nsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: nsgName
   location: location
 }
