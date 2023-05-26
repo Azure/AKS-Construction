@@ -6,9 +6,11 @@ param aksPrincipleId string = ''
 
 param vnetAddressPrefix string
 param vnetAksSubnetAddressPrefix string
-param vnetPodAddressPrefix string
 
 param cniDynamicIpAllocation bool = false
+
+@description('Provide the vnetPodAddressPrefix when using cniDynamicIpAllocation')
+param vnetPodAddressPrefix string = ''
 
 //Nsg
 param workspaceName string = ''
