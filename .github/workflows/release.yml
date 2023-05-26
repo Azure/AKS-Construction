@@ -11,6 +11,7 @@ on:
         description: 'Create a NEW release with that tag'
         type: boolean
         required: false
+        default: true
 
 env:
   templateRelease: ${{ github.event.inputs.templateRelease }}
