@@ -34,7 +34,7 @@ param nodeLabels object = {}
 param subnetId string
 
 @description('The subnet the pods will use')
-param podSubnetID string
+param podSubnetID string = ''
 
 @description('OS Type for the node pool')
 @allowed(['Linux','Windows'])
