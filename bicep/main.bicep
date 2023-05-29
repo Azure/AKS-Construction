@@ -1100,14 +1100,21 @@ param managedNodeResourceGroup string = ''
 param restrictionLevelNodeResourceGroup string = 'Unrestricted'
 
 @allowed(['', 'Istio'])
+@description('The service mesh profile to use')
 param serviceMeshProfile string = ''
 
+@description('The ingress gateway to use for the Istio service mesh')
+param istioIngressGatewayMode string = ''
+
 var serviceMeshProfileObj = {
-  // istio: {
-  //   components: {
-  //     ingressGateways: null
-  //   }
-  // }
+  istio: {
+    components: {
+      ingressGateways: empty(istioIngressGatewayMode) ? null : [{
+        enabled: true
+        mode: istioIngressGatewayMode
+      }]
+    }
+  }
   mode: 'Istio'
 }
 
