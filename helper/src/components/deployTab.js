@@ -81,7 +81,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts })
        }),
     ...(addons.networkPolicy !== "none" && !net.ebpfDataplane && { networkPolicy: addons.networkPolicy }),
-    ...(defaults.addons.serviceMeshProfile !== addons.serviceMeshProfile && {serviceMeshProfile: "Istio" }),
+    ...(defaults.addons.serviceMeshProfile !== addons.serviceMeshProfile && {serviceMeshProfile: addons.serviceMeshProfile }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
     ...(addons.azurepolicy !== "none" && addons.azurePolicyInitiative !== defaults.addons.azurePolicyInitiative && { azurePolicyInitiative: addons.azurePolicyInitiative }),
     ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}),
