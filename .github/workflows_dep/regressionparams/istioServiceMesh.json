@@ -6,7 +6,7 @@
       "value": "az-k8s-ist"
     },
     "serviceMeshProfile" : {
-        "value" : "istio"
+        "value" : "Istio"
     }
   }
 }
