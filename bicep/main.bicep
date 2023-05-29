@@ -871,9 +871,6 @@ param enableAzureRBAC bool = false
 @description('Enables Kubernetes Event-driven Autoscaling (KEDA)')
 param kedaAddon bool = false
 
-@description('Enables Open Service Mesh')
-param openServiceMeshAddon bool = false
-
 @description('Enables SGX Confidential Compute plugin')
 param sgxPlugin bool = false
 
@@ -1094,7 +1091,6 @@ param warIngressNginx bool = false
 @description('The name of the NEW resource group to create the AKS cluster managed resources in')
 param managedNodeResourceGroup string = ''
 
-
 // Preview feature requires: az feature register --namespace "Microsoft.ContainerService" --name "NRGLockdownPreview"
 @allowed([
   'ReadOnly'
@@ -1102,6 +1098,18 @@ param managedNodeResourceGroup string = ''
 ])
 @description('The restriction level applied to the cluster node resource group')
 param restrictionLevelNodeResourceGroup string = 'Unrestricted'
+
+@allowed(['', 'Istio'])
+param serviceMeshProfile string = ''
+
+var serviceMeshProfileObj = {
+  // istio: {
+  //   components: {
+  //     ingressGateways: null
+  //   }
+  // }
+  mode: 'Istio'
+}
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
@@ -1159,7 +1167,6 @@ var systemPoolBase = {
 
 var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])))
 
-
 output userNodePoolName string = nodePoolName
 output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 
@@ -1178,10 +1185,6 @@ var aks_addons = union({
       rotationPollInterval: keyVaultAksCSIPollInterval
     }
     enabled: keyVaultAksCSI
-  }
-  openServiceMesh: {
-    enabled: openServiceMeshAddon
-    config: {}
   }
   ACCSGXDevicePlugin: {
     enabled: sgxPlugin
@@ -1312,7 +1315,8 @@ var aksProperties = union({
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
 keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {},
-!empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {}
+!empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {},
+!empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
 resource aks 'Microsoft.ContainerService/managedClusters@2023-03-02-preview' = {

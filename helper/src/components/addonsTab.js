@@ -505,10 +505,19 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Open Service Mesh : Enable Open Service Mesh on the AKS Cluster
-                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/open-service-mesh-about">docs</a>)
+                    Service Mesh
+                    (<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/servicemesh-about">docs</a>)
                 </Label>
-                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-osm-Checkbox"}} checked={addons.openServiceMeshAddon} onChange={(ev, v) => updateFn("openServiceMeshAddon", v)} label="Install the Open Service Mesh AddOn" />
+                <Checkbox
+                  styles={{ root: { marginLeft: '50px' } }}
+                  inputProps={{ "data-testid": "addons-asm-Checkbox"}}
+                  checked={addons.serviceMeshProfile}
+                  onChange={(ev, v) => updateFn("serviceMeshProfile", v ? "Istio" : "")}
+                  label="Install the Istio Service Mesh AddOn (Preview)" />
+                {
+                    addons.serviceMeshProfile &&
+                    ( <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/istio-deploy-addon"}/> )
+                }
             </Stack.Item>
 
             <Separator className="notopmargin" />
