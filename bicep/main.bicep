@@ -871,6 +871,9 @@ param enableAzureRBAC bool = false
 @description('Enables Kubernetes Event-driven Autoscaling (KEDA)')
 param kedaAddon bool = false
 
+@description('Enables Open Service Mesh')
+param openServiceMeshAddon bool = false
+
 @description('Enables SGX Confidential Compute plugin')
 param sgxPlugin bool = false
 
@@ -1192,6 +1195,10 @@ var aks_addons = union({
       rotationPollInterval: keyVaultAksCSIPollInterval
     }
     enabled: keyVaultAksCSI
+  }
+  openServiceMesh: {
+    enabled: openServiceMeshAddon
+    config: {}
   }
   ACCSGXDevicePlugin: {
     enabled: sgxPlugin
