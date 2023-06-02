@@ -1,7 +1,8 @@
 /* eslint-disable import/no-anonymous-default-export */
 import React from 'react';
-import { TextField, Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, SpinButton } from '@fluentui/react';
+import { TextField,Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, SpinButton } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
+import { PreviewDialog } from  './previewDialog'
 
 
 export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
@@ -58,17 +59,23 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     <MessageBar styles={{ root: { marginTop: '10px',width: '700px' } }} messageBarType={MessageBarType.info}>To enable client trust in AKS, leverage open source tooling eg. <a target="_new" href="https://github.com/sse-secure-systems/connaisseur">Connaisseur</a>  (<a target="_new" href="https://github.com/Gordonby/connaisseur-aks-acr">sample</a>)</MessageBar>
                 }
             </Stack.Item>
-
             <Stack.Item align="center" styles={{ root: { width: '700px' }}}>
-                <Checkbox disabled={addons.registry !== "Premium"} checked={addons.acrUntaggedRetentionPolicyEnabled} onChange={(ev, v) => updateFn("acrUntaggedRetentionPolicyEnabled", v)} label={<Text>Create untagged image retention policy (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>) (*preview)</Text>} />
+                <Checkbox
+                disabled={addons.registry !== "Premium"}
+                checked={addons.acrUntaggedRetentionPolicyEnabled}
+                onChange={(ev, v) => updateFn("acrUntaggedRetentionPolicyEnabled", v)}
+                label={<Text>Create untagged image retention policy (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>)
+                 </Text>} />
                 <MessageBar styles={{ root: { marginTop: '10px', width: '700px' } }} messageBarType={MessageBarType.warning}>Deleting untagged images will remove them from your ACR after a defined period (<a target="_new" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy">docs</a>) (*preview)</MessageBar>
-
                 {addons.acrUntaggedRetentionPolicyEnabled && (
+                    <div>
+                    <PreviewDialog previewLink={"https://docs.microsoft.com/azure/container-registry/container-registry-content-trust"} isDialogHidden={addons.acrUntaggedRetentionPolicyEnabled}/>
                     <Stack.Item style={{ marginTop: '10px', marginLeft: "50px"}}>
                         <Slider label="Days to retain untagged images for" min={0} max={365} step={1} defaultValue={addons.acrUntaggedRetentionPolicy} showValue={true}
                             onChange={(v) => updateFn("acrUntaggedRetentionPolicy", v)}
                             snapToStep />
                     </Stack.Item>
+                    </div>
                 )}
             </Stack.Item>
 
@@ -106,10 +113,13 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     onChange={(ev, { key }) => updateFn("ingress", key)}
                 />
                 {hasError(invalidArray, 'ingress') &&
-                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '100px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
+                    <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
                 }
             </Stack.Item>
-
+            { addons.ingress === "warNginx" &&
+                (
+                <PreviewDialog previewLink={"https://docs.microsoft.com/en-us/azure/aks/web-app-routing"}/>
+                )}
             <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.ingress === "none" ? "none" : "block") } }} >
                 <Stack tokens={{ childrenGap: 15 }}>
                     {addons.ingress === "nginx" && false &&
@@ -283,15 +293,27 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         styles={{ root: { marginTop: '15px'}}}
                     />
                     <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2} onChange={(ev, v) => setContainerLogsV2(v)} label={<Text>Enable the ContainerLogV2 schema (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2">docs</Link>) (*preview)</Text>} />
+                    {
+                        addons.containerLogsV2 &&
+                        (
+                            <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2"} isDialogHidden={addons.acrUntaggedRetentionPolicyEnabled}/>
+                        )
+                    }
 
                     <MessageBar messageBarType={MessageBarType.warning}>Enable the ContainerLogV2 (successor for ContainerLog) schema for additional data capture and friendlier schema. Disabling this feature will also disable features that are dependent on it (e.g. Basic Logs).</MessageBar>
 
                     <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2BasicLogs} onChange={(ev, v) => setContainerLogV2BasicLogs(v)} label={<Text>Set Basic Logs for ContainerLogV2 (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1%2Cportal-2">docs</Link>) (*preview)</Text>} />
-
+                    {
+                        addons.containerLogsV2BasicLogs &&
+                        (
+                            <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1%2Cportal-2"}/>
+                        )
+                    }
                     <MessageBar messageBarType={MessageBarType.warning}>Enable the Basic log data plan to cost optimise on log ingestion at the cost of a lower retention period, some log query operations that are no longer available and no alerts. Enabling Basic Logs for ContainerLogsV2 has a dependency on the ContainerLogsV2 schema and thus enabling this capability will automatically enable ContainerLogsV2. In addition, the ContainerLogsV2 table's retention is fixed at eight days. More information available via the provided docs link.</MessageBar>
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
 
+                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableSysLog} onChange={(ev, v) => updateFn("enableSysLog", v)} label={<Text> Enable collection of syslogs in Container Insights and send them to the Log Analytics workspace (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-syslog">docs *preview</Link>) </Text>} />
                 </Stack.Item>
             }
 
@@ -348,18 +370,23 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             <Separator className="notopmargin" />
             <Stack.Item align="start">
                 <Label >Cluster East-West traffic restrictions (Network Policies)</Label>
-                <MessageBar>Control which components can communicate with each other. The principle of least privilege should be applied to how traffic can flow between pods in an Azure Kubernetes Service (AKS) cluster</MessageBar>
+                <MessageBar>Control which components can communicate with each other. The principle of least privilege should be applied to how traffic can flow between pods in an Azure Kubernetes Service (AKS) cluster.</MessageBar>
+                {hasError(invalidArray, 'networkPolicy') &&
+                    <MessageBar messageBarType={MessageBarType.error} styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }}>{getError(invalidArray, 'networkPolicy')}</MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={addons.networkPolicy}
+                    errorMessage={getError(invalidArray, 'networkPolicy')}
                     options={[
                         { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { "data-testid":'addons-netpolicy-calico', key: 'calico', text: 'Use Network Policy addon with Calico to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' },
-                        { "data-testid":'addons-netpolicy-azure', key: 'azure', text: 'Use Network Policy addon with Azure provider to implemented intra-cluster traffic restrictions (driven from "NetworkPolicy" objects)' }
-
+                        { "data-testid":'addons-netpolicy-calico', disabled: net.ebpfDataplane, key: 'calico', text: 'Use Calico to implement intra-cluster traffic restrictions' },
+                        { "data-testid":'addons-netpolicy-azure', disabled: net.ebpfDataplane, key: 'azure', text: 'Use Azure NPM to implement intra-cluster traffic restrictions ' },
+                        { "data-testid":'addons-netpolicy-cilium', key: 'cilium', text: 'Use Cilium to implement intra-cluster traffic restrictions (requires Cilium backplane for CNI).' }
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPolicy", key)}
                 />
+
             </Stack.Item>
 
             <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.networkPolicy === "none" ? "none" : "block") } }} >
@@ -466,6 +493,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/keda-about">docs</a>)
                 </Label>
                 <Checkbox styles={{ root: { marginLeft: '50px' } }} checked={addons.kedaAddon} onChange={(ev, v) => updateFn("kedaAddon", v, 'https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites')} label="Install the KEDA AddOn" />
+                {
+                    addons.kedaAddon &&
+                    (
+                        <PreviewDialog previewLink={"https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites"}/>
+                    )
+                }
             </Stack.Item>
 
             <Separator className="notopmargin" />
@@ -487,6 +520,10 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     (<a target="_new" href="https://github.com/Azure/azure-workload-identity">project</a>)
                 </Label>
                 <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-workloadIdentity-Checkbox"}} checked={addons.workloadIdentity} onChange={(ev, v) => updateFn("workloadIdentity", v)} label="Install Workload Identity" />
+                {
+                    addons.workloadIdentity &&
+                    ( <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster"}/> )
+                }
             </Stack.Item>
 
             <Separator className="notopmargin" />
@@ -528,6 +565,27 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     checked={addons.daprAddonHA}
                     onChange={(ev, v) => updateFn("daprAddonHA", v)}
                     label="Enable high availability mode"
+                />
+            </Stack.Item>
+
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Confidential Computing
+                    (<a target="_new" href="https://learn.microsoft.com/azure/confidential-computing/confidential-enclave-nodes-aks-get-started">docs</a>)
+                </Label>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: "10px" } }}>
+                    Enabling this option installs the SGX Device Plugin, but will require a node pool using a VM SKU that supports SGX. Choose `SGX Enclave` for the compute on the cluster tab.
+                </MessageBar>
+                <Checkbox
+                    styles={{ root: { marginLeft: "50px" } }}
+                    inputProps={{ "data-testid": "addons-sgx-checkbox" }}
+                    checked={addons.sgxPlugin}
+                    onChange={(ev, v) => updateFn("sgxPlugin", v)}
+                    label="Install the sgxPlugin on compatible VM node pools"
+                    disabled={cluster.computeType !== 'sgx'}
                 />
             </Stack.Item>
 

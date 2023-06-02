@@ -9,7 +9,8 @@
     "defaults": {
         "deploy": {
             "enableTelemetry": true,
-            "kubernetesVersion": "1.24.9",
+            "managedNodeResourceGroup": "",
+            "kubernetesVersion": "1.25.6",
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
@@ -101,16 +102,18 @@
             "enableMonitorIngress": false,
             "retentionInDays": 30,
             "createAksMetricAlerts": true,
+            "enableSysLog": false,
             "csisecret": "none",
             "keyVaultAksCSIPollInterval": "2m",
             "kvId": "",
             "gitops": "none",
             "containerLogsV2": false,
-            "containerLogsV2BasicLogs": false
+            "containerLogsV2BasicLogs": false,
+            "sgxPlugin": false
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",
-            "azureFirewallsSku": "Standard",
+            "azureFirewallSku": "Standard",
             "maxPods": 30,
             "cniDynamicIpAllocation": false,
             "networkPluginMode": false,
@@ -123,6 +126,7 @@
             "enableNodePublicIP": false,
             "vnet_opt": "default",
             "byoAKSSubnetId": "",
+            "byoAKSPodSubnetId": "",
             "byoAGWSubnetId": "",
             "vnetAddressPrefix": "10.240.0.0/16",
             "vnetAksSubnetAddressPrefix": "10.240.0.0/22",

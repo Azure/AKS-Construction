@@ -25,7 +25,7 @@ var managementIpConfig = {
   }
 }
 
-resource fw_pip 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
+resource fw_pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
   name: firewallPublicIpName
   location: location
   sku: {
@@ -38,7 +38,7 @@ resource fw_pip 'Microsoft.Network/publicIPAddresses@2021-03-01' = {
   }
 }
 
-resource fwManagementIp_pip 'Microsoft.Network/publicIPAddresses@2021-03-01' = if(fwSku=='Basic') {
+resource fwManagementIp_pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if(fwSku=='Basic') {
   name: firewallManagementPublicIpName
   location: location
   sku: {
@@ -318,6 +318,33 @@ resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-
               ]
             }
           ] : [])
+      }
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'AksWorkloadEgress'
+        priority: 500
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+            {
+              name: 'GitHub'
+              ruleType: 'ApplicationRule'
+              protocols: [
+                {
+                  port: 443
+                  protocolType: 'Https'
+                }
+              ]
+              targetFqdns: [
+                'github.com'
+                'raw.githubusercontent.com'
+              ]
+              sourceAddresses: [
+                vnetAksSubnetAddressPrefix
+              ]
+            }
+          ]
       }
     ]
   }

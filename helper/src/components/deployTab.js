@@ -27,6 +27,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
   const params = {
     resourceName: deploy.clusterName,
+    ...(deploy.managedNodeResourceGroup !== defaults.deploy.managedNodeResourceGroup && { managedNodeResourceGroup: deploy.managedNodeResourceGroup }),
     ...(deploy.kubernetesVersion !== defaults.deploy.kubernetesVersion && {kubernetesVersion: deploy.kubernetesVersion}),
     ...(cluster.agentCount !== defaults.cluster.agentCount && { agentCount: cluster.agentCount}),
     ...(cluster.upgradeChannel !== defaults.cluster.upgradeChannel && { upgradeChannel: cluster.upgradeChannel }),
@@ -50,6 +51,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
          ...(net.bastion && defaults.net.bastionSubnetAddressPrefix !== net.bastionSubnetAddressPrefix && {bastionSubnetAddressPrefix: net.bastionSubnetAddressPrefix})
        }),
     ...(net.vnet_opt === "byo" && { byoAKSSubnetId: net.byoAKSSubnetId, ...serviceparams }),
+    ...(net.vnet_opt === "byo" && net.cniDynamicIpAllocation && { byoAKSPodSubnetId: net.byoAKSPodSubnetId}),
     ...(net.vnet_opt === "byo" && addons.ingress === 'appgw' && { byoAGWSubnetId: net.byoAGWSubnetId }),
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
     ...(cluster.enable_aad && cluster.AksDisableLocalAccounts !== defaults.cluster.AksDisableLocalAccounts && { AksDisableLocalAccounts: cluster.AksDisableLocalAccounts }),
@@ -64,8 +66,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ]})
     }),
     ...(net.afw && { azureFirewalls: true, ...(addons.certMan && {certManagerFW: true}), ...(net.vnet_opt === "custom" && defaults.net.vnetFirewallSubnetAddressPrefix !== net.vnetFirewallSubnetAddressPrefix && { vnetFirewallSubnetAddressPrefix: net.vnetFirewallSubnetAddressPrefix }) }),
-    ...(net.afw && net.azureFirewallsSku !== defaults.net.azureFirewallsSku && { azureFirewallsSku: net.azureFirewallsSku}),
-    ...(net.afw && net.vnetFirewallManagementSubnetAddressPrefix !== defaults.net.vnetFirewallManagementSubnetAddressPrefix && net.azureFirewallsSku==="Basic" && { vnetFirewallManagementSubnetAddressPrefix: net.vnetFirewallManagementSubnetAddressPrefix}),
+    ...(net.afw && net.azureFirewallSku !== defaults.net.azureFirewallSku && { azureFirewallSku: net.azureFirewallSku}),
+    ...(net.afw && net.vnetFirewallManagementSubnetAddressPrefix !== defaults.net.vnetFirewallManagementSubnetAddressPrefix && net.azureFirewallSku==="Basic" && { vnetFirewallManagementSubnetAddressPrefix: net.vnetFirewallManagementSubnetAddressPrefix}),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
         privateLinks: true,
         ...(addons.csisecret === 'akvNew' && deploy.keyVaultIPAllowlist  && apiips_array.length > 0 && {keyVaultIPAllowlist: apiips_array }),
@@ -78,7 +80,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...( addons.logDataCap !== defaults.addons.logDataCap && {logDataCap: addons.logDataCap }),
         ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts })
        }),
-    ...(addons.networkPolicy !== "none" && { networkPolicy: addons.networkPolicy }),
+    ...(addons.networkPolicy !== "none" && !net.ebpfDataplane && { networkPolicy: addons.networkPolicy }),
     ...(defaults.addons.openServiceMeshAddon !== addons.openServiceMeshAddon && {openServiceMeshAddon: addons.openServiceMeshAddon }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
     ...(addons.azurepolicy !== "none" && addons.azurePolicyInitiative !== defaults.addons.azurePolicyInitiative && { azurePolicyInitiative: addons.azurePolicyInitiative }),
@@ -106,7 +108,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
       })
     }),
-    ...(net.vnet_opt === "byo" && {
+    ...(net.vnet_opt !== "default" && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
     }),
     ...(cluster.keyVaultKms !== defaults.cluster.keyVaultKms && {
@@ -119,6 +121,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon}),
     ...(addons.daprAddon !== defaults.addons.daprAddon && { daprAddon: addons.daprAddon }),
     ...(addons.daprAddonHA !== defaults.addons.daprAddonHA && { daprAddonHA: addons.daprAddonHA }),
+    ...(addons.sgxPlugin !== defaults.addons.sgxPlugin && { sgxPlugin: addons.sgxPlugin })
   }
 
   const preview_params = {
@@ -153,7 +156,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
     ...(addons.monitor === "aci" && {
-       ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs})
+       ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs}),
+       ...(addons.enableSysLog !== defaults.addons.enableSysLog && {enableSysLog: addons.enableSysLog })
     })
   }
 
@@ -194,7 +198,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }
 
   const params2tf = p => Object.keys(p).map(k => {
-    return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? '{value=data.azurerm_client_config.current.client_id}' : `{value=var.${k}}`}\n`
+    return `    ${k} = ${k.toLowerCase().endsWith('principalid') ? '{value=data.azurerm_client_config.current.object_id}' : `{value=var.${k}}`}\n`
   }).join('')
 
   const params2TfVar = p => Object.keys(p).filter(p => p !== 'adminPrincipalId' &&
@@ -322,11 +326,11 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const deployTfProviders =
     `#providers.tf\n\n` +
     `terraform {\n` +
-    `  required_version = ">=1.1.9"\n` +
+    `  required_version = ">=1.3.2"\n` +
     `  required_providers {\n` +
     `    azurerm = {\n` +
     `      source = "hashicorp/azurerm"\n` +
-    `      version = "~>3.6"\n` +
+    `      version = "~>3.48"\n` +
     `    }\n` +
     `  }\n` +
     `}\n\n` +
@@ -351,14 +355,17 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `  name = "AKS-C"\n` +
     `  resource_group_name = azurerm_resource_group.rg.name\n` +
     `  deployment_mode = "Incremental"\n` +
-    `  template_content = data.http.aksc_release.body\n` +
+    `  template_content = data.http.aksc_release.response_body\n` +
     `  parameters_content = jsonencode({\n` +
     params2tf(finalParams) +
     `  })\n` +
     `}`
 
   const deployTfVar = `#variables.tf\n\nvariable resourceGroupName {\n  type=string\n  default="${deploy.rg}"\n}\nvariable location {\n  type=string\n  default="${deploy.location}"\n}` + params2TfVar(finalParams)
-  const deployTfOutput = `#outputs.tf\n\noutput aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}`
+  const deployTfOutput = `#outputs.tf\n\n` +
+    `output aksClusterName {\n  value = jsondecode(azurerm_resource_group_template_deployment.aksc_deploy.output_content).aksClusterName.value\n  description = "The name of the AKS cluster."\n}\n` +
+    `output userClientId {\n  value = data.azurerm_client_config.current.client_id\n  description = "Current User ClientId"\n}\n` +
+    `output userObjectId {\n  value = data.azurerm_client_config.current.object_id\n  description = "Current User ObjectId"\n}`
 
   const param_file = JSON.stringify(params2file(finalParams), null, 2).replaceAll('\\\\\\', '').replaceAll('\\\\\\', '')
 
@@ -406,6 +413,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
           <TextField label="Cluster Name" onChange={(ev, val) => updateFn('clusterName', val)} required errorMessage={getError(invalidArray, 'clusterName')} value={deploy.clusterName} />
           <TextField id="azResourceGroup" label="Resource Group" onChange={(ev, val) => updateFn('rg', val)} required errorMessage={getError(invalidArray, 'rg')} value={deploy.rg} />
+          <TextField id="managedNodeResourceGroup" label="Managed Resource Group Name (optional)" onChange={(ev, val) => updateFn('managedNodeResourceGroup', val)} maxLength={80} value={deploy.managedNodeResourceGroup} />
           <TextField label="Kubernetes version" prefix="Current GA Version" readOnly={false} disabled={false} required value={deploy.kubernetesVersion} onChange={(ev, val) => updateFn('kubernetesVersion', val)} />
 
           <Dropdown
@@ -546,7 +554,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
               </Stack.Item>
             </Stack>
 
-            <CodeBlock key="github-auth" lang="shell script" hideSave={true} error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
+            <CodeBlock testId={'deploy-github-shellscript'} key="github-auth" lang="shell script" hideSave={true} error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={`# Create resource group, and an identity with contributor access that github can federate
 az group create -l WestEurope -n ${deploy.rg}
 
 app=($(az ad app create --display-name ${ghRepo} --query "[appId,id]" -o tsv | tr ' ' "\\n"))
@@ -569,7 +577,7 @@ gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 <Separator></Separator>
 
             <Text style={{marginTop: '20px'}}>Add the following code to a new file in your repos <code>.github/workflows</code> folder, this will call the AKS-Construction reusable workflow.  NOTE: This example creates a manually triggered Action</Text>
-            <CodeBlock  lang="github actions"  deploycmd={`name: Deploy AKS-Construction
+            <CodeBlock testId={'deploy-github-actions'} lang="github actions"  deploycmd={`name: Deploy AKS-Construction
 
 on:
   workflow_dispatch:

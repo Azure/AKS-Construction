@@ -25,7 +25,7 @@ resource appgwpip 'Microsoft.Network/publicIPAddresses@2020-07-01' = {
 var frontendPublicIpConfig = {
   properties: {
     publicIPAddress: {
-      id: '${appgwpip.id}'
+      id: appgwpip.id
     }
   }
   name: 'appGatewayFrontendIP'
@@ -189,7 +189,7 @@ var diagProperties = {
     }
   ]
 }
-resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2017-05-01-preview' = if (!empty(workspaceId)) {
+resource appgw_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(workspaceId)) {
   scope: appgw
   name: 'appgwDiag'
   properties: diagProperties

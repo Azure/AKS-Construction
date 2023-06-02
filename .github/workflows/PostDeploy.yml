@@ -65,7 +65,7 @@ jobs:
 
       - name: Kubelogin
         env:
-          kubeloginversion: 'v0.0.13'
+          kubeloginversion: 'v0.0.28'
         run: |
           wget https://github.com/Azure/kubelogin/releases/download/${{ env.kubeloginversion }}/kubelogin-linux-amd64.zip
           unzip kubelogin-linux-amd64.zip

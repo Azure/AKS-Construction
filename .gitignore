@@ -7,3 +7,5 @@ samples/peered-vnet/*.json
 bicep/main.json
 helper/localsite.html
 helper/prodsite.html
+helper/build/**
+container-azm-ms-agentconfig.yaml

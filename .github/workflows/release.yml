@@ -11,6 +11,7 @@ on:
         description: 'Create a NEW release with that tag'
         type: boolean
         required: false
+        default: true
 
 env:
   templateRelease: ${{ github.event.inputs.templateRelease }}
@@ -94,7 +95,9 @@ jobs:
 
       - name: Install Bicep
         shell: pwsh
-        run: az bicep install
+        run: |
+          az config set bicep.use_binary_from_path=False
+          az bicep install
 
       - name: Bicep build
         shell: pwsh
@@ -178,7 +181,9 @@ jobs:
           echo "ARTIFACTNAME=$ARTIFACTNAME" >> $Env:GITHUB_OUTPUT
 
       - name: Install Bicep
-        run: az bicep install
+        run: |
+          az config set bicep.use_binary_from_path=False
+          az bicep install
 
       - name: Bicep build
         run: |

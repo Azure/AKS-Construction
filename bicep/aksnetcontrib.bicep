@@ -2,6 +2,7 @@
 //name/rg required to new up an existing reference and form a dependency
 //principalid required as it needs to be used to establish a unique roleassignment name
 param byoAKSSubnetId string
+param byoAKSPodSubnetId string
 param user_identity_principalId string
 
 @allowed([
@@ -12,18 +13,24 @@ param rbacAssignmentScope string = 'Subnet'
 
 var networkContributorRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
 
+var existingAksPodSubnetName = !empty(byoAKSPodSubnetId) ? split(byoAKSPodSubnetId, '/')[10] : ''
 var existingAksSubnetName = !empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/')[10] : ''
 var existingAksVnetName = !empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/')[8] : ''
 
-resource existingvnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing =  {
+resource existingvnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing =  {
   name: existingAksVnetName
 }
-resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-08-01' existing = {
+resource existingAksSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' existing = {
   parent: existingvnet
   name: existingAksSubnetName
 }
 
-resource subnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (rbacAssignmentScope == 'subnet') {
+resource existingAksPodSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' existing = {
+  parent: existingvnet
+  name: existingAksPodSubnetName
+}
+
+resource subnetRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (rbacAssignmentScope == 'subnet') {
   name:  guid(user_identity_principalId, networkContributorRole, existingAksSubnetName)
   scope: existingAksSubnet
   properties: {
@@ -33,7 +40,17 @@ resource subnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview'
   }
 }
 
-resource existingVnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (rbacAssignmentScope != 'subnet') {
+resource podSubnetRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (rbacAssignmentScope == 'subnet') {
+  name:  guid(user_identity_principalId, networkContributorRole, existingAksPodSubnetName)
+  scope: existingAksPodSubnet
+  properties: {
+    roleDefinitionId: networkContributorRole
+    principalId: user_identity_principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource existingVnetRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (rbacAssignmentScope != 'subnet') {
   name:  guid(user_identity_principalId, networkContributorRole, existingAksVnetName)
   scope: existingvnet
   properties: {

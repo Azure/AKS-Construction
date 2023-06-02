@@ -121,6 +121,7 @@ jobs:
         if: ${{ github.event.pull_request.head.repo.fork }}
         shell: pwsh
         run: |
+          az config set bicep.use_binary_from_path=False
           az bicep install
 
       - name: Bicep build

@@ -35,24 +35,37 @@ param custom_vnet bool = false
 @description('Full resource id path of an existing subnet to use for AKS')
 param byoAKSSubnetId string = ''
 
+@description('Full resource id path of an existing pod subnet to use for AKS')
+param byoAKSPodSubnetId string = ''
+
 @description('Full resource id path of an existing subnet to use for Application Gateway')
 param byoAGWSubnetId string = ''
 
-//--- Custom, BYO networking and PrivateApiZones requires BYO AKS User Identity
-var createAksUai = custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)
-resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = if (createAksUai) {
+@description('The name of an existing User Assigned Identity to use for the AKS Control Plane (in the same resouce group), requires rbac assignments to be done outside of this template')
+param byoUaiName string = ''
+
+//--- Custom, BYO networking and PrivateApiZones requires AKS User Identity
+var createAksUai = (custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivateZoneId) || keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId)) && empty(byoUaiName)
+resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
 }
+
+resource byoAksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = if (!empty(byoUaiName)) {
+  name: byoUaiName
+}
+
+var aksPrincipalId = !empty(byoUaiName) ? byoAksUai.properties.principalId : createAksUai ? aksUai.properties.principalId : ''
 
 //----------------------------------------------------- BYO Vnet
 var existingAksVnetRG = !empty(byoAKSSubnetId) ? (length(split(byoAKSSubnetId, '/')) > 4 ? split(byoAKSSubnetId, '/')[4] : '') : ''
 
 module aksnetcontrib './aksnetcontrib.bicep' = if (!empty(byoAKSSubnetId) && createAksUai) {
-  name: 'addAksNetContributor'
+  name: take('${deployment().name}-addAksNetContributor',64)
   scope: resourceGroup(existingAksVnetRG)
   params: {
     byoAKSSubnetId: byoAKSSubnetId
+    byoAKSPodSubnetId: byoAKSPodSubnetId
     user_identity_principalId: createAksUai ? aksUai.properties.principalId : ''
     rbacAssignmentScope: uaiNetworkScopeRbac
   }
@@ -115,17 +128,20 @@ param CreateNetworkSecurityGroups bool = false
 param CreateNetworkSecurityGroupFlowLogs bool = false
 
 module network './network.bicep' = if (custom_vnet) {
-  name: 'network'
+  name: take('${deployment().name}-network',64)
   params: {
     resourceName: resourceName
     location: location
     networkPluginIsKubenet: networkPlugin=='kubenet'
     vnetAddressPrefix: vnetAddressPrefix
-    aksPrincipleId: createAksUai ? aksUai.properties.principalId : ''
+    vnetPodAddressPrefix: cniDynamicIpAllocation ? podCidr : ''
+    cniDynamicIpAllocation: cniDynamicIpAllocation
+    aksPrincipleId: aksPrincipalId
     vnetAksSubnetAddressPrefix: vnetAksSubnetAddressPrefix
     ingressApplicationGateway: ingressApplicationGateway
     vnetAppGatewaySubnetAddressPrefix: vnetAppGatewaySubnetAddressPrefix
     azureFirewalls: azureFirewalls
+    azureFirewallSku: azureFirewallSku
     vnetFirewallSubnetAddressPrefix: vnetFirewallSubnetAddressPrefix
     vnetFirewallManagementSubnetAddressPrefix: vnetFirewallManagementSubnetAddressPrefix
     privateLinks: privateLinks
@@ -151,6 +167,7 @@ output CustomVnetId string = custom_vnet ? network.outputs.vnetId : ''
 output CustomVnetPrivateLinkSubnetId string = custom_vnet ? network.outputs.privateLinkSubnetId : ''
 
 var aksSubnetId = custom_vnet ? network.outputs.aksSubnetId : byoAKSSubnetId
+var aksPodSubnetId = custom_vnet ? network.outputs.aksPodSubnetId : byoAKSPodSubnetId
 var appGwSubnetId = ingressApplicationGateway ? (custom_vnet ? network.outputs.appGwSubnetId : byoAGWSubnetId) : ''
 
 
@@ -166,7 +183,7 @@ param dnsZoneId string = ''
 var isDnsZonePrivate = !empty(dnsZoneId) ? split(dnsZoneId, '/')[7] == 'privateDnsZones' : false
 
 module dnsZone './dnsZoneRbac.bicep' = if (!empty(dnsZoneId)) {
-  name: 'addDnsContributor'
+  name: take('${deployment().name}-addDnsContributor',64)
   params: {
     dnsZoneId: dnsZoneId
     vnetId: isDnsZonePrivate ? (!empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/subnets')[0] : (custom_vnet ? network.outputs.vnetId : '')) : ''
@@ -202,7 +219,7 @@ param keyVaultAksCSIPollInterval string = '2m'
 
 @description('Creates a KeyVault for application secrets (eg. CSI)')
 module kv 'keyvault.bicep' = if(keyVaultCreate) {
-  name: 'keyvaultApps'
+  name: take('${deployment().name}-keyvaultApps',64)
   params: {
     resourceName: resourceName
     keyVaultPurgeProtection: keyVaultPurgeProtection
@@ -224,7 +241,7 @@ var rbacSecretUserSps = union([deployAppGw && appgwKVIntegration ? appGwIdentity
 
 @description('A seperate module is used for RBAC to avoid delaying the KeyVault creation and causing a circular reference.')
 module kvRbac 'keyvaultrbac.bicep' = if (keyVaultCreate) {
-  name: 'KeyVaultAppsRbac'
+  name: take('${deployment().name}-KeyVaultAppsRbac',64)
   params: {
     keyVaultName: keyVaultCreate ? kv.outputs.keyVaultName : ''
 
@@ -266,16 +283,16 @@ var kmsRbacWaitSeconds=30
 @description('This indicates if the deploying user has provided their PrincipalId in order for the key to be created')
 var keyVaultKmsCreateAndPrereqs = keyVaultKmsCreate && !empty(keyVaultKmsOfficerRolePrincipalId) && privateLinks == false
 
-resource kvKmsByo 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = if(!empty(keyVaultKmsByoName)) {
+resource kvKmsByo 'Microsoft.KeyVault/vaults@2022-07-01' existing = if(!empty(keyVaultKmsByoName)) {
   name: keyVaultKmsByoName
   scope: resourceGroup(keyVaultKmsByoRG)
 }
 
 @description('Creates a new Key vault for a new KMS Key')
 module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
-  name: 'keyvaultKms-${resourceName}'
+  name: take('${deployment().name}-keyvaultKms-${resourceName}',64)
   params: {
-    resourceName: 'kms${resourceName}'
+    resourceName: take('kms${resourceName}',20)
     keyVaultPurgeProtection: keyVaultPurgeProtection
     keyVaultSoftDelete: keyVaultSoftDelete
     location: location
@@ -285,7 +302,7 @@ module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
 }
 
 module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
-  name: 'keyvaultKmsRbacs-${resourceName}'
+  name: take('${deployment().name}-keyvaultKmsRbacs-${resourceName}',64)
   params: {
     keyVaultName: keyVaultKmsCreate ? kvKms.outputs.keyVaultName : ''
     //We can't create a kms kv and key and do privatelink. Private Link is a BYO scenario
@@ -294,7 +311,7 @@ module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
     // ]
     //This allows the Aks Cluster to access the key vault key
     rbacCryptoUserSps: [
-      createAksUai ? aksUai.properties.principalId : ''
+      aksPrincipalId
     ]
     //This allows the Deploying user to create the key vault key
     rbacCryptoOfficerUsers: [
@@ -308,24 +325,24 @@ module kvKmsCreatedRbac 'keyvaultrbac.bicep' = if(keyVaultKmsCreateAndPrereqs) {
 }
 
 module kvKmsByoRbac 'keyvaultrbac.bicep' = if(!empty(keyVaultKmsByoKeyId)) {
-  name: 'keyvaultKmsByoRbacs-${resourceName}'
+  name: take('${deployment().name}-keyvaultKmsByoRbacs-${resourceName}',64)
   scope: resourceGroup(keyVaultKmsByoRG)
   params: {
     keyVaultName: kvKmsByo.name
     //Contribuor allows AKS to create the private link
     rbacKvContributorSps : [
-      createAksUai && privateLinks ? aksUai.properties.principalId : ''
+      privateLinks ? aksPrincipalId : ''
     ]
     //This allows the Aks Cluster to access the key vault key
     rbacCryptoUserSps: [
-      createAksUai ? aksUai.properties.principalId : ''
+      aksPrincipalId
     ]
   }
 }
 
 @description('It can take time for the RBAC to propagate, this delays the deployment to avoid this problem')
 module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKmsCreateAndPrereqs && kmsRbacWaitSeconds>0) {
-  name: 'keyvaultKmsRbac-waits-${resourceName}'
+  name: take('${deployment().name}-keyvaultKmsRbac-waits-${resourceName}',64)
   params: {
     waitSeconds: kmsRbacWaitSeconds
     location: location
@@ -337,7 +354,7 @@ module waitForKmsRbac 'br/public:deployment-scripts/wait:1.0.1' = if(keyVaultKms
 
 @description('Adding a key to the keyvault... We can only do this for public key vaults')
 module kvKmsKey 'keyvaultkey.bicep' = if(keyVaultKmsCreateAndPrereqs) {
-  name: 'keyvaultKmsKeys-${resourceName}'
+  name: take('${deployment().name}-keyvaultKmsKeys-${resourceName}',64)
   params: {
     keyVaultName: keyVaultKmsCreateAndPrereqs ? kvKms.outputs.keyVaultName : ''
   }
@@ -393,7 +410,7 @@ param acrUntaggedRetentionPolicy int = 30
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
-resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!empty(registries_sku)) {
+resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = if (!empty(registries_sku)) {
   name: acrName
   location: location
   sku: {
@@ -409,7 +426,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = if (!
       retentionPolicy: acrUntaggedRetentionPolicyEnabled ? {
         status: 'enabled'
         days: acrUntaggedRetentionPolicy
-      } : json('null')
+      } : null
     }
     publicNetworkAccess: privateLinks /* && empty(acrIPWhitelist)*/ ? 'Disabled' : 'Enabled'
     zoneRedundancy: acrZoneRedundancyEnabled
@@ -459,7 +476,7 @@ resource acrDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = i
 
 //resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
 module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)) && privateLinks && acrPrivatePool) {
-  name: 'acrprivatepool'
+  name: take('${deployment().name}-acrprivatepool',64)
   params: {
     acrName: acr.name
     acrPoolSubnetId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
@@ -498,12 +515,13 @@ resource aks_acr_push 'Microsoft.Authorization/roleAssignments@2022-04-01' = if 
 
 param imageNames array = []
 
-module acrImport 'br/public:deployment-scripts/import-acr:2.0.1' = if (!empty(registries_sku) && !empty(imageNames)) {
-  name: 'testAcrImportMulti'
+module acrImport 'br/public:deployment-scripts/import-acr:3.0.1' = if (!empty(registries_sku) && !empty(imageNames)) {
+  name: take('${deployment().name}-AcrImport',64)
   params: {
     acrName: acr.name
     location: location
     images: imageNames
+    managedIdentityName: 'id-acrImport-${resourceName}-${location}'
   }
 }
 
@@ -539,7 +557,7 @@ param certManagerFW bool = false
 param azureFirewallSku string = 'Standard'
 
 module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
-  name: 'firewall'
+  name: take('${deployment().name}-firewall',64)
   params: {
     resourceName: resourceName
     location: location
@@ -596,7 +614,7 @@ var appGWenableWafFirewall = appGWsku=='Standard_v2' ? false : appGWenableFirewa
 // If integrating App Gateway with KeyVault, create a Identity App Gateway will use to access keyvault
 // 'identity' is always created (adding: "|| deployAppGw") until this is fixed:
 // https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if (deployAppGw) {
+resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = if (deployAppGw) {
   name: 'id-appgw-${resourceName}'
   location: location
 }
@@ -604,7 +622,7 @@ resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
-resource appgwpip 'Microsoft.Network/publicIPAddresses@2021-02-01' = if (deployAppGw) {
+resource appgwpip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if (deployAppGw) {
   name: 'pip-agw-${resourceName}'
   location: location
   sku: {
@@ -722,6 +740,7 @@ var appgwProperties = union({
       name: 'appGwRoutingRuleName'
       properties: {
         ruleType: 'Basic'
+        priority: '1'
         httpListener: {
           id: '${appgwResourceId}/httpListeners/hlisten'
         }
@@ -742,7 +761,7 @@ var appgwProperties = union({
 } : {})
 
 // 'identity' is always set until this is fixed: https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appgw 'Microsoft.Network/applicationGateways@2021-02-01' = if (deployAppGw) {
+resource appgw 'Microsoft.Network/applicationGateways@2022-07-01' = if (deployAppGw) {
   name: appgwName
   location: location
   zones: !empty(availabilityZones) ? availabilityZones : []
@@ -832,7 +851,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.24.9'
+param kubernetesVersion string = '1.25.6'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -854,6 +873,9 @@ param kedaAddon bool = false
 
 @description('Enables Open Service Mesh')
 param openServiceMeshAddon bool = false
+
+@description('Enables SGX Confidential Compute plugin')
+param sgxPlugin bool = false
 
 @description('Enables the Blob CSI driver')
 param blobCSIDriver bool = false
@@ -932,6 +954,7 @@ param ebpfDataplane string = ''
   ''
   'azure'
   'calico'
+  'cilium'
 ])
 @description('The network policy to use.')
 param networkPolicy string = ''
@@ -1038,6 +1061,7 @@ param AutoscaleProfile object = {
   'loadBalancer'
   'managedNATGateway'
   'userAssignedNATGateway'
+  'userDefinedRouting'
 ])
 @description('Outbound traffic type for the egress traffic of your cluster')
 param aksOutboundTrafficType string = 'loadBalancer'
@@ -1065,6 +1089,19 @@ param workloadIdentity bool = false
 param enableNodePublicIP bool = false
 
 param warIngressNginx bool = false
+
+@maxLength(80)
+@description('The name of the NEW resource group to create the AKS cluster managed resources in')
+param managedNodeResourceGroup string = ''
+
+
+// Preview feature requires: az feature register --namespace "Microsoft.ContainerService" --name "NRGLockdownPreview"
+@allowed([
+  'ReadOnly'
+  'Unrestricted'
+])
+@description('The restriction level applied to the cluster node resource group')
+param restrictionLevelNodeResourceGroup string = 'Unrestricted'
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
@@ -1110,7 +1147,8 @@ var systemPoolBase = {
   osType: 'Linux'
   maxPods: 30
   type: 'VirtualMachineScaleSets'
-  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : json('null')
+  vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : null
+  podSubnetID: !empty(aksPodSubnetId) ? aksPodSubnetId : null
   upgradeSettings: {
     maxSurge: '33%'
   }
@@ -1125,7 +1163,7 @@ var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array
 output userNodePoolName string = nodePoolName
 output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 
-var akssku = AksPaidSkuForSLA ? 'Paid' : 'Free'
+var akssku = AksPaidSkuForSLA ? 'Standard' : 'Free'
 
 var aks_addons = union({
   azurepolicy: {
@@ -1143,6 +1181,10 @@ var aks_addons = union({
   }
   openServiceMesh: {
     enabled: openServiceMeshAddon
+    config: {}
+  }
+  ACCSGXDevicePlugin: {
+    enabled: sgxPlugin
     config: {}
   }
 }, createLaw && omsagent ? {
@@ -1171,16 +1213,12 @@ var aks_addons1 = ingressApplicationGateway ? union(aks_addons, deployAppGw ? {
   }
 }) : aks_addons
 
-var aks_identity = {
-  type: 'UserAssigned'
-  userAssignedIdentities: {
-    '${aksUai.id}': {}
-  }
-}
-
 @description('Sets the private dns zone id if provided')
 var aksPrivateDnsZone = privateClusterDnsMethod=='privateDnsZone' ? (!empty(dnsApiPrivateZoneId) ? dnsApiPrivateZoneId : 'system') : privateClusterDnsMethod
 output aksPrivateDnsZone string = aksPrivateDnsZone
+output privateFQDN string = enablePrivateCluster && privateClusterDnsMethod != 'none' ? aks.properties.privateFQDN : ''
+// Dropping cluster name at start of privateFQDN to get private dns zone name.
+output aksPrivateDnsZoneName string =  enablePrivateCluster && privateClusterDnsMethod != 'none' ? join(skip(split(aks.properties.privateFQDN, '.'),1),'.') : ''
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS-Construction/issues/344')
 var managedNATGatewayProfile =  {
@@ -1267,21 +1305,35 @@ var aksProperties = union({
       enabled: fileCSIDriver
     }
   }
+  nodeResourceGroupProfile: {
+    restrictionLevel: restrictionLevelNodeResourceGroup
+  }
 },
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
-keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {}
+keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {},
+!empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-10-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-03-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
-  identity: createAksUai ? aks_identity : {
+  identity: createAksUai ? {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${aksUai.id}': {}
+    }
+  } : !empty(byoUaiName) ? {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${byoAksUai.id}': {}
+    }
+  } : {
     type: 'SystemAssigned'
   }
   sku: {
-    name: 'Basic'
+    name: 'Base'
     tier: akssku
   }
   dependsOn: [
@@ -1308,6 +1360,7 @@ module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
     AksName: aks.name
     PoolName: poolName
     subnetId: aksSubnetId
+    podSubnetID: !empty(aksPodSubnetId) ? aksPodSubnetId : ''
     agentCount: agentCount
     agentCountMax: agentCountMax
     agentVMSize: agentVMSize
@@ -1317,6 +1370,7 @@ module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
     osSKU: osSKU
     enableNodePublicIP: enableNodePublicIP
     osDiskSizeGB: osDiskSizeGB
+    availabilityZones: availabilityZones
   }
 }
 
@@ -1338,18 +1392,18 @@ output aksResourceId string = aks.id
 @description('Not giving Rbac at the vnet level when using private dns results in ReconcilePrivateDNS. Therefore we need to upgrade the scope when private dns is being used, because it wants to set up the dns->vnet integration.')
 var uaiNetworkScopeRbac = enablePrivateCluster && !empty(dnsApiPrivateZoneId) ? 'Vnet' : 'Subnet'
 module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !empty(dnsApiPrivateZoneId) && createAksUai) {
-  name: 'addPrivateK8sApiDnsContributor'
+  name: take('${deployment().name}-addPrivateK8sApiDnsContributor',64)
   params: {
     vnetId: ''
     dnsZoneId: dnsApiPrivateZoneId
-    principalId: createAksUai ? aksUai.properties.principalId : ''
+    principalId: aksPrincipalId
   }
 }
 
 var policySetBaseline = '/providers/Microsoft.Authorization/policySetDefinitions/a8640138-9b0a-4a28-b8cb-1666c838647d'
 var policySetRestrictive = '/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00'
 
-resource aks_policies 'Microsoft.Authorization/policyAssignments@2020-09-01' = if (!empty(azurepolicy)) {
+resource aks_policies 'Microsoft.Authorization/policyAssignments@2022-06-01' = if (!empty(azurepolicy)) {
   name: '${resourceName}-${azurePolicyInitiative}'
   location: location
   properties: {
@@ -1394,7 +1448,7 @@ resource aks_admin_role_assignment 'Microsoft.Authorization/roleAssignments@2022
 
 param fluxGitOpsAddon bool = false
 
-resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-preview' = if(fluxGitOpsAddon) {
+resource fluxAddon 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' = if(fluxGitOpsAddon) {
   name: 'flux'
   scope: aks
   properties: {
@@ -1417,7 +1471,7 @@ param daprAddon bool = false
 @description('Enable high availability (HA) mode for the Dapr control plane')
 param daprAddonHA bool = false
 
-resource daprExtension 'Microsoft.KubernetesConfiguration/extensions@2022-04-02-preview' = if(daprAddon) {
+resource daprExtension 'Microsoft.KubernetesConfiguration/extensions@2022-11-01' = if(daprAddon) {
     name: 'dapr'
     scope: aks
     properties: {
@@ -1454,6 +1508,9 @@ param AksDiagCategories array = [
   'guard'
 ]
 
+@description('Enable SysLogs and send to log analytics')
+param enableSysLog bool = false
+
 resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  if (createLaw && omsagent)  {
   name: 'aksDiags'
   scope: aks
@@ -1469,6 +1526,98 @@ resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  
         enabled: true
       }
     ]
+  }
+}
+
+resource sysLog 'Microsoft.Insights/dataCollectionRules@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
+  name: 'MSCI-${location}-${aks.name}'
+  location: location
+  kind: 'Linux'
+  properties: {
+    dataFlows: [
+      {
+        destinations: [
+          'ciworkspace'
+        ]
+        streams: [
+          'Microsoft-Syslog'
+          'Microsoft-ContainerInsights-Group-Default'
+        ]
+      }
+    ]
+    dataSources: {
+      extensions: [
+        {
+          streams: [
+            'Microsoft-ContainerInsights-Group-Default'
+          ]
+          extensionName: 'ContainerInsights'
+          extensionSettings: {
+            dataCollectionSettings: {
+              interval : '1m'
+              namespaceFilteringMode: 'Off'
+            }
+          }
+          name: 'ContainerInsightsExtension'
+        }
+      ]
+      syslog: [
+        {
+          facilityNames: [
+            'auth'
+            'authpriv'
+            'cron'
+            'daemon'
+            'mark'
+            'kern'
+            'local0'
+            'local1'
+            'local2'
+            'local3'
+            'local4'
+            'local5'
+            'local6'
+            'local7'
+            'lpr'
+            'mail'
+            'news'
+            'syslog'
+            'user'
+            'uucp'
+          ]
+          logLevels: [
+            'Debug'
+            'Info'
+            'Notice'
+            'Warning'
+            'Error'
+            'Critical'
+            'Alert'
+            'Emergency'
+          ]
+          name: 'sysLogsDataSource'
+
+          streams: ['Microsoft-Syslog']
+        }
+      ]
+    }
+    destinations: {
+      logAnalytics: [
+        {
+          name: 'ciworkspace'
+          workspaceResourceId: aks_law.id
+        }
+      ]
+    }
+  }
+}
+
+resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
+  name: '${aks.name}-${aks_law.name}-association'
+  scope: aks
+  properties: {
+    dataCollectionRuleId: sysLog.id
+    description: 'Association of data collection rule. Deleting this association will break the data collection for this AKS Cluster.'
   }
 }
 
@@ -1495,7 +1644,7 @@ var AlertFrequencyLookup = {
 var AlertFrequency = AlertFrequencyLookup[AksMetricAlertMetricFrequencyModel]
 
 module aksmetricalerts './aksmetricalerts.bicep' = if (createLaw) {
-  name: 'aksmetricalerts'
+  name: take('${deployment().name}-aksmetricalerts',64)
   scope: resourceGroup()
   params: {
     clusterName: aks.name
@@ -1525,6 +1674,9 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (cre
   location: location
   properties : union({
       retentionInDays: retentionInDays
+      sku: {
+        name: 'PerGB2018'
+      }
     },
     logDataCap>0 ? { workspaceCapping: {
       dailyQuotaGb: logDataCap
@@ -1534,7 +1686,8 @@ resource aks_law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (cre
 
 
 resource containerLogsV2_Basiclogs 'Microsoft.OperationalInsights/workspaces/tables@2022-10-01' = if(containerLogsV2BasicLogs){
-  name: '${aks_law_name}/ContainerLogV2'
+  name: 'ContainerLogV2'
+  parent: aks_law
   properties: {
     plan: 'Basic'
   }
@@ -1612,7 +1765,7 @@ var telemetryId = '3c1e2fc6-1c4b-44f9-8694-25d00ae30a3a-${location}'
     |__|     |_______||_______||_______||__|  |__| |_______|    |__|     | _| `._____|   |__|        |_______/ |_______|| _|      |_______| \______/      |__|     |__|  |__| |_______||__| \__|     |__|     */
 
 //  Telemetry Deployment
-resource telemetrydeployment 'Microsoft.Resources/deployments@2021-04-01' = if (enableTelemetry) {
+resource telemetrydeployment 'Microsoft.Resources/deployments@2022-09-01' = if (enableTelemetry) {
   name: telemetryId
   properties: {
     mode: 'Incremental'

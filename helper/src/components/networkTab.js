@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Image, ImageFit, Link, Separator, TextField, DirectionalHint, Callout, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, Slider, Dropdown } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
+import { PreviewDialog } from './previewDialog';
 
 const columnProps = {
     tokens: { childrenGap: 20 },
@@ -59,17 +60,20 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
             <Stack.Item>
                 <Label required={true}>Network Plugin</Label>
-                <MessageBar>Typically, only use "kubenet" networking if you need to limit your non-routable IP usage on your network (use network calculator)
-                </MessageBar>
+                <MessageBar>Typically, only use "kubenet" networking if you need to limit your non-routable IP usage on your network (use network calculator)</MessageBar>
+                {hasError(invalidArray, 'networkPlugin') &&
+                    <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'networkPlugin')}</MessageBar>
+                }
                 <ChoiceGroup
                     styles={{ root: { marginLeft: '50px' } }}
                     selectedKey={net.networkPlugin}
                     options={[
-                        { key: 'kubenet', text: 'Use "kubenet" basic networking, so your PODs DO NOT receive VNET IPs' },
+                        { key: 'kubenet', text: 'Use "kubenet" basic networking, so your PODs DO NOT receive VNET IPs', disabled:cluster.osType==='Windows' },
                         { key: 'azure', text: 'Use "CNI" for fastest container networking, but using more IPs' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPlugin", key)}
+                    errorMessage={getError(invalidArray, 'networkPlugin')}
                 />
             </Stack.Item>
 
@@ -95,6 +99,13 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             checked={net.networkPluginMode}
                             onChange={(ev, v) => UpdateCniOverlay(v)}
                             label="CNI Overlay Network" />
+                            {
+                                net.networkPluginMode &&
+                                (
+                                    <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters"} />
+                                )
+
+                            }
                     </Stack.Item>
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.info}>Powered by Cilium is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-powered-by-cilium#prerequisites">preview feature</a> that leverages more efficient use of the linux kernel and other networking features.</MessageBar>
@@ -104,6 +115,12 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             checked={net.ebpfDataplane}
                             onChange={(ev, v) => updateFn("ebpfDataplane", v)}
                             label="Cilium powered dataplane" />
+                            {
+                                net.ebpfDataplane &&
+                                (
+                                    <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/azure-cni-powered-by-cilium#prerequisites"} />
+                                )
+                            }
                     </Stack.Item>
                 </Stack>
             </Stack.Item>
@@ -155,6 +172,9 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                 <Stack horizontal tokens={{ childrenGap: 50 }}>
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.info}>NAT Gateway allows more traffic flows than a Load Balancer.<a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
+                        {net.aksOutboundTrafficType==='userDefinedRouting' && net.vnet_opt === 'byo' &&
+                          <MessageBar styles={{ root: { width:'400px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Ensure that the AKS Subnet is configured with a UDR and that your Virtual Network Appliance is <Link href="https://learn.microsoft.com/azure/aks/limit-egress-traffic">properly configured</Link> to allow necessary traffic</MessageBar>
+                        }
                         {hasError(invalidArray, 'aksOutboundTrafficType') &&
                             <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'aksOutboundTrafficType')}</MessageBar>
                         }
@@ -166,7 +186,8 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             options={[
                                 { key: 'loadBalancer', text: 'Load Balancer'  },
                                 { key: 'managedNATGateway', text: 'Managed NAT Gateway' },
-                                { key: 'userAssignedNATGateway', text: 'Assigned NAT Gateway'}
+                                { key: 'userAssignedNATGateway', text: 'Assigned NAT Gateway'},
+                                { key: 'userDefinedRouting', text: 'User Defined Routing'}
                             ]}
                             onChange={(ev, { key }) => updateFn("aksOutboundTrafficType", key)}
                         />
@@ -179,7 +200,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             label="Create NAT Gateway for AKS Subnet (Custom VNet Only)"
                         />
                         <Slider
-                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.vnet_opt === 'byo'}
+                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.aksOutboundTrafficType==='userDefinedRouting' || net.vnet_opt === 'byo'}
                             buttonProps={{ "data-testid": "net-natGwIp-slider"}}
                             styles={{ root: { width: 450 } }}
                             label={'Nat Gateway Ip Count'} min={1}  max={16} step={1}
@@ -188,7 +209,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                         />
 
                         <Slider
-                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.vnet_opt === 'byo'}
+                            disabled={net.aksOutboundTrafficType==='loadBalancer' || net.aksOutboundTrafficType==='userDefinedRouting' || net.vnet_opt === 'byo'}
                             buttonProps={{ "data-testid": "net-natGwTimeout-slider"}}
                             styles={{ root: { width: 450 } }}
                             label={'Nat Gateway Idle Timeout (Minutes)'} min={5}  max={120} step={1}
@@ -207,21 +228,21 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'afw')}</MessageBar>
                 }
                 <Checkbox
-                    styles={{ root: { marginLeft: '50px', marginTop: '10 !important' } }}
+                    styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
                     disabled={net.vnet_opt !== 'custom'}
-                    errorMessage={getError(invalidArray, 'afw')}
+                    errorMessage={getError(invalidArray, 'afw(')}
                     checked={net.afw}
                     onChange={(ev, v) => updateFn("afw", v)}
                     label="Implement Azure Firewall & UDR next hop" />
 
-                {net.azureFirewallsSku==='Basic' &&
+                {net.azureFirewallSku==='Basic' &&
                     <MessageBar styles={{ root: { marginLeft: '50px', width:'500px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Basic SKU is currently a preview service <Link href="https://learn.microsoft.com/en-gb/azure/firewall/deploy-firewall-basic-portal-policy#prerequisites">(*preview)</Link></MessageBar>
                 }
                 <Dropdown
                     styles={{ root: { marginLeft: '50px', width: '200px', marginTop: '10 !important' } }}
                     disabled={!net.afw}
                     label="Firewall SKU"
-                    onChange={(ev, { key }) => updateFn("azureFirewallsSku", key)} selectedKey={net.azureFirewallsSku}
+                    onChange={(ev, { key }) => updateFn("azureFirewallSku", key)} selectedKey={net.azureFirewallSku}
                     options={[
                         { key: 'Basic', text: 'Basic' },
                         { key: 'Standard', text: 'Standard' },
@@ -397,7 +418,8 @@ function BYOVNET({ net, addons, updateFn, invalidArray }) {
             <TextField value={net.byoAKSSubnetId} onChange={(ev, v) => updateFn("byoAKSSubnetId", v)} errorMessage={getError(invalidArray, 'byoAKSSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing AKS Nodes subnet ResourceId</Text>} />
 
             <Separator className="notopmargin" />
-
+            <TextField disabled={!net.cniDynamicIpAllocation} value={net.byoAKSPodSubnetId} onChange={(ev, v) => updateFn("byoAKSPodSubnetId", v)} errorMessage={getError(invalidArray, 'byoAKSPodSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing AKS Pods subnet ResourceId</Text>} />
+            <Separator/>
 
             <TextField disabled={addons.ingress !== 'appgw'} value={net.byoAGWSubnetId} onChange={(ev, v) => updateFn("byoAGWSubnetId", v)} errorMessage={getError(invalidArray, 'byoAGWSubnetId')} required placeholder="Resource Id" label={<Text style={{ fontWeight: 600 }}>Enter your existing Application Gateway subnet ResourceId</Text>} />
             <MessageBar messageBarType={MessageBarType.warning}>Ensure your Application Gateway subnet meets these requirements <Link href="https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#size-of-the-subnet">here</Link></MessageBar>
@@ -443,7 +465,7 @@ function CustomVNET({ net, addons, updateFn, invalidArray }) {
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
-                        <TextField prefix="Cidr" disabled={!net.afw || net.azureFirewallsSku!=='Basic'} label="Azure Firewall management subnet" onChange={(ev, val) => updateFn("vnetFirewallManagementSubnetAddressPrefix", val)} value={net.afw ? (net.azureFirewallsSku==='Basic' ? net.vnetFirewallManagementSubnetAddressPrefix : 'Management subnet for Basic SKU') : "No Firewall requested"} />
+                        <TextField prefix="Cidr" disabled={!net.afw || net.azureFirewallSku!=='Basic'} label="Azure Firewall management subnet" onChange={(ev, val) => updateFn("vnetFirewallManagementSubnetAddressPrefix", val)} value={net.afw ? (net.azureFirewallSku==='Basic' ? net.vnetFirewallManagementSubnetAddressPrefix : 'Management subnet for Basic SKU') : "No Firewall requested"} />
                     </Stack.Item>
 
                     <Stack.Item style={{ marginLeft: "20px"}}>
