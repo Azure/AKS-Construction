@@ -1,0 +1,3597 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.17.1.54307",
+      "templateHash": "10222297839347036995"
+    }
+  },
+  "parameters": {
+    "resourceName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "vnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.240.0.0/16"
+    },
+    "vnetAksSubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.240.0.0/22"
+    },
+    "vnetAppGatewaySubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.240.4.0/26"
+    },
+    "privateLinks": {
+      "type": "bool",
+      "defaultValue": true
+    },
+    "privateLinkSubnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.240.4.192/26"
+    },
+    "privateLinkAcrId": {
+      "type": "string",
+      "defaultValue": ""
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "network",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "resourceName": {
+            "value": "[parameters('resourceName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "vnetAddressPrefix": {
+            "value": "[parameters('vnetAddressPrefix')]"
+          },
+          "vnetAksSubnetAddressPrefix": {
+            "value": "[parameters('vnetAksSubnetAddressPrefix')]"
+          },
+          "ingressApplicationGateway": {
+            "value": true
+          },
+          "vnetAppGatewaySubnetAddressPrefix": {
+            "value": "[parameters('vnetAppGatewaySubnetAddressPrefix')]"
+          },
+          "azureFirewalls": {
+            "value": false
+          },
+          "privateLinks": {
+            "value": "[parameters('privateLinks')]"
+          },
+          "privateLinkSubnetAddressPrefix": {
+            "value": "[parameters('privateLinkSubnetAddressPrefix')]"
+          },
+          "privateLinkAcrId": {
+            "value": "[parameters('privateLinkAcrId')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.17.1.54307",
+              "templateHash": "3834904454132541691"
+            }
+          },
+          "parameters": {
+            "resourceName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "networkPluginIsKubenet": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "aksPrincipleId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "vnetAddressPrefix": {
+              "type": "string"
+            },
+            "vnetAksSubnetAddressPrefix": {
+              "type": "string"
+            },
+            "cniDynamicIpAllocation": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "vnetPodAddressPrefix": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Provide the vnetPodAddressPrefix when using cniDynamicIpAllocation"
+              }
+            },
+            "workspaceName": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "workspaceResourceGroupName": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "networkSecurityGroups": {
+              "type": "bool",
+              "defaultValue": true
+            },
+            "azureFirewalls": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "azureFirewallSku": {
+              "type": "string",
+              "defaultValue": "Basic"
+            },
+            "azureFirewallsManagementSeperation": {
+              "type": "bool",
+              "defaultValue": "[and(parameters('azureFirewalls'), equals(parameters('azureFirewallSku'), 'Basic'))]"
+            },
+            "vnetFirewallSubnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "vnetFirewallManagementSubnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "ingressApplicationGateway": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "ingressApplicationGatewayPublic": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "vnetAppGatewaySubnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "privateLinks": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "privateLinkSubnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "privateLinkAcrId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "privateLinkAkvId": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "acrPrivatePool": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "acrAgentPoolSubnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "natGateway": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "natGatewayPublicIps": {
+              "type": "int",
+              "defaultValue": 2
+            },
+            "natGatewayIdleTimeoutMins": {
+              "type": "int",
+              "defaultValue": 30
+            },
+            "bastion": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "bastionSubnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "availabilityZones": {
+              "type": "array",
+              "defaultValue": [],
+              "metadata": {
+                "description": "Used by the Bastion Public IP"
+              }
+            },
+            "bastionHostName": {
+              "type": "string",
+              "defaultValue": "[format('bas-{0}', parameters('resourceName'))]"
+            },
+            "bastionSku": {
+              "type": "string",
+              "defaultValue": "Standard",
+              "allowedValues": [
+                "Standard",
+                "Basic"
+              ]
+            },
+            "CreateNsgFlowLogs": {
+              "type": "bool",
+              "defaultValue": false
+            }
+          },
+          "variables": {
+            "bastion_subnet_name": "AzureBastionSubnet",
+            "bastion_baseSubnet": {
+              "name": "[variables('bastion_subnet_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('bastionSubnetAddressPrefix')]"
+              }
+            },
+            "acrpool_subnet_name": "acrpool-sn",
+            "acrpool_baseSubnet": {
+              "name": "[variables('acrpool_subnet_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('acrAgentPoolSubnetAddressPrefix')]"
+              }
+            },
+            "private_link_subnet_name": "privatelinks-sn",
+            "private_link_baseSubnet": {
+              "name": "[variables('private_link_subnet_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('privateLinkSubnetAddressPrefix')]",
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+              }
+            },
+            "appgw_subnet_name": "appgw-sn",
+            "appgw_baseSubnet": {
+              "name": "[variables('appgw_subnet_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('vnetAppGatewaySubnetAddressPrefix')]"
+              }
+            },
+            "fw_subnet_name": "AzureFirewallSubnet",
+            "fw_subnet": {
+              "name": "[variables('fw_subnet_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('vnetFirewallSubnetAddressPrefix')]"
+              }
+            },
+            "fwmgmt_subnet_name": "AzureFirewallManagementSubnet",
+            "fwmgmt_subnet": {
+              "name": "[variables('fwmgmt_subnet_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('vnetFirewallManagementSubnetAddressPrefix')]"
+              }
+            },
+            "routeFwTableName": "[format('rt-afw-{0}', parameters('resourceName'))]",
+            "contributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+            "aks_subnet_name": "aks-sn",
+            "aks_baseSubnet": {
+              "name": "[variables('aks_subnet_name')]",
+              "properties": "[union(createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('natGateway'), createObject('natGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
+            },
+            "aks_podSubnet_name": "aks-pods-sn",
+            "aks_podSubnet": {
+              "name": "[variables('aks_podSubnet_name')]",
+              "properties": "[union(createObject('addressPrefix', parameters('vnetPodAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('natGateway'), createObject('natGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
+            },
+            "vnetName": "[format('vnet-{0}', parameters('resourceName'))]",
+            "privateLinkAcrName": "[format('pl-acr-{0}', parameters('resourceName'))]",
+            "privateDnsAcrLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]",
+            "privateLinkAkvName": "[format('pl-akv-{0}', parameters('resourceName'))]",
+            "privateDnsAkvLinkName": "[format('vnet-dnscr-{0}', parameters('resourceName'))]",
+            "publicIpAddressName": "[format('pip-{0}', parameters('bastionHostName'))]",
+            "flowLogStorageName": "[take(replace(toLower(format('stflow{0}{1}', parameters('resourceName'), uniqueString(resourceGroup().id, parameters('resourceName')))), '-', ''), 24)]",
+            "natGwName": "[format('ng-{0}', parameters('resourceName'))]"
+          },
+          "resources": [
+            {
+              "condition": "[parameters('azureFirewalls')]",
+              "type": "Microsoft.Network/routeTables",
+              "apiVersion": "2022-07-01",
+              "name": "[variables('routeFwTableName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "routes": [
+                  {
+                    "name": "AKSNodesEgress",
+                    "properties": {
+                      "addressPrefix": "0.0.0.0/0",
+                      "nextHopType": "VirtualAppliance",
+                      "nextHopIpAddress": "[if(parameters('azureFirewalls'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-calcAzFwIp', deployment().name), 64)), '2022-09-01').outputs.FirewallPrivateIp.value, null())]"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-calcAzFwIp', deployment().name), 64))]"
+              ]
+            },
+            {
+              "condition": "[and(and(parameters('azureFirewalls'), not(empty(parameters('aksPrincipleId')))), parameters('networkPluginIsKubenet'))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.Network/routeTables/{0}', variables('routeFwTableName'))]",
+              "name": "[guid(resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')), parameters('aksPrincipleId'), variables('contributorRoleId'))]",
+              "properties": {
+                "principalId": "[parameters('aksPrincipleId')]",
+                "roleDefinitionId": "[variables('contributorRoleId')]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', variables('routeFwTableName'))]"
+              ],
+              "metadata": {
+                "description": "Required for kubenet networking."
+              }
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2022-07-01",
+              "name": "[variables('vnetName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressPrefix')]"
+                  ]
+                },
+                "subnets": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/natGateways', variables('natGwName'))]",
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64))]",
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64))]",
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64))]",
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64))]",
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64))]",
+                "[resourceId('Microsoft.Network/routeTables', variables('routeFwTableName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('privateLinkAcrId')))]",
+              "type": "Microsoft.Network/privateEndpoints",
+              "apiVersion": "2021-08-01",
+              "name": "[variables('privateLinkAcrName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "customNetworkInterfaceName": "[format('nic-{0}', variables('privateLinkAcrName'))]",
+                "privateLinkServiceConnections": [
+                  {
+                    "name": "Acr-Connection",
+                    "properties": {
+                      "privateLinkServiceId": "[parameters('privateLinkAcrId')]",
+                      "groupIds": [
+                        "registry"
+                      ]
+                    }
+                  }
+                ],
+                "subnet": {
+                  "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('private_link_subnet_name'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('privateLinkAcrId')))]",
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "privatelink.azurecr.io",
+              "location": "global"
+            },
+            {
+              "condition": "[not(empty(parameters('privateLinkAcrId')))]",
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', 'privatelink.azurecr.io', variables('privateDnsAcrLinkName'))]",
+              "location": "global",
+              "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('privateLinkAcrId')))]",
+              "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}/{1}', variables('privateLinkAcrName'), 'default')]",
+              "properties": {
+                "privateDnsZoneConfigs": [
+                  {
+                    "name": "vnet-pl-acr",
+                    "properties": {
+                      "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')]"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')]",
+                "[resourceId('Microsoft.Network/privateEndpoints', variables('privateLinkAcrName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('privateLinkAkvId')))]",
+              "type": "Microsoft.Network/privateEndpoints",
+              "apiVersion": "2021-08-01",
+              "name": "[variables('privateLinkAkvName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "customNetworkInterfaceName": "[format('nic-{0}', variables('privateLinkAkvName'))]",
+                "privateLinkServiceConnections": [
+                  {
+                    "name": "Akv-Connection",
+                    "properties": {
+                      "privateLinkServiceId": "[parameters('privateLinkAkvId')]",
+                      "groupIds": [
+                        "vault"
+                      ]
+                    }
+                  }
+                ],
+                "subnet": {
+                  "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('private_link_subnet_name'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('privateLinkAkvId')))]",
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "privatelink.vaultcore.azure.net",
+              "location": "global"
+            },
+            {
+              "condition": "[not(empty(parameters('privateLinkAkvId')))]",
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', 'privatelink.vaultcore.azure.net', variables('privateDnsAkvLinkName'))]",
+              "location": "global",
+              "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.vaultcore.azure.net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('privateLinkAkvId')))]",
+              "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}/{1}', variables('privateLinkAkvName'), 'default')]",
+              "properties": {
+                "privateDnsZoneConfigs": [
+                  {
+                    "name": "vnet-pl-akv",
+                    "properties": {
+                      "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.vaultcore.azure.net')]"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.vaultcore.azure.net')]",
+                "[resourceId('Microsoft.Network/privateEndpoints', variables('privateLinkAkvName'))]"
+              ]
+            },
+            {
+              "condition": "[parameters('bastion')]",
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2022-07-01",
+              "name": "[variables('publicIpAddressName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "zones": "[if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), createArray())]",
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "condition": "[parameters('bastion')]",
+              "type": "Microsoft.Network/bastionHosts",
+              "apiVersion": "2022-11-01",
+              "name": "[parameters('bastionHostName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "[parameters('bastionSku')]"
+              },
+              "properties": {
+                "enableTunneling": true,
+                "ipConfigurations": [
+                  {
+                    "name": "IpConf",
+                    "properties": {
+                      "subnet": {
+                        "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('bastion_subnet_name'))]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+              ]
+            },
+            {
+              "condition": "[and(parameters('CreateNsgFlowLogs'), parameters('networkSecurityGroups'))]",
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2021-08-01",
+              "name": "[variables('flowLogStorageName')]",
+              "kind": "StorageV2",
+              "sku": {
+                "name": "Standard_LRS"
+              },
+              "location": "[parameters('location')]",
+              "properties": {
+                "minimumTlsVersion": "TLS1_2"
+              }
+            },
+            {
+              "copy": {
+                "name": "natGwIp",
+                "count": "[length(range(0, parameters('natGatewayPublicIps')))]"
+              },
+              "condition": "[parameters('natGateway')]",
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2021-08-01",
+              "name": "[format('pip-{0}-{1}', variables('natGwName'), add(range(0, parameters('natGatewayPublicIps'))[copyIndex()], 1))]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "zones": "[if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), createArray())]",
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "condition": "[parameters('natGateway')]",
+              "type": "Microsoft.Network/natGateways",
+              "apiVersion": "2021-08-01",
+              "name": "[variables('natGwName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "zones": "[if(not(empty(parameters('availabilityZones'))), parameters('availabilityZones'), createArray())]",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "publicIpAddresses",
+                    "count": "[length(range(0, parameters('natGatewayPublicIps')))]",
+                    "input": {
+                      "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-{0}-{1}', variables('natGwName'), add(range(0, parameters('natGatewayPublicIps'))[range(0, parameters('natGatewayPublicIps'))[copyIndex('publicIpAddresses')]], 1)))]"
+                    }
+                  }
+                ],
+                "idleTimeoutInMinutes": "[parameters('natGatewayIdleTimeoutMins')]"
+              },
+              "dependsOn": [
+                "natGwIp"
+              ]
+            },
+            {
+              "condition": "[parameters('azureFirewalls')]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[take(format('{0}-calcAzFwIp', deployment().name), 64)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "vnetFirewallSubnetAddressPrefix": {
+                    "value": "[parameters('vnetFirewallSubnetAddressPrefix')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.17.1.54307",
+                      "templateHash": "15511718763070451701"
+                    }
+                  },
+                  "parameters": {
+                    "vnetFirewallSubnetAddressPrefix": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "A subnet address for the Azure Firewall"
+                      }
+                    }
+                  },
+                  "variables": {
+                    "subnetOctets": "[split(parameters('vnetFirewallSubnetAddressPrefix'), '.')]",
+                    "hostIdOctet": "4"
+                  },
+                  "resources": [],
+                  "outputs": {
+                    "FirewallPrivateIp": {
+                      "type": "string",
+                      "value": "[format('{0}.{1}.{2}.{3}', variables('subnetOctets')[0], variables('subnetOctets')[1], variables('subnetOctets')[2], variables('hostIdOctet'))]"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('aksPrincipleId')))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[take(format('{0}-subnetRbac', deployment().name), 64)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "servicePrincipalId": {
+                    "value": "[parameters('aksPrincipleId')]"
+                  },
+                  "subnetName": {
+                    "value": "[variables('aks_subnet_name')]"
+                  },
+                  "vnetName": {
+                    "value": "[variables('vnetName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.17.1.54307",
+                      "templateHash": "6649525784723845324"
+                    }
+                  },
+                  "parameters": {
+                    "vnetName": {
+                      "type": "string"
+                    },
+                    "subnetName": {
+                      "type": "string"
+                    },
+                    "servicePrincipalId": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "networkContributorRole": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Authorization/roleAssignments",
+                      "apiVersion": "2022-04-01",
+                      "scope": "[format('Microsoft.Network/virtualNetworks/{0}/subnets/{1}', split(format('{0}/{1}', parameters('vnetName'), parameters('subnetName')), '/')[0], split(format('{0}/{1}', parameters('vnetName'), parameters('subnetName')), '/')[1])]",
+                      "name": "[guid(resourceId('Microsoft.Network/virtualNetworks/subnets', split(format('{0}/{1}', parameters('vnetName'), parameters('subnetName')), '/')[0], split(format('{0}/{1}', parameters('vnetName'), parameters('subnetName')), '/')[1]), parameters('servicePrincipalId'), variables('networkContributorRole'))]",
+                      "properties": {
+                        "roleDefinitionId": "[variables('networkContributorRole')]",
+                        "principalId": "[parameters('servicePrincipalId')]",
+                        "principalType": "ServicePrincipal"
+                      }
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+              ]
+            },
+            {
+              "condition": "[parameters('networkSecurityGroups')]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[take(format('{0}-nsgAks', deployment().name), 64)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "resourceName": {
+                    "value": "[format('{0}-{1}', variables('aks_subnet_name'), parameters('resourceName'))]"
+                  },
+                  "workspaceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01').customerId), createObject('value', ''))]",
+                  "workspaceRegion": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01', 'full').location), createObject('value', ''))]",
+                  "workspaceResourceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))), createObject('value', ''))]",
+                  "ruleInAllowInternetHttp": {
+                    "value": true
+                  },
+                  "ruleInAllowInternetHttps": {
+                    "value": true
+                  },
+                  "ruleInDenySsh": {
+                    "value": true
+                  },
+                  "FlowLogStorageAccountId": "[if(parameters('CreateNsgFlowLogs'), createObject('value', resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))), createObject('value', ''))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.17.1.54307",
+                      "templateHash": "14699866650360515799"
+                    }
+                  },
+                  "parameters": {
+                    "resourceName": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "workspaceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceResourceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceRegion": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "ruleInAllowGwManagement": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInGwManagementPort": {
+                      "type": "string",
+                      "defaultValue": "443,65200-65535"
+                    },
+                    "ruleInAllowAzureLoadBalancer": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenyInternet": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttp": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttps": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowBastionHostComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleOutAllowBastionComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenySsh": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "NsgDiagnosticCategories": {
+                      "type": "array",
+                      "defaultValue": [
+                        "NetworkSecurityGroupEvent",
+                        "NetworkSecurityGroupRuleCounter"
+                      ]
+                    },
+                    "FlowLogStorageAccountId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "FlowLogTrafficAnalytics": {
+                      "type": "bool",
+                      "defaultValue": "[not(empty(parameters('FlowLogStorageAccountId')))]"
+                    }
+                  },
+                  "variables": {
+                    "nsgName": "[format('nsg-{0}', parameters('resourceName'))]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2022-11-01",
+                      "name": "[variables('nsgName')]",
+                      "location": "[parameters('location')]"
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowGwManagement')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AppGatewayManagement')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "[parameters('ruleInGwManagementPort')]",
+                        "sourceAddressPrefix": "GatewayManager",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 110,
+                        "direction": "Inbound"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowAzureLoadBalancer')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AzureLoadBalancer')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "AzureLoadBalancer",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 120,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenyInternet')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Deny_AllInboundInternet')]",
+                      "properties": {
+                        "description": "Azure infrastructure communication",
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 4096,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttp')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Http')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttps')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Https')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowBastionHostComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Host_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 700,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_SshRdp_Outbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22",
+                          "3389"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Azure_Cloud_Outbound')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "AzureCloud",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 220,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Get_Session_Info')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "Internet",
+                        "access": "Allow",
+                        "priority": 230,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenySsh')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'DenySshInbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 100,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('workspaceResourceId')))]",
+                      "type": "Microsoft.Insights/diagnosticSettings",
+                      "apiVersion": "2021-05-01-preview",
+                      "scope": "[format('Microsoft.Network/networkSecurityGroups/{0}', variables('nsgName'))]",
+                      "name": "[format('diags-{0}', variables('nsgName'))]",
+                      "properties": {
+                        "copy": [
+                          {
+                            "name": "logs",
+                            "count": "[length(parameters('NsgDiagnosticCategories'))]",
+                            "input": {
+                              "category": "[parameters('NsgDiagnosticCategories')[copyIndex('logs')]]",
+                              "enabled": true
+                            }
+                          }
+                        ],
+                        "workspaceId": "[parameters('workspaceResourceId')]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2022-09-01",
+                      "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
+                      "resourceGroup": "NetworkWatcherRG",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "parameters": {
+                          "location": {
+                            "value": "[parameters('location')]"
+                          },
+                          "name": {
+                            "value": "[format('flowNsg-{0}', variables('nsgName'))]"
+                          },
+                          "nsgId": {
+                            "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          },
+                          "storageId": {
+                            "value": "[parameters('FlowLogStorageAccountId')]"
+                          },
+                          "trafficAnalytics": {
+                            "value": "[parameters('FlowLogTrafficAnalytics')]"
+                          },
+                          "workspaceId": {
+                            "value": "[parameters('workspaceId')]"
+                          },
+                          "workspaceResourceId": {
+                            "value": "[parameters('workspaceResourceId')]"
+                          },
+                          "workspaceRegion": {
+                            "value": "[parameters('workspaceRegion')]"
+                          }
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.17.1.54307",
+                              "templateHash": "11967796486575428489"
+                            }
+                          },
+                          "parameters": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "location": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            },
+                            "nsgId": {
+                              "type": "string"
+                            },
+                            "storageId": {
+                              "type": "string"
+                            },
+                            "trafficAnalytics": {
+                              "type": "bool"
+                            },
+                            "trafficAnalyticsInterval": {
+                              "type": "int",
+                              "defaultValue": 60
+                            },
+                            "workspaceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "The resource guid of the attached workspace."
+                              }
+                            },
+                            "workspaceResourceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "Resource Id of the attached workspace."
+                              }
+                            },
+                            "workspaceRegion": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "type": "Microsoft.Network/networkWatchers",
+                              "apiVersion": "2022-01-01",
+                              "name": "[format('NetworkWatcher_{0}', parameters('location'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {}
+                            },
+                            {
+                              "type": "Microsoft.Network/networkWatchers/flowLogs",
+                              "apiVersion": "2022-11-01",
+                              "name": "[format('{0}/{1}', format('NetworkWatcher_{0}', parameters('location')), parameters('name'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "targetResourceId": "[parameters('nsgId')]",
+                                "storageId": "[parameters('storageId')]",
+                                "enabled": true,
+                                "retentionPolicy": {
+                                  "days": 2,
+                                  "enabled": true
+                                },
+                                "format": {
+                                  "type": "JSON",
+                                  "version": 2
+                                },
+                                "flowAnalyticsConfiguration": {
+                                  "networkWatcherFlowAnalyticsConfiguration": {
+                                    "enabled": "[parameters('trafficAnalytics')]",
+                                    "workspaceId": "[parameters('workspaceId')]",
+                                    "trafficAnalyticsInterval": "[parameters('trafficAnalyticsInterval')]",
+                                    "workspaceRegion": "[parameters('workspaceRegion')]",
+                                    "workspaceResourceId": "[parameters('workspaceResourceId')]"
+                                  }
+                                }
+                              },
+                              "dependsOn": [
+                                "[resourceId('Microsoft.Network/networkWatchers', format('NetworkWatcher_{0}', parameters('location')))]"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                    },
+                    "nsgSubnetObj": {
+                      "type": "object",
+                      "value": {
+                        "properties": {
+                          "networkSecurityGroup": {
+                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))]"
+              ]
+            },
+            {
+              "condition": "[and(parameters('acrPrivatePool'), parameters('networkSecurityGroups'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[take(format('{0}-nsgAcrPool', deployment().name), 64)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "resourceName": {
+                    "value": "[format('{0}-{1}', variables('acrpool_subnet_name'), parameters('resourceName'))]"
+                  },
+                  "workspaceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01').customerId), createObject('value', ''))]",
+                  "workspaceRegion": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01', 'full').location), createObject('value', ''))]",
+                  "workspaceResourceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))), createObject('value', ''))]",
+                  "FlowLogStorageAccountId": "[if(parameters('CreateNsgFlowLogs'), createObject('value', resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))), createObject('value', ''))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.17.1.54307",
+                      "templateHash": "14699866650360515799"
+                    }
+                  },
+                  "parameters": {
+                    "resourceName": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "workspaceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceResourceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceRegion": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "ruleInAllowGwManagement": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInGwManagementPort": {
+                      "type": "string",
+                      "defaultValue": "443,65200-65535"
+                    },
+                    "ruleInAllowAzureLoadBalancer": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenyInternet": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttp": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttps": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowBastionHostComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleOutAllowBastionComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenySsh": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "NsgDiagnosticCategories": {
+                      "type": "array",
+                      "defaultValue": [
+                        "NetworkSecurityGroupEvent",
+                        "NetworkSecurityGroupRuleCounter"
+                      ]
+                    },
+                    "FlowLogStorageAccountId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "FlowLogTrafficAnalytics": {
+                      "type": "bool",
+                      "defaultValue": "[not(empty(parameters('FlowLogStorageAccountId')))]"
+                    }
+                  },
+                  "variables": {
+                    "nsgName": "[format('nsg-{0}', parameters('resourceName'))]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2022-11-01",
+                      "name": "[variables('nsgName')]",
+                      "location": "[parameters('location')]"
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowGwManagement')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AppGatewayManagement')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "[parameters('ruleInGwManagementPort')]",
+                        "sourceAddressPrefix": "GatewayManager",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 110,
+                        "direction": "Inbound"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowAzureLoadBalancer')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AzureLoadBalancer')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "AzureLoadBalancer",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 120,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenyInternet')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Deny_AllInboundInternet')]",
+                      "properties": {
+                        "description": "Azure infrastructure communication",
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 4096,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttp')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Http')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttps')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Https')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowBastionHostComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Host_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 700,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_SshRdp_Outbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22",
+                          "3389"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Azure_Cloud_Outbound')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "AzureCloud",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 220,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Get_Session_Info')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "Internet",
+                        "access": "Allow",
+                        "priority": 230,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenySsh')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'DenySshInbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 100,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('workspaceResourceId')))]",
+                      "type": "Microsoft.Insights/diagnosticSettings",
+                      "apiVersion": "2021-05-01-preview",
+                      "scope": "[format('Microsoft.Network/networkSecurityGroups/{0}', variables('nsgName'))]",
+                      "name": "[format('diags-{0}', variables('nsgName'))]",
+                      "properties": {
+                        "copy": [
+                          {
+                            "name": "logs",
+                            "count": "[length(parameters('NsgDiagnosticCategories'))]",
+                            "input": {
+                              "category": "[parameters('NsgDiagnosticCategories')[copyIndex('logs')]]",
+                              "enabled": true
+                            }
+                          }
+                        ],
+                        "workspaceId": "[parameters('workspaceResourceId')]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2022-09-01",
+                      "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
+                      "resourceGroup": "NetworkWatcherRG",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "parameters": {
+                          "location": {
+                            "value": "[parameters('location')]"
+                          },
+                          "name": {
+                            "value": "[format('flowNsg-{0}', variables('nsgName'))]"
+                          },
+                          "nsgId": {
+                            "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          },
+                          "storageId": {
+                            "value": "[parameters('FlowLogStorageAccountId')]"
+                          },
+                          "trafficAnalytics": {
+                            "value": "[parameters('FlowLogTrafficAnalytics')]"
+                          },
+                          "workspaceId": {
+                            "value": "[parameters('workspaceId')]"
+                          },
+                          "workspaceResourceId": {
+                            "value": "[parameters('workspaceResourceId')]"
+                          },
+                          "workspaceRegion": {
+                            "value": "[parameters('workspaceRegion')]"
+                          }
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.17.1.54307",
+                              "templateHash": "11967796486575428489"
+                            }
+                          },
+                          "parameters": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "location": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            },
+                            "nsgId": {
+                              "type": "string"
+                            },
+                            "storageId": {
+                              "type": "string"
+                            },
+                            "trafficAnalytics": {
+                              "type": "bool"
+                            },
+                            "trafficAnalyticsInterval": {
+                              "type": "int",
+                              "defaultValue": 60
+                            },
+                            "workspaceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "The resource guid of the attached workspace."
+                              }
+                            },
+                            "workspaceResourceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "Resource Id of the attached workspace."
+                              }
+                            },
+                            "workspaceRegion": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "type": "Microsoft.Network/networkWatchers",
+                              "apiVersion": "2022-01-01",
+                              "name": "[format('NetworkWatcher_{0}', parameters('location'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {}
+                            },
+                            {
+                              "type": "Microsoft.Network/networkWatchers/flowLogs",
+                              "apiVersion": "2022-11-01",
+                              "name": "[format('{0}/{1}', format('NetworkWatcher_{0}', parameters('location')), parameters('name'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "targetResourceId": "[parameters('nsgId')]",
+                                "storageId": "[parameters('storageId')]",
+                                "enabled": true,
+                                "retentionPolicy": {
+                                  "days": 2,
+                                  "enabled": true
+                                },
+                                "format": {
+                                  "type": "JSON",
+                                  "version": 2
+                                },
+                                "flowAnalyticsConfiguration": {
+                                  "networkWatcherFlowAnalyticsConfiguration": {
+                                    "enabled": "[parameters('trafficAnalytics')]",
+                                    "workspaceId": "[parameters('workspaceId')]",
+                                    "trafficAnalyticsInterval": "[parameters('trafficAnalyticsInterval')]",
+                                    "workspaceRegion": "[parameters('workspaceRegion')]",
+                                    "workspaceResourceId": "[parameters('workspaceResourceId')]"
+                                  }
+                                }
+                              },
+                              "dependsOn": [
+                                "[resourceId('Microsoft.Network/networkWatchers', format('NetworkWatcher_{0}', parameters('location')))]"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                    },
+                    "nsgSubnetObj": {
+                      "type": "object",
+                      "value": {
+                        "properties": {
+                          "networkSecurityGroup": {
+                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))]",
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64))]"
+              ]
+            },
+            {
+              "condition": "[and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[take(format('{0}-nsgAppGw', deployment().name), 64)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "resourceName": {
+                    "value": "[format('{0}-{1}', variables('appgw_subnet_name'), parameters('resourceName'))]"
+                  },
+                  "workspaceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01').customerId), createObject('value', ''))]",
+                  "workspaceRegion": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01', 'full').location), createObject('value', ''))]",
+                  "workspaceResourceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))), createObject('value', ''))]",
+                  "ruleInAllowInternetHttp": {
+                    "value": "[parameters('ingressApplicationGatewayPublic')]"
+                  },
+                  "ruleInAllowInternetHttps": {
+                    "value": "[parameters('ingressApplicationGatewayPublic')]"
+                  },
+                  "ruleInAllowGwManagement": {
+                    "value": true
+                  },
+                  "ruleInAllowAzureLoadBalancer": {
+                    "value": true
+                  },
+                  "ruleInDenyInternet": {
+                    "value": true
+                  },
+                  "ruleInGwManagementPort": {
+                    "value": "65200-65535"
+                  },
+                  "FlowLogStorageAccountId": "[if(parameters('CreateNsgFlowLogs'), createObject('value', resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))), createObject('value', ''))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.17.1.54307",
+                      "templateHash": "14699866650360515799"
+                    }
+                  },
+                  "parameters": {
+                    "resourceName": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "workspaceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceResourceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceRegion": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "ruleInAllowGwManagement": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInGwManagementPort": {
+                      "type": "string",
+                      "defaultValue": "443,65200-65535"
+                    },
+                    "ruleInAllowAzureLoadBalancer": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenyInternet": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttp": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttps": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowBastionHostComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleOutAllowBastionComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenySsh": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "NsgDiagnosticCategories": {
+                      "type": "array",
+                      "defaultValue": [
+                        "NetworkSecurityGroupEvent",
+                        "NetworkSecurityGroupRuleCounter"
+                      ]
+                    },
+                    "FlowLogStorageAccountId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "FlowLogTrafficAnalytics": {
+                      "type": "bool",
+                      "defaultValue": "[not(empty(parameters('FlowLogStorageAccountId')))]"
+                    }
+                  },
+                  "variables": {
+                    "nsgName": "[format('nsg-{0}', parameters('resourceName'))]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2022-11-01",
+                      "name": "[variables('nsgName')]",
+                      "location": "[parameters('location')]"
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowGwManagement')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AppGatewayManagement')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "[parameters('ruleInGwManagementPort')]",
+                        "sourceAddressPrefix": "GatewayManager",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 110,
+                        "direction": "Inbound"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowAzureLoadBalancer')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AzureLoadBalancer')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "AzureLoadBalancer",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 120,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenyInternet')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Deny_AllInboundInternet')]",
+                      "properties": {
+                        "description": "Azure infrastructure communication",
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 4096,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttp')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Http')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttps')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Https')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowBastionHostComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Host_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 700,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_SshRdp_Outbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22",
+                          "3389"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Azure_Cloud_Outbound')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "AzureCloud",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 220,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Get_Session_Info')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "Internet",
+                        "access": "Allow",
+                        "priority": 230,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenySsh')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'DenySshInbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 100,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('workspaceResourceId')))]",
+                      "type": "Microsoft.Insights/diagnosticSettings",
+                      "apiVersion": "2021-05-01-preview",
+                      "scope": "[format('Microsoft.Network/networkSecurityGroups/{0}', variables('nsgName'))]",
+                      "name": "[format('diags-{0}', variables('nsgName'))]",
+                      "properties": {
+                        "copy": [
+                          {
+                            "name": "logs",
+                            "count": "[length(parameters('NsgDiagnosticCategories'))]",
+                            "input": {
+                              "category": "[parameters('NsgDiagnosticCategories')[copyIndex('logs')]]",
+                              "enabled": true
+                            }
+                          }
+                        ],
+                        "workspaceId": "[parameters('workspaceResourceId')]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2022-09-01",
+                      "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
+                      "resourceGroup": "NetworkWatcherRG",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "parameters": {
+                          "location": {
+                            "value": "[parameters('location')]"
+                          },
+                          "name": {
+                            "value": "[format('flowNsg-{0}', variables('nsgName'))]"
+                          },
+                          "nsgId": {
+                            "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          },
+                          "storageId": {
+                            "value": "[parameters('FlowLogStorageAccountId')]"
+                          },
+                          "trafficAnalytics": {
+                            "value": "[parameters('FlowLogTrafficAnalytics')]"
+                          },
+                          "workspaceId": {
+                            "value": "[parameters('workspaceId')]"
+                          },
+                          "workspaceResourceId": {
+                            "value": "[parameters('workspaceResourceId')]"
+                          },
+                          "workspaceRegion": {
+                            "value": "[parameters('workspaceRegion')]"
+                          }
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.17.1.54307",
+                              "templateHash": "11967796486575428489"
+                            }
+                          },
+                          "parameters": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "location": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            },
+                            "nsgId": {
+                              "type": "string"
+                            },
+                            "storageId": {
+                              "type": "string"
+                            },
+                            "trafficAnalytics": {
+                              "type": "bool"
+                            },
+                            "trafficAnalyticsInterval": {
+                              "type": "int",
+                              "defaultValue": 60
+                            },
+                            "workspaceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "The resource guid of the attached workspace."
+                              }
+                            },
+                            "workspaceResourceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "Resource Id of the attached workspace."
+                              }
+                            },
+                            "workspaceRegion": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "type": "Microsoft.Network/networkWatchers",
+                              "apiVersion": "2022-01-01",
+                              "name": "[format('NetworkWatcher_{0}', parameters('location'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {}
+                            },
+                            {
+                              "type": "Microsoft.Network/networkWatchers/flowLogs",
+                              "apiVersion": "2022-11-01",
+                              "name": "[format('{0}/{1}', format('NetworkWatcher_{0}', parameters('location')), parameters('name'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "targetResourceId": "[parameters('nsgId')]",
+                                "storageId": "[parameters('storageId')]",
+                                "enabled": true,
+                                "retentionPolicy": {
+                                  "days": 2,
+                                  "enabled": true
+                                },
+                                "format": {
+                                  "type": "JSON",
+                                  "version": 2
+                                },
+                                "flowAnalyticsConfiguration": {
+                                  "networkWatcherFlowAnalyticsConfiguration": {
+                                    "enabled": "[parameters('trafficAnalytics')]",
+                                    "workspaceId": "[parameters('workspaceId')]",
+                                    "trafficAnalyticsInterval": "[parameters('trafficAnalyticsInterval')]",
+                                    "workspaceRegion": "[parameters('workspaceRegion')]",
+                                    "workspaceResourceId": "[parameters('workspaceResourceId')]"
+                                  }
+                                }
+                              },
+                              "dependsOn": [
+                                "[resourceId('Microsoft.Network/networkWatchers', format('NetworkWatcher_{0}', parameters('location')))]"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                    },
+                    "nsgSubnetObj": {
+                      "type": "object",
+                      "value": {
+                        "properties": {
+                          "networkSecurityGroup": {
+                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))]",
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64))]"
+              ]
+            },
+            {
+              "condition": "[and(parameters('bastion'), parameters('networkSecurityGroups'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[take(format('{0}-nsgBastion', deployment().name), 64)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "resourceName": {
+                    "value": "[format('{0}-{1}', variables('bastion_subnet_name'), parameters('resourceName'))]"
+                  },
+                  "workspaceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01').customerId), createObject('value', ''))]",
+                  "workspaceRegion": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01', 'full').location), createObject('value', ''))]",
+                  "workspaceResourceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))), createObject('value', ''))]",
+                  "ruleInAllowBastionHostComms": {
+                    "value": true
+                  },
+                  "ruleInAllowInternetHttps": {
+                    "value": true
+                  },
+                  "ruleInAllowGwManagement": {
+                    "value": true
+                  },
+                  "ruleInAllowAzureLoadBalancer": {
+                    "value": true
+                  },
+                  "ruleOutAllowBastionComms": {
+                    "value": true
+                  },
+                  "ruleInGwManagementPort": {
+                    "value": "443"
+                  },
+                  "FlowLogStorageAccountId": "[if(parameters('CreateNsgFlowLogs'), createObject('value', resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))), createObject('value', ''))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.17.1.54307",
+                      "templateHash": "14699866650360515799"
+                    }
+                  },
+                  "parameters": {
+                    "resourceName": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "workspaceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceResourceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceRegion": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "ruleInAllowGwManagement": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInGwManagementPort": {
+                      "type": "string",
+                      "defaultValue": "443,65200-65535"
+                    },
+                    "ruleInAllowAzureLoadBalancer": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenyInternet": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttp": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttps": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowBastionHostComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleOutAllowBastionComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenySsh": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "NsgDiagnosticCategories": {
+                      "type": "array",
+                      "defaultValue": [
+                        "NetworkSecurityGroupEvent",
+                        "NetworkSecurityGroupRuleCounter"
+                      ]
+                    },
+                    "FlowLogStorageAccountId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "FlowLogTrafficAnalytics": {
+                      "type": "bool",
+                      "defaultValue": "[not(empty(parameters('FlowLogStorageAccountId')))]"
+                    }
+                  },
+                  "variables": {
+                    "nsgName": "[format('nsg-{0}', parameters('resourceName'))]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2022-11-01",
+                      "name": "[variables('nsgName')]",
+                      "location": "[parameters('location')]"
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowGwManagement')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AppGatewayManagement')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "[parameters('ruleInGwManagementPort')]",
+                        "sourceAddressPrefix": "GatewayManager",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 110,
+                        "direction": "Inbound"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowAzureLoadBalancer')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AzureLoadBalancer')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "AzureLoadBalancer",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 120,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenyInternet')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Deny_AllInboundInternet')]",
+                      "properties": {
+                        "description": "Azure infrastructure communication",
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 4096,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttp')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Http')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttps')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Https')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowBastionHostComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Host_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 700,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_SshRdp_Outbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22",
+                          "3389"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Azure_Cloud_Outbound')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "AzureCloud",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 220,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Get_Session_Info')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "Internet",
+                        "access": "Allow",
+                        "priority": 230,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenySsh')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'DenySshInbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 100,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('workspaceResourceId')))]",
+                      "type": "Microsoft.Insights/diagnosticSettings",
+                      "apiVersion": "2021-05-01-preview",
+                      "scope": "[format('Microsoft.Network/networkSecurityGroups/{0}', variables('nsgName'))]",
+                      "name": "[format('diags-{0}', variables('nsgName'))]",
+                      "properties": {
+                        "copy": [
+                          {
+                            "name": "logs",
+                            "count": "[length(parameters('NsgDiagnosticCategories'))]",
+                            "input": {
+                              "category": "[parameters('NsgDiagnosticCategories')[copyIndex('logs')]]",
+                              "enabled": true
+                            }
+                          }
+                        ],
+                        "workspaceId": "[parameters('workspaceResourceId')]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2022-09-01",
+                      "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
+                      "resourceGroup": "NetworkWatcherRG",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "parameters": {
+                          "location": {
+                            "value": "[parameters('location')]"
+                          },
+                          "name": {
+                            "value": "[format('flowNsg-{0}', variables('nsgName'))]"
+                          },
+                          "nsgId": {
+                            "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          },
+                          "storageId": {
+                            "value": "[parameters('FlowLogStorageAccountId')]"
+                          },
+                          "trafficAnalytics": {
+                            "value": "[parameters('FlowLogTrafficAnalytics')]"
+                          },
+                          "workspaceId": {
+                            "value": "[parameters('workspaceId')]"
+                          },
+                          "workspaceResourceId": {
+                            "value": "[parameters('workspaceResourceId')]"
+                          },
+                          "workspaceRegion": {
+                            "value": "[parameters('workspaceRegion')]"
+                          }
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.17.1.54307",
+                              "templateHash": "11967796486575428489"
+                            }
+                          },
+                          "parameters": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "location": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            },
+                            "nsgId": {
+                              "type": "string"
+                            },
+                            "storageId": {
+                              "type": "string"
+                            },
+                            "trafficAnalytics": {
+                              "type": "bool"
+                            },
+                            "trafficAnalyticsInterval": {
+                              "type": "int",
+                              "defaultValue": 60
+                            },
+                            "workspaceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "The resource guid of the attached workspace."
+                              }
+                            },
+                            "workspaceResourceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "Resource Id of the attached workspace."
+                              }
+                            },
+                            "workspaceRegion": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "type": "Microsoft.Network/networkWatchers",
+                              "apiVersion": "2022-01-01",
+                              "name": "[format('NetworkWatcher_{0}', parameters('location'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {}
+                            },
+                            {
+                              "type": "Microsoft.Network/networkWatchers/flowLogs",
+                              "apiVersion": "2022-11-01",
+                              "name": "[format('{0}/{1}', format('NetworkWatcher_{0}', parameters('location')), parameters('name'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "targetResourceId": "[parameters('nsgId')]",
+                                "storageId": "[parameters('storageId')]",
+                                "enabled": true,
+                                "retentionPolicy": {
+                                  "days": 2,
+                                  "enabled": true
+                                },
+                                "format": {
+                                  "type": "JSON",
+                                  "version": 2
+                                },
+                                "flowAnalyticsConfiguration": {
+                                  "networkWatcherFlowAnalyticsConfiguration": {
+                                    "enabled": "[parameters('trafficAnalytics')]",
+                                    "workspaceId": "[parameters('workspaceId')]",
+                                    "trafficAnalyticsInterval": "[parameters('trafficAnalyticsInterval')]",
+                                    "workspaceRegion": "[parameters('workspaceRegion')]",
+                                    "workspaceResourceId": "[parameters('workspaceResourceId')]"
+                                  }
+                                }
+                              },
+                              "dependsOn": [
+                                "[resourceId('Microsoft.Network/networkWatchers', format('NetworkWatcher_{0}', parameters('location')))]"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                    },
+                    "nsgSubnetObj": {
+                      "type": "object",
+                      "value": {
+                        "properties": {
+                          "networkSecurityGroup": {
+                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))]",
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64))]"
+              ]
+            },
+            {
+              "condition": "[and(parameters('privateLinks'), parameters('networkSecurityGroups'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[take(format('{0}-nsgPrivateLinks', deployment().name), 64)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "resourceName": {
+                    "value": "[format('{0}-{1}', variables('private_link_subnet_name'), parameters('resourceName'))]"
+                  },
+                  "workspaceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01').customerId), createObject('value', ''))]",
+                  "workspaceRegion": "[if(not(empty(parameters('workspaceName'))), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2021-06-01', 'full').location), createObject('value', ''))]",
+                  "workspaceResourceId": "[if(not(empty(parameters('workspaceName'))), createObject('value', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('workspaceResourceGroupName')), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))), createObject('value', ''))]",
+                  "FlowLogStorageAccountId": "[if(parameters('CreateNsgFlowLogs'), createObject('value', resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))), createObject('value', ''))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.17.1.54307",
+                      "templateHash": "14699866650360515799"
+                    }
+                  },
+                  "parameters": {
+                    "resourceName": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "workspaceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceResourceId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "workspaceRegion": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]"
+                    },
+                    "ruleInAllowGwManagement": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInGwManagementPort": {
+                      "type": "string",
+                      "defaultValue": "443,65200-65535"
+                    },
+                    "ruleInAllowAzureLoadBalancer": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenyInternet": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttp": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowInternetHttps": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInAllowBastionHostComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleOutAllowBastionComms": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "ruleInDenySsh": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "NsgDiagnosticCategories": {
+                      "type": "array",
+                      "defaultValue": [
+                        "NetworkSecurityGroupEvent",
+                        "NetworkSecurityGroupRuleCounter"
+                      ]
+                    },
+                    "FlowLogStorageAccountId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "FlowLogTrafficAnalytics": {
+                      "type": "bool",
+                      "defaultValue": "[not(empty(parameters('FlowLogStorageAccountId')))]"
+                    }
+                  },
+                  "variables": {
+                    "nsgName": "[format('nsg-{0}', parameters('resourceName'))]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2022-11-01",
+                      "name": "[variables('nsgName')]",
+                      "location": "[parameters('location')]"
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowGwManagement')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AppGatewayManagement')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "[parameters('ruleInGwManagementPort')]",
+                        "sourceAddressPrefix": "GatewayManager",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 110,
+                        "direction": "Inbound"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowAzureLoadBalancer')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_AzureLoadBalancer')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "AzureLoadBalancer",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 120,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenyInternet')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Deny_AllInboundInternet')]",
+                      "properties": {
+                        "description": "Azure infrastructure communication",
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 4096,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttp')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Http')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowInternetHttps')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Internet_Https')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "Internet",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInAllowBastionHostComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Host_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 700,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_SshRdp_Outbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 200,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22",
+                          "3389"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Azure_Cloud_Outbound')]",
+                      "properties": {
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "AzureCloud",
+                        "access": "Allow",
+                        "priority": 210,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "443"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Bastion_Communication')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationAddressPrefix": "VirtualNetwork",
+                        "access": "Allow",
+                        "priority": 220,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "8080",
+                          "5701"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleOutAllowBastionComms')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'Allow_Get_Session_Info')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "Internet",
+                        "access": "Allow",
+                        "priority": 230,
+                        "direction": "Outbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "80"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[parameters('ruleInDenySsh')]",
+                      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                      "apiVersion": "2022-07-01",
+                      "name": "[format('{0}/{1}', variables('nsgName'), 'DenySshInbound')]",
+                      "properties": {
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Deny",
+                        "priority": 100,
+                        "direction": "Inbound",
+                        "sourcePortRanges": [],
+                        "destinationPortRanges": [
+                          "22"
+                        ],
+                        "sourceAddressPrefixes": [],
+                        "destinationAddressPrefixes": []
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('workspaceResourceId')))]",
+                      "type": "Microsoft.Insights/diagnosticSettings",
+                      "apiVersion": "2021-05-01-preview",
+                      "scope": "[format('Microsoft.Network/networkSecurityGroups/{0}', variables('nsgName'))]",
+                      "name": "[format('diags-{0}', variables('nsgName'))]",
+                      "properties": {
+                        "copy": [
+                          {
+                            "name": "logs",
+                            "count": "[length(parameters('NsgDiagnosticCategories'))]",
+                            "input": {
+                              "category": "[parameters('NsgDiagnosticCategories')[copyIndex('logs')]]",
+                              "enabled": true
+                            }
+                          }
+                        ],
+                        "workspaceId": "[parameters('workspaceResourceId')]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2022-09-01",
+                      "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
+                      "resourceGroup": "NetworkWatcherRG",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "parameters": {
+                          "location": {
+                            "value": "[parameters('location')]"
+                          },
+                          "name": {
+                            "value": "[format('flowNsg-{0}', variables('nsgName'))]"
+                          },
+                          "nsgId": {
+                            "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          },
+                          "storageId": {
+                            "value": "[parameters('FlowLogStorageAccountId')]"
+                          },
+                          "trafficAnalytics": {
+                            "value": "[parameters('FlowLogTrafficAnalytics')]"
+                          },
+                          "workspaceId": {
+                            "value": "[parameters('workspaceId')]"
+                          },
+                          "workspaceResourceId": {
+                            "value": "[parameters('workspaceResourceId')]"
+                          },
+                          "workspaceRegion": {
+                            "value": "[parameters('workspaceRegion')]"
+                          }
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.17.1.54307",
+                              "templateHash": "11967796486575428489"
+                            }
+                          },
+                          "parameters": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "location": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            },
+                            "nsgId": {
+                              "type": "string"
+                            },
+                            "storageId": {
+                              "type": "string"
+                            },
+                            "trafficAnalytics": {
+                              "type": "bool"
+                            },
+                            "trafficAnalyticsInterval": {
+                              "type": "int",
+                              "defaultValue": 60
+                            },
+                            "workspaceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "The resource guid of the attached workspace."
+                              }
+                            },
+                            "workspaceResourceId": {
+                              "type": "string",
+                              "defaultValue": "",
+                              "metadata": {
+                                "description": "Resource Id of the attached workspace."
+                              }
+                            },
+                            "workspaceRegion": {
+                              "type": "string",
+                              "defaultValue": "[resourceGroup().location]"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "type": "Microsoft.Network/networkWatchers",
+                              "apiVersion": "2022-01-01",
+                              "name": "[format('NetworkWatcher_{0}', parameters('location'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {}
+                            },
+                            {
+                              "type": "Microsoft.Network/networkWatchers/flowLogs",
+                              "apiVersion": "2022-11-01",
+                              "name": "[format('{0}/{1}', format('NetworkWatcher_{0}', parameters('location')), parameters('name'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "targetResourceId": "[parameters('nsgId')]",
+                                "storageId": "[parameters('storageId')]",
+                                "enabled": true,
+                                "retentionPolicy": {
+                                  "days": 2,
+                                  "enabled": true
+                                },
+                                "format": {
+                                  "type": "JSON",
+                                  "version": 2
+                                },
+                                "flowAnalyticsConfiguration": {
+                                  "networkWatcherFlowAnalyticsConfiguration": {
+                                    "enabled": "[parameters('trafficAnalytics')]",
+                                    "workspaceId": "[parameters('workspaceId')]",
+                                    "trafficAnalyticsInterval": "[parameters('trafficAnalyticsInterval')]",
+                                    "workspaceRegion": "[parameters('workspaceRegion')]",
+                                    "workspaceResourceId": "[parameters('workspaceResourceId')]"
+                                  }
+                                }
+                              },
+                              "dependsOn": [
+                                "[resourceId('Microsoft.Network/networkWatchers', format('NetworkWatcher_{0}', parameters('location')))]"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                    },
+                    "nsgSubnetObj": {
+                      "type": "object",
+                      "value": {
+                        "properties": {
+                          "networkSecurityGroup": {
+                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('flowLogStorageName'))]",
+                "[resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "debugSubnets": {
+              "type": "array",
+              "value": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
+            },
+            "vnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            },
+            "vnetName": {
+              "type": "string",
+              "value": "[variables('vnetName')]"
+            },
+            "aksSubnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('aks_subnet_name'))]"
+            },
+            "aksPodSubnetId": {
+              "type": "string",
+              "value": "[if(parameters('cniDynamicIpAllocation'), resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('aks_podSubnet_name')), '')]"
+            },
+            "fwSubnetId": {
+              "type": "string",
+              "value": "[if(parameters('azureFirewalls'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('fw_subnet_name')), '')]"
+            },
+            "fwMgmtSubnetId": {
+              "type": "string",
+              "value": "[if(parameters('azureFirewallsManagementSeperation'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('fwmgmt_subnet_name')), '')]"
+            },
+            "acrPoolSubnetId": {
+              "type": "string",
+              "value": "[if(parameters('acrPrivatePool'), format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), variables('acrpool_subnet_name')), '')]"
+            },
+            "appGwSubnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('appgw_subnet_name'))]"
+            },
+            "privateLinkSubnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('private_link_subnet_name'))]"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "aksSubnetId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2022-09-01').outputs.aksSubnetId.value]"
+    }
+  }
+}
