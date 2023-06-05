@@ -5,6 +5,64 @@
         "icon": "Group",
         "sections": [
             {
+                "key": "env",
+                "sectionTitle": "Enviroment Type",
+                "cards": [
+                    {
+                        "key": "Dev",
+                        "title": "Development",
+                        "description": {
+                            "bulets": [
+                                {"description": "Single pool, single node"},
+                                {"description": "Daily, automated start/stop"}
+                            ]
+                        },
+                        "icon": "code",
+                        "values": {
+                            "cluster": {
+                                "SystemPoolType": "none",
+                                "AksPaidSkuForSLA": false,
+                                "availabilityZones": "no",
+                                "agentCount": 1
+                            },
+                            "addons": {
+                                "automation": "workingday",
+                                "registry": "Basic"
+                            }
+                        }
+                    },
+                    {
+                        "key": "prod",
+                        "title": "Well Architected",
+                        "default": true,
+                        "description": {
+                            "bulets": [
+                                {"description": "SLA"},
+                                {"description": "Availability Zones"},
+                                {"description": "3 Node user pool"}
+                            ]
+                        },
+                        "icon": "server",
+                        "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
+                            "cluster": {
+                                "SystemPoolType": "Standard",
+                                "AksPaidSkuForSLA": true,
+                                "availabilityZones": "yes",
+                                "agentCount": 3
+                            },
+                            "addons": {
+                                "registry": "Premium",
+                                "enableACRTrustPolicy": true,
+                                "acrUntaggedRetentionPolicyEnabled": true
+                            }
+                        }
+                    }
+                ]
+            },
+            {
                 "key": "ops",
                 "sectionTitle": "Operations Principles",
                 "cards": [
@@ -21,7 +79,6 @@
                                 "workloadDeployCommands": []
                             },
                             "cluster": {
-                                "SystemPoolType": "none",
                                 "autoscale": false,
                                 "upgradeChannel": "none",
                                 "DefenderForContainers": false,
@@ -65,10 +122,8 @@
                                 "workloadDeployCommands": []
                             },
                             "cluster": {
-                                "SystemPoolType": "CostOptimised",
                                 "autoscale": false,
-                                "upgradeChannel": "none",
-                                "AksPaidSkuForSLA": false
+                                "upgradeChannel": "none"
                             },
                             "addons": {
                                 "registry": "none",
@@ -111,10 +166,8 @@
                                 "workloadDeployCommands": []
                             },
                             "cluster": {
-                                "SystemPoolType": "CostOptimised",
                                 "autoscale": true,
-                                "upgradeChannel": "stable",
-                                "AksPaidSkuForSLA": true
+                                "upgradeChannel": "stable"
                             },
                             "addons": {
                                 "registry": [

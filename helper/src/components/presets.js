@@ -90,8 +90,9 @@ export function Presets({ description, icon, sections, selectedValues, updateSel
                         },]} />
                     }
 
-                    <DocumentCardTitle showAsSecondaryTitle={true} shouldTruncate={false} title={c.description.title}/>
-
+                    {c.description.title &&
+                        <DocumentCardTitle showAsSecondaryTitle={true} shouldTruncate={false} title={c.description.title}/>
+                    }
                     <div style={{ padding: "8px 16px" }} >
                         <Text>
                             {c.description.titleWarning &&
