@@ -1777,4 +1777,44 @@ resource telemetrydeployment 'Microsoft.Resources/deployments@2022-09-01' = if (
   }
 }
 
+/*   ___      __    __  .___________.  ______   .___  ___.      ___   .___________. __    ______   .__   __.
+    /   \    |  |  |  | |           | /  __  \  |   \/   |     /   \  |           ||  |  /  __  \  |  \ |  |
+   /  ^  \   |  |  |  | `---|  |----`|  |  |  | |  \  /  |    /  ^  \ `---|  |----`|  | |  |  |  | |   \|  |
+  /  /_\  \  |  |  |  |     |  |     |  |  |  | |  |\/|  |   /  /_\  \    |  |     |  | |  |  |  | |  . `  |
+ /  _____  \ |  `--'  |     |  |     |  `--'  | |  |  |  |  /  _____  \   |  |     |  | |  `--'  | |  |\   |
+/__/     \__\ \______/      |__|      \______/  |__|  |__| /__/     \__\  |__|     |__|  \______/  |__| \__| */
+
+
+param automationaccount bool = false
+
+module AksStartStop 'automationrunbook/automation.bicep' = if (automationaccount) {
+  name: '${deployment().name}-Automation'
+  params: {
+    location: location
+    automationAccountName: 'aa-${resourceName}'
+    runbookName: 'aks-cluster-changestate'
+    runbookUri: 'https://raw.githubusercontent.com/finoops/aks-cluster-changestate/main/aks-cluster-changestate.ps1'
+    runbookType: 'Script'
+    runbookJobSchedule: [
+      {
+        scheduleName: 'Weekday - 09:00'
+        parameters: {
+          ResourceGroupName : resourceGroup().name
+          AksClusterName : aks.name
+          Operation: 'start'
+        }
+      }
+      {
+        scheduleName: 'Day - 19:00'
+        parameters: {
+          ResourceGroupName : resourceGroup().name
+          AksClusterName : aks.name
+          Operation: 'stop'
+        }
+      }
+    ]
+  }
+}
+
+
 //ACSCII Art link : https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=Star%20Wars&text=changeme
