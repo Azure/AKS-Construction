@@ -1094,7 +1094,6 @@ param warIngressNginx bool = false
 @description('The name of the NEW resource group to create the AKS cluster managed resources in')
 param managedNodeResourceGroup string = ''
 
-
 // Preview feature requires: az feature register --namespace "Microsoft.ContainerService" --name "NRGLockdownPreview"
 @allowed([
   'ReadOnly'
@@ -1102,6 +1101,25 @@ param managedNodeResourceGroup string = ''
 ])
 @description('The restriction level applied to the cluster node resource group')
 param restrictionLevelNodeResourceGroup string = 'Unrestricted'
+
+@allowed(['', 'Istio'])
+@description('The service mesh profile to use')
+param serviceMeshProfile string = ''
+
+@description('The ingress gateway to use for the Istio service mesh')
+param istioIngressGatewayMode string = ''
+
+var serviceMeshProfileObj = {
+  istio: {
+    components: {
+      ingressGateways: empty(istioIngressGatewayMode) ? null : [{
+        enabled: true
+        mode: istioIngressGatewayMode
+      }]
+    }
+  }
+  mode: 'Istio'
+}
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
@@ -1158,7 +1176,6 @@ var systemPoolBase = {
 }
 
 var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])))
-
 
 output userNodePoolName string = nodePoolName
 output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
@@ -1312,7 +1329,8 @@ var aksProperties = union({
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
 keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {},
-!empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {}
+!empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {},
+!empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
 resource aks 'Microsoft.ContainerService/managedClusters@2023-03-02-preview' = {
