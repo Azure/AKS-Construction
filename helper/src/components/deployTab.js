@@ -306,7 +306,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     '# Private cluster, so use command invoke\n' +
     `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` +
     post_deployPScmd.replaceAll('"', '\\"') +
-    `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.ps1 --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
+    `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
 
     const deployPScmd =
     `# Create Resource Group\n` +
@@ -315,7 +315,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deployRelease.main_url}` } --parameters` +
     Object.keys(finalParams).map(k => {
       const val = finalParams[k]
-      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)).replace('"[\\', '\'[').replace('\\"]"', '"]\'').replace('\\",\\"','","') : val
       return ` \`\n\t${k}=${targetVal}`
     }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deployPSstr : '')
 
