@@ -297,16 +297,13 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }).join('')+
     (!deploy.disablePreviews ? preview_post_deployPScmd : '')
 
-    const post_deployPSstr = cluster.apisecurity !== "private" ?
+
+    //Below used when not a private cluster (used further below the BASH  postdeploy script if a private cluster)
+    const post_deployPSstr =
     '# Get credentials for your new AKS cluster & login (interactive)\n' +
     `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
     'kubectl get nodes' +
     post_deployPScmd
-    :
-    '# Private cluster, so use command invoke\n' +
-    `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` +
-    post_deployPScmd.replaceAll('"', '\\"') +
-    `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
 
     const deployPScmd =
     `# Create Resource Group\n` +
@@ -317,7 +314,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)).replace('"[\\', '\'[').replace('\\"]"', '"]\'').replace('\\",\\"','","') : val
       return ` \`\n\t${k}=${targetVal}`
-    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deployPSstr : '')
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? cluster.apisecurity !== "private" ? post_deployPSstr: post_deployBASHstr : '')
 
 
   //Terraform
