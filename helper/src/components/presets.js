@@ -52,7 +52,7 @@ export function Presets({ description, icon, sections, selectedValues, updateSel
       { sections.map(s => [
         <Separator key={`sep${s.key}`} styles={SeparatorStyle}><span style={{"color": "rgb(0, 103, 184)"}}>{s.sectionTitle}</span></Separator>,
 
-        <Stack  key={`st${s.key}`} horizontal tokens={{ childrenGap: 10 }}>
+        <Stack key={`st${s.key}`} horizontal tokens={{ childrenGap: 10 }}>
             <Text variant="mediumPlus" styles={{ root: { marginBottom: "15px" } }} >{s.sectionDescription}</Text>
             { s.sectionMoreInfoLink != null &&
             <DefaultButton
@@ -79,20 +79,36 @@ export function Presets({ description, icon, sections, selectedValues, updateSel
                         <Checkbox inputProps={{ 'data-testid': `portalnav-presets-${s.key}-${c.key}-Checkbox`}} checked={selectedValues[s.key] === c.key} label={c.title} styles={{ label: { fontWeight: selectedValues[s.key] === c.key ? '500' : 'normal' } }} />
                     </DocumentCardDetails>
 
-                    {c.imageSrc &&
-                        <DocumentCardImage styles={{ root: { backgroundColor: bodyBackground } }} imageSrc={c.imageSrc} height={150} imageFit={ImageFit.centerContain} />
-                    }
-                    {c.icon &&
-                        <DocumentCardPreview styles={{ root: { backgroundColor: bodyBackground, borderBottom: '0' } }} previewImages={[{
-                            previewIconProps: {
-                                iconName: c.icon, className: iconClass
-                            }, height: 100
-                        },]} />
-                    }
+                    <Stack key={`sum${s.key}`} height={'100px'} enableScopedSelectors horizontal tokens={{ childrenGap: 10  }}>
+                        <Stack.Item align="start" grow={false}>
+                            {c.imageSrc &&
+                                <DocumentCardImage styles={{ root: { backgroundColor: bodyBackground } }}
+                                imageSrc={c.imageSrc}
+                                height={150}
+                                imageFit={ImageFit.centerContain} />
+                            }
+                            {c.icon &&
+                                <DocumentCardPreview
+                                    styles={{ root: { backgroundColor: bodyBackground, borderBottom: '0' } }}
+                                    width={'80px'}
+                                    previewImages={[{
+                                        previewIconProps: {
+                                            iconName: c.icon, className: iconClass
+                                        }, height: 100, width: 100
+                                    },]}
+                                />
+                            }
+                        </Stack.Item>
 
-                    {c.description.title &&
-                        <DocumentCardTitle showAsSecondaryTitle={true} shouldTruncate={false} title={c.description.title}/>
-                    }
+                        {c.description.title &&
+                            <Stack.Item styles={{root: {paddingTop: 10, paddingRight:10}}} height={100}>
+                                <text >
+                                    {c.description.title}
+                                </text>
+                            </Stack.Item>
+                        }
+                    </Stack>
+
                     <div style={{ padding: "8px 16px" }} >
                         <Text>
                             {c.description.titleWarning &&

@@ -5,64 +5,6 @@
         "icon": "Group",
         "sections": [
             {
-                "key": "env",
-                "sectionTitle": "Enviroment Type",
-                "cards": [
-                    {
-                        "key": "Dev",
-                        "title": "Development",
-                        "description": {
-                            "bulets": [
-                                {"description": "Single pool, single node"},
-                                {"description": "Daily, automated start/stop"}
-                            ]
-                        },
-                        "icon": "code",
-                        "values": {
-                            "cluster": {
-                                "SystemPoolType": "none",
-                                "AksPaidSkuForSLA": false,
-                                "availabilityZones": "no",
-                                "agentCount": 1
-                            },
-                            "addons": {
-                                "automation": "workingday",
-                                "registry": "Basic"
-                            }
-                        }
-                    },
-                    {
-                        "key": "prod",
-                        "title": "Well Architected",
-                        "default": true,
-                        "description": {
-                            "bulets": [
-                                {"description": "SLA"},
-                                {"description": "Availability Zones"},
-                                {"description": "3 Node user pool"}
-                            ]
-                        },
-                        "icon": "server",
-                        "values": {
-                            "deploy": {
-                                "workloadDeployCommands": []
-                            },
-                            "cluster": {
-                                "SystemPoolType": "Standard",
-                                "AksPaidSkuForSLA": true,
-                                "availabilityZones": "yes",
-                                "agentCount": 3
-                            },
-                            "addons": {
-                                "registry": "Premium",
-                                "enableACRTrustPolicy": true,
-                                "acrUntaggedRetentionPolicyEnabled": true
-                            }
-                        }
-                    }
-                ]
-            },
-            {
                 "key": "ops",
                 "sectionTitle": "Operations Principles",
                 "cards": [
@@ -137,7 +79,7 @@
                         "default": true,
                         "title": "I want a managed environment",
                         "description": {
-                            "title": "I'd like my cluster to be auto-managed by Azure for upgrades and scaling, and use Azure provided managed addons to create an full environment with the minimum of operational requirements",
+                            "title": "Auto managed by Azure for upgrades and scaling, using Azure provided managed addons for minimmal operational burden",
                             "bulets": [
                                 {
                                     "description": "Cluster auto-scaler",
@@ -445,6 +387,78 @@
                                 "vnetprivateend": true,
                                 "afw": true,
                                 "bastion": true
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "key": "env",
+                "sectionTitle": "Scale",
+                "cards": [
+                    {
+                        "key": "Dev",
+                        "title": "Development",
+                        "description": {
+                            "title": "Leverages a cost-optimised configuration for AKS development teams",
+                            "bulets": [
+                                {"description": "Single pool, single node"},
+                                {"description": "VM Compute: D2s v3 w/managed disk"},
+                                {"description": "Automated Daily start/stop"},
+                                {"description": "AzMonitor: Reduced logging and monitoring"},
+                                {"description": "AzMonitor: Daily Log cap"}
+                            ]
+                        },
+                        "icon": "code",
+                        "values": {
+                            "cluster": {
+                                "SystemPoolType": "none",
+                                "AksPaidSkuForSLA": false,
+                                "availabilityZones": "no",
+                                "agentCount": 1,
+                                "containerLogsV2BasicLogs" : true,
+                                "logDataCap" : 2,
+                                "agentVMSize": "Standard_D2s_v3",
+                                "osDiskType" : "Managed",
+                                "osDiskSizeGB" : 32
+                            },
+                            "addons": {
+                                "automation": "workingday"
+                            }
+                        }
+                    },
+                    {
+                        "key": "prod",
+                        "title": "Production grade",
+                        "default": true,
+                        "description": {
+                            "title": "Creates a more comprehensive AKS environment",
+                            "bulets": [
+                                {"description": "SLA"},
+                                {"description": "VM Compute: DS3 v2 w/ephemeral OS disk"},
+                                {"description": "Availability Zones"},
+                                {"description": "3 Node minimum (user pool)"},
+                                {"description": "NAT Gateway Egress"}
+                            ]
+                        },
+                        "icon": "server",
+                        "values": {
+                            "deploy": {
+                                "workloadDeployCommands": []
+                            },
+                            "cluster": {
+                                "SystemPoolType": "Standard",
+                                "AksPaidSkuForSLA": true,
+                                "availabilityZones": "yes",
+                                "agentCount": 3,
+                                "agentVMSize": "Standard_DS3_v2",
+                                "osDiskType" : "Ephemeral"
+                            },
+                            "addons": {
+                                "registry": "Premium",
+                                "enableACRTrustPolicy": true,
+                                "acrUntaggedRetentionPolicyEnabled": true,
+                                "automation": "none"
                             }
                         }
                     }

@@ -77,6 +77,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(deploy.enableTelemetry !== defaults.deploy.enableTelemetry && {enableTelemetry: deploy.enableTelemetry }),
     ...(addons.monitor === "aci" && {
         omsagent: true, retentionInDays: addons.retentionInDays,
+        ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs}),
         ...( addons.logDataCap !== defaults.addons.logDataCap && {logDataCap: addons.logDataCap }),
         ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts })
        }),
@@ -156,7 +157,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
     ...(addons.monitor === "aci" && {
-       ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs}),
        ...(addons.enableSysLog !== defaults.addons.enableSysLog && {enableSysLog: addons.enableSysLog })
     })
   }
