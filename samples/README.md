@@ -1,6 +1,18 @@
 # Samples
 
+## Common Deployment Scenarios
+
+These are the 2 most common scenarios & configurations AKS Construction is used for. Each has an Azure Portal UI experience for fine tuning the deployment parameters
+
+Scenario | Description | Deploy
+-------- | ----------- | ------
+Dev | A fully featured Kubernetes environment using Azure CNI's Overlay network, Cillium backplane and a minimal set of recommended addOns. |
+Well Architected | A secure cluster environment that closely matches then Azure Well Architected Framework guidance for Production grade |
+
+## Advanced scenarios
+
 These samples demonstrate relevant Bicep patterns and show how to best consume the bicep modules from this project in your own deployments.
+
 
 Filename | Description | Deploy
 -------- | ----------- | -----------
