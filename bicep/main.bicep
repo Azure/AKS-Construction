@@ -5,6 +5,7 @@ param location string = resourceGroup().location
 @minLength(3)
 @maxLength(20)
 @description('Used to name all resources')
+@metadata({category: 'Basic'})
 param resourceName string
 
 /*
@@ -30,15 +31,19 @@ Resource sections
 //Networking can either be one of: custom / byo / default
 
 @description('Are you providing your own vNet CIDR blocks')
+@metadata({category: 'Networking', portalUi: { adv: { visible: false, defaultOverride: 'true'}}})
 param custom_vnet bool = false
 
 @description('Full resource id path of an existing subnet to use for AKS')
+@metadata({category: 'Networking', portalUiVisibility: 'hidden'})
 param byoAKSSubnetId string = ''
 
 @description('Full resource id path of an existing pod subnet to use for AKS')
+@metadata({category: 'Networking'})
 param byoAKSPodSubnetId string = ''
 
 @description('Full resource id path of an existing subnet to use for Application Gateway')
+@metadata({category: 'Networking'})
 param byoAGWSubnetId string = ''
 
 @description('The name of an existing User Assigned Identity to use for the AKS Control Plane (in the same resouce group), requires rbac assignments to be done outside of this template')
@@ -1785,9 +1790,26 @@ resource telemetrydeployment 'Microsoft.Resources/deployments@2022-09-01' = if (
 /__/     \__\ \______/      |__|      \______/  |__|  |__| /__/     \__\  |__|     |__|  \______/  |__| \__| */
 
 
-param automationaccount bool = false
+@allowed(['', 'Weekday', 'Day'])
+@metadata({category: 'Automation'})
+param automationAccountScheduledStartStop string = ''
 
-module AksStartStop 'automationrunbook/automation.bicep' = if (automationaccount) {
+@description('The IANA time zone of the automation account')
+@metadata({category: 'Automation'})
+param automationTimeZone string = 'Etc/UTC'
+
+@metadata({category: 'Automation'})
+param automationStartHour int = 0
+
+@minValue(0)
+@maxValue(23)
+@metadata({category: 'Automation'})
+@description('When to stop the cluster')
+param automationStopHour int = 0
+
+var automationFrequency = automationAccountScheduledStartStop == 'Day' ? 'Day' : 'Weekday'
+
+module AksStartStop 'automationrunbook/automation.bicep' = if (!empty(automationAccountScheduledStartStop)) {
   name: '${deployment().name}-Automation'
   params: {
     location: location
@@ -1795,9 +1817,22 @@ module AksStartStop 'automationrunbook/automation.bicep' = if (automationaccount
     runbookName: 'aks-cluster-changestate'
     runbookUri: 'https://raw.githubusercontent.com/finoops/aks-cluster-changestate/main/aks-cluster-changestate.ps1'
     runbookType: 'Script'
+    timezone: automationTimeZone
+    schedulesToCreate : [
+      {
+        frequency: automationFrequency
+        hour: automationStartHour
+        minute: 0
+      }
+      {
+        frequency: automationFrequency
+        hour: automationStopHour
+        minute:0
+      }
+    ]
     runbookJobSchedule: [
       {
-        scheduleName: 'Weekday - 09:00'
+        scheduleName: '${automationFrequency} - ${automationStartHour}:00'
         parameters: {
           ResourceGroupName : resourceGroup().name
           AksClusterName : aks.name
@@ -1805,7 +1840,7 @@ module AksStartStop 'automationrunbook/automation.bicep' = if (automationaccount
         }
       }
       {
-        scheduleName: 'Day - 19:00'
+        scheduleName: '${automationFrequency} - ${automationStopHour}:00'
         parameters: {
           ResourceGroupName : resourceGroup().name
           AksClusterName : aks.name

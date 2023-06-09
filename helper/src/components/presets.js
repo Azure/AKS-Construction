@@ -102,9 +102,9 @@ export function Presets({ description, icon, sections, selectedValues, updateSel
 
                         {c.description.title &&
                             <Stack.Item styles={{root: {paddingTop: 10, paddingRight:10}}} height={100}>
-                                <text >
+                                <Text>
                                     {c.description.title}
-                                </text>
+                                </Text>
                             </Stack.Item>
                         }
                     </Stack>
