@@ -394,17 +394,17 @@
             },
             {
                 "key": "env",
-                "sectionTitle": "Scale",
+                "sectionTitle": "Workload Type",
                 "cards": [
                     {
                         "key": "Dev",
-                        "title": "Development",
+                        "title": "Non-Production Workloads",
                         "description": {
                             "title": "Leverages a cost-optimised configuration for AKS development teams",
                             "bulets": [
                                 {"description": "Single pool, single node"},
                                 {"description": "VM Compute: D2s v3 w/managed disk"},
-                                {"description": "Automated Daily start/stop"},
+                                {"description": "Automated Daily cluster start/stop"},
                                 {"description": "AzMonitor: Reduced logging and monitoring"},
                                 {"description": "AzMonitor: Daily Log cap"}
                             ]
@@ -423,21 +423,21 @@
                                 "osDiskSizeGB" : 32
                             },
                             "addons": {
-                                "automation": "workingday"
+                                "automation": "Weekday"
                             }
                         }
                     },
                     {
                         "key": "prod",
-                        "title": "Production grade",
+                        "title": "Production workloads",
                         "default": true,
                         "description": {
-                            "title": "Creates a more comprehensive AKS environment",
+                            "title": "Creates a comprehensive AKS configuration for higher reliability and availability",
                             "bulets": [
-                                {"description": "SLA"},
+                                {"description": "3 Node minimum (user pool)"},
                                 {"description": "VM Compute: DS3 v2 w/ephemeral OS disk"},
                                 {"description": "Availability Zones"},
-                                {"description": "3 Node minimum (user pool)"},
+                                {"description": "SLA"},
                                 {"description": "NAT Gateway Egress"}
                             ]
                         },
@@ -458,7 +458,7 @@
                                 "registry": "Premium",
                                 "enableACRTrustPolicy": true,
                                 "acrUntaggedRetentionPolicyEnabled": true,
-                                "automation": "none"
+                                "automation": ""
                             }
                         }
                     }
