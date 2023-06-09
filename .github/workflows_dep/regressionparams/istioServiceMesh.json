@@ -3,10 +3,10 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceName": {
-      "value": "az-k8s-osmd"
+      "value": "az-k8s-ist"
     },
-    "openServiceMeshAddon" : {
-        "value" : true
+    "serviceMeshProfile" : {
+        "value" : "Istio"
     }
   }
 }

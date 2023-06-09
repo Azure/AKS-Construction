@@ -71,7 +71,7 @@
             "fluxGitOpsAddon": false,
             "networkPolicy": "none",
             "kedaAddon": false,
-            "openServiceMeshAddon": false,
+            "serviceMeshProfile": "",
             "blobCSIDriver": false,
             "fileCSIDriver": true,
             "diskCSIDriver": true,
