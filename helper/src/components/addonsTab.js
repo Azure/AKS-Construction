@@ -437,6 +437,51 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             }
 
             <Stack.Item align="start">
+                <Label required={true}>Azure Automation</Label>
+                <MessageBar>Creates an Azure Automation Account responsible for stopping and starting the AKS Cluster to save on compute costs in development environments.</MessageBar>
+                <ChoiceGroup
+                    styles={{ root: { marginLeft: '50px' } }}
+                    selectedKey={addons.automationAccountScheduledStartStop}
+                    options={[
+                        { key: '', text: 'No, I do not require automation to stop the cluster ' },
+                        { key: 'Weekday', text: 'Yes, start and stop the cluster on Weekdays' },
+                        { key: 'Day', text: 'Yes, start and stop the cluster every day' }
+                    ]}
+                    onChange={(ev, { key }) => updateFn("automationAccountScheduledStartStop", key)}
+                />
+
+                {addons.automationAccountScheduledStartStop !== '' &&
+                <Stack.Item align="center" styles={{ root: { marginLeft: '100px', width:'250px'}}}>
+                    <MessageBar>Only supports 'on the hour' schedules. 24 hour format.</MessageBar>
+
+                    <SpinButton
+                        label="Start time (hour)"
+                        value={addons.automationStartHour}
+                        onChange={(ev, v) => updateFn("automationStartHour", v)}
+                        min={0}
+                        max={23}
+                        step={1}
+                        incrementButtonAriaLabel="Increase value by 1"
+                        decrementButtonAriaLabel="Decrease value by 1"
+                        styles={{ root: { marginTop: '15px'}}}
+                    />
+
+                    <SpinButton
+                        label="Stop time (hour)"
+                        value={addons.automationStopHour}
+                        onChange={(ev, v) => updateFn("automationStopHour", v)}
+                        min={0}
+                        max={23}
+                        step={1}
+                        incrementButtonAriaLabel="Increase value by 1"
+                        decrementButtonAriaLabel="Decrease value by 1"
+                        styles={{ root: { marginTop: '15px'}}}
+                    />
+                </Stack.Item>
+                }
+            </Stack.Item>
+
+            <Stack.Item align="start">
                 <Label required={true}>
                     CSI Blob storage: Enable BlobFuse or NFS v3 access to Azure Blob Storage
                     (<a target="_new" href="https://docs.microsoft.com/azure/aks/azure-blob-csi">docs</a>)

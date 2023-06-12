@@ -423,7 +423,7 @@
                                 "osDiskSizeGB" : 32
                             },
                             "addons": {
-                                "automation": "Weekday"
+                                "automationAccountScheduledStartStop": "Weekday"
                             }
                         }
                     },
@@ -458,7 +458,7 @@
                                 "registry": "Premium",
                                 "enableACRTrustPolicy": true,
                                 "acrUntaggedRetentionPolicyEnabled": true,
-                                "automation": ""
+                                "automationAccountScheduledStartStop": ""
                             }
                         }
                     }

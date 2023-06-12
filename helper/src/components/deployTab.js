@@ -122,7 +122,13 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon}),
     ...(addons.daprAddon !== defaults.addons.daprAddon && { daprAddon: addons.daprAddon }),
     ...(addons.daprAddonHA !== defaults.addons.daprAddonHA && { daprAddonHA: addons.daprAddonHA }),
-    ...(addons.sgxPlugin !== defaults.addons.sgxPlugin && { sgxPlugin: addons.sgxPlugin })
+    ...(addons.sgxPlugin !== defaults.addons.sgxPlugin && { sgxPlugin: addons.sgxPlugin }),
+    ...(addons.automationAccountScheduledStartStop !== defaults.addons.automationAccountScheduledStartStop && {
+      ...({automationAccountScheduledStartStop: addons.automationAccountScheduledStartStop}),
+      ...(addons.automationTimeZone != defaults.addons.automationTimeZone && {automationTimeZone: addons.automationTimeZone}),
+      ...(addons.automationStartHour != defaults.addons.automationStartHour && {automationStartHour: addons.automationStartHour}),
+      ...(addons.automationStopHour != defaults.addons.automationStopHour && {automationStopHour: addons.automationStopHour}),
+    })
   }
 
   const preview_params = {
