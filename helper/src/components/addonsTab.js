@@ -451,7 +451,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 />
 
                 {addons.automationAccountScheduledStartStop !== '' &&
-                <Stack.Item align="center" styles={{ root: { marginLeft: '100px', width:'250px'}}}>
+                <Stack.Item align="center" styles={{ root: { marginLeft: '100px', width:'275px'}}}>
                     <MessageBar>Only supports 'on the hour' schedules. 24 hour format, UTC Time zone.</MessageBar>
 
                     <SpinButton
