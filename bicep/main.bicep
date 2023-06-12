@@ -5,7 +5,6 @@ param location string = resourceGroup().location
 @minLength(3)
 @maxLength(20)
 @description('Used to name all resources')
-@metadata({category: 'Basic'})
 param resourceName string
 
 /*
@@ -31,19 +30,15 @@ Resource sections
 //Networking can either be one of: custom / byo / default
 
 @description('Are you providing your own vNet CIDR blocks')
-@metadata({category: 'Networking', portalUi: { adv: { visible: false, defaultOverride: 'true'}}})
 param custom_vnet bool = false
 
 @description('Full resource id path of an existing subnet to use for AKS')
-@metadata({category: 'Networking', portalUiVisibility: 'hidden'})
 param byoAKSSubnetId string = ''
 
 @description('Full resource id path of an existing pod subnet to use for AKS')
-@metadata({category: 'Networking'})
 param byoAKSPodSubnetId string = ''
 
 @description('Full resource id path of an existing subnet to use for Application Gateway')
-@metadata({category: 'Networking'})
 param byoAGWSubnetId string = ''
 
 @description('The name of an existing User Assigned Identity to use for the AKS Control Plane (in the same resouce group), requires rbac assignments to be done outside of this template')
@@ -1807,8 +1802,8 @@ resource telemetrydeployment 'Microsoft.Resources/deployments@2022-09-01' = if (
  /  _____  \ |  `--'  |     |  |     |  `--'  | |  |  |  |  /  _____  \   |  |     |  | |  `--'  | |  |\   |
 /__/     \__\ \______/      |__|      \______/  |__|  |__| /__/     \__\  |__|     |__|  \______/  |__| \__| */
 
-
 @allowed(['', 'Weekday', 'Day'])
+@description('Creates an Azure Automation Account to provide scheduled start and stop of the cluster')
 @metadata({category: 'Automation'})
 param automationAccountScheduledStartStop string = ''
 
@@ -1816,14 +1811,17 @@ param automationAccountScheduledStartStop string = ''
 @metadata({category: 'Automation'})
 param automationTimeZone string = 'Etc/UTC'
 
+@minValue(0)
+@maxValue(23)
+@description('When to start the cluster')
 @metadata({category: 'Automation'})
-param automationStartHour int = 0
+param automationStartHour int = 8
 
 @minValue(0)
 @maxValue(23)
-@metadata({category: 'Automation'})
 @description('When to stop the cluster')
-param automationStopHour int = 0
+@metadata({category: 'Automation'})
+param automationStopHour int = 19
 
 var automationFrequency = automationAccountScheduledStartStop == 'Day' ? 'Day' : 'Weekday'
 
@@ -1850,7 +1848,7 @@ module AksStartStop 'automationrunbook/automation.bicep' = if (!empty(automation
     ]
     runbookJobSchedule: [
       {
-        scheduleName: '${automationFrequency} - ${automationStartHour}:00'
+        scheduleName: '${automationFrequency} - ${padLeft(automationStartHour, 2, '0')}:00'
         parameters: {
           ResourceGroupName : resourceGroup().name
           AksClusterName : aks.name
@@ -1858,7 +1856,7 @@ module AksStartStop 'automationrunbook/automation.bicep' = if (!empty(automation
         }
       }
       {
-        scheduleName: '${automationFrequency} - ${automationStopHour}:00'
+        scheduleName: '${automationFrequency} - ${padLeft(automationStopHour, 2, '0')}:00'
         parameters: {
           ResourceGroupName : resourceGroup().name
           AksClusterName : aks.name
@@ -1869,5 +1867,13 @@ module AksStartStop 'automationrunbook/automation.bicep' = if (!empty(automation
   }
 }
 
+@description('Gives the Automation Account permission to stop/start the AKS cluster')
+module aksAutomationRbac 'automationrunbook/aksRbac.bicep' = if (!empty(automationAccountScheduledStartStop)) {
+  name: '${deployment().name}-AutomationRbac'
+  params: {
+    aksName: aks.name
+    principalId: AksStartStop.outputs.automationAccountPrincipalId
+  }
+}
 
 //ACSCII Art link : https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=Star%20Wars&text=changeme
