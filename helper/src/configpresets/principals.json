@@ -426,8 +426,7 @@
                                 "automationAccountScheduledStartStop": "Weekday"
                             },
                             "net": {
-                                "createNatGateway": false,
-                                "vnetprivateend": true
+                                "createNatGateway": false
                             }
                         }
                     },
