@@ -24,9 +24,9 @@ export function PreviewDialog({previewLink}) {
       dialogContentProps={dialogContentProps}
       >
       <DialogFooter>
-      <PrimaryButton onClick={toggleHideDialog} text="Close" />
-      <DefaultButton onClick={_openLink} text="Open Link in New Tab" />
-    </DialogFooter>
+        <PrimaryButton onClick={toggleHideDialog} text="Close" />
+        <DefaultButton onClick={_openLink} text="Open Link in New Tab" />
+      </DialogFooter>
       </Dialog>
     </div>
   );

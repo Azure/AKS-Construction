@@ -424,6 +424,10 @@
                             },
                             "addons": {
                                 "automationAccountScheduledStartStop": "Weekday"
+                            },
+                            "net": {
+                                "createNatGateway": false,
+                                "vnetprivateend": true
                             }
                         }
                     },
@@ -455,10 +459,11 @@
                                 "osDiskType" : "Ephemeral"
                             },
                             "addons": {
-                                "registry": "Premium",
-                                "enableACRTrustPolicy": true,
-                                "acrUntaggedRetentionPolicyEnabled": true,
                                 "automationAccountScheduledStartStop": ""
+                            },
+                            "net": {
+                                "createNatGateway": true,
+                                "aksOutboundTrafficType": "userAssignedNATGateway"
                             }
                         }
                     }

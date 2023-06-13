@@ -454,28 +454,18 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Stack.Item align="center" styles={{ root: { marginLeft: '100px', width:'275px'}}}>
                     <MessageBar>Only supports 'on the hour' schedules. 24 hour format, UTC Time zone.</MessageBar>
 
-                    <SpinButton
-                        label="Start time (hour)"
-                        value={addons.automationStartHour}
-                        onChange={(ev, v) => updateFn("automationStartHour", v)}
-                        min={0}
-                        max={23}
-                        step={1}
-                        incrementButtonAriaLabel="Increase value by 1"
-                        decrementButtonAriaLabel="Decrease value by 1"
-                        styles={{ root: { marginTop: '15px'}}}
+                    <Dropdown
+                        styles={{ root: { marginBottom: '20px' } }}
+                        label="Start time"
+                        onChange={(ev, { key }) => updateFn("automationStartHour", key)} selectedKey={addons.automationStartHour}
+                        options={[...Array(24).keys()].map(i => {return {key: i, text: `${i}:00`}})}
                     />
 
-                    <SpinButton
-                        label="Stop time (hour)"
-                        value={addons.automationStopHour}
-                        onChange={(ev, v) => updateFn("automationStopHour", v)}
-                        min={0}
-                        max={23}
-                        step={1}
-                        incrementButtonAriaLabel="Increase value by 1"
-                        decrementButtonAriaLabel="Decrease value by 1"
-                        styles={{ root: { marginTop: '15px'}}}
+                    <Dropdown
+                        styles={{ root: { marginBottom: '20px' } }}
+                        label="Stop time"
+                        onChange={(ev, { key }) => updateFn("automationStopHour", key)} selectedKey={addons.automationStopHour}
+                        options={[...Array(24).keys()].map(i => {return {key: i, text: `${i}:00`}})}
                     />
                 </Stack.Item>
                 }
