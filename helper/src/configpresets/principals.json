@@ -426,7 +426,8 @@
                                 "automationAccountScheduledStartStop": "Weekday"
                             },
                             "net": {
-                                "createNatGateway": false
+                                "createNatGateway": false,
+                                "aksOutboundTrafficType": "loadBalancer"
                             }
                         }
                     },
