@@ -77,6 +77,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(deploy.enableTelemetry !== defaults.deploy.enableTelemetry && {enableTelemetry: deploy.enableTelemetry }),
     ...(addons.monitor === "aci" && {
         omsagent: true, retentionInDays: addons.retentionInDays,
+        ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs}),
         ...( addons.logDataCap !== defaults.addons.logDataCap && {logDataCap: addons.logDataCap }),
         ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts })
        }),
@@ -121,7 +122,13 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.fluxGitOpsAddon !== defaults.addons.fluxGitOpsAddon && { fluxGitOpsAddon: addons.fluxGitOpsAddon}),
     ...(addons.daprAddon !== defaults.addons.daprAddon && { daprAddon: addons.daprAddon }),
     ...(addons.daprAddonHA !== defaults.addons.daprAddonHA && { daprAddonHA: addons.daprAddonHA }),
-    ...(addons.sgxPlugin !== defaults.addons.sgxPlugin && { sgxPlugin: addons.sgxPlugin })
+    ...(addons.sgxPlugin !== defaults.addons.sgxPlugin && { sgxPlugin: addons.sgxPlugin }),
+    ...(addons.automationAccountScheduledStartStop !== defaults.addons.automationAccountScheduledStartStop && {
+      ...({automationAccountScheduledStartStop: addons.automationAccountScheduledStartStop}),
+      ...(addons.automationTimeZone != defaults.addons.automationTimeZone && {automationTimeZone: addons.automationTimeZone}),
+      ...(addons.automationStartHour != defaults.addons.automationStartHour && {automationStartHour: addons.automationStartHour}),
+      ...(addons.automationStopHour != defaults.addons.automationStopHour && {automationStopHour: addons.automationStopHour}),
+    })
   }
 
   const preview_params = {
@@ -156,7 +163,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
     ...(addons.monitor === "aci" && {
-       ...(addons.containerLogsV2BasicLogs && { containerLogsV2BasicLogs: addons.containerLogsV2BasicLogs}),
        ...(addons.enableSysLog !== defaults.addons.enableSysLog && {enableSysLog: addons.enableSysLog })
     })
   }
