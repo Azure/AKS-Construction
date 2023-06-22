@@ -1872,7 +1872,7 @@ module aksAutomationRbac 'automationrunbook/aksRbac.bicep' = if (!empty(automati
   name: '${deployment().name}-AutomationRbac'
   params: {
     aksName: aks.name
-    principalId: AksStartStop.outputs.automationAccountPrincipalId
+    principalId: !empty(automationAccountScheduledStartStop) ? AksStartStop.outputs.automationAccountPrincipalId : ''
   }
 }
 
