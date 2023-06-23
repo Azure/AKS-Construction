@@ -112,9 +112,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
       })
     }),
-    ...(net.vnet_opt !== "default" && {
-      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
-    }),
+    ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
     ...(cluster.keyVaultKms !== defaults.cluster.keyVaultKms && {
       ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
       ...(cluster.keyVaultKms === "byoprivate" && cluster.keyVaultKmsByoKeyId !== '' &&  cluster.keyVaultKmsByoRG !== '' && {keyVaultKmsByoKeyId: cluster.keyVaultKmsByoKeyId, keyVaultKmsByoRG: cluster.keyVaultKmsByoRG}),
