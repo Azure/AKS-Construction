@@ -1059,8 +1059,7 @@ param AutoscaleProfile object = {
 
 @allowed([
   'loadBalancer'
-  'managedNATGateway'
-  'userAssignedNATGateway'
+  'natGateway'
   'userDefinedRouting'
 ])
 @description('Outbound traffic type for the egress traffic of your cluster')
@@ -1120,6 +1119,8 @@ var serviceMeshProfileObj = {
   }
   mode: 'Istio'
 }
+
+var outboundTrafficType = createNatGateway   ? ( custom_vnet ? 'userAssignedNATGateway' : 'managedNATGateway' )  : aksOutboundTrafficType
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
@@ -1291,7 +1292,7 @@ var aksProperties = union({
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
-    outboundType: aksOutboundTrafficType
+    outboundType: outboundTrafficType
     ebpfDataplane: networkPlugin=='azure' ? ebpfDataplane : ''
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
@@ -1326,14 +1327,14 @@ var aksProperties = union({
     restrictionLevel: restrictionLevelNodeResourceGroup
   }
 },
-aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
+outboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
 keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {},
 !empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {},
 !empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-03-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-04-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
