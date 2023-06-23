@@ -135,12 +135,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const preview_params = {
     ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled !== defaults.addons.acrUntaggedRetentionPolicyEnabled && { acrUntaggedRetentionPolicyEnabled: addons.acrUntaggedRetentionPolicyEnabled}),
     ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled && addons.acrUntaggedRetentionPolicy !== defaults.addons.acrUntaggedRetentionPolicy && { acrUntaggedRetentionPolicy: addons.acrUntaggedRetentionPolicy}),
-    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNATGateway' && {
+    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'natGateway' && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
       ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
     }),
-    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'userAssignedNATGateway' && {
+    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'natGateway' && {
       ...({createNatGateway: true}),
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),

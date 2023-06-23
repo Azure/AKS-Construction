@@ -9,7 +9,7 @@
       "value": "Standard_DS3_v2"
     },
     "aksOutboundTrafficType" : {
-      "value": "managedNATGateway"
+      "value": "natGateway"
     },
     "natGwIpCount" : {
       "value": 3

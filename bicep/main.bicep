@@ -1120,7 +1120,7 @@ var serviceMeshProfileObj = {
   mode: 'Istio'
 }
 
-var outboundTrafficType = createNatGateway   ? ( custom_vnet ? 'userAssignedNATGateway' : 'managedNATGateway' )  : aksOutboundTrafficType
+var outboundTrafficType = aksOutboundTrafficType=='natGateway' ? ( custom_vnet ? 'userAssignedNATGateway' : 'managedNATGateway' )  : aksOutboundTrafficType
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
