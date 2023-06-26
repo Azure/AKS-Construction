@@ -1,9 +1,10 @@
 import React from "react";
 import { useBoolean } from "@fluentui/react-hooks";
-import { Dialog, DialogType, DialogFooter } from '@fluentui/react/lib/Dialog';
-import { PrimaryButton,DefaultButton } from '@fluentui/react/lib/Button';
+import { Dialog, DialogType, DialogFooter } from "@fluentui/react/lib/Dialog";
+import { PrimaryButton, DefaultButton } from "@fluentui/react/lib/Button";
 
-export function PreviewDialog({previewLink}) {
+export function PreviewDialog({ previewLink, onClose, show}) {
+  // const [hideDialog, { toggle: toggleHideDialog }] = useBoolean(false);
 
   const [hideDialog, { toggle: toggleHideDialog }] = useBoolean(false);
 
@@ -18,6 +19,13 @@ export function PreviewDialog({previewLink}) {
     window.open(`${previewLink}`, '_blank', 'noreferrer');
   }
 
+  function _openLink() {
+    window.open(`${previewLink}`, "_blank", "noreferrer");
+  }
+
+  if(!show){
+    return null;
+}
   return (
     <div>
       <Dialog

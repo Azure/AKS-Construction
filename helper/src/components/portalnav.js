@@ -14,6 +14,7 @@ import AppsTab from './appsTab'
 
 import { appInsights } from '../index.js'
 import { initializeIcons } from '@fluentui/react/lib/Icons';
+import { PreviewDialog } from './previewDialog';
 initializeIcons();
 
 
@@ -118,6 +119,14 @@ export default function PortalNav({ config }) {
   const [tabValues, setTabValues] = useState(initTabValues(selected, defaults, true))
   // Field Selections - Used to keep track of the last FieldSelections monitored by App Insights to prevent logging the same entry continuously
   const [lastAIUpdated, setLastAIUpdated] = useState ({tab: null, field: null})
+  const [show, setShow] = useState(false)
+  const [previewLink, setPreviewLink] = useState("")
+
+  const showModal = (e,previewLink) => {
+    setShow(current => !current);
+    setPreviewLink(previewLink)
+
+  };
 
   function initSelected (currentPreset) {
     return {
@@ -439,6 +448,8 @@ export default function PortalNav({ config }) {
   return (
     <ThemeProvider theme={{ semanticColors, palette }}>
       <main id="mainContent" className="wrapper">
+
+      <PreviewDialog onClose={showModal} show={show} previewLink={previewLink}></PreviewDialog>
         <Header presets={presets} selectedPreset={selected.preset} setPresets={presetChanged} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
@@ -455,7 +466,7 @@ export default function PortalNav({ config }) {
               <ClusterTab defaults={defaults} tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
             </PivotItem>
             <PivotItem headerText={tabLabels.addons} itemKey="addons" onRenderItemLink={(a, b) => _customRenderer('addons', a, b)} >
-              <AddonsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value, previewLink) => mergeState("addons", field, value, previewLink)} invalidArray={invalidArray['addons']} />
+              <AddonsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("addons", field, value)} invalidArray={invalidArray['addons']} showModal={showModal} />
             </PivotItem>
             <PivotItem headerText={tabLabels.net} itemKey="net" onRenderItemLink={(a, b) => _customRenderer('net', a, b)}>
               <NetworkTab defaults={defaults} tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("net", field, value)} invalidArray={invalidArray['net']} />
