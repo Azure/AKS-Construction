@@ -6,7 +6,7 @@ import { PrimaryButton, DefaultButton } from "@fluentui/react/lib/Button";
 import { TextField,Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, SpinButton } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 
-export default function ({ tabValues, updateFn, featureFlag, invalidArray,showModal }) {
+export default function ({ tabValues, updateFn, featureFlag, invalidArray,showPreviewModal }) {
     const { cluster, addons, net } = tabValues
     const osmFeatureFlag = featureFlag.includes('osm')
     const wiFeatureFlag = featureFlag.includes('workloadId')
@@ -64,7 +64,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray,showMo
                 <Checkbox
                 disabled={addons.registry !== "Premium"}
                 checked={addons.acrUntaggedRetentionPolicyEnabled}
-                onChange={(ev, v) => {updateFn("acrUntaggedRetentionPolicyEnabled", v); showModal(ev,"https://learn.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy"); }}
+                onChange={(ev, v) => {updateFn("acrUntaggedRetentionPolicyEnabled", v); showPreviewModal(ev,"https://learn.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy"); }}
                 label={<Text>Create untagged image retention policy (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>)
                  </Text>} />
                 <MessageBar styles={{ root: { marginTop: '10px', width: '700px' } }} messageBarType={MessageBarType.warning}>Deleting untagged images will remove them from your ACR after a defined period (<a target="_new" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy">docs</a>) (*preview)</MessageBar>
@@ -110,7 +110,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray,showMo
                         { key: 'nginx', text: 'Nginx ingress controller' },
                         { key: 'traefik', text: 'Traefik ingress controller' }
                     ]}
-                    onChange={(ev, { key }) => {updateFn("ingress", key); key === "warNginx" && showModal(ev,"https://docs.microsoft.com/en-us/azure/aks/web-app-routing"); }}
+                    onChange={(ev, { key }) => {updateFn("ingress", key); key === "warNginx" && showPreviewModal(ev,"https://docs.microsoft.com/en-us/azure/aks/web-app-routing"); }}
                 />
                 {hasError(invalidArray, 'ingress') &&
                     <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
@@ -298,7 +298,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray,showMo
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
 
-                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableSysLog} onChange={(ev, v) => {updateFn("enableSysLog", v);showModal(ev,"https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2");}} label={<Text> Enable collection of syslogs in Container Insights and send them to the Log Analytics workspace (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-syslog">docs *preview</Link>) </Text>} />
+                    <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.enableSysLog} onChange={(ev, v) => {updateFn("enableSysLog", v);showPreviewModal(ev,"https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2");}} label={<Text> Enable collection of syslogs in Container Insights and send them to the Log Analytics workspace (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-syslog">docs *preview</Link>) </Text>} />
                 </Stack.Item>
             }
 
@@ -512,7 +512,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray,showMo
                     KEDA : Enable Kubernetes Event-driven Autoscaling (KEDA) on the AKS Cluster (<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/keda-deploy-add-on-arm#prerequisites">*preview</a>)
                     (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/keda-about">docs</a>)
                 </Label>
-                <Checkbox styles={{ root: { marginLeft: '50px' } }} checked={addons.kedaAddon} onChange={(ev, v) => {updateFn("kedaAddon", v, 'https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites'); showModal(ev,"https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites")}} label="Install the KEDA AddOn" />
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} checked={addons.kedaAddon} onChange={(ev, v) => {updateFn("kedaAddon", v, 'https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites'); showPreviewModal(ev,"https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites")}} label="Install the KEDA AddOn" />
             </Stack.Item>
 
             <Separator className="notopmargin" />
@@ -526,7 +526,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray,showMo
                   styles={{ root: { marginLeft: '50px' } }}
                   inputProps={{ "data-testid": "addons-asm-Checkbox"}}
                   checked={addons.serviceMeshProfile}
-                  onChange={(ev, v) => { updateFn("serviceMeshProfile", v ? "Istio" : ""); showModal(ev, "https://learn.microsoft.com/en-us/azure/aks/istio-deploy-addon");}}
+                  onChange={(ev, v) => { updateFn("serviceMeshProfile", v ? "Istio" : ""); showPreviewModal(ev, "https://learn.microsoft.com/en-us/azure/aks/istio-deploy-addon");}}
                   label="Install the Istio Service Mesh AddOn (Preview)" />
             </Stack.Item>
 
@@ -538,7 +538,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray,showMo
                     (<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster">*preview</a>)
                     (<a target="_new" href="https://github.com/Azure/azure-workload-identity">project</a>)
                 </Label>
-                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-workloadIdentity-Checkbox"}} checked={addons.workloadIdentity} onChange={(ev, v) => {updateFn("workloadIdentity", v);showModal(ev,"https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster")}} label="Install Workload Identity" />
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-workloadIdentity-Checkbox"}} checked={addons.workloadIdentity} onChange={(ev, v) => {updateFn("workloadIdentity", v);showPreviewModal(ev,"https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster")}} label="Install Workload Identity" />
 
             </Stack.Item>
 

@@ -6,18 +6,12 @@ import { PrimaryButton, DefaultButton } from "@fluentui/react/lib/Button";
 export function PreviewDialog({ previewLink, onClose, show}) {
   // const [hideDialog, { toggle: toggleHideDialog }] = useBoolean(false);
 
-  const [hideDialog, { toggle: toggleHideDialog }] = useBoolean(false);
-
   const dialogContentProps = {
     type: DialogType.normal,
-    title: 'Preview Feature',
-    closeButtonAriaLabel: 'Close',
+    title: "Preview Feature",
+    closeButtonAriaLabel: "Close",
     subText: `Review the instructions on this page ${previewLink} to enable the feature `,
   };
-
-  function _openLink() {
-    window.open(`${previewLink}`, '_blank', 'noreferrer');
-  }
 
   function _openLink() {
     window.open(`${previewLink}`, "_blank", "noreferrer");
@@ -27,16 +21,16 @@ export function PreviewDialog({ previewLink, onClose, show}) {
     return null;
 }
   return (
-    <div>
-      <Dialog
-      hidden={hideDialog}
-      onDismiss={toggleHideDialog}
-      dialogContentProps={dialogContentProps}>
-      <DialogFooter>
-        <PrimaryButton onClick={toggleHideDialog} text="Close" />
-        <DefaultButton onClick={_openLink} text="Open Link in New Tab" />
-      </DialogFooter>
-      </Dialog>
-    </div>
+    <>
+          <Dialog
+            hidden={false}
+            onDismiss={onClose}
+            dialogContentProps={dialogContentProps} >
+            <DialogFooter>
+              <PrimaryButton onClick={onClose} text="Close" />
+              <DefaultButton onClick={_openLink} text="Open Link in New Tab" />
+            </DialogFooter>
+          </Dialog>
+    </>
   );
 }

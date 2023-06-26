@@ -122,7 +122,7 @@ export default function PortalNav({ config }) {
   const [show, setShow] = useState(false)
   const [previewLink, setPreviewLink] = useState("")
 
-  const showModal = (e,previewLink) => {
+  const showPreviewModal = (e,previewLink) => {
     setShow(current => !current);
     setPreviewLink(previewLink)
 
@@ -448,8 +448,7 @@ export default function PortalNav({ config }) {
   return (
     <ThemeProvider theme={{ semanticColors, palette }}>
       <main id="mainContent" className="wrapper">
-
-      <PreviewDialog onClose={showModal} show={show} previewLink={previewLink}></PreviewDialog>
+      <PreviewDialog onClose={showPreviewModal} show={show} previewLink={previewLink}></PreviewDialog>
         <Header presets={presets} selectedPreset={selected.preset} setPresets={presetChanged} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>
@@ -466,7 +465,7 @@ export default function PortalNav({ config }) {
               <ClusterTab defaults={defaults} tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("cluster", field, value)} invalidArray={invalidArray['cluster']} />
             </PivotItem>
             <PivotItem headerText={tabLabels.addons} itemKey="addons" onRenderItemLink={(a, b) => _customRenderer('addons', a, b)} >
-              <AddonsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("addons", field, value)} invalidArray={invalidArray['addons']} showModal={showModal} />
+              <AddonsTab tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("addons", field, value)} invalidArray={invalidArray['addons']} showPreviewModal={showPreviewModal} />
             </PivotItem>
             <PivotItem headerText={tabLabels.net} itemKey="net" onRenderItemLink={(a, b) => _customRenderer('net', a, b)}>
               <NetworkTab defaults={defaults} tabValues={tabValues} featureFlag={featureFlag} updateFn={(field, value) => mergeState("net", field, value)} invalidArray={invalidArray['net']} />
