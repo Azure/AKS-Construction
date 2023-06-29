@@ -123,9 +123,9 @@ export default function PortalNav({ config }) {
   const [previewLink, setPreviewLink] = useState("")
 
   const showPreviewModal = (e,previewLink) => {
-    setShow(current => !current);
+    if (!e.currentTarget.checked) return;
+    setShow(true);
     setPreviewLink(previewLink)
-
   };
 
   function initSelected (currentPreset) {
@@ -448,7 +448,7 @@ export default function PortalNav({ config }) {
   return (
     <ThemeProvider theme={{ semanticColors, palette }}>
       <main id="mainContent" className="wrapper">
-      <PreviewDialog onClose={showPreviewModal} show={show} previewLink={previewLink}></PreviewDialog>
+      <PreviewDialog onClose={ ()=> setShow(false)} show={show} previewLink={previewLink}></PreviewDialog>
         <Header presets={presets} selectedPreset={selected.preset} setPresets={presetChanged} featureFlag={featureFlag} />
 
         <Stack verticalFill styles={{ root: { width: '960px', margin: '0 auto', color: 'grey' } }}>

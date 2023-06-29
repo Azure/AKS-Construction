@@ -10,13 +10,8 @@ export function PreviewDialog({ previewLink, onClose, show}) {
     type: DialogType.normal,
     title: "Preview Feature",
     closeButtonAriaLabel: "Close",
-    subText: `Review the instructions on this page ${previewLink} to enable the feature `,
+    // subText: `Review the instructions on this page ${previewLink} to enable the feature `,
   };
-
-  function _openLink() {
-    window.open(`${previewLink}`, "_blank", "noreferrer");
-  }
-
   if(!show){
     return null;
 }
@@ -26,9 +21,9 @@ export function PreviewDialog({ previewLink, onClose, show}) {
             hidden={false}
             onDismiss={onClose}
             dialogContentProps={dialogContentProps} >
+            <div>Review the instructions on this <a href={previewLink} target='_blank' rel="noreferrer" >page</a> to enable the feature</div>
             <DialogFooter>
               <PrimaryButton onClick={onClose} text="Close" />
-              <DefaultButton onClick={_openLink} text="Open Link in New Tab" />
             </DialogFooter>
           </Dialog>
     </>
