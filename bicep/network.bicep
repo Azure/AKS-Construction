@@ -520,7 +520,7 @@ resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
   sku: {
     name: 'Standard'
   }
-  //zones: !empty(availabilityZones) ? first(availabilityZones) : []
+  zones: !empty(availabilityZones) ? first(availabilityZones) : []
   properties: {
     publicIpAddresses: [for i in range(0, natGatewayPublicIps): {
       id: natGwIp[i].id
