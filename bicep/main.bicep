@@ -1375,7 +1375,7 @@ param osSKU string = 'Ubuntu'
 var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
 
 module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
-  name: 'userNodePool'
+  name: take('${deployment().name}-userNodePool',64)
   params: {
     AksName: aks.name
     PoolName: poolName
