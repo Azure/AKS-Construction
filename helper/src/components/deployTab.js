@@ -318,7 +318,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deployRelease.main_url}` } --parameters` +
     Object.keys(finalParams).map(k => {
       const val = finalParams[k]
-      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)).replace('"[\\', '\'[').replace('\\"]"', '"]\'').replace('\\",\\"','","') : val
+      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)).replaceAll('"[\\', '\'[').replaceAll('\\"]"', '"]\'').replaceAll('\\",\\"','","') : val
       return ` \`\n\t${k}=${targetVal}`
     }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? cluster.apisecurity !== "private" ? post_deployPSstr: post_deployBASHstr : '')
 
