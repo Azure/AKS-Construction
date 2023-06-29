@@ -71,7 +71,7 @@
             "fluxGitOpsAddon": false,
             "networkPolicy": "none",
             "kedaAddon": false,
-            "openServiceMeshAddon": false,
+            "serviceMeshProfile": "",
             "blobCSIDriver": false,
             "fileCSIDriver": true,
             "diskCSIDriver": true,
@@ -109,7 +109,11 @@
             "gitops": "none",
             "containerLogsV2": false,
             "containerLogsV2BasicLogs": false,
-            "sgxPlugin": false
+            "sgxPlugin": false,
+            "automationAccountScheduledStartStop": "",
+            "automationTimeZone": "Etc/UTC",
+            "automationStartHour": 8,
+            "automationStopHour" : 19
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",

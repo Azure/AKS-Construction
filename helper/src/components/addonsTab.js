@@ -292,23 +292,16 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         decrementButtonAriaLabel="Decrease value by 1"
                         styles={{ root: { marginTop: '15px'}}}
                     />
-                    <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2} onChange={(ev, v) => setContainerLogsV2(v)} label={<Text>Enable the ContainerLogV2 schema (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2">docs</Link>) (*preview)</Text>} />
-                    {
-                        addons.containerLogsV2 &&
-                        (
-                            <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2"} isDialogHidden={addons.acrUntaggedRetentionPolicyEnabled}/>
-                        )
-                    }
+                    <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2} onChange={(ev, v) => setContainerLogsV2(v)} label={<Text>Enable the ContainerLogV2 schema (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2">docs</Link>)</Text>} />
 
                     <MessageBar messageBarType={MessageBarType.warning}>Enable the ContainerLogV2 (successor for ContainerLog) schema for additional data capture and friendlier schema. Disabling this feature will also disable features that are dependent on it (e.g. Basic Logs).</MessageBar>
 
-                    <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2BasicLogs} onChange={(ev, v) => setContainerLogV2BasicLogs(v)} label={<Text>Set Basic Logs for ContainerLogV2 (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1%2Cportal-2">docs</Link>) (*preview)</Text>} />
-                    {
-                        addons.containerLogsV2BasicLogs &&
-                        (
-                            <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1%2Cportal-2"}/>
-                        )
-                    }
+                    <Checkbox
+                        styles={{ root: { marginTop: '10px', marginBottom: '10px'}}}
+                        checked={addons.containerLogsV2BasicLogs}
+                        onChange={(ev, v) => setContainerLogV2BasicLogs(v)}
+                        label={<Text>Set Basic Logs for ContainerLogV2 (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1%2Cportal-2">docs</Link>)</Text>}
+                    />
                     <MessageBar messageBarType={MessageBarType.warning}>Enable the Basic log data plan to cost optimise on log ingestion at the cost of a lower retention period, some log query operations that are no longer available and no alerts. Enabling Basic Logs for ContainerLogsV2 has a dependency on the ContainerLogsV2 schema and thus enabling this capability will automatically enable ContainerLogsV2. In addition, the ContainerLogsV2 table's retention is fixed at eight days. More information available via the provided docs link.</MessageBar>
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
@@ -444,6 +437,41 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
             }
 
             <Stack.Item align="start">
+                <Label required={true}>Azure Automation</Label>
+                <MessageBar>Creates an Azure Automation Account responsible for stopping and starting the AKS Cluster to save on compute costs in development environments.</MessageBar>
+                <ChoiceGroup
+                    styles={{ root: { marginLeft: '50px' } }}
+                    selectedKey={addons.automationAccountScheduledStartStop}
+                    options={[
+                        { key: '', text: 'No, I do not require automation to stop the cluster ' },
+                        { key: 'Weekday', text: 'Yes, start and stop the cluster on Weekdays' },
+                        { key: 'Day', text: 'Yes, start and stop the cluster every day' }
+                    ]}
+                    onChange={(ev, { key }) => updateFn("automationAccountScheduledStartStop", key)}
+                />
+
+                {addons.automationAccountScheduledStartStop !== '' &&
+                <Stack.Item align="center" styles={{ root: { marginLeft: '100px', width:'275px'}}}>
+                    <MessageBar>Only supports 'on the hour' schedules. 24 hour format, UTC Time zone.</MessageBar>
+
+                    <Dropdown
+                        styles={{ root: { marginBottom: '20px' } }}
+                        label="Start time"
+                        onChange={(ev, { key }) => updateFn("automationStartHour", key)} selectedKey={addons.automationStartHour}
+                        options={[...Array(24).keys()].map(i => {return {key: i, text: `${i}:00`}})}
+                    />
+
+                    <Dropdown
+                        styles={{ root: { marginBottom: '20px' } }}
+                        label="Stop time"
+                        onChange={(ev, { key }) => updateFn("automationStopHour", key)} selectedKey={addons.automationStopHour}
+                        options={[...Array(24).keys()].map(i => {return {key: i, text: `${i}:00`}})}
+                    />
+                </Stack.Item>
+                }
+            </Stack.Item>
+
+            <Stack.Item align="start">
                 <Label required={true}>
                     CSI Blob storage: Enable BlobFuse or NFS v3 access to Azure Blob Storage
                     (<a target="_new" href="https://docs.microsoft.com/azure/aks/azure-blob-csi">docs</a>)
@@ -505,10 +533,19 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Open Service Mesh : Enable Open Service Mesh on the AKS Cluster
-                    (<a target="_new" href="https://docs.microsoft.com/azure/aks/open-service-mesh-about">docs</a>)
+                    Service Mesh
+                    (<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/servicemesh-about">docs</a>)
                 </Label>
-                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-osm-Checkbox"}} checked={addons.openServiceMeshAddon} onChange={(ev, v) => updateFn("openServiceMeshAddon", v)} label="Install the Open Service Mesh AddOn" />
+                <Checkbox
+                  styles={{ root: { marginLeft: '50px' } }}
+                  inputProps={{ "data-testid": "addons-asm-Checkbox"}}
+                  checked={addons.serviceMeshProfile}
+                  onChange={(ev, v) => updateFn("serviceMeshProfile", v ? "Istio" : "")}
+                  label="Install the Istio Service Mesh AddOn (Preview)" />
+                {
+                    addons.serviceMeshProfile &&
+                    ( <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/istio-deploy-addon"}/> )
+                }
             </Stack.Item>
 
             <Separator className="notopmargin" />

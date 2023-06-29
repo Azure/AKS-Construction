@@ -1094,7 +1094,6 @@ param warIngressNginx bool = false
 @description('The name of the NEW resource group to create the AKS cluster managed resources in')
 param managedNodeResourceGroup string = ''
 
-
 // Preview feature requires: az feature register --namespace "Microsoft.ContainerService" --name "NRGLockdownPreview"
 @allowed([
   'ReadOnly'
@@ -1102,6 +1101,25 @@ param managedNodeResourceGroup string = ''
 ])
 @description('The restriction level applied to the cluster node resource group')
 param restrictionLevelNodeResourceGroup string = 'Unrestricted'
+
+@allowed(['', 'Istio'])
+@description('The service mesh profile to use')
+param serviceMeshProfile string = ''
+
+@description('The ingress gateway to use for the Istio service mesh')
+param istioIngressGatewayMode string = ''
+
+var serviceMeshProfileObj = {
+  istio: {
+    components: {
+      ingressGateways: empty(istioIngressGatewayMode) ? null : [{
+        enabled: true
+        mode: istioIngressGatewayMode
+      }]
+    }
+  }
+  mode: 'Istio'
+}
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
@@ -1158,7 +1176,6 @@ var systemPoolBase = {
 }
 
 var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])))
-
 
 output userNodePoolName string = nodePoolName
 output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
@@ -1312,7 +1329,8 @@ var aksProperties = union({
 aksOutboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
 keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : {},
-!empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {}
+!empty(managedNodeResourceGroup) ? {  nodeResourceGroup: managedNodeResourceGroup} : {},
+!empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
 resource aks 'Microsoft.ContainerService/managedClusters@2023-03-02-preview' = {
@@ -1774,6 +1792,87 @@ resource telemetrydeployment 'Microsoft.Resources/deployments@2022-09-01' = if (
       contentVersion: '1.0.0.0'
       resources: {}
     }
+  }
+}
+
+/*   ___      __    __  .___________.  ______   .___  ___.      ___   .___________. __    ______   .__   __.
+    /   \    |  |  |  | |           | /  __  \  |   \/   |     /   \  |           ||  |  /  __  \  |  \ |  |
+   /  ^  \   |  |  |  | `---|  |----`|  |  |  | |  \  /  |    /  ^  \ `---|  |----`|  | |  |  |  | |   \|  |
+  /  /_\  \  |  |  |  |     |  |     |  |  |  | |  |\/|  |   /  /_\  \    |  |     |  | |  |  |  | |  . `  |
+ /  _____  \ |  `--'  |     |  |     |  `--'  | |  |  |  |  /  _____  \   |  |     |  | |  `--'  | |  |\   |
+/__/     \__\ \______/      |__|      \______/  |__|  |__| /__/     \__\  |__|     |__|  \______/  |__| \__| */
+
+@allowed(['', 'Weekday', 'Day'])
+@description('Creates an Azure Automation Account to provide scheduled start and stop of the cluster')
+@metadata({category: 'Automation'})
+param automationAccountScheduledStartStop string = ''
+
+@description('The IANA time zone of the automation account')
+@metadata({category: 'Automation'})
+param automationTimeZone string = 'Etc/UTC'
+
+@minValue(0)
+@maxValue(23)
+@description('When to start the cluster')
+@metadata({category: 'Automation'})
+param automationStartHour int = 8
+
+@minValue(0)
+@maxValue(23)
+@description('When to stop the cluster')
+@metadata({category: 'Automation'})
+param automationStopHour int = 19
+
+var automationFrequency = automationAccountScheduledStartStop == 'Day' ? 'Day' : 'Weekday'
+
+module AksStartStop 'automationrunbook/automation.bicep' = if (!empty(automationAccountScheduledStartStop)) {
+  name: '${deployment().name}-Automation'
+  params: {
+    location: location
+    automationAccountName: 'aa-${resourceName}'
+    runbookName: 'aks-cluster-changestate'
+    runbookUri: 'https://raw.githubusercontent.com/finoops/aks-cluster-changestate/main/aks-cluster-changestate.ps1'
+    runbookType: 'Script'
+    timezone: automationTimeZone
+    schedulesToCreate : [
+      {
+        frequency: automationFrequency
+        hour: automationStartHour
+        minute: 0
+      }
+      {
+        frequency: automationFrequency
+        hour: automationStopHour
+        minute:0
+      }
+    ]
+    runbookJobSchedule: [
+      {
+        scheduleName: '${automationFrequency} - ${padLeft(automationStartHour, 2, '0')}:00'
+        parameters: {
+          ResourceGroupName : resourceGroup().name
+          AksClusterName : aks.name
+          Operation: 'start'
+        }
+      }
+      {
+        scheduleName: '${automationFrequency} - ${padLeft(automationStopHour, 2, '0')}:00'
+        parameters: {
+          ResourceGroupName : resourceGroup().name
+          AksClusterName : aks.name
+          Operation: 'stop'
+        }
+      }
+    ]
+  }
+}
+
+@description('Gives the Automation Account permission to stop/start the AKS cluster')
+module aksAutomationRbac 'automationrunbook/aksRbac.bicep' = if (!empty(automationAccountScheduledStartStop)) {
+  name: '${deployment().name}-AutomationRbac'
+  params: {
+    aksName: aks.name
+    principalId: !empty(automationAccountScheduledStartStop) ? AksStartStop.outputs.automationAccountPrincipalId : ''
   }
 }
 
