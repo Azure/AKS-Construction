@@ -165,6 +165,9 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                 <Stack horizontal tokens={{ childrenGap: 50 }}>
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.info}>NAT Gateway allows more traffic flows than a Load Balancer.<a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
+                        {cluster.availabilityZones === "yes" &&
+                            <MessageBar messageBarType={MessageBarType.warning}>NAT Gateways are not a Zone Redundant resource</MessageBar>
+                        }
                         {net.aksOutboundTrafficType==='userDefinedRouting' && net.vnet_opt === 'byo' &&
                           <MessageBar styles={{ root: { width:'400px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Ensure that the AKS Subnet is configured with a UDR and that your Virtual Network Appliance is <Link href="https://learn.microsoft.com/azure/aks/limit-egress-traffic">properly configured</Link> to allow necessary traffic</MessageBar>
                         }
