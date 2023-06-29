@@ -1,8 +1,5 @@
 /* eslint-disable import/no-anonymous-default-export */
-import React, { useState} from 'react';
-import { useBoolean } from "@fluentui/react-hooks";
-import { Dialog, DialogType, DialogFooter } from "@fluentui/react/lib/Dialog";
-import { PrimaryButton, DefaultButton } from "@fluentui/react/lib/Button";
+import React from 'react';
 import { TextField,Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, SpinButton } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
 

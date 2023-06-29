@@ -1,16 +1,13 @@
 import React from "react";
-import { useBoolean } from "@fluentui/react-hooks";
 import { Dialog, DialogType, DialogFooter } from "@fluentui/react/lib/Dialog";
-import { PrimaryButton, DefaultButton } from "@fluentui/react/lib/Button";
+import { PrimaryButton} from "@fluentui/react/lib/Button";
 
 export function PreviewDialog({ previewLink, onClose, show}) {
-  // const [hideDialog, { toggle: toggleHideDialog }] = useBoolean(false);
 
   const dialogContentProps = {
     type: DialogType.normal,
     title: "Preview Feature",
     closeButtonAriaLabel: "Close",
-    // subText: `Review the instructions on this page ${previewLink} to enable the feature `,
   };
   if(!show){
     return null;
