@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# ---------------------------------------------------------------------------
+# NOTE: This needs to be kept in sync with the postdeploy.ps1 (PowerShell) script
+# ---------------------------------------------------------------------------
+
 # Fail if any command fails
 set -e
 

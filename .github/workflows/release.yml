@@ -130,6 +130,7 @@ jobs:
       matrix:
         files:
         - 'postdeploy/scripts/postdeploy.sh'
+        - 'postdeploy/scripts/postdeploy.ps1'
         - 'postdeploy/k8smanifests/networkpolicy-deny-all.yml'
         - 'postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz'
         - 'helper/src/dependencies.json'
