@@ -86,6 +86,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
     ...(addons.azurepolicy !== "none" && addons.azurePolicyInitiative !== defaults.addons.azurePolicyInitiative && { azurePolicyInitiative: addons.azurePolicyInitiative }),
     ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}),
+    ...(net.networkPlugin === 'azure' && {
+        ...(net.networkPluginMode && {networkPluginMode: 'Overlay'}),
+        }),
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...((net.vnet_opt === "custom" || net.vnet_opt === "byo") && defaults.net.cniDynamicIpAllocation !== net.cniDynamicIpAllocation && { cniDynamicIpAllocation: true }),
     ...(net.vnet_opt === "custom" && net.cniDynamicIpAllocation && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
@@ -109,9 +112,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
       })
     }),
-    ...(net.vnet_opt !== "default" && {
-      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
-    }),
+    ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
     ...(cluster.keyVaultKms !== defaults.cluster.keyVaultKms && {
       ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
       ...(cluster.keyVaultKms === "byoprivate" && cluster.keyVaultKmsByoKeyId !== '' &&  cluster.keyVaultKmsByoRG !== '' && {keyVaultKmsByoKeyId: cluster.keyVaultKmsByoKeyId, keyVaultKmsByoRG: cluster.keyVaultKmsByoRG}),
@@ -134,12 +135,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const preview_params = {
     ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled !== defaults.addons.acrUntaggedRetentionPolicyEnabled && { acrUntaggedRetentionPolicyEnabled: addons.acrUntaggedRetentionPolicyEnabled}),
     ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled && addons.acrUntaggedRetentionPolicy !== defaults.addons.acrUntaggedRetentionPolicy && { acrUntaggedRetentionPolicy: addons.acrUntaggedRetentionPolicy}),
-    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNATGateway' && {
+    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'natGateway' && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
       ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
     }),
-    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'userAssignedNATGateway' && {
+    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'natGateway' && {
       ...({createNatGateway: true}),
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
@@ -158,7 +159,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(defaults.addons.blobCSIDriver !== addons.blobCSIDriver && {blobCSIDriver: addons.blobCSIDriver }),
     ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {oidcIssuer: true, workloadIdentity: addons.workloadIdentity }),
     ...(net.networkPlugin === 'azure' && {
-      ...(net.networkPluginMode && {networkPluginMode: 'Overlay'}),
       ...(net.ebpfDataplane && {ebpfDataplane: 'cilium'})
     }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
