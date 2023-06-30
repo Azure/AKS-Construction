@@ -117,6 +117,17 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
       ...(cluster.keyVaultKms === "byoprivate" && cluster.keyVaultKmsByoKeyId !== '' &&  cluster.keyVaultKmsByoRG !== '' && {keyVaultKmsByoKeyId: cluster.keyVaultKmsByoKeyId, keyVaultKmsByoRG: cluster.keyVaultKmsByoRG}),
     }),
+    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'natGateway' && {
+      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
+      ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
+      ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
+    }),
+    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'natGateway' && {
+      ...({createNatGateway: true}),
+      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
+      ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
+      ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
+    }),
     ...(addons.csisecret !== "none" && { keyVaultAksCSI: true }),
     ...(addons.csisecret === 'akvNew' && { keyVaultCreate: true, ...(deploy.kvCertSecretRole && { keyVaultOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}) }),
     ...(addons.csisecret !== "none" && addons.keyVaultAksCSIPollInterval !== defaults.addons.keyVaultAksCSIPollInterval  && { keyVaultAksCSIPollInterval: addons.keyVaultAksCSIPollInterval }),
@@ -135,17 +146,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const preview_params = {
     ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled !== defaults.addons.acrUntaggedRetentionPolicyEnabled && { acrUntaggedRetentionPolicyEnabled: addons.acrUntaggedRetentionPolicyEnabled}),
     ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled && addons.acrUntaggedRetentionPolicy !== defaults.addons.acrUntaggedRetentionPolicy && { acrUntaggedRetentionPolicy: addons.acrUntaggedRetentionPolicy}),
-    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'natGateway' && {
-      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
-      ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
-      ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
-    }),
-    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'natGateway' && {
-      ...({createNatGateway: true}),
-      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
-      ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
-      ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
-    }),
     ...(net.vnet_opt === "custom" && net.vnetprivateend && {
       ...(addons.registry !== "none" && {
         ...(addons.acrPrivatePool !== defaults.addons.acrPrivatePool && {acrPrivatePool: addons.acrPrivatePool}),
