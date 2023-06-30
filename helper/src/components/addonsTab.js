@@ -2,10 +2,8 @@
 import React from 'react';
 import { TextField,Link, Separator, Dropdown, Slider, Stack, Text, Label, ChoiceGroup, Checkbox, MessageBar, MessageBarType, SpinButton } from '@fluentui/react';
 import { adv_stackstyle, hasError, getError } from './common'
-import { PreviewDialog } from  './previewDialog'
 
-
-export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
+export default function ({ tabValues, updateFn, featureFlag, invalidArray,showPreviewModal }) {
     const { cluster, addons, net } = tabValues
     const osmFeatureFlag = featureFlag.includes('osm')
     const wiFeatureFlag = featureFlag.includes('workloadId')
@@ -63,13 +61,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                 <Checkbox
                 disabled={addons.registry !== "Premium"}
                 checked={addons.acrUntaggedRetentionPolicyEnabled}
-                onChange={(ev, v) => updateFn("acrUntaggedRetentionPolicyEnabled", v)}
+                onChange={(ev, v) => {updateFn("acrUntaggedRetentionPolicyEnabled", v); showPreviewModal(ev,"https://learn.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy"); }}
                 label={<Text>Create untagged image retention policy (<a target="_new" href="https://docs.microsoft.com/azure/container-registry/container-registry-content-trust">docs</a>)
                  </Text>} />
                 <MessageBar styles={{ root: { marginTop: '10px', width: '700px' } }} messageBarType={MessageBarType.warning}>Deleting untagged images will remove them from your ACR after a defined period (<a target="_new" href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-retention-policy">docs</a>) (*preview)</MessageBar>
                 {addons.acrUntaggedRetentionPolicyEnabled && (
                     <div>
-                    <PreviewDialog previewLink={"https://docs.microsoft.com/azure/container-registry/container-registry-content-trust"} isDialogHidden={addons.acrUntaggedRetentionPolicyEnabled}/>
                     <Stack.Item style={{ marginTop: '10px', marginLeft: "50px"}}>
                         <Slider label="Days to retain untagged images for" min={0} max={365} step={1} defaultValue={addons.acrUntaggedRetentionPolicy} showValue={true}
                             onChange={(v) => updateFn("acrUntaggedRetentionPolicy", v)}
@@ -110,16 +107,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         { key: 'nginx', text: 'Nginx ingress controller' },
                         { key: 'traefik', text: 'Traefik ingress controller' }
                     ]}
-                    onChange={(ev, { key }) => updateFn("ingress", key)}
+                    onChange={(ev, { key }) => {updateFn("ingress", key); key === "warNginx" && showPreviewModal(ev,"https://docs.microsoft.com/en-us/azure/aks/web-app-routing"); }}
                 />
                 {hasError(invalidArray, 'ingress') &&
                     <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingress')}</MessageBar>
                 }
             </Stack.Item>
-            { addons.ingress === "warNginx" &&
-                (
-                <PreviewDialog previewLink={"https://docs.microsoft.com/en-us/azure/aks/web-app-routing"}/>
-                )}
             <Stack.Item align="center" styles={{ root: { maxWidth: '700px', display: (addons.ingress === "none" ? "none" : "block") } }} >
                 <Stack tokens={{ childrenGap: 15 }}>
                     {addons.ingress === "nginx" && false &&
@@ -292,16 +285,12 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                         decrementButtonAriaLabel="Decrease value by 1"
                         styles={{ root: { marginTop: '15px'}}}
                     />
-                    <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2} onChange={(ev, v) => setContainerLogsV2(v)} label={<Text>Enable the ContainerLogV2 schema (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2">docs</Link>)</Text>} />
+
+                    <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2} onChange={(ev, v) => setContainerLogsV2(v)} label={<Text>Enable the ContainerLogV2 schema (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-logging-v2">docs</Link>) (*preview)</Text>} />
 
                     <MessageBar messageBarType={MessageBarType.warning}>Enable the ContainerLogV2 (successor for ContainerLog) schema for additional data capture and friendlier schema. Disabling this feature will also disable features that are dependent on it (e.g. Basic Logs).</MessageBar>
 
-                    <Checkbox
-                        styles={{ root: { marginTop: '10px', marginBottom: '10px'}}}
-                        checked={addons.containerLogsV2BasicLogs}
-                        onChange={(ev, v) => setContainerLogV2BasicLogs(v)}
-                        label={<Text>Set Basic Logs for ContainerLogV2 (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1%2Cportal-2">docs</Link>)</Text>}
-                    />
+                    <Checkbox styles={{ root: { marginTop: '10px', marginBottom: '10px'}}} checked={addons.containerLogsV2BasicLogs} onChange={(ev, v) => setContainerLogV2BasicLogs(v)} label={<Text>Set Basic Logs for ContainerLogV2 (<Link target="_target" href="https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1%2Cportal-2">docs</Link>)</Text>} />
                     <MessageBar messageBarType={MessageBarType.warning}>Enable the Basic log data plan to cost optimise on log ingestion at the cost of a lower retention period, some log query operations that are no longer available and no alerts. Enabling Basic Logs for ContainerLogsV2 has a dependency on the ContainerLogsV2 schema and thus enabling this capability will automatically enable ContainerLogsV2. In addition, the ContainerLogsV2 table's retention is fixed at eight days. More information available via the provided docs link.</MessageBar>
 
                     <Checkbox styles={{ root: { marginTop: '10px'}}} checked={addons.createAksMetricAlerts} onChange={(ev, v) => updateFn("createAksMetricAlerts", v)} label={<Text>Create recommended metric alerts, enable you to monitor your system resource when it's running on peak capacity or hitting failure rates (<Link target="_target" href="https://azure.microsoft.com/en-us/updates/ci-recommended-alerts/">docs</Link>) </Text>} />
@@ -520,13 +509,7 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     KEDA : Enable Kubernetes Event-driven Autoscaling (KEDA) on the AKS Cluster (<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/keda-deploy-add-on-arm#prerequisites">*preview</a>)
                     (<a target="_new" href="https://docs.microsoft.com/en-us/azure/aks/keda-about">docs</a>)
                 </Label>
-                <Checkbox styles={{ root: { marginLeft: '50px' } }} checked={addons.kedaAddon} onChange={(ev, v) => updateFn("kedaAddon", v, 'https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites')} label="Install the KEDA AddOn" />
-                {
-                    addons.kedaAddon &&
-                    (
-                        <PreviewDialog previewLink={"https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites"}/>
-                    )
-                }
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} checked={addons.kedaAddon} onChange={(ev, v) => {updateFn("kedaAddon", v, 'https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites'); showPreviewModal(ev,"https://learn.microsoft.com/azure/aks/keda-deploy-add-on-arm#prerequisites")}} label="Install the KEDA AddOn" />
             </Stack.Item>
 
             <Separator className="notopmargin" />
@@ -540,12 +523,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                   styles={{ root: { marginLeft: '50px' } }}
                   inputProps={{ "data-testid": "addons-asm-Checkbox"}}
                   checked={addons.serviceMeshProfile}
-                  onChange={(ev, v) => updateFn("serviceMeshProfile", v ? "Istio" : "")}
+                  onChange={(ev, v) => { updateFn("serviceMeshProfile", v ? "Istio" : ""); showPreviewModal(ev, "https://learn.microsoft.com/en-us/azure/aks/istio-deploy-addon");}}
                   label="Install the Istio Service Mesh AddOn (Preview)" />
-                {
-                    addons.serviceMeshProfile &&
-                    ( <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/istio-deploy-addon"}/> )
-                }
             </Stack.Item>
 
             <Separator className="notopmargin" />
@@ -556,11 +535,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray }) {
                     (<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster">*preview</a>)
                     (<a target="_new" href="https://github.com/Azure/azure-workload-identity">project</a>)
                 </Label>
-                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-workloadIdentity-Checkbox"}} checked={addons.workloadIdentity} onChange={(ev, v) => updateFn("workloadIdentity", v)} label="Install Workload Identity" />
-                {
-                    addons.workloadIdentity &&
-                    ( <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster"}/> )
-                }
+                <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-workloadIdentity-Checkbox"}} checked={addons.workloadIdentity} onChange={(ev, v) => {updateFn("workloadIdentity", v);showPreviewModal(ev,"https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster")}} label="Install Workload Identity" />
+
             </Stack.Item>
 
             <Separator className="notopmargin" />
