@@ -463,7 +463,7 @@
                             },
                             "net": {
                                 "createNatGateway": true,
-                                "aksOutboundTrafficType": "userAssignedNATGateway"
+                                "aksOutboundTrafficType": "natGateway"
                             }
                         }
                     }

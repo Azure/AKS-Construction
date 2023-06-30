@@ -14,7 +14,7 @@ test('managed-natgw-option-is-now-the-prod-default', async ({ page }) => {
   //Check default value
   const dropdown = await page.waitForSelector('[data-testid="net-aksEgressType"]')
   await expect(dropdown).toBeVisible()
-  await expect(dropdown).toMatchText('Assigned NAT Gateway')
+  await expect(dropdown).toMatchText('NAT Gateway')
 
   // Click the 1st Tab in the portal Navigation Pivot (network)
   await page.click('[data-testid="portalnav-Pivot"] > button:nth-child(1)');
@@ -23,6 +23,6 @@ test('managed-natgw-option-is-now-the-prod-default', async ({ page }) => {
   await page.waitForSelector('[data-testid="deploy-deploycmd"]')
   const clitextbox = await page.$('[data-testid="deploy-deploycmd"]')
   await expect(clitextbox).toBeVisible()
-  await expect(clitextbox).toContainText('aksOutboundTrafficType=userAssignedNATGateway')
+  await expect(clitextbox).toContainText('aksOutboundTrafficType=natGateway')
 
 });

@@ -393,7 +393,7 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2022-11-01' = if(bastion) {
   }
 }
 
-resource log 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = if(networkSecurityGroups && !empty(workspaceName)) {
+resource log 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = if(networkSecurityGroups && !empty(workspaceName)) {
   name: workspaceName
   scope: resourceGroup(workspaceResourceGroupName)
 }
@@ -520,7 +520,7 @@ resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
   sku: {
     name: 'Standard'
   }
-  zones: !empty(availabilityZones) ? availabilityZones : []
+  zones: !empty(availabilityZones) ? first(availabilityZones) : []
   properties: {
     publicIpAddresses: [for i in range(0, natGatewayPublicIps): {
       id: natGwIp[i].id

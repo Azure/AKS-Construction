@@ -92,20 +92,13 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             label="Implement Dynamic Allocation of IPs" />
                     </Stack.Item>
                     <Stack.Item>
-                        <MessageBar messageBarType={MessageBarType.info}>Overlay is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters">preview feature</a> that leverages a private CIDR for Pod IP's. See if it's right for you:<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay">docs</a> </MessageBar>
+                        <MessageBar messageBarType={MessageBarType.info}>Overlay is a feature that leverages a private CIDR for Pod IP's. See if it's right for you:<a target="_new" href="https://learn.microsoft.com/azure/aks/azure-cni-overlay">docs</a> </MessageBar>
                         <Checkbox
                             styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
                             disabled={net.networkPlugin!=='azure' || net.cniDynamicIpAllocation}
                             checked={net.networkPluginMode}
                             onChange={(ev, v) => UpdateCniOverlay(v)}
                             label="CNI Overlay Network" />
-                            {
-                                net.networkPluginMode &&
-                                (
-                                    <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay#steps-to-set-up-overlay-clusters"} />
-                                )
-
-                            }
                     </Stack.Item>
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.info}>Powered by Cilium is a <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/azure-cni-powered-by-cilium#prerequisites">preview feature</a> that leverages more efficient use of the linux kernel and other networking features.</MessageBar>
@@ -172,6 +165,9 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                 <Stack horizontal tokens={{ childrenGap: 50 }}>
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.info}>NAT Gateway allows more traffic flows than a Load Balancer.<a target="_target" href="https://docs.microsoft.com/azure/aks/nat-gateway">docs</a></MessageBar>
+                        {cluster.availabilityZones === "yes" &&
+                            <MessageBar messageBarType={MessageBarType.warning}>NAT Gateways are not a Zone Redundant resource</MessageBar>
+                        }
                         {net.aksOutboundTrafficType==='userDefinedRouting' && net.vnet_opt === 'byo' &&
                           <MessageBar styles={{ root: { width:'400px', marginTop: '10px !important'}}} messageBarType={MessageBarType.warning}>Ensure that the AKS Subnet is configured with a UDR and that your Virtual Network Appliance is <Link href="https://learn.microsoft.com/azure/aks/limit-egress-traffic">properly configured</Link> to allow necessary traffic</MessageBar>
                         }
@@ -185,8 +181,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             data-testid="net-aksEgressType"
                             options={[
                                 { key: 'loadBalancer', text: 'Load Balancer'  },
-                                { key: 'managedNATGateway', text: 'Managed NAT Gateway' },
-                                { key: 'userAssignedNATGateway', text: 'Assigned NAT Gateway'},
+                                { key: 'natGateway', text: 'NAT Gateway' },
                                 { key: 'userDefinedRouting', text: 'User Defined Routing'}
                             ]}
                             onChange={(ev, { key }) => updateFn("aksOutboundTrafficType", key)}
@@ -195,7 +190,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     <Stack.Item>
                         <Checkbox //simple "read-only" checkbox that derives its values from other settings
                             styles={{ root: { marginBottom: '10px' }}}
-                            checked={net.vnet_opt === 'custom' && net.aksOutboundTrafficType === 'userAssignedNATGateway'}
+                            checked={net.vnet_opt === 'custom' && net.aksOutboundTrafficType === 'natGateway'}
                             disabled={true}
                             label="Create NAT Gateway for AKS Subnet (Custom VNet Only)"
                         />

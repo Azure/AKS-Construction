@@ -250,7 +250,8 @@ export default function PortalNav({ config }) {
           key: rel.tag_name,
           text: `${rel.tag_name}${i === 0 ? ' (latest)' : ''}`,
           main_url: rel.assets.find(a => a.name === 'main.json').browser_download_url,
-          post_url: rel.assets.find(a => a.name === 'postdeploy.sh').browser_download_url,
+          postBASH_url: rel.assets.find(a => a.name === 'postdeploy.sh').browser_download_url,
+          postPS_url: rel.assets.find(a => a.name === 'postdeploy.ps1') ? rel.assets.find(a => a.name === 'postdeploy.ps1').browser_download_url : undefined, //Needs to be in the release to work.
           base_download_url: rel.assets.find(a => a.name === 'main.json').browser_download_url.replace('/main.json', '')
         }
       }).concat(defaults.deploy.templateVersions)
@@ -402,13 +403,8 @@ export default function PortalNav({ config }) {
      :'Ensure to select Azure Firewall when using Custom Networking and User Defined Routing for Outbound Traffic Type')
 
   invalidFn('net', 'aksOutboundTrafficType',
-    (net.aksOutboundTrafficType === 'managedNATGateway' && net.vnet_opt !== "default") ||
-    (net.aksOutboundTrafficType === 'userAssignedNATGateway' && net.vnet_opt === "default") ||
     (net.aksOutboundTrafficType === 'userDefinedRouting' && net.vnet_opt === "default"),
-     net.aksOutboundTrafficType === 'userDefinedRouting' ?
-     'When using User Defined Routing, only custom and Bring your Own networking is supported.'
-     :
-     'When using Managed Nat Gateway, only default networking is supported. For other networking options, use Assigned NAT Gateway')
+     'When using User Defined Routing, only custom and Bring your Own networking is supported.')
   invalidFn('net', 'serviceCidr',  net.vnet_opt === "custom" && !isCidrValid(net.serviceCidr), invalidCidrMessage)
   invalidFn('net', 'podCidr', !isCidrValid(net.podCidr), invalidCidrMessage)
   invalidFn('net', 'dnsServiceIP', !isIPValid(net.dnsServiceIP), 'Enter a valid IP')

@@ -86,6 +86,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
     ...(addons.azurepolicy !== "none" && addons.azurePolicyInitiative !== defaults.addons.azurePolicyInitiative && { azurePolicyInitiative: addons.azurePolicyInitiative }),
     ...(net.networkPlugin !== defaults.net.networkPlugin && {networkPlugin: net.networkPlugin}),
+    ...(net.networkPlugin === 'azure' && {
+        ...(net.networkPluginMode && {networkPluginMode: 'Overlay'}),
+        }),
     ...(net.vnet_opt === "custom" && net.networkPlugin === 'kubenet' && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
     ...((net.vnet_opt === "custom" || net.vnet_opt === "byo") && defaults.net.cniDynamicIpAllocation !== net.cniDynamicIpAllocation && { cniDynamicIpAllocation: true }),
     ...(net.vnet_opt === "custom" && net.cniDynamicIpAllocation && defaults.net.podCidr !== net.podCidr && { podCidr: net.podCidr }),
@@ -109,9 +112,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.appgwKVIntegration && addons.csisecret === 'akvNew' && { appgwKVIntegration: true })
       })
     }),
-    ...(net.vnet_opt !== "default" && {
-      ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType})
-    }),
+    ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
     ...(cluster.keyVaultKms !== defaults.cluster.keyVaultKms && {
       ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
       ...(cluster.keyVaultKms === "byoprivate" && cluster.keyVaultKmsByoKeyId !== '' &&  cluster.keyVaultKmsByoRG !== '' && {keyVaultKmsByoKeyId: cluster.keyVaultKmsByoKeyId, keyVaultKmsByoRG: cluster.keyVaultKmsByoRG}),
@@ -134,12 +135,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const preview_params = {
     ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled !== defaults.addons.acrUntaggedRetentionPolicyEnabled && { acrUntaggedRetentionPolicyEnabled: addons.acrUntaggedRetentionPolicyEnabled}),
     ...(addons.registry === "Premium" && addons.acrUntaggedRetentionPolicyEnabled && addons.acrUntaggedRetentionPolicy !== defaults.addons.acrUntaggedRetentionPolicy && { acrUntaggedRetentionPolicy: addons.acrUntaggedRetentionPolicy}),
-    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNATGateway' && {
+    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'natGateway' && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
       ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
     }),
-    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'userAssignedNATGateway' && {
+    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'natGateway' && {
       ...({createNatGateway: true}),
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
@@ -158,7 +159,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(defaults.addons.blobCSIDriver !== addons.blobCSIDriver && {blobCSIDriver: addons.blobCSIDriver }),
     ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {oidcIssuer: true, workloadIdentity: addons.workloadIdentity }),
     ...(net.networkPlugin === 'azure' && {
-      ...(net.networkPluginMode && {networkPluginMode: 'Overlay'}),
       ...(net.ebpfDataplane && {ebpfDataplane: 'cilium'})
     }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
@@ -240,32 +240,33 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const deployRelease = deploy.templateVersions.find(t => t.key === deploy.selectedTemplate) || {}
 
-  const preview_post_deploycmd = Object.keys(preview_post_params).map(k => {
+
+  //Bash (Remember to align any changes with Powershell)
+  const preview_post_deployBASHcmd = Object.keys(preview_post_params).map(k => {
     const val = preview_post_params[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
     return ` \\\n\t-p ${k}=${targetVal}`
   }).join('')
 
-  const post_deploycmd =  `\n\n# Deploy charts into cluster\n` +
-  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.post_url}  | bash -s -- `) +
+  const post_deployBASHcmd =  `\n\n# Deploy charts into cluster\n` +
+  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.postBASH_url}  | bash -s -- `) +
   (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
   Object.keys(post_params).map(k => {
     const val = post_params[k]
     const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
     return ` \\\n\t-p ${k}=${targetVal}`
   }).join('')+
-  (!deploy.disablePreviews ? preview_post_deploycmd : '')
+  (!deploy.disablePreviews ? preview_post_deployBASHcmd : '')
 
-
-  const post_deploystr = cluster.apisecurity !== "private" ?
+  const post_deployBASHstr = cluster.apisecurity !== "private" ?
     '# Get credentials for your new AKS cluster & login (interactive)\n' +
     `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
     'kubectl get nodes' +
-    post_deploycmd
+    post_deployBASHcmd
     :
     '# Private cluster, so use command invoke\n' +
     `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` +
-    post_deploycmd.replaceAll('"', '\\"') +
+    post_deployBASHcmd.replaceAll('"', '\\"') +
     `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
 
   const networkWatcher = net.nsg && net.nsgFlowLogs !== defaults.net.nsgFlowLogs ?
@@ -274,7 +275,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const cardSpecificWorkloadDeployCmd = deploy.workloadDeployCommands && deploy.workloadDeployCommands.length>0 ? deploy.workloadDeployCommands.map(w => w).join('\n').replace(/\$RESOURCEGROUP/g,deploy.rg).replace(/\$AKSNAME/g, aks) : ''
 
-  const deploycmd =
+  const deployBASHcmd =
     `# Create Resource Group\n` +
     `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` + networkWatcher +
     `# Deploy template with in-line parameters\n` +
@@ -283,9 +284,46 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
       return ` \\\n\t${k}=${targetVal}`
-    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deploystr : '')
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deployBASHstr : '')
+
+    //Powershell (Remember to align any changes with Bash)
+    const preview_post_deployPScmd = Object.keys(preview_post_params).map(k => {
+      const val = preview_post_params[k]
+      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+      return ` \`\n\t-${k} ${targetVal}`
+    }).join('')
+
+    const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
+    (deploy.selectedTemplate === "local" ? ` .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.ps1 ` : `& $([scriptblock]::Create((New-Object Net.WebClient).DownloadString("${deployRelease.postPS_url}")))`) +
+    (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : ` -releace_version="${deployRelease.base_download_url}"`) +
+    Object.keys(post_params).map(k => {
+      const val = post_params[k]
+      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+      return ` \`\n\t-${k} ${targetVal}`
+    }).join('')+
+    (!deploy.disablePreviews ? preview_post_deployPScmd : '')
 
 
+    //Below used when not a private cluster (used further below the BASH  postdeploy script if a private cluster)
+    const post_deployPSstr =
+    '# Get credentials for your new AKS cluster & login (interactive)\n' +
+    `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
+    'kubectl get nodes' +
+    post_deployPScmd
+
+    const deployPScmd =
+    `# Create Resource Group\n` +
+    `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` + networkWatcher +
+    `# Deploy template with in-line parameters\n` +
+    `az deployment group create -g ${deploy.rg}  ${deploy.selectedTemplate === "local" ? '--template-file ./bicep/main.bicep' : `--template-uri ${deployRelease.main_url}` } --parameters` +
+    Object.keys(finalParams).map(k => {
+      const val = finalParams[k]
+      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)).replaceAll('"[\\', '\'[').replaceAll('\\"]"', '"]\'').replaceAll('\\",\\"','","') : val
+      return ` \`\n\t${k}=${targetVal}`
+    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? cluster.apisecurity !== "private" ? post_deployPSstr: post_deployBASHstr : '')
+
+
+  //Terraform
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
 
   const deployTfProviders =
@@ -355,6 +393,13 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
   const ghOrg = deploy.githubrepo.replace(/.*com\//, "").replace(/\/.*/, '')
   const ghRepo = deploy.githubrepo.replace(/.*\//, '')
+
+  //PowerShell is disabled generally due to a missing postdeploy.ps1 script missing in the release
+  if (deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" && deploy.deployItemKey === "deployPSArmCli")
+  {
+    deploy.deployItemKey = "deployArmCli"
+  }
+
   console.log (`deploy.deployItemKey=${deploy.deployItemKey}`)
   return (
 
@@ -430,7 +475,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
       <Pivot selectedKey={deploy.deployItemKey}  onLinkClick={({props}) => updateFn('deployItemKey', props.itemKey)}>
 
-        <PivotItem headerText="Command Line" itemKey="deployArmCli" itemIcon="PasteAsCode" >
+        <PivotItem headerText="Bash" itemKey="deployArmCli" itemIcon="PasteAsCode" >
 
           <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
             <Stack.Item>
@@ -455,7 +500,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             </Stack.Item>
           </Stack>
 
-          <CodeBlock hideSave={true} lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deploycmd} testId={'deploy-deploycmd'}/>
+          <CodeBlock hideSave={true} lang="shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployBASHcmd} testId={'deploy-deploycmd'}/>
 
           { cardSpecificWorkloadDeployCmd.length > 0 &&
             <CodeBlock hideSave={true} lang="Workload Deployment shell script"  error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={cardSpecificWorkloadDeployCmd} testId={'deploy-deploycmd'}/>
@@ -464,6 +509,39 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             <Text variant="medium">Not ready to deploy? Bookmark your configuration by copying <a href={"?" + urlParams.toString()}>this link</a></Text>
           }
         </PivotItem>
+
+        <PivotItem headerText="PowerShell" itemKey="deployPSArmCli" itemIcon="PasteAsCode" headerButtonProps={{disabled: deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" ? true : false , 'style': {color: deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" ? "grey" : "white"}}} >
+
+        <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
+          <Stack.Item>
+            <Label >PowerShell and Azure CLI commands to deploy your fully operational environment<br></br> PowerShell disabled is <i>postdeploy.ps1</i> not in selected Template Version</Label>
+            <Text>
+              Requires <Link target="_bl" href="https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.3">PowerShell (7 or greater) </Link>,  <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+            </Text>
+          </Stack.Item>
+
+          <Stack.Item  align="end">
+            <Stack horizontal tokens={{childrenGap: 5}}>
+            <Dropdown
+              errorMessage={getError(invalidArray, 'selectedTemplate')}
+              label='Template Version'
+              disabled={process.env.REACT_APP_TEMPLATERELEASE !== undefined}
+              selectedKey={deploy.selectedTemplate}
+              onChange={(ev, { key }) => updateFn('selectedTemplate', key)}
+              options={deploy.templateVersions}
+              styles={{ dropdown: { width: 200 } }}
+            />
+            </Stack>
+          </Stack.Item>
+        </Stack>
+
+        <CodeBlock hideSave={true} lang="PowerShell script" error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployPScmd} testId={'deploy-deploycmd'}/>
+
+        { urlParams.toString() !== "" &&
+          <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
+        }
+        </PivotItem>
+
 
         <PivotItem headerText="Github Actions" itemKey="github" itemIcon="GitGraph">
             <Stack horizontal tokens={{childrenGap: 30}}>
