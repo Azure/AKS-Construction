@@ -1,1 +1,0 @@
-{"version":3,"file":"Sticky.js","sourceRoot":"../src/","sources":["Sticky.ts"],"names":[],"mappings":";;;AAAA,oEAA0C","sourcesContent":["export * from './components/Sticky/index';\n"]}

@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"../src/","sources":["spacing/index.ts"],"names":[],"mappings":";;;;IAAS,gHAAA,cAAc,OAAA","sourcesContent":["export { DefaultSpacing } from './DefaultSpacing';\n"]}

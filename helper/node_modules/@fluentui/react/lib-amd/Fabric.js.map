@@ -1,1 +1,0 @@
-{"version":3,"file":"Fabric.js","sourceRoot":"../src/","sources":["Fabric.ts"],"names":[],"mappings":";;;IAAA,uCAA0C","sourcesContent":["export * from './components/Fabric/index';\n"]}

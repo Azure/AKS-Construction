@@ -1,1 +1,0 @@
-{"version":3,"file":"DetailsList.js","sourceRoot":"../src/","sources":["DetailsList.ts"],"names":[],"mappings":";;;IAAA,uCAA+C","sourcesContent":["export * from './components/DetailsList/index';\n"]}

@@ -1,1 +1,0 @@
-{"version":3,"file":"setPortalAttribute.js","sourceRoot":"../src/","sources":["dom/setPortalAttribute.ts"],"names":[],"mappings":";;;AAAA,yDAAoF;AAA3E,sHAAA,qBAAqB,OAAA;AAAE,mHAAA,kBAAkB,OAAA","sourcesContent":["export { DATA_PORTAL_ATTRIBUTE, setPortalAttribute } from '@fluentui/dom-utilities';\n"]}

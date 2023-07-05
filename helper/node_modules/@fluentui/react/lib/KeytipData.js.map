@@ -1,1 +1,0 @@
-{"version":3,"file":"KeytipData.js","sourceRoot":"../src/","sources":["KeytipData.ts"],"names":[],"mappings":"AAAA,cAAc,+BAA+B,CAAC","sourcesContent":["export * from './components/KeytipData/index';\n"]}

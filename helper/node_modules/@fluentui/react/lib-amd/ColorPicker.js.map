@@ -1,1 +1,0 @@
-{"version":3,"file":"ColorPicker.js","sourceRoot":"../src/","sources":["ColorPicker.ts"],"names":[],"mappings":";;;IAAA,uCAA+C","sourcesContent":["export * from './components/ColorPicker/index';\n"]}

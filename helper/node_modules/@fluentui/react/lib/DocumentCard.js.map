@@ -1,1 +1,0 @@
-{"version":3,"file":"DocumentCard.js","sourceRoot":"../src/","sources":["DocumentCard.ts"],"names":[],"mappings":"AAAA,cAAc,iCAAiC,CAAC","sourcesContent":["export * from './components/DocumentCard/index';\n"]}

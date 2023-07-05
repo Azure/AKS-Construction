@@ -1,1 +1,0 @@
-{"version":3,"file":"ResizeGroup.js","sourceRoot":"../src/","sources":["ResizeGroup.ts"],"names":[],"mappings":"AAAA,cAAc,gCAAgC,CAAC","sourcesContent":["export * from './components/ResizeGroup/index';\n"]}

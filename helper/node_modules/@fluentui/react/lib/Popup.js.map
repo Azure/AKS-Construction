@@ -1,1 +1,0 @@
-{"version":3,"file":"Popup.js","sourceRoot":"../src/","sources":["Popup.ts"],"names":[],"mappings":"AAAA,cAAc,0BAA0B,CAAC","sourcesContent":["export * from './components/Popup/index';\n"]}

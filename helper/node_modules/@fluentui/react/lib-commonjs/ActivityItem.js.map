@@ -1,1 +1,0 @@
-{"version":3,"file":"ActivityItem.js","sourceRoot":"../src/","sources":["ActivityItem.ts"],"names":[],"mappings":";;;AAAA,0EAAgD","sourcesContent":["export * from './components/ActivityItem/index';\n"]}

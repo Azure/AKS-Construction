@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"../src/","sources":["motion/index.ts"],"names":[],"mappings":";;;AAAA,yDAA+B;AAC/B,4DAAkC","sourcesContent":["export * from './FluentMotion';\nexport * from './AnimationStyles';\n"]}

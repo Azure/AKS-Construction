@@ -1,1 +1,0 @@
-{"version":3,"file":"IRenderFunction.js","sourceRoot":"../src/","sources":["IRenderFunction.ts"],"names":[],"mappings":"","sourcesContent":["/**\n * Render function interface for providing overrideable render callbacks.\n *\n * @public\n */\nexport interface IRenderFunction<P> {\n  (props?: P, defaultRender?: (props?: P) => JSX.Element | null): JSX.Element | null;\n}\n"]}

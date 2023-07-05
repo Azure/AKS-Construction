@@ -1,1 +1,0 @@
-{"version":3,"file":"SwatchColorPicker.js","sourceRoot":"../src/","sources":["SwatchColorPicker.ts"],"names":[],"mappings":";;;IAAA,uCAAqD","sourcesContent":["export * from './components/SwatchColorPicker/index';\n"]}

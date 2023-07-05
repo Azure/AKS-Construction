@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"../src/","sources":["components/Persona/PersonaCoin/index.ts"],"names":[],"mappings":"AAAA,cAAc,eAAe,CAAC;AAC9B,cAAc,oBAAoB,CAAC","sourcesContent":["export * from './PersonaCoin';\nexport * from './PersonaCoin.base';\n"]}

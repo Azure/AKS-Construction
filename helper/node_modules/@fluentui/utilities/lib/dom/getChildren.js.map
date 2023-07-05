@@ -1,1 +1,0 @@
-{"version":3,"file":"getChildren.js","sourceRoot":"../src/","sources":["dom/getChildren.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,WAAW,EAAE,MAAM,yBAAyB,CAAC","sourcesContent":["export { getChildren } from '@fluentui/dom-utilities';\n"]}

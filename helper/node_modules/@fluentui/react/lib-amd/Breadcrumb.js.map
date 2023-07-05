@@ -1,1 +1,0 @@
-{"version":3,"file":"Breadcrumb.js","sourceRoot":"../src/","sources":["Breadcrumb.ts"],"names":[],"mappings":";;;IAAA,uCAA8C","sourcesContent":["export * from './components/Breadcrumb/index';\n"]}

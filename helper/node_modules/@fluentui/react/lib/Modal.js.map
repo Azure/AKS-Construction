@@ -1,1 +1,0 @@
-{"version":3,"file":"Modal.js","sourceRoot":"../src/","sources":["Modal.ts"],"names":[],"mappings":"AAAA,cAAc,0BAA0B,CAAC;AACzC,OAAO,EAAE,KAAK,IAAI,OAAO,EAAE,MAAM,0BAA0B,CAAC","sourcesContent":["export * from './components/Modal/index';\nexport { Modal as default } from './components/Modal/index';\n"]}

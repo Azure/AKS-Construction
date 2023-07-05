@@ -1,1 +1,0 @@
-{"version":3,"file":"SelectableOption.js","sourceRoot":"../src/","sources":["SelectableOption.ts"],"names":[],"mappings":";;;IAAA,uCAAmD","sourcesContent":["export * from './utilities/selectableOption/index';\n"]}

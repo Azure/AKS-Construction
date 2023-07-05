@@ -1,1 +1,0 @@
-{"version":3,"file":"TeachingBubble.js","sourceRoot":"../src/","sources":["TeachingBubble.ts"],"names":[],"mappings":";;;IAAA,uCAAkD","sourcesContent":["export * from './components/TeachingBubble/index';\n"]}

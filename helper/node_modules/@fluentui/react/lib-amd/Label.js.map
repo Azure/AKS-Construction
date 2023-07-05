@@ -1,1 +1,0 @@
-{"version":3,"file":"Label.js","sourceRoot":"../src/","sources":["Label.ts"],"names":[],"mappings":";;;IAAA,uCAAyC","sourcesContent":["export * from './components/Label/index';\n"]}

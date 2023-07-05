@@ -1,1 +1,0 @@
-{"version":3,"file":"Text.js","sourceRoot":"../src/","sources":["Text.ts"],"names":[],"mappings":";;;AAAA,kEAAwC","sourcesContent":["export * from './components/Text/index';\n"]}

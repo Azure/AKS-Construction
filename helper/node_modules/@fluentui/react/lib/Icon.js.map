@@ -1,1 +1,0 @@
-{"version":3,"file":"Icon.js","sourceRoot":"../src/","sources":["Icon.ts"],"names":[],"mappings":"AAAA,cAAc,yBAAyB,CAAC","sourcesContent":["export * from './components/Icon/index';\n"]}

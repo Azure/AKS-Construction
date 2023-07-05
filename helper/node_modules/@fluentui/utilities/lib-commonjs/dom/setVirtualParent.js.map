@@ -1,1 +1,0 @@
-{"version":3,"file":"setVirtualParent.js","sourceRoot":"../src/","sources":["dom/setVirtualParent.ts"],"names":[],"mappings":";;;AAAA,yDAA2D;AAAlD,iHAAA,gBAAgB,OAAA","sourcesContent":["export { setVirtualParent } from '@fluentui/dom-utilities';\n"]}

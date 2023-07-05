@@ -1,1 +1,0 @@
-{"version":3,"file":"Persona.js","sourceRoot":"../src/","sources":["Persona.ts"],"names":[],"mappings":"AAAA,cAAc,4BAA4B,CAAC","sourcesContent":["export * from './components/Persona/index';\n"]}

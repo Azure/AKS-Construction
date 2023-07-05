@@ -1,1 +1,0 @@
-{"version":3,"file":"List.js","sourceRoot":"../src/","sources":["List.ts"],"names":[],"mappings":"AAAA,cAAc,yBAAyB,CAAC","sourcesContent":["export * from './components/List/index';\n"]}

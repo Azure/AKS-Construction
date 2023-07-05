@@ -1,1 +1,0 @@
-{"version":3,"file":"Slider.js","sourceRoot":"../src/","sources":["Slider.ts"],"names":[],"mappings":";;;IAAA,uCAA0C","sourcesContent":["export * from './components/Slider/index';\n"]}

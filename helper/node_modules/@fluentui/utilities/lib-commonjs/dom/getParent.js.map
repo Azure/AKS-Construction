@@ -1,1 +1,0 @@
-{"version":3,"file":"getParent.js","sourceRoot":"../src/","sources":["dom/getParent.ts"],"names":[],"mappings":";;;AAAA,yDAAoD;AAA3C,0GAAA,SAAS,OAAA","sourcesContent":["export { getParent } from '@fluentui/dom-utilities';\n"]}

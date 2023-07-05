@@ -1,1 +1,0 @@
-{"version":3,"file":"OverflowSet.js","sourceRoot":"../src/","sources":["OverflowSet.ts"],"names":[],"mappings":";;;AAAA,yEAA+C","sourcesContent":["export * from './components/OverflowSet/index';\n"]}

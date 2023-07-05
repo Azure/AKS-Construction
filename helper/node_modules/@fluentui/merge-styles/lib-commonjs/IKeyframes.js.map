@@ -1,1 +1,0 @@
-{"version":3,"file":"IKeyframes.js","sourceRoot":"../src/","sources":["IKeyframes.ts"],"names":[],"mappings":"","sourcesContent":["import { IRawStyle } from './IRawStyle';\n/**\n * Keyframe definition.\n */\nexport type IKeyframes = Record<string, IRawStyle>;\n"]}

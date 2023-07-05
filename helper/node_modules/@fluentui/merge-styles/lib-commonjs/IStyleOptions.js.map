@@ -1,1 +1,0 @@
-{"version":3,"file":"IStyleOptions.js","sourceRoot":"../src/","sources":["IStyleOptions.ts"],"names":[],"mappings":"","sourcesContent":["export interface IStyleOptions {\n  rtl?: boolean;\n  specificityMultiplier?: number;\n}\n"]}

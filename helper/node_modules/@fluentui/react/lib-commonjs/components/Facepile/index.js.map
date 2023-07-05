@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"../src/","sources":["components/Facepile/index.ts"],"names":[],"mappings":";;;AAAA,2DAAiC;AACjC,0DAAgC;AAChC,qDAA2B","sourcesContent":["export * from './Facepile.types';\nexport * from './Facepile.base';\nexport * from './Facepile';\n"]}

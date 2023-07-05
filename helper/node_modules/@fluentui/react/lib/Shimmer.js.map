@@ -1,1 +1,0 @@
-{"version":3,"file":"Shimmer.js","sourceRoot":"../src/","sources":["Shimmer.ts"],"names":[],"mappings":"AAAA,cAAc,4BAA4B,CAAC","sourcesContent":["export * from './components/Shimmer/index';\n"]}

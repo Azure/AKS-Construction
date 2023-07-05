@@ -1,1 +1,0 @@
-{"version":3,"file":"Dialog.js","sourceRoot":"../src/","sources":["Dialog.ts"],"names":[],"mappings":"AAAA,cAAc,2BAA2B,CAAC;AAC1C,OAAO,EAAE,MAAM,IAAI,OAAO,EAAE,MAAM,2BAA2B,CAAC","sourcesContent":["export * from './components/Dialog/index';\nexport { Dialog as default } from './components/Dialog/index';\n"]}

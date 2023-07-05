@@ -1,1 +1,0 @@
-{"version":3,"file":"Selection.js","sourceRoot":"../src/","sources":["Selection.ts"],"names":[],"mappings":"AAAA,cAAc,6BAA6B,CAAC","sourcesContent":["export * from './utilities/selection/index';\n"]}

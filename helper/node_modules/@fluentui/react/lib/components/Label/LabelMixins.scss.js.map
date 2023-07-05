@@ -1,1 +1,0 @@
-{"version":3,"file":"LabelMixins.scss.js","sourceRoot":"../src/","sources":["components/Label/LabelMixins.scss.ts"],"names":[],"mappings":"AAAA,oBAAoB;AACpB,OAAO,EAAE,UAAU,EAAE,MAAM,+BAA+B,CAAC;AAC3D,UAAU,CAAC,EAAE,CAAC,CAAC","sourcesContent":["/* eslint-disable */\nimport { loadStyles } from '@microsoft/load-themed-styles';\nloadStyles([]);"]}
