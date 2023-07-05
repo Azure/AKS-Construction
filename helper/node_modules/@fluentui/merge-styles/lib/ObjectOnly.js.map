@@ -1,0 +1,1 @@
+{"version":3,"file":"ObjectOnly.js","sourceRoot":"../src/","sources":["ObjectOnly.ts"],"names":[],"mappings":"","sourcesContent":["export type ObjectOnly<TArg> = TArg extends {} ? TArg : {};\n"]}

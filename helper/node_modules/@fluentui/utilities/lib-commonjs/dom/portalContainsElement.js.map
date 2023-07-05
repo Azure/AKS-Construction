@@ -1,0 +1,1 @@
+{"version":3,"file":"portalContainsElement.js","sourceRoot":"../src/","sources":["dom/portalContainsElement.ts"],"names":[],"mappings":";;;AAAA,yDAAgE;AAAvD,sHAAA,qBAAqB,OAAA","sourcesContent":["export { portalContainsElement } from '@fluentui/dom-utilities';\n"]}

@@ -1,0 +1,1 @@
+{"version":3,"file":"ISize.js","sourceRoot":"../src/","sources":["ISize.ts"],"names":[],"mappings":"","sourcesContent":["/**\n * {@docCategory ISize}\n */\nexport interface ISize {\n  width: number;\n  height: number;\n}\n"]}

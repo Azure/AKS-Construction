@@ -1,0 +1,1 @@
+{"version":3,"file":"IRectangle.js","sourceRoot":"../src/","sources":["IRectangle.ts"],"names":[],"mappings":"","sourcesContent":["/**\n * Rectangle interface.\n *\n * @public\n * {@docCategory IRectangle}\n */\nexport interface IRectangle {\n  left: number;\n  top: number;\n  width: number;\n  height: number;\n  right?: number;\n  bottom?: number;\n}\n"]}

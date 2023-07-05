@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"../src/","sources":["spacing/index.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,kBAAkB,CAAC","sourcesContent":["export { DefaultSpacing } from './DefaultSpacing';\n"]}

@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"../src/","sources":["index.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,UAAU,EAAE,MAAM,cAAc,CAAC;AAC1C,OAAO,EAAE,UAAU,EAAE,CAAC;AAEtB,UAAU,CAAC,uBAAuB,EAAE,OAAO,CAAC,CAAC","sourcesContent":["import { setVersion } from './setVersion';\nexport { setVersion };\n\nsetVersion('@fluentui/set-version', '6.0.0');\n"]}

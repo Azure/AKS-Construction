@@ -1,0 +1,1 @@
+{"version":3,"file":"IDisposable.js","sourceRoot":"../src/","sources":["IDisposable.ts"],"names":[],"mappings":"","sourcesContent":["/**\n * Disposable interface.\n *\n * @public\n * {@docCategory IDisposable}\n */\nexport interface IDisposable {\n  dispose: () => void;\n}\n"]}

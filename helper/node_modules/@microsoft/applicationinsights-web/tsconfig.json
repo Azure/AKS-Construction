@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es3",
+    "moduleResolution": "Node",
+    "alwaysStrict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "noEmitHelpers": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationDir": "AISKU/types",
+    "outDir": "dist-esm",
+    "rootDir": "./AISKU/src"
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

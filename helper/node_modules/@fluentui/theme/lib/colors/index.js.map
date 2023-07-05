@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"../src/","sources":["colors/index.ts"],"names":[],"mappings":"AAAA,cAAc,gBAAgB,CAAC;AAC/B,OAAO,EAAE,cAAc,EAAE,MAAM,kBAAkB,CAAC","sourcesContent":["export * from './FluentColors';\nexport { DefaultPalette } from './DefaultPalette';\n"]}

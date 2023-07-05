@@ -1,0 +1,1 @@
+{"version":3,"file":"elementContainsAttribute.js","sourceRoot":"../src/","sources":["dom/elementContainsAttribute.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,wBAAwB,EAAE,MAAM,yBAAyB,CAAC","sourcesContent":["export { elementContainsAttribute } from '@fluentui/dom-utilities';\n"]}

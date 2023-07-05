@@ -1,0 +1,1 @@
+{"version":3,"file":"createRef.js","sourceRoot":"../src/","sources":["createRef.ts"],"names":[],"mappings":"","sourcesContent":["import * as React from 'react';\n\nexport type IRefObject<T> = React.RefObject<T> | RefObject<T> | ((ref: T | null) => void);\n\nexport type RefObject<T> = {\n  (component: T | null): void;\n  current: T | null;\n};\n"]}
