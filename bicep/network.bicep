@@ -61,6 +61,10 @@ var bastion_baseSubnet = {
 }
 var bastion_subnet = bastion && networkSecurityGroups ? union(bastion_baseSubnet, nsgBastion.outputs.nsgSubnetObj) : bastion_baseSubnet
 
+//NatGatewayEgress
+
+var NatAvailabilityZone = array(int(first(availabilityZones)))
+
 var acrpool_subnet_name = 'acrpool-sn'
 var acrpool_baseSubnet = {
   name: acrpool_subnet_name
@@ -507,7 +511,7 @@ resource natGwIp 'Microsoft.Network/publicIPAddresses@2021-08-01' =  [for i in r
   sku: {
     name: 'Standard'
   }
-  zones: !empty(availabilityZones) ? availabilityZones : []
+  zones: !empty(availabilityZones) ? NatAvailabilityZone : []
   properties: {
     publicIPAllocationMethod: 'Static'
   }
@@ -520,7 +524,7 @@ resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
   sku: {
     name: 'Standard'
   }
-  zones: !empty(availabilityZones) ? first(availabilityZones) : []
+  zones: !empty(availabilityZones) ? NatAvailabilityZone : []
   properties: {
     publicIpAddresses: [for i in range(0, natGatewayPublicIps): {
       id: natGwIp[i].id
