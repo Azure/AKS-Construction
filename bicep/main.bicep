@@ -1261,6 +1261,7 @@ var azureDefenderSecurityProfile = {
   }
 }
 
+
 var aksProperties = union({
   kubernetesVersion: kubernetesVersion
   enableRBAC: true
@@ -1270,8 +1271,8 @@ var aksProperties = union({
     enableAzureRBAC: enableAzureRBAC
     tenantID: aad_tenant_id
   } : null
-  apiServerAccessProfile: !empty(authorizedIPRanges) ? {
-    authorizedIPRanges: authorizedIPRanges
+  apiServerAccessProfile: !empty(authorizedIPRanges)  ? {
+    authorizedIPRanges: createNatGateway ? concat(authorizedIPRanges, network.outputs.natGwIpArr) : authorizedIPRanges
   } : {
     enablePrivateCluster: enablePrivateCluster
     privateDNSZone: enablePrivateCluster ? aksPrivateDnsZone : ''

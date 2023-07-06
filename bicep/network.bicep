@@ -63,7 +63,7 @@ var bastion_subnet = bastion && networkSecurityGroups ? union(bastion_baseSubnet
 
 //NatGatewayEgress
 
-var NatAvailabilityZone = array(int(first(availabilityZones)))
+var NatAvailabilityZone = array(first(availabilityZones))
 
 var acrpool_subnet_name = 'acrpool-sn'
 var acrpool_baseSubnet = {
@@ -517,7 +517,10 @@ resource natGwIp 'Microsoft.Network/publicIPAddresses@2021-08-01' =  [for i in r
   }
 }]
 
+output natGwIpArr array = [for i in range(0, natGatewayPublicIps): natGateway ? natGwIp[i].properties.ipAddress : null]
+
 var natGwName = 'ng-${resourceName}'
+
 resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
   name: natGwName
   location: location
