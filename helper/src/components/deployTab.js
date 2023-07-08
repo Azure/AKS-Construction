@@ -510,7 +510,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           }
         </PivotItem>
 
-        <PivotItem headerText="PowerShell" itemKey="deployPSArmCli" itemIcon="PasteAsCode" headerButtonProps={{disabled: deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" ? true : false , 'style': {color: deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" ? "grey" : "white"}}} >
+        <PivotItem headerText="PowerShell" itemKey="deployPSArmCli" itemIcon="PasteAsCode" headerButtonProps={{disabled: deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" ? true : false , 'style': {color: deployRelease.postPS_url === undefined && deploy.selectedTemplate !== "local" ? "grey" : "none"}}} >
 
         <Stack horizontal horizontalAlign="space-between" styles={{root: { width: '100%', marginTop: '10px'}}}>
           <Stack.Item>
