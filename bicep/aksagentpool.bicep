@@ -46,10 +46,18 @@ param osSKU string
 @description('Assign a public IP per node')
 param enableNodePublicIP bool = false
 
+param spotInstance bool = false
+
 @description('Apply a default sku taint to Windows node pools')
 param autoTaintWindows bool = false
 
 var taints = autoTaintWindows ? union(nodeTaints, ['sku=Windows:NoSchedule']) : nodeTaints
+
+var spotProperties = {
+  scaleSetPriority: 'Spot'
+  scaleSetEvictionPolicy: 'Delete'
+  spotMaxPrice: -1
+}
 
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
   name: AksName
@@ -58,27 +66,29 @@ resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = 
 resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10-01' = {
   parent: aks
   name: PoolName
-  properties: {
-    mode: 'User'
-    vmSize: agentVMSize
-    count: agentCount
-    minCount: autoScale ? agentCount : null
-    maxCount: autoScale ? agentCountMax : null
-    enableAutoScaling: autoScale
-    availabilityZones: !empty(availabilityZones) ? availabilityZones : null
-    osDiskType: osDiskType
-    osSKU: osSKU
-    osDiskSizeGB: osDiskSizeGB
-    osType: osType
-    maxPods: maxPods
-    type: 'VirtualMachineScaleSets'
-    vnetSubnetID: !empty(subnetId) ? subnetId : null
-    podSubnetID: !empty(podSubnetID) ? podSubnetID : null
-    upgradeSettings: {
-      maxSurge: '33%'
-    }
-    nodeTaints: taints
-    nodeLabels: nodeLabels
-    enableNodePublicIP: enableNodePublicIP
-  }
+  properties: union({
+      mode: 'User'
+      vmSize: agentVMSize
+      count: agentCount
+      minCount: autoScale ? agentCount : null
+      maxCount: autoScale ? agentCountMax : null
+      enableAutoScaling: autoScale
+      availabilityZones: !empty(availabilityZones) ? availabilityZones : null
+      osDiskType: osDiskType
+      osSKU: osSKU
+      osDiskSizeGB: osDiskSizeGB
+      osType: osType
+      maxPods: maxPods
+      type: 'VirtualMachineScaleSets'
+      vnetSubnetID: !empty(subnetId) ? subnetId : null
+      podSubnetID: !empty(podSubnetID) ? podSubnetID : null
+      upgradeSettings: {
+        maxSurge: '33%'
+      }
+      nodeTaints: taints
+      nodeLabels: nodeLabels
+      enableNodePublicIP: enableNodePublicIP
+    },
+    spotInstance ? spotProperties : {}
+  )
 }
