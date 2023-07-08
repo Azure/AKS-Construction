@@ -1132,6 +1132,8 @@ var systemPoolPresets = {
     maxCount: 3
     enableAutoScaling: true
     availabilityZones: []
+    osDiskSizeGB: 32
+    osDiskType: 'Ephemeral'
   }
   Standard : {
     vmSize: 'Standard_DS2_v2'
@@ -1144,6 +1146,8 @@ var systemPoolPresets = {
       '2'
       '3'
     ]
+    osDiskSizeGB: 60
+    osDiskType: 'Ephemeral'
   }
   HighSpec : {
     vmSize: 'Standard_D4s_v3'
@@ -1156,6 +1160,8 @@ var systemPoolPresets = {
       '2'
       '3'
     ]
+    osDiskSizeGB: 128
+    osDiskType: 'Ephemeral'
   }
 }
 
@@ -1165,6 +1171,8 @@ var systemPoolBase = {
   count: agentCount
   mode: 'System'
   osType: 'Linux'
+  osDiskType: osDiskType
+  osDiskSizeGB: osDiskSizeGB
   maxPods: 30
   type: 'VirtualMachineScaleSets'
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : null
