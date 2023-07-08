@@ -58,7 +58,8 @@
             "enableAzureRBAC": true,
             "aadgroupids": "",
             "availabilityZones": "no",
-            "DefenderForContainers" : false
+            "DefenderForContainers" : false,
+            "nodePoolSpot": false
         },
         "addons": {
             "logDataCap": 0,

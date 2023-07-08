@@ -223,6 +223,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                                 <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'osDiskType')}</MessageBar>
                             }
                             <TextField label="VM SKU" onChange={(ev, val) => updateFn('vmSize', val)} required errorMessage={getError(invalidArray, 'vmSize')} value={cluster.vmSize} />
+                            <Checkbox checked={cluster.nodePoolSpot} onChange={(ev, val) => updateFn("nodePoolSpot", val)} disabled={cluster.SystemPoolType=='none'} onRenderLabel={() => <Text styles={{ root: { color: 'gray' } }}>Spot Instance</Text>} />
                             <ChoiceGroup
                                 onChange={(ev, { key }) => updateFn("osDiskType", key)}
                                 selectedKey={cluster.osDiskType}
