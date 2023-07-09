@@ -46,6 +46,7 @@ param osSKU string
 @description('Assign a public IP per node')
 param enableNodePublicIP bool = false
 
+@description('If the node pool should use VM spot instances')
 param spotInstance bool = false
 
 @description('Apply a default sku taint to Windows node pools')
@@ -82,8 +83,8 @@ resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@202
       type: 'VirtualMachineScaleSets'
       vnetSubnetID: !empty(subnetId) ? subnetId : null
       podSubnetID: !empty(podSubnetID) ? podSubnetID : null
-      upgradeSettings: {
-        maxSurge: '33%'
+      upgradeSettings: spotInstance ? {} : {
+        maxSurge:  '33%' //Spot pools can't set max surge
       }
       nodeTaints: taints
       nodeLabels: nodeLabels
