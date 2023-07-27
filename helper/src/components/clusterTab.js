@@ -397,7 +397,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                     options={[
                         { key: 'none', text: 'Public IP with no IP restrictions' },
                         { key: 'whitelist', text: 'Create allowed IP ranges (defaults to IP address of machine running the script)' },
-                        { key: 'private', text: 'Private Cluster (WARNING: most complex to operate)' }
+                        { key: 'private', text: 'Private Cluster (Note: Best option, but most complex to operate)' }
 
                     ]}
                     onChange={(ev, { key }) => updateFn("apisecurity", key)}
