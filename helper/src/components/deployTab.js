@@ -250,14 +250,14 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }).join('')
 
   const post_deployBASHcmd =  `\n\n# Deploy charts into cluster\n` +
-  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.postBASH_url}  | bash -s -- `) +
-  (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
-  Object.keys(post_params).map(k => {
-    const val = post_params[k]
-    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-    return ` \\\n\t-p ${k}=${targetVal}`
-  }).join('')+
-  (!deploy.disablePreviews ? preview_post_deployBASHcmd : '')
+    (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.postBASH_url}  | bash -s -- `) +
+    (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
+    Object.keys(post_params).map(k => {
+      const val = post_params[k]
+      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+      return ` \\\n\t-p ${k}=${targetVal}`
+    }).join('')+
+    (!deploy.disablePreviews ? preview_post_deployBASHcmd : '')
 
   const getCredentials =
     '# Get credentials for your new AKS cluster & login (interactive)\n' +
@@ -294,14 +294,14 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     '\n\n' +
     (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deployBASHstr : '')
 
-    //Powershell (Remember to align any changes with Bash)
-    const preview_post_deployPScmd = Object.keys(preview_post_params).map(k => {
-      const val = preview_post_params[k]
-      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-      return ` \`\n\t-${k} ${targetVal}`
-    }).join('')
+  //Powershell (Remember to align any changes with Bash)
+  const preview_post_deployPScmd = Object.keys(preview_post_params).map(k => {
+    const val = preview_post_params[k]
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+    return ` \`\n\t-${k} ${targetVal}`
+  }).join('')
 
-    const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
+  const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
     (deploy.selectedTemplate === "local" ? ` .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.ps1 ` : `& $([scriptblock]::Create((New-Object Net.WebClient).DownloadString("${deployRelease.postPS_url}")))`) +
     (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : ` -releace_version="${deployRelease.base_download_url}"`) +
     Object.keys(post_params).map(k => {
@@ -316,7 +316,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     :
     privateCluster
 
-    const deployPScmd =
+  const deployPScmd =
     `# Create Resource Group\n` +
     `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` + networkWatcher +
     `# Deploy template with in-line parameters\n` +
