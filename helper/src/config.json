@@ -28,7 +28,8 @@
             "githubrepo": "",
             "githubrepobranch": "main",
             "deployItemKey": "deployArmCli",
-            "workloadDeployCommands" : []
+            "workloadDeployCommands" : [],
+            "getCreds" : true
         },
         "cluster": {
             "keyVaultKmsByoRG": "",
