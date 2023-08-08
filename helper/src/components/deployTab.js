@@ -459,9 +459,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
             <Label>Always retrieve cluster credentials & login (interactive)</Label>
             <Stack.Item>
-              <Checkbox disabled={cluster.apisecurity === "private"} checked={addons.ingress === "nginx" || addons.ingress === "traefik" || addons.ingress === "contour" || deploy.getCreds} onChange={(ev, v) => updateFn("getCreds", v)} label="Always show the az aks get-credentials command to quickly connect to your new cluster" />
-              {/* <Checkbox checked={deploy.getCreds} onChange={(ev, v) => updateFn("getCreds", v)} label="Always show the az aks get-credentials command to quickly connect to your new cluster" /> */}
-              {/* <Checkbox onChange={(ev, v) => updateFn("getCreds", v)} label="Always show the az aks get-credentials command to quickly connect to your new cluster" /> */}
+              <Checkbox disabled={cluster.apisecurity === "private"} checked={addons.ingress === "nginx" || addons.ingress === "traefik" || addons.ingress === "contour" || deploy.getCreds} onChange={(ev, v) => updateFn("getCreds", v)} label="Always show the 'az aks get-credentials' command to quickly connect to your new cluster" />
             </Stack.Item>
 
             <Label>Telemetry</Label>
