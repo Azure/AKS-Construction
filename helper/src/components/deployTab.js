@@ -195,7 +195,6 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...(addons.enableMonitorIngress && { enableMonitorIngress: addons.enableMonitorIngress})
       })
     }),
-    ...(deploy.getCreds && { getCreds: deploy.getCreds })
   }
 
   const preview_post_params = {
@@ -259,6 +258,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }).join('')+
     (!deploy.disablePreviews ? preview_post_deployBASHcmd : '')
 
+  const displayPostCmd =
+    Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0)
+
   const getCredentials =
     '# Get credentials for your new AKS cluster & login (interactive)\n' +
     `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
@@ -271,9 +273,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
 
   const post_deployBASHstr = cluster.apisecurity !== "private" ?
-    (Object.keys(post_params).length === 1 && deploy.getCreds) ? getCredentials : getCredentials + post_deployBASHcmd
+    (deploy.getCreds || displayPostCmd ?
+      getCredentials + (displayPostCmd ? post_deployBASHcmd : '')
+      :
+      '')
     :
-    privateCluster
+    (displayPostCmd) ? privateCluster : ''
 
   const networkWatcher = net.nsg && net.nsgFlowLogs !== defaults.net.nsgFlowLogs ?
     `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
@@ -292,7 +297,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       return ` \\\n\t${k}=${targetVal}`
     }).join('') +
     '\n\n' +
-    (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deployBASHstr : '')
+    (displayPostCmd || deploy.getCreds ? post_deployBASHstr : '')
 
   //Powershell (Remember to align any changes with Bash)
   const preview_post_deployPScmd = Object.keys(preview_post_params).map(k => {
@@ -312,9 +317,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     (!deploy.disablePreviews ? preview_post_deployPScmd : '')
 
   const post_deployPSstr = cluster.apisecurity !== "private" ?
-    (Object.keys(post_params).length === 1 && deploy.getCreds) ? getCredentials : getCredentials + post_deployPScmd
+    (deploy.getCreds || displayPostCmd ?
+      getCredentials + (displayPostCmd ? post_deployPScmd : '')
+      :
+      '')
     :
-    privateCluster
+    (displayPostCmd) ? privateCluster : ''
 
   const deployPScmd =
     `# Create Resource Group\n` +
@@ -327,7 +335,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       return ` \`\n\t${k}=${targetVal}`
     }).join('') +
     '\n\n' +
-    (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deployPSstr : '')
+    (displayPostCmd || deploy.getCreds ? post_deployPSstr : '')
 
   //Terraform
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
@@ -459,7 +467,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
             <Label>Always retrieve cluster credentials & login (interactive)</Label>
             <Stack.Item>
-              <Checkbox disabled={cluster.apisecurity === "private"} checked={addons.ingress === "nginx" || addons.ingress === "traefik" || addons.ingress === "contour" || deploy.getCreds} onChange={(ev, v) => updateFn("getCreds", v)} label="Always show the 'az aks get-credentials' command to quickly connect to your new cluster" />
+              <Checkbox disabled={cluster.apisecurity === "private" || displayPostCmd} checked={deploy.getCreds || displayPostCmd} onChange={(ev, v) => updateFn("getCreds", v)} label="Always show the 'az aks get-credentials' command to quickly connect to your new cluster" />
             </Stack.Item>
 
             <Label>Telemetry</Label>
