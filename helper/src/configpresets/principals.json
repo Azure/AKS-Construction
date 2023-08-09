@@ -281,7 +281,8 @@
                                 "vnet_opt": "custom",
                                 "vnetprivateend": false,
                                 "afw": false,
-                                "bastion": false
+                                "bastion": false,
+                                "aksOutboundTrafficType":"loadBalancer"
                             }
                         }
                     },
@@ -386,7 +387,8 @@
                                 "vnet_opt": "custom",
                                 "vnetprivateend": true,
                                 "afw": true,
-                                "bastion": true
+                                "bastion": true,
+                                "aksOutboundTrafficType": "userDefinedRouting"
                             }
                         }
                     }
@@ -426,8 +428,6 @@
                                 "automationAccountScheduledStartStop": "Weekday"
                             },
                             "net": {
-                                "createNatGateway": false,
-                                "aksOutboundTrafficType": "loadBalancer"
                             }
                         }
                     },
@@ -462,8 +462,6 @@
                                 "automationAccountScheduledStartStop": ""
                             },
                             "net": {
-                                "createNatGateway": true,
-                                "aksOutboundTrafficType": "natGateway"
                             }
                         }
                     }
