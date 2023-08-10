@@ -10,7 +10,7 @@
         "deploy": {
             "enableTelemetry": true,
             "managedNodeResourceGroup": "",
-            "kubernetesVersion": "1.25.6",
+            "kubernetesVersion": "1.26.6",
             "location": "WestEurope",
             "apiips": "",
             "demoapp": false,
