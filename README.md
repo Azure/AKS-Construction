@@ -92,6 +92,14 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+## Deployment Configuration
+
+If you would like to contribute to this project, you can **develop inside a container** to containerize all the necessary pre-requisite component without requiring them to be installed on the local machine. The environment you will work in will be created using a development container, or dev container hosted on a virtual machine using GitHub Codespaces.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure/AKS-Construction)
+
+*More information can be found at [Developing inside a Container](https://code.visualstudio.com/docs/remote/containers).*
+
 ## FAQ / Troubleshooting
 
 ### Subscription is not registered to use namespace Microsoft.OperationsManagement
