@@ -501,7 +501,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             <Stack.Item>
               <Label >Commands to deploy your fully operational environment</Label>
               <Text>
-                Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="https://shell.azure.com/">Azure Cloud Shell</Link>.
+                Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="https://portal.azure.com/#cloudshell/">Azure Cloud Shell</Link>.
               </Text>
             </Stack.Item>
 
