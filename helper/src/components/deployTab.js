@@ -555,7 +555,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           </Stack.Item>
         </Stack>
 
-        <CodeBlock hideSave={true} lang="PowerShell script" error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployPScmd} testId={'deploy-deploycmd'}/>
+        <CodeBlock hideSave={true} lang="PowerShell script" error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployPScmd} testId={'deploy-deployPS'}/>
 
         { urlParams.toString() !== "" &&
           <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
@@ -672,7 +672,7 @@ az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
 
         <PivotItem headerText="Parameters File" itemKey="params"  itemIcon="FileSymlink">
           <Label>Can be used for source control</Label>
-          <CodeBlock  lang="json"  deploycmd={param_file} label="Parameter file" />
+          <CodeBlock  lang="json"  deploycmd={param_file} label="Parameter file" testId={'deploy-deployparams'} />
         </PivotItem>
 
 
