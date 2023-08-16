@@ -161,7 +161,10 @@ export function Presets({
                 enableScopedSelectors
                 horizontal
                 tokens={{ childrenGap: 10 }}
-                style={{ display: "flex", flexDirection: "column" }}
+                style={{
+                  display: "flex",
+                  flexDirection: c.imageSrc ? "column" : "row",
+                }}
               >
                 <Stack.Item align="start" grow={false}>
                   {c.imageSrc && (
