@@ -250,25 +250,36 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   }).join('')
 
   const post_deployBASHcmd =  `\n\n# Deploy charts into cluster\n` +
-  (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.postBASH_url}  | bash -s -- `) +
-  (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
-  Object.keys(post_params).map(k => {
-    const val = post_params[k]
-    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-    return ` \\\n\t-p ${k}=${targetVal}`
-  }).join('')+
-  (!deploy.disablePreviews ? preview_post_deployBASHcmd : '')
+    (deploy.selectedTemplate === "local" ? `bash .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.sh ` : `curl -sL ${deployRelease.postBASH_url}  | bash -s -- `) +
+    (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : `-r ${deployRelease.base_download_url}`) +
+    Object.keys(post_params).map(k => {
+      const val = post_params[k]
+      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+      return ` \\\n\t-p ${k}=${targetVal}`
+    }).join('')+
+    (!deploy.disablePreviews ? preview_post_deployBASHcmd : '')
 
-  const post_deployBASHstr = cluster.apisecurity !== "private" ?
+  const displayPostCmd =
+    Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0)
+
+  const displayGetCredentials =
     '# Get credentials for your new AKS cluster & login (interactive)\n' +
     `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
-    'kubectl get nodes' +
-    post_deployBASHcmd
-    :
+    'kubectl get nodes'
+
+  const privateCluster =
     '# Private cluster, so use command invoke\n' +
     `az aks command invoke -g ${deploy.rg} -n ${aks}  --command "` +
     post_deployBASHcmd.replaceAll('"', '\\"') +
     `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
+
+  const post_deployBASHstr = cluster.apisecurity !== "private" ?
+    (deploy.getCredentials || displayPostCmd ?
+      displayGetCredentials + (displayPostCmd ? post_deployBASHcmd : '')
+      :
+      '')
+    :
+    (displayPostCmd) ? privateCluster : ''
 
   const networkWatcher = net.nsg && net.nsgFlowLogs !== defaults.net.nsgFlowLogs ?
     `# Create Network Watcher Resource Group If It Doesn't Exist\n` +
@@ -285,16 +296,18 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
       return ` \\\n\t${k}=${targetVal}`
-    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? post_deployBASHstr : '')
+    }).join('') +
+    '\n\n' +
+    (displayPostCmd || deploy.getCredentials ? post_deployBASHstr : '')
 
-    //Powershell (Remember to align any changes with Bash)
-    const preview_post_deployPScmd = Object.keys(preview_post_params).map(k => {
-      const val = preview_post_params[k]
-      const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
-      return ` \`\n\t-${k} ${targetVal}`
-    }).join('')
+  //Powershell (Remember to align any changes with Bash)
+  const preview_post_deployPScmd = Object.keys(preview_post_params).map(k => {
+    const val = preview_post_params[k]
+    const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
+    return ` \`\n\t-${k} ${targetVal}`
+  }).join('')
 
-    const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
+  const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
     (deploy.selectedTemplate === "local" ? ` .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.ps1 ` : `& $([scriptblock]::Create((New-Object Net.WebClient).DownloadString("${deployRelease.postPS_url}")))`) +
     (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : ` -releace_version="${deployRelease.base_download_url}"`) +
     Object.keys(post_params).map(k => {
@@ -304,15 +317,15 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     }).join('')+
     (!deploy.disablePreviews ? preview_post_deployPScmd : '')
 
+  const post_deployPSstr = cluster.apisecurity !== "private" ?
+    (deploy.getCredentials || displayPostCmd ?
+      displayGetCredentials + (displayPostCmd ? post_deployPScmd : '')
+      :
+      '')
+    :
+    (displayPostCmd) ? privateCluster : ''
 
-    //Below used when not a private cluster (used further below the BASH  postdeploy script if a private cluster)
-    const post_deployPSstr =
-    '# Get credentials for your new AKS cluster & login (interactive)\n' +
-    `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
-    'kubectl get nodes' +
-    post_deployPScmd
-
-    const deployPScmd =
+  const deployPScmd =
     `# Create Resource Group\n` +
     `az group create -l ${deploy.location} -n ${deploy.rg}\n\n` + networkWatcher +
     `# Deploy template with in-line parameters\n` +
@@ -321,8 +334,9 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       const val = finalParams[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)).replaceAll('"[\\', '\'[').replaceAll('\\"]"', '"]\'').replaceAll('\\",\\"','","') : val
       return ` \`\n\t${k}=${targetVal}`
-    }).join('') + '\n\n' + (Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0) ? cluster.apisecurity !== "private" ? post_deployPSstr: post_deployBASHstr : '')
-
+    }).join('') +
+    '\n\n' +
+    (displayPostCmd || deploy.getCredentials ? post_deployPSstr : '')
 
   //Terraform
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
@@ -452,6 +466,12 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             </Stack.Item>
             { deploy.keyVaultIPAllowlist && net.vnetprivateend && <MessageBar messageBarType={MessageBarType.info}> <Text >"Add current IP to KeyVault firewall" will enable KeyVaults  PublicNetworkAccess property</Text></MessageBar> }
 
+            <Label>Always retrieve cluster credentials & login (interactive)</Label>
+            <Stack.Item>
+              <Checkbox disabled={cluster.apisecurity === "private" || displayPostCmd} checked={deploy.getCredentials || displayPostCmd} onChange={(ev, v) => updateFn("getCredentials", v)} label="Always show the 'az aks get-credentials' command to quickly connect to your new cluster" />
+            </Stack.Item>
+
+            <Label>Telemetry</Label>
             <Stack.Item>
               <Checkbox inputProps={{ "data-testid": "akscTelemetryOpt-Checkbox"}} checked={deploy.enableTelemetry} onChange={(ev, v) => updateFn("enableTelemetry", v)} label="Enable telemetry feedback to Microsoft" />
             </Stack.Item>
@@ -482,7 +502,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             <Stack.Item>
               <Label >Commands to deploy your fully operational environment</Label>
               <Text>
-                Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+                Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="https://portal.azure.com/#cloudshell/">Azure Cloud Shell</Link>.
               </Text>
             </Stack.Item>
 
@@ -536,7 +556,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
           </Stack.Item>
         </Stack>
 
-        <CodeBlock hideSave={true} lang="PowerShell script" error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployPScmd} testId={'deploy-deploycmd'}/>
+        <CodeBlock hideSave={true} lang="PowerShell script" error={allok ? false : 'Configuration not complete, please correct the tabs with the warning symbol before running'} deploycmd={deployPScmd} testId={'deploy-deployPS'}/>
 
         { urlParams.toString() !== "" &&
           <Text variant="medium">Not ready to deploy? Bookmark your configuration : <a href={"?" + urlParams.toString()}>here</a></Text>
@@ -653,7 +673,7 @@ az ad sp delete --id $(az ad sp show --id \${rmId[0]} --query id -o tsv)
 
         <PivotItem headerText="Parameters File" itemKey="params"  itemIcon="FileSymlink">
           <Label>Can be used for source control</Label>
-          <CodeBlock  lang="json"  deploycmd={param_file} label="Parameter file" />
+          <CodeBlock  lang="json"  deploycmd={param_file} label="Parameter file" testId={'deploy-deployparams'} />
         </PivotItem>
 
 
