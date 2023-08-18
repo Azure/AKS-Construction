@@ -851,7 +851,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.25.6'
+param kubernetesVersion string = '1.26.6'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -1336,7 +1336,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 !empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-04-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-05-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties

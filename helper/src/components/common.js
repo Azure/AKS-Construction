@@ -40,6 +40,10 @@ export function CodeBlock({deploycmd, testId, lang, filename, error, hideSave}) 
         window.open(dataUrl());
     }
 
+    const onCopyDeployHandler = () => {
+        appInsights.trackEvent({name: "Copy."+ testId});
+      };
+
     return [
         <div key="code-header" className="codeHeader" style={{...(error && {borderColor: 'darkred'})}}>
             <span className="language">{lang}</span>
@@ -64,7 +68,7 @@ export function CodeBlock({deploycmd, testId, lang, filename, error, hideSave}) 
         </div>,
 
         <pre key="code-pre" className="has-inner-focus"  style={{...(error && {borderColor: 'darkred'})}}>
-            <code className={"lang-" + lang}><span data-lang={lang} data-testid={testId || 'none'} style={{...(error && {color: 'grey'})}}>{deploycmd}</span></code>
+            <code onCopyCapture={onCopyDeployHandler} className={"lang-" + lang}><span data-lang={lang} data-testid={testId || 'none'} style={{...(error && {color: 'grey'})}}>{deploycmd}</span></code>
         </pre>
     ]
 }
