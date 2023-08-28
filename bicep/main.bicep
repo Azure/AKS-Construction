@@ -886,6 +886,9 @@ param fileCSIDriver bool = true
 @description('Enables the Disk CSI driver')
 param diskCSIDriver bool = true
 
+@description('Enables HTTP Application Routing')
+param httpApplicationRouting bool = false
+
 @allowed([
   'none'
   'patch'
@@ -1185,6 +1188,9 @@ output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
 var akssku = AksPaidSkuForSLA ? 'Standard' : 'Free'
 
 var aks_addons = union({
+  httpApplicationRouting: {
+    enabled: httpApplicationRouting
+  }
   azurepolicy: {
     config: {
       version: !empty(azurepolicy) ? 'v2' : json('null')
