@@ -125,7 +125,7 @@ resource automationAccount 'Microsoft.Automation/automationAccounts@2022-08-08' 
   }
 }
 
-resource automationAccountDiagLogging 'Microsoft.Insights/diagnosticSettings@2016-09-01' = if(!empty(loganalyticsWorkspaceId)) {
+resource automationAccountDiagLogging 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if(!empty(loganalyticsWorkspaceId)) {
   name: 'diags'
   scope: automationAccount
   properties: {

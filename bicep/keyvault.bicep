@@ -55,7 +55,7 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
   }
 }
 
-resource kvDiags 'Microsoft.Insights/diagnosticSettings@2016-09-01' = if (!empty(logAnalyticsWorkspaceId)) {
+resource kvDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(logAnalyticsWorkspaceId)) {
   name: 'kvDiags'
   scope: kv
   properties: {

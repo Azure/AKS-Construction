@@ -243,7 +243,7 @@ param NsgDiagnosticCategories array = [
   'NetworkSecurityGroupRuleCounter'
 ]
 
-resource nsgDiags 'Microsoft.Insights/diagnosticSettings@2016-09-01' = if (!empty(workspaceResourceId)) {
+resource nsgDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(workspaceResourceId)) {
   name: 'diags-${nsgName}'
   scope: nsg
   properties: {
