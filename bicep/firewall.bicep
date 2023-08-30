@@ -25,7 +25,7 @@ var managementIpConfig = {
   }
 }
 
-resource fw_pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+resource fw_pip 'Microsoft.Network/publicIPAddresses@2023-04-01' = {
   name: firewallPublicIpName
   location: location
   sku: {
@@ -38,7 +38,7 @@ resource fw_pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
   }
 }
 
-resource fwManagementIp_pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if(fwSku=='Basic') {
+resource fwManagementIp_pip 'Microsoft.Network/publicIPAddresses@2023-04-01' = if(fwSku=='Basic') {
   name: firewallManagementPublicIpName
   location: location
   sku: {
@@ -51,7 +51,7 @@ resource fwManagementIp_pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = i
   }
 }
 
-resource fwDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(workspaceDiagsId)) {
+resource fwDiags 'Microsoft.Insights/diagnosticSettings@2016-09-01' = if (!empty(workspaceDiagsId)) {
   scope: fw
   name: 'fwDiags'
   properties: {
@@ -91,7 +91,7 @@ resource fwDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if
 param appDnsZoneName string = ''
 
 var fw_name = 'afw-${resourceName}'
-resource fw 'Microsoft.Network/azureFirewalls@2022-01-01' = {
+resource fw 'Microsoft.Network/azureFirewalls@2023-04-01' = {
   name: fw_name
   location: location
   zones: !empty(availabilityZones) ? availabilityZones : []
@@ -122,7 +122,7 @@ resource fw 'Microsoft.Network/azureFirewalls@2022-01-01' = {
   }
 }
 
-resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
+resource fwPolicy 'Microsoft.Network/firewallPolicies@2023-04-01' = {
   name: 'afwp-${resourceName}'
   location: location
   properties: {

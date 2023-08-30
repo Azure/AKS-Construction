@@ -6,7 +6,7 @@ param workspaceRegion string = resourceGroup().location
 
 var nsgName = 'nsg-${resourceName}'
 
-resource nsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+resource nsg 'Microsoft.Network/networkSecurityGroups@2023-04-01' = {
   name: nsgName
   location: location
 }
@@ -243,7 +243,7 @@ param NsgDiagnosticCategories array = [
   'NetworkSecurityGroupRuleCounter'
 ]
 
-resource nsgDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(workspaceResourceId)) {
+resource nsgDiags 'Microsoft.Insights/diagnosticSettings@2016-09-01' = if (!empty(workspaceResourceId)) {
   name: 'diags-${nsgName}'
   scope: nsg
   properties: {

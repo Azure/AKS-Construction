@@ -12,7 +12,7 @@ param workspaceId string = ''
 param workspaceResourceId string = ''
 param workspaceRegion string = resourceGroup().location
 
-resource networkWatcher 'Microsoft.Network/networkWatchers@2022-01-01' = {
+resource networkWatcher 'Microsoft.Network/networkWatchers@2023-04-01' = {
   name: 'NetworkWatcher_${location}'
   location: location
   properties: {}
