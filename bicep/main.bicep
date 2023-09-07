@@ -1508,6 +1508,19 @@ resource daprExtension 'Microsoft.KubernetesConfiguration/extensions@2022-11-01'
     }
 }
 
+@description('Add the AKS Backup extension')
+param enableAksBackup bool = true
+
+module aksBackup './backupVault.bicep' = if (enableAksBackup) {
+  name: '${aks.name}-backup'
+  scope: resourceGroup()
+  params: {
+    location: location
+    resourceName: resourceName
+    managedNodeResourceGroup: managedNodeResourceGroup
+  }
+}
+
 output daprReleaseNamespace string = daprAddon ? daprExtension.properties.scope.cluster.releaseNamespace : ''
 
 /*__  ___.   ______   .__   __.  __  .___________.  ______   .______       __  .__   __.   _______
