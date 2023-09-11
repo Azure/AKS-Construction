@@ -261,7 +261,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
   const displayPostCmd =
     Object.keys(post_params).length >0 || (!deploy.disablePreviews && Object.keys(preview_post_params).length >0)
 
-  const getCredentials =
+  const displayGetCredentials =
     '# Get credentials for your new AKS cluster & login (interactive)\n' +
     `az aks get-credentials -g ${deploy.rg} -n ${aks}\n` +
     'kubectl get nodes'
@@ -273,8 +273,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     `\n"${deploy.selectedTemplate === "local" ? ' --file ./postdeploy/scripts/postdeploy.sh --file ./postdeploy/helm/Az-CertManagerIssuer-0.3.0.tgz --file ./postdeploy/k8smanifests/networkpolicy-deny-all.yml --file ./helper/src/dependencies.json' : ''}`
 
   const post_deployBASHstr = cluster.apisecurity !== "private" ?
-    (deploy.getCreds || displayPostCmd ?
-      getCredentials + (displayPostCmd ? post_deployBASHcmd : '')
+    (deploy.getCredentials || displayPostCmd ?
+      displayGetCredentials + (displayPostCmd ? post_deployBASHcmd : '')
       :
       '')
     :
@@ -297,7 +297,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       return ` \\\n\t${k}=${targetVal}`
     }).join('') +
     '\n\n' +
-    (displayPostCmd || deploy.getCreds ? post_deployBASHstr : '')
+    (displayPostCmd || deploy.getCredentials ? post_deployBASHstr : '')
 
   //Powershell (Remember to align any changes with Bash)
   const preview_post_deployPScmd = Object.keys(preview_post_params).map(k => {
@@ -317,8 +317,8 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     (!deploy.disablePreviews ? preview_post_deployPScmd : '')
 
   const post_deployPSstr = cluster.apisecurity !== "private" ?
-    (deploy.getCreds || displayPostCmd ?
-      getCredentials + (displayPostCmd ? post_deployPScmd : '')
+    (deploy.getCredentials || displayPostCmd ?
+      displayGetCredentials + (displayPostCmd ? post_deployPScmd : '')
       :
       '')
     :
@@ -335,7 +335,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       return ` \`\n\t${k}=${targetVal}`
     }).join('') +
     '\n\n' +
-    (displayPostCmd || deploy.getCreds ? post_deployPSstr : '')
+    (displayPostCmd || deploy.getCredentials ? post_deployPSstr : '')
 
   //Terraform
   const deployTfcmd = `#download the *.tf files and run these commands to deploy using terraform\n#for more AKS Construction samples of deploying with terraform, see https://aka.ms/aksc/terraform\n\nterraform fmt\nterraform init\nterraform validate\nterraform plan -out main.tfplan\nterraform apply main.tfplan\nterraform output`
@@ -467,7 +467,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
 
             <Label>Always retrieve cluster credentials & login (interactive)</Label>
             <Stack.Item>
-              <Checkbox disabled={cluster.apisecurity === "private" || displayPostCmd} checked={deploy.getCreds || displayPostCmd} onChange={(ev, v) => updateFn("getCreds", v)} label="Always show the 'az aks get-credentials' command to quickly connect to your new cluster" />
+              <Checkbox disabled={cluster.apisecurity === "private" || displayPostCmd} checked={deploy.getCredentials || displayPostCmd} onChange={(ev, v) => updateFn("getCredentials", v)} label="Always show the 'az aks get-credentials' command to quickly connect to your new cluster" />
             </Stack.Item>
 
             <Label>Telemetry</Label>
@@ -501,7 +501,7 @@ az role assignment create --role "Managed Identity Operator" --assignee-principa
             <Stack.Item>
               <Label >Commands to deploy your fully operational environment</Label>
               <Text>
-                Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell</Link>.
+                Requires <Link target="_bl" href="https://docs.microsoft.com/cli/azure/install-azure-cli">AZ CLI (2.37.0 or greater)</Link>, or execute in the <Link target="_cs" href="https://portal.azure.com/#cloudshell/">Azure Cloud Shell</Link>.
               </Text>
             </Stack.Item>
 
