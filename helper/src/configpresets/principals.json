@@ -292,7 +292,7 @@
                         "description": {
                             "title": "Best option for highly secure, regulated environments or sensitive data requirements.",
                             "titleWarning": {
-                                "description": "WARNING: most complex environment option to operate",
+                                "description": "Most secure option for your apps, but requires most involved access management",
                                 "MessageBarType": 5
                             },
                             "bulets": [
