@@ -189,13 +189,13 @@ var aks_podSubnet =  {
 }
 
 var aks_subnet = networkSecurityGroups ? union(aks_baseSubnet, nsgAks.outputs.nsgSubnetObj) : aks_baseSubnet
-var aks_podsubnet = networkSecurityGroups ? union(aks_podSubnet, nsgAks.outputs.nsgSubnetObj) : aks_podSubnet
+var aks_finalPodSubnet = networkSecurityGroups ? union(aks_podSubnet, nsgAks.outputs.nsgSubnetObj) : aks_podSubnet
 
 
 
 var subnets = union(
   array(aks_subnet),
-  cniDynamicIpAllocation ? array(aks_podsubnet) : [],
+  cniDynamicIpAllocation ? array(aks_finalPodSubnet) : [],
   azureFirewalls ? array(fw_subnet) : [],
   privateLinks ? array(private_link_subnet) : [],
   acrPrivatePool ? array(acrpool_subnet) : [],
