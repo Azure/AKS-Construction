@@ -1370,6 +1370,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2023-05-02-preview' = {
 }
 output aksClusterName string = aks.name
 output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.issuerURL : ''
+output ingressFqdn string = aks.properties.addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName
 
 @allowed(['Linux','Windows'])
 @description('The User Node pool OS')
