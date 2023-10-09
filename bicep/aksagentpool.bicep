@@ -40,7 +40,7 @@ param podSubnetID string = ''
 @allowed(['Linux','Windows'])
 param osType string
 
-@allowed(['Ubuntu','Windows2019','Windows2022'])
+@allowed(['AzureLinux','Ubuntu','Windows2019','Windows2022'])
 param osSKU string
 
 @description('Assign a public IP per node')

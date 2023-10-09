@@ -127,6 +127,7 @@ export default function ({ defaults, tabValues, updateFn, featureFlag, invalidAr
                             onChange={(ev, { key }) => updateFn("osSKU", key)}
                             options={[
                                 { key: 'Ubuntu', text: 'Ubuntu', disabled:cluster.osType!=='Linux' },
+                                { key: 'AzureLinux', text: 'Azure Linux', disabled:cluster.osType!=='Linux' },
                                 { key: 'Windows2022', text: 'Windows Server 2022', disabled:cluster.osType!=='Windows' }
                             ]}
                             styles={{ dropdown: { width: "100%", minWidth: "200px" } }}

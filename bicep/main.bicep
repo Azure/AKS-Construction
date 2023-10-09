@@ -1165,6 +1165,7 @@ var systemPoolBase = {
   count: agentCount
   mode: 'System'
   osType: 'Linux'
+  osSku: osSKU=='AzureLinux' ? osSKU : 'Ubuntu'
   maxPods: 30
   type: 'VirtualMachineScaleSets'
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : null
@@ -1369,8 +1370,8 @@ output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.i
 @description('The User Node pool OS')
 param osType string = 'Linux'
 
-@allowed(['Ubuntu','Windows2019','Windows2022'])
-@description('The User Node pool OS SKU')
+@allowed(['AzureLinux','Ubuntu','Windows2019','Windows2022'])
+@description('User Node pool OS SKU')
 param osSKU string = 'Ubuntu'
 
 var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
