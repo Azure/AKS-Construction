@@ -599,7 +599,7 @@ gh secret set --repo ${deploy.githubrepo} USER_OBJECT_ID -b $spId
 <Text>* Requires <Link target="_gh" href="https://github.com/cli/cli">GitHub CLI</Link>, or execute in the <Link target="_cs" href="http://shell.azure.com/">Azure Cloud Shell (where it is pre-installed)</Link>.</Text>
 <Separator></Separator>
 
-            <Text style={{marginTop: '20px'}}>Add the following code to a new file in your repos <code style={{ "background-color": "#e6e6e6"}}>.github/workflows</code> folder, this will call the AKS-Construction reusable workflow.  NOTE: This example creates a manually triggered Action</Text>
+            <Text style={{marginTop: '20px'}}>Add the following code to a new file in your repos <code>.github/workflows</code> folder, this will call the AKS-Construction reusable workflow.  NOTE: This example creates a manually triggered Action</Text>
             <CodeBlock testId={'deploy-github-actions'} lang="github actions"  deploycmd={`name: Deploy AKS-Construction
 
 on:
