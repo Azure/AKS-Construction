@@ -51,6 +51,9 @@ param autoTaintWindows bool = false
 
 var taints = autoTaintWindows ? union(nodeTaints, ['sku=Windows:NoSchedule']) : nodeTaints
 
+// Default OS Disk Size in GB for Linux is 30, for Windows is 100
+var defaultOsDiskSizeGB = osType == 'Linux' ? 30 : 100
+
 resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
   name: AksName
 }
@@ -68,7 +71,7 @@ resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@202
     availabilityZones: !empty(availabilityZones) ? availabilityZones : null
     osDiskType: osDiskType
     osSKU: osSKU
-    osDiskSizeGB: osDiskSizeGB
+    osDiskSizeGB: osDiskSizeGB == 0 ? defaultOsDiskSizeGB : osDiskSizeGB
     osType: osType
     maxPods: maxPods
     type: 'VirtualMachineScaleSets'
