@@ -170,7 +170,7 @@ var aks_baseSubnet =  {
 }
 
 var aks_podSubnet_name = 'aks-pods-sn'
-var aks_podSubnet =  {
+var aks_podBaseSubnet =  {
   name: aks_podSubnet_name
   properties: union({
       addressPrefix: vnetPodAddressPrefix
@@ -189,7 +189,7 @@ var aks_podSubnet =  {
 }
 
 var aks_subnet = networkSecurityGroups ? union(aks_baseSubnet, nsgAks.outputs.nsgSubnetObj) : aks_baseSubnet
-var aks_podsubnet = networkSecurityGroups ? union(aks_podSubnet, nsgAks.outputs.nsgSubnetObj) : aks_podSubnet
+var aks_podsubnet = networkSecurityGroups ? union(aks_podBaseSubnet, nsgAks.outputs.nsgSubnetObj) : aks_podBaseSubnet
 
 
 
@@ -239,7 +239,7 @@ module aks_vnet_con 'networksubnetrbac.bicep' = if (!empty(aksPrincipleId)) {
 
 /*   --------------------------------------------------------------------------  Private Link for ACR      */
 var privateLinkAcrName = 'pl-acr-${resourceName}'
-resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2021-08-01' = if (!empty(privateLinkAcrId)) {
+resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2023-05-01' = if (!empty(privateLinkAcrId)) {
   name: privateLinkAcrName
   location: location
   properties: {
@@ -279,7 +279,7 @@ resource privateDnsAcrLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
   }
 }
 
-resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-08-01' = if (!empty(privateLinkAcrId))  {
+resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-05-01' = if (!empty(privateLinkAcrId))  {
   parent: privateLinkAcr
   name: 'default'
   properties: {
@@ -297,7 +297,7 @@ resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
 
 /*   --------------------------------------------------------------------------  Private Link for KeyVault      */
 var privateLinkAkvName = 'pl-akv-${resourceName}'
-resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2021-08-01' = if (!empty(privateLinkAkvId)) {
+resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2023-05-01' = if (!empty(privateLinkAkvId)) {
   name: privateLinkAkvName
   location: location
   properties: {
@@ -337,7 +337,7 @@ resource privateDnsAkvLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
   }
 }
 
-resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-08-01' = if (!empty(privateLinkAkvId))  {
+resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-05-01' = if (!empty(privateLinkAkvId))  {
   parent: privateLinkAkv
   name: 'default'
   properties: {
@@ -405,7 +405,7 @@ resource log 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = if
 param CreateNsgFlowLogs bool = false
 
 var flowLogStorageName = take(replace(toLower('stflow${resourceName}${uniqueString(resourceGroup().id, resourceName)}'),'-',''),24)
-resource flowLogStor 'Microsoft.Storage/storageAccounts@2021-08-01' = if(CreateNsgFlowLogs && networkSecurityGroups) {
+resource flowLogStor 'Microsoft.Storage/storageAccounts@2023-01-01' = if(CreateNsgFlowLogs && networkSecurityGroups) {
   name: flowLogStorageName
   kind: 'StorageV2'
   sku: {
@@ -505,7 +505,7 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   ]
 }
 
-resource natGwIp 'Microsoft.Network/publicIPAddresses@2021-08-01' =  [for i in range(0, natGatewayPublicIps): if(natGateway) {
+resource natGwIp 'Microsoft.Network/publicIPAddresses@2023-05-01' =  [for i in range(0, natGatewayPublicIps): if(natGateway) {
   name: 'pip-${natGwName}-${i+1}'
   location: location
   sku: {
@@ -521,7 +521,7 @@ output natGwIpArr array = [for i in range(0, natGatewayPublicIps): natGateway ? 
 
 var natGwName = 'ng-${resourceName}'
 
-resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
+resource natGw 'Microsoft.Network/natGateways@2023-05-01' = if(natGateway) {
   name: natGwName
   location: location
   sku: {
@@ -538,4 +538,3 @@ resource natGw 'Microsoft.Network/natGateways@2021-08-01' = if(natGateway) {
     natGwIp
   ]
 }
-
