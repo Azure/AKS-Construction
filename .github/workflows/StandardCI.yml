@@ -31,7 +31,7 @@ on:
     - cron: "0 23 * * 2"
 env:
   RG: "AksBicepAcc-Ci-BasicCluster" #The resource group we're deploying to.
-  ParamFilePath: "https://raw.githubusercontent.com/Azure/AKS-Construction/0.10.0-preview/.github/workflows_dep/AksDeploy-Basic.parameters.json" # ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
+  ParamFilePath: "https://raw.githubusercontent.com/Azure/AKS-Construction/main/.github/workflows_dep/AksDeploy-Basic.parameters.json" # ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
   AZCLIVERSION: 2.43.0 #Pinning to a specific AZ CLI version
