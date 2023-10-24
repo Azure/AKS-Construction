@@ -87,3 +87,12 @@ code {
 a {
     color: #9370DB !important;
 }
+
+
+span code{
+    color: #171717;
+    background-color: #e6e6e6;
+    line-height: 130%;
+    direction: ltr;
+    font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
+}
