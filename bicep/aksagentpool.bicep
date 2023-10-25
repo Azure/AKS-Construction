@@ -54,7 +54,7 @@ var taints = autoTaintWindows ? union(nodeTaints, ['sku=Windows:NoSchedule']) : 
 // Default OS Disk Size in GB for Linux is 30, for Windows is 100
 var defaultOsDiskSizeGB = osType == 'Linux' ? 30 : 100
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' existing = {
   name: AksName
 }
 
