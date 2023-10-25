@@ -83,7 +83,7 @@ permissions:
 concurrency: ci-${{ github.ref }}
 
 env:
-  AZCLIVERSION: 2.43.0 #2.30.0 #2.29.2 #2.26.0 #latest
+  AZCLIVERSION: 2.53.0 #2.43.0 #2.34.1 #2.29.2 #2.26.0 #latest
   ParamFilePath: ".github/workflows_dep/AksDeploy-ByoVnet.parameters.json"
   RESNAME: "Byov"
   DEPNAME: "Dep${{ github.run_number }}"

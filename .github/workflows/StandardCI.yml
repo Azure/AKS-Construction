@@ -34,7 +34,7 @@ env:
   ParamFilePath: "https://raw.githubusercontent.com/Azure/AKS-Construction/main/.github/workflows_dep/AksDeploy-Basic.parameters.json" # ".github/workflows_dep/AksDeploy-Basic.parameters.json" #Path to parameter file
   RESNAME: "AksStan" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-  AZCLIVERSION: 2.43.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.53.0 #2.43.0 #2.34.1 #2.29.2 #2.26.0 #latest
 
 permissions:
       id-token: write
