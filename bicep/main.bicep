@@ -410,7 +410,7 @@ param acrUntaggedRetentionPolicy int = 30
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
-resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = if (!empty(registries_sku)) {
+resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = if (!empty(registries_sku)) {
   name: acrName
   location: location
   sku: {
@@ -1786,7 +1786,8 @@ var telemetryId = '3c1e2fc6-1c4b-44f9-8694-25d00ae30a3a-${location}'
     |__|     |_______||_______||_______||__|  |__| |_______|    |__|     | _| `._____|   |__|        |_______/ |_______|| _|      |_______| \______/      |__|     |__|  |__| |_______||__| \__|     |__|     */
 
 //  Telemetry Deployment
-resource telemetrydeployment 'Microsoft.Resources/deployments@2022-09-01' = if (enableTelemetry) {
+#disable-next-line no-deployments-resources
+resource telemetrydeployment 'Microsoft.Resources/deployments@2023-07-01' = if (enableTelemetry) {
   name: telemetryId
   properties: {
     mode: 'Incremental'
