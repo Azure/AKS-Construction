@@ -1107,6 +1107,7 @@ param serviceMeshProfile string = ''
 
 @description('The ingress gateway to use for the Istio service mesh')
 param istioIngressGatewayMode string = ''
+param istioRevision string = 'asm-1-17'
 
 var serviceMeshProfileObj = {
   istio: {
@@ -1116,6 +1117,9 @@ var serviceMeshProfileObj = {
         mode: istioIngressGatewayMode
       }]
     }
+    revisions: [
+      istioRevision
+    ]
   }
   mode: 'Istio'
 }
@@ -1336,7 +1340,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 !empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-06-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
