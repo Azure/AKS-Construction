@@ -120,7 +120,7 @@ var fwmgmt_subnet = {
 }
 
 var routeFwTableName = 'rt-afw-${resourceName}'
-resource vnet_udr 'Microsoft.Network/routeTables@2022-07-01' = if (azureFirewalls) {
+resource vnet_udr 'Microsoft.Network/routeTables@2023-04-01' = if (azureFirewalls) {
   name: routeFwTableName
   location: location
   properties: {
@@ -206,7 +206,7 @@ var subnets = union(
 output debugSubnets array = subnets
 
 var vnetName = 'vnet-${resourceName}'
-resource vnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
+resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   name: vnetName
   location: location
   properties: {
@@ -361,7 +361,7 @@ var publicIpAddressName = 'pip-${bastionHostName}'
 ])
 param bastionSku string = 'Standard'
 
-resource bastionPip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if(bastion) {
+resource bastionPip 'Microsoft.Network/publicIPAddresses@2023-04-01' = if(bastion) {
   name: publicIpAddressName
   location: location
   sku: {
@@ -373,7 +373,7 @@ resource bastionPip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if(bastio
   }
 }
 
-resource bastionHost 'Microsoft.Network/bastionHosts@2022-11-01' = if(bastion) {
+resource bastionHost 'Microsoft.Network/bastionHosts@2023-04-01' = if(bastion) {
   name: bastionHostName
   location: location
   sku: {

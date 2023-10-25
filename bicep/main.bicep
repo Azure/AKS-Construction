@@ -622,7 +622,7 @@ resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
-resource appgwpip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if (deployAppGw) {
+resource appgwpip 'Microsoft.Network/publicIPAddresses@2023-04-01' = if (deployAppGw) {
   name: 'pip-agw-${resourceName}'
   location: location
   sku: {
@@ -761,7 +761,7 @@ var appgwProperties = union({
 } : {})
 
 // 'identity' is always set until this is fixed: https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appgw 'Microsoft.Network/applicationGateways@2022-07-01' = if (deployAppGw) {
+resource appgw 'Microsoft.Network/applicationGateways@2023-04-01' = if (deployAppGw) {
   name: appgwName
   location: location
   zones: !empty(availabilityZones) ? availabilityZones : []
@@ -1554,7 +1554,7 @@ resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  
   }
 }
 
-resource sysLog 'Microsoft.Insights/dataCollectionRules@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
+resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
   name: 'MSCI-${location}-${aks.name}'
   location: location
   kind: 'Linux'
@@ -1637,7 +1637,7 @@ resource sysLog 'Microsoft.Insights/dataCollectionRules@2022-06-01' = if (create
   }
 }
 
-resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
+resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
   name: '${aks.name}-${aks_law.name}-association'
   scope: aks
   properties: {
@@ -1743,7 +1743,7 @@ output LogAnalyticsId string = (createLaw) ? aks_law.id : ''
 @description('Create an Event Grid System Topic for AKS events')
 param createEventGrid bool = false
 
-resource eventGrid 'Microsoft.EventGrid/systemTopics@2021-12-01' = if(createEventGrid) {
+resource eventGrid 'Microsoft.EventGrid/systemTopics@2023-06-01-preview' = if(createEventGrid) {
   name: 'evgt-${aks.name}'
   location: location
   identity: {
