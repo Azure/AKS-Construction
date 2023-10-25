@@ -51,11 +51,11 @@ param autoTaintWindows bool = false
 
 var taints = autoTaintWindows ? union(nodeTaints, ['sku=Windows:NoSchedule']) : nodeTaints
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' existing = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-08-02-preview' existing = {
   name: AksName
 }
 
-resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10-01' = {
+resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@2023-08-02-preview' = {
   parent: aks
   name: PoolName
   properties: {

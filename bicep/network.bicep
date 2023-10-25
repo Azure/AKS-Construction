@@ -279,7 +279,7 @@ resource privateDnsAcrLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
   }
 }
 
-resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-08-01' = if (!empty(privateLinkAcrId))  {
+resource privateDnsAcrZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-04-01' = if (!empty(privateLinkAcrId))  {
   parent: privateLinkAcr
   name: 'default'
   properties: {
@@ -337,7 +337,7 @@ resource privateDnsAkvLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
   }
 }
 
-resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-08-01' = if (!empty(privateLinkAkvId))  {
+resource privateDnsAkvZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-04-01' = if (!empty(privateLinkAkvId))  {
   parent: privateLinkAkv
   name: 'default'
   properties: {
@@ -405,7 +405,7 @@ resource log 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = if
 param CreateNsgFlowLogs bool = false
 
 var flowLogStorageName = take(replace(toLower('stflow${resourceName}${uniqueString(resourceGroup().id, resourceName)}'),'-',''),24)
-resource flowLogStor 'Microsoft.Storage/storageAccounts@2022-09-01' = if(CreateNsgFlowLogs && networkSecurityGroups) {
+resource flowLogStor 'Microsoft.Storage/storageAccounts@2023-01-01' = if(CreateNsgFlowLogs && networkSecurityGroups) {
   name: flowLogStorageName
   kind: 'StorageV2'
   sku: {
