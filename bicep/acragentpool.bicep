@@ -2,7 +2,7 @@ param location string = resourceGroup().location
 param acrName string
 param acrPoolSubnetId string = ''
 
-resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing =  {
+resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing =  {
   name: acrName
 }
 
