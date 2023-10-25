@@ -51,7 +51,7 @@ param autoTaintWindows bool = false
 
 var taints = autoTaintWindows ? union(nodeTaints, ['sku=Windows:NoSchedule']) : nodeTaints
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-05-02-preview' existing = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' existing = {
   name: AksName
 }
 
