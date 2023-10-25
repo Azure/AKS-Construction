@@ -60,11 +60,11 @@ var spotProperties = {
   spotMaxPrice: -1
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2021-10-01' existing = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-08-02-preview' existing = {
   name: AksName
 }
 
-resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@2021-10-01' = {
+resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@2023-08-02-preview' = {
   parent: aks
   name: PoolName
   properties: union({

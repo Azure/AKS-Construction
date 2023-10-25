@@ -410,7 +410,7 @@ param acrUntaggedRetentionPolicy int = 30
 
 var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup().id, resourceName)}'
 
-resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = if (!empty(registries_sku)) {
+resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = if (!empty(registries_sku)) {
   name: acrName
   location: location
   sku: {
@@ -622,7 +622,7 @@ resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01
 var appgwName = 'agw-${resourceName}'
 var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGateways', '${appgwName}') : ''
 
-resource appgwpip 'Microsoft.Network/publicIPAddresses@2022-07-01' = if (deployAppGw) {
+resource appgwpip 'Microsoft.Network/publicIPAddresses@2023-04-01' = if (deployAppGw) {
   name: 'pip-agw-${resourceName}'
   location: location
   sku: {
@@ -761,7 +761,7 @@ var appgwProperties = union({
 } : {})
 
 // 'identity' is always set until this is fixed: https://github.com/Azure/bicep/issues/387#issuecomment-885671296
-resource appgw 'Microsoft.Network/applicationGateways@2022-07-01' = if (deployAppGw) {
+resource appgw 'Microsoft.Network/applicationGateways@2023-04-01' = if (deployAppGw) {
   name: appgwName
   location: location
   zones: !empty(availabilityZones) ? availabilityZones : []
@@ -1110,6 +1110,7 @@ param serviceMeshProfile string = ''
 
 @description('The ingress gateway to use for the Istio service mesh')
 param istioIngressGatewayMode string = ''
+param istioRevision string = 'asm-1-17'
 
 var serviceMeshProfileObj = {
   istio: {
@@ -1119,6 +1120,9 @@ var serviceMeshProfileObj = {
         mode: istioIngressGatewayMode
       }]
     }
+    revisions: [
+      istioRevision
+    ]
   }
   mode: 'Istio'
 }
@@ -1339,7 +1343,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 !empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-05-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
@@ -1554,7 +1558,7 @@ resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  
   }
 }
 
-resource sysLog 'Microsoft.Insights/dataCollectionRules@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
+resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
   name: 'MSCI-${location}-${aks.name}'
   location: location
   kind: 'Linux'
@@ -1637,7 +1641,7 @@ resource sysLog 'Microsoft.Insights/dataCollectionRules@2022-06-01' = if (create
   }
 }
 
-resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
+resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
   name: '${aks.name}-${aks_law.name}-association'
   scope: aks
   properties: {
@@ -1743,7 +1747,7 @@ output LogAnalyticsId string = (createLaw) ? aks_law.id : ''
 @description('Create an Event Grid System Topic for AKS events')
 param createEventGrid bool = false
 
-resource eventGrid 'Microsoft.EventGrid/systemTopics@2021-12-01' = if(createEventGrid) {
+resource eventGrid 'Microsoft.EventGrid/systemTopics@2023-06-01-preview' = if(createEventGrid) {
   name: 'evgt-${aks.name}'
   location: location
   identity: {
@@ -1790,7 +1794,8 @@ var telemetryId = '3c1e2fc6-1c4b-44f9-8694-25d00ae30a3a-${location}'
     |__|     |_______||_______||_______||__|  |__| |_______|    |__|     | _| `._____|   |__|        |_______/ |_______|| _|      |_______| \______/      |__|     |__|  |__| |_______||__| \__|     |__|     */
 
 //  Telemetry Deployment
-resource telemetrydeployment 'Microsoft.Resources/deployments@2022-09-01' = if (enableTelemetry) {
+#disable-next-line no-deployments-resources
+resource telemetrydeployment 'Microsoft.Resources/deployments@2023-07-01' = if (enableTelemetry) {
   name: telemetryId
   properties: {
     mode: 'Incremental'
