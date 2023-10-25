@@ -36,7 +36,7 @@ env:
   RG: "AksBicepAcc-Ci-OssCluster" #The resource group we're deploying to.
   RESNAME: "AksOss" #Used in Azure Resource Naming, overrides the default in the parameter file
   DEPNAME: "Dep${{ github.run_number }}" #Deployment Name
-  AZCLIVERSION: 2.43.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.53.0 #2.43.0 #2.34.1 #2.29.2 #2.26.0 #latest
 
 permissions:
       id-token: write
@@ -64,7 +64,7 @@ jobs:
         run: |
           LATEST=$(curl https://api.github.com/repos/Azure/AKS-Construction/releases/latest | jq '.tag_name' -r)
           echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
-          
+
   ContourDeploy:
     uses: ./.github/workflows/AKSC_Deploy.yml
     needs: [ReusableWF]
