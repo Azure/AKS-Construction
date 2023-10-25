@@ -1115,6 +1115,7 @@ var serviceMeshProfileObj = {
         enabled: true
         mode: istioIngressGatewayMode
       }]
+    }
     revisions: [
       '1'
     ]
