@@ -80,7 +80,7 @@ on:
 env:
   ParamFilePath: ".github/workflows_dep/AksDeploy-Private.parameters.json"
   DEPNAME: 'DepPriv${{ github.run_number }}'
-  AZCLIVERSION: 2.43.0 #2.36.0 #2.30.0 #Pinning to a specific AZ CLI version
+  AZCLIVERSION: 2.53.0 #2.43.0 #2.34.1 #2.29.2 #2.26.0 #latest
 
 concurrency: ci-${{ github.event.inputs.environment }}-${{ github.ref }}
 
