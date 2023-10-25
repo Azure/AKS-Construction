@@ -1117,7 +1117,7 @@ var serviceMeshProfileObj = {
       }]
     }
     revisions: [
-      '1'
+      'asm-1-17'
     ]
   }
   mode: 'Istio'
