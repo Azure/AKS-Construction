@@ -1107,6 +1107,7 @@ param serviceMeshProfile string = ''
 
 @description('The ingress gateway to use for the Istio service mesh')
 param istioIngressGatewayMode string = ''
+param istioRevision string = 'asm-1-17'
 
 var serviceMeshProfileObj = {
   istio: {
@@ -1117,7 +1118,7 @@ var serviceMeshProfileObj = {
       }]
     }
     revisions: [
-      'asm-1-17'
+      istioRevision
     ]
   }
   mode: 'Istio'
