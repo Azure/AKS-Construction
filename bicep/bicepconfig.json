@@ -5,6 +5,12 @@
         "enabled": true,
         "verbose": false,
         "rules": {
+            "prefer-unquoted-property-names" : {
+                "level": "warning"
+            },
+            "use-parent-property" : {
+                "level": "warning"
+            },
             "use-recent-api-versions" : {
                 "level": "warning"
             },
