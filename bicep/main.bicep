@@ -921,6 +921,9 @@ var autoScale = agentCountMax > agentCount
 @description('Name for user node pool')
 param nodePoolName string = 'npuser01'
 
+@description('Config the user node pool as a spot instance')
+param nodePoolSpot bool = false
+
 @description('Allocate pod ips dynamically')
 param cniDynamicIpAllocation bool = false
 
@@ -1396,6 +1399,7 @@ module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
     enableNodePublicIP: enableNodePublicIP
     osDiskSizeGB: osDiskSizeGB
     availabilityZones: availabilityZones
+    spotInstance: nodePoolSpot
   }
 }
 
