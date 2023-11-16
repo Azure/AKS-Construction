@@ -60,7 +60,10 @@ var spotProperties = {
   spotMaxPrice: -1
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-08-02-preview' existing = {
+// Default OS Disk Size in GB for Linux is 30, for Windows is 100
+var defaultOsDiskSizeGB = osType == 'Linux' ? 30 : 100
+
+resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' existing = {
   name: AksName
 }
 
@@ -77,7 +80,7 @@ resource userNodepool 'Microsoft.ContainerService/managedClusters/agentPools@202
       availabilityZones: !empty(availabilityZones) ? availabilityZones : null
       osDiskType: osDiskType
       osSKU: osSKU
-      osDiskSizeGB: osDiskSizeGB
+      osDiskSizeGB: osDiskSizeGB == 0 ? defaultOsDiskSizeGB : osDiskSizeGB
       osType: osType
       maxPods: maxPods
       type: 'VirtualMachineScaleSets'
