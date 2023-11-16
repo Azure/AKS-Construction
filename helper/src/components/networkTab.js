@@ -81,6 +81,9 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
 
             <Stack.Item>
                 <Label>CNI Features</Label>
+                {hasError(invalidArray, 'cniFeatures') &&
+                    <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'cniFeatures')}</MessageBar>
+                }
                 <Stack horizontal tokens={{ childrenGap: 15 }} >
                     <Stack.Item>
                         <MessageBar messageBarType={MessageBarType.info}>Dynamic IP allocation separates node IP's and Pod IP's by subnet allowing dynamic allocation of Pod IPs <a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/configure-azure-cni#dynamic-allocation-of-ips-and-enhanced-subnet-support">docs</a> </MessageBar>
