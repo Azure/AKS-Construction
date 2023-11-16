@@ -1172,6 +1172,7 @@ var systemPoolBase = {
   count: agentCount
   mode: 'System'
   osType: 'Linux'
+  osSku: osSKU=='AzureLinux' ? osSKU : 'Ubuntu'
   maxPods: 30
   type: 'VirtualMachineScaleSets'
   vnetSubnetID: !empty(aksSubnetId) ? aksSubnetId : null
@@ -1376,11 +1377,14 @@ output aksOidcIssuerUrl string = oidcIssuer ? aks.properties.oidcIssuerProfile.i
 @description('The User Node pool OS')
 param osType string = 'Linux'
 
-@allowed(['Ubuntu','Windows2019','Windows2022'])
-@description('The User Node pool OS SKU')
+@allowed(['AzureLinux','Ubuntu','Windows2019','Windows2022'])
+@description('User Node pool OS SKU')
 param osSKU string = 'Ubuntu'
 
 var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
+
+// Default OS Disk Size in GB for Linux is 30, for Windows is 100
+var defaultOsDiskSizeGB = osType == 'Linux' ? 30 : 100
 
 module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
   name: take('${deployment().name}-userNodePool',64)
@@ -1397,7 +1401,7 @@ module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
     osType: osType
     osSKU: osSKU
     enableNodePublicIP: enableNodePublicIP
-    osDiskSizeGB: osDiskSizeGB
+    osDiskSizeGB: osDiskSizeGB == 0 ? defaultOsDiskSizeGB : osDiskSizeGB
     availabilityZones: availabilityZones
     spotInstance: nodePoolSpot
   }
