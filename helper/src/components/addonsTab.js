@@ -91,6 +91,9 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray,showPr
                 <Label required={true}>
                     Ingress Controllers: Securely expose your applications via Layer 7 HTTP(S) proxies
                 </Label>
+                {hasError(invalidArray, 'ingressControllers') &&
+                    <MessageBar messageBarType={MessageBarType.error}>{getError(invalidArray, 'ingressControllers')}</MessageBar>
+                }
                 {cluster.osType==='Windows' && addons.ingress !== 'none' &&
                     <MessageBar styles={{ root: { marginTop: '20px', marginLeft: '50px', width: '700px' } }} messageBarType={MessageBarType.warning}>
                         Please Note: If you're using Windows Nodes not all Ingress Controllers will support this OS, please check the Ingress Controller documentation and change the OS or Ingress Controller as required.
