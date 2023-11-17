@@ -1298,7 +1298,7 @@ var aksProperties = union({
     #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no Network Policy required.
     networkPolicy: networkPolicy
     networkPluginMode: networkPlugin=='azure' ? networkPluginMode : ''
-    podCidr: networkPlugin=='kubenet' || cniDynamicIpAllocation ? podCidr : json('null')
+    podCidr: networkPlugin=='kubenet' || networkPluginMode=='Overlay' || cniDynamicIpAllocation ? podCidr : json('null')
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     dockerBridgeCidr: dockerBridgeCidr
