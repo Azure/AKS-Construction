@@ -1,5 +1,6 @@
 param resourceName string
 param location string = resourceGroup().location
+param customTags object = {}
 param workspaceId string = ''
 param workspaceResourceId string = ''
 param workspaceRegion string = resourceGroup().location
@@ -9,6 +10,7 @@ var nsgName = 'nsg-${resourceName}'
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-04-01' = {
   name: nsgName
   location: location
+  tags: customTags
 }
 output nsgId string = nsg.id
 
@@ -265,6 +267,7 @@ module nsgFlow 'networkwatcherflowlog.bicep' = if(!empty(FlowLogStorageAccountId
   params: {
     location:location
     name: 'flowNsg-${nsgName}'
+    customTags: customTags
     nsgId: nsg.id
     storageId: FlowLogStorageAccountId
     trafficAnalytics: FlowLogTrafficAnalytics

@@ -1,4 +1,5 @@
 param dnsZoneName string
+param customTags object = {}
 param principalId string
 param isPrivate bool
 param vnetId string = ''
@@ -36,7 +37,7 @@ resource privateDnsContributor 'Microsoft.Authorization/roleAssignments@2022-04-
 resource dns_vnet_link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (isPrivate && !empty(vnetId)) {
   parent: privateDns
   name: 'privatedns'
-  tags: {}
+  tags: customTags
   location: 'global'
   properties: {
     virtualNetwork: {

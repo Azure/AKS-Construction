@@ -10,6 +10,8 @@ param vnetId string
 @description('The AAD identity to create the RBAC against')
 param principalId string
 
+param customTags object = {}
+
 var dnsZoneIdSegments = split(dnsZoneId, '/')
 var dnsZoneSubscriptionId = !empty(dnsZoneId) ? dnsZoneIdSegments[2] : ''
 var dnsZoneRg = !empty(dnsZoneId) ? dnsZoneIdSegments[4] : ''
@@ -21,6 +23,7 @@ module dnsZone './dnsZone.bicep' = if (!empty(dnsZoneId)) {
   scope: resourceGroup(dnsZoneSubscriptionId, dnsZoneRg)
   params: {
     dnsZoneName: dnsZoneName
+    customTags: customTags
     isPrivate: isDnsZonePrivate
     vnetId: vnetId
     principalId: principalId

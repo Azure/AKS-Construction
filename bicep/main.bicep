@@ -7,6 +7,9 @@ param location string = resourceGroup().location
 @description('Used to name all resources')
 param resourceName string
 
+@description('Tags for deployed resources')
+param customTags object = {}
+
 /*
 Resource sections
 1. Networking
@@ -49,6 +52,7 @@ var createAksUai = (custom_vnet || !empty(byoAKSSubnetId) || !empty(dnsApiPrivat
 resource aksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = if (createAksUai) {
   name: 'id-aks-${resourceName}'
   location: location
+  tags: customTags
 }
 
 resource byoAksUai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = if (!empty(byoUaiName)) {
@@ -132,6 +136,7 @@ module network './network.bicep' = if (custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
+    customTags: customTags
     networkPluginIsKubenet: networkPlugin=='kubenet'
     vnetAddressPrefix: vnetAddressPrefix
     vnetPodAddressPrefix: cniDynamicIpAllocation ? podCidr : ''
@@ -186,6 +191,7 @@ module dnsZone './dnsZoneRbac.bicep' = if (!empty(dnsZoneId)) {
   name: take('${deployment().name}-addDnsContributor',64)
   params: {
     dnsZoneId: dnsZoneId
+    customTags: customTags
     vnetId: isDnsZonePrivate ? (!empty(byoAKSSubnetId) ? split(byoAKSSubnetId, '/subnets')[0] : (custom_vnet ? network.outputs.vnetId : '')) : ''
     principalId: any(aks.properties.identityProfile.kubeletidentity).objectId
   }
@@ -222,6 +228,7 @@ module kv 'keyvault.bicep' = if(keyVaultCreate) {
   name: take('${deployment().name}-keyvaultApps',64)
   params: {
     resourceName: resourceName
+    customTags: customTags
     keyVaultPurgeProtection: keyVaultPurgeProtection
     keyVaultSoftDelete: keyVaultSoftDelete
     keyVaultIPAllowlist: keyVaultIPAllowlist
@@ -293,6 +300,7 @@ module kvKms 'keyvault.bicep' = if(keyVaultKmsCreateAndPrereqs) {
   name: take('${deployment().name}-keyvaultKms-${resourceName}',64)
   params: {
     resourceName: take('kms${resourceName}',20)
+    customTags: customTags
     keyVaultPurgeProtection: keyVaultPurgeProtection
     keyVaultSoftDelete: keyVaultSoftDelete
     location: location
@@ -413,6 +421,7 @@ var acrName = 'cr${replace(resourceName, '-', '')}${uniqueString(resourceGroup()
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = if (!empty(registries_sku)) {
   name: acrName
   location: location
+  tags: customTags
   sku: {
     #disable-next-line BCP036 //Disabling validation of this parameter to cope with empty string to indicate no ACR required.
     name: registries_sku
@@ -481,6 +490,7 @@ module acrPool 'acragentpool.bicep' = if (custom_vnet && (!empty(registries_sku)
     acrName: acr.name
     acrPoolSubnetId: custom_vnet ? network.outputs.acrPoolSubnetId : ''
     location: location
+    customTags: customTags
   }
 }
 
@@ -561,6 +571,7 @@ module firewall './firewall.bicep' = if (azureFirewalls && custom_vnet) {
   params: {
     resourceName: resourceName
     location: location
+    customTags: customTags
     workspaceDiagsId: createLaw ? aks_law.id : ''
     fwSubnetId: azureFirewalls && custom_vnet ? network.outputs.fwSubnetId : ''
     fwSku: azureFirewallSku
@@ -617,6 +628,7 @@ var appGWenableWafFirewall = appGWsku=='Standard_v2' ? false : appGWenableFirewa
 resource appGwIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = if (deployAppGw) {
   name: 'id-appgw-${resourceName}'
   location: location
+  tags: customTags
 }
 
 var appgwName = 'agw-${resourceName}'
@@ -625,6 +637,7 @@ var appgwResourceId = deployAppGw ? resourceId('Microsoft.Network/applicationGat
 resource appgwpip 'Microsoft.Network/publicIPAddresses@2023-04-01' = if (deployAppGw) {
   name: 'pip-agw-${resourceName}'
   location: location
+  tags: customTags
   sku: {
     name: 'Standard'
   }
@@ -764,6 +777,7 @@ var appgwProperties = union({
 resource appgw 'Microsoft.Network/applicationGateways@2023-04-01' = if (deployAppGw) {
   name: appgwName
   location: location
+  tags: customTags
   zones: !empty(availabilityZones) ? availabilityZones : []
   identity: {
     type: 'UserAssigned'
@@ -1347,6 +1361,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' = {
   name: 'aks-${resourceName}'
   location: location
+  tags: customTags
   properties: aksProperties
   identity: createAksUai ? {
     type: 'UserAssigned'
@@ -1428,6 +1443,7 @@ module privateDnsZoneRbac './dnsZoneRbac.bicep' = if (enablePrivateCluster && !e
   name: take('${deployment().name}-addPrivateK8sApiDnsContributor',64)
   params: {
     vnetId: ''
+    customTags: customTags
     dnsZoneId: dnsApiPrivateZoneId
     principalId: aksPrincipalId
   }
@@ -1565,6 +1581,7 @@ resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  
 resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
   name: 'MSCI-${location}-${aks.name}'
   location: location
+  tags: customTags
   kind: 'Linux'
   properties: {
     dataFlows: [
@@ -1682,6 +1699,7 @@ module aksmetricalerts './aksmetricalerts.bicep' = if (createLaw) {
   params: {
     clusterName: aks.name
     logAnalyticsWorkspaceName: aks_law.name
+    customsTags: customTags
     metricAlertsEnabled: createAksMetricAlerts
     evalFrequency: AlertFrequency.evalFrequency
     windowSize: AlertFrequency.windowSize
@@ -1705,6 +1723,7 @@ var createLaw = (omsagent || deployAppGw || azureFirewalls || CreateNetworkSecur
 resource aks_law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (createLaw) {
   name: aks_law_name
   location: location
+  tags: customTags
   properties : union({
       retentionInDays: retentionInDays
       sku: {
@@ -1754,6 +1773,7 @@ param createEventGrid bool = false
 resource eventGrid 'Microsoft.EventGrid/systemTopics@2023-06-01-preview' = if(createEventGrid) {
   name: 'evgt-${aks.name}'
   location: location
+  tags: customTags
   identity: {
     type: 'SystemAssigned'
   }
@@ -1846,6 +1866,7 @@ module AksStartStop 'automationrunbook/automation.bicep' = if (!empty(automation
   params: {
     location: location
     automationAccountName: 'aa-${resourceName}'
+    customTags: customTags
     runbookName: 'aks-cluster-changestate'
     runbookUri: 'https://raw.githubusercontent.com/finoops/aks-cluster-changestate/main/aks-cluster-changestate.ps1'
     runbookType: 'Script'

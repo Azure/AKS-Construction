@@ -1,6 +1,9 @@
 @description('The name of the AKS Cluster to configure the alerts on')
 param clusterName string
 
+@description('Custom tags for created resources')
+param customsTags object = {}
+
 @description('The name of the Log Analytics workspace to log metric data to')
 param logAnalyticsWorkspaceName string
 
@@ -47,6 +50,7 @@ var AksResourceId = resourceId('Microsoft.ContainerService/managedClusters', clu
 resource Node_CPU_utilization_high_for_clusterName_CI_1 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Node CPU utilization high for ${clusterName} CI-1'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -87,6 +91,7 @@ resource Node_CPU_utilization_high_for_clusterName_CI_1 'Microsoft.Insights/metr
 resource Node_working_set_memory_utilization_high_for_clusterName_CI_2 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Node working set memory utilization high for ${clusterName} CI-2'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -127,6 +132,7 @@ resource Node_working_set_memory_utilization_high_for_clusterName_CI_2 'Microsof
 resource Jobs_completed_more_than_6_hours_ago_for_clusterName_CI_11 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Jobs completed more than 6 hours ago for ${clusterName} CI-11'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -174,6 +180,7 @@ resource Jobs_completed_more_than_6_hours_ago_for_clusterName_CI_11 'Microsoft.I
 resource Container_CPU_usage_high_for_clusterName_CI_9 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Container CPU usage high for ${clusterName} CI-9'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -221,6 +228,7 @@ resource Container_CPU_usage_high_for_clusterName_CI_9 'Microsoft.Insights/metri
 resource Container_working_set_memory_usage_high_for_clusterName_CI_10 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Container working set memory usage high for ${clusterName} CI-10'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -268,6 +276,7 @@ resource Container_working_set_memory_usage_high_for_clusterName_CI_10 'Microsof
 resource Pods_in_failed_state_for_clusterName_CI_4 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Pods in failed state for ${clusterName} CI-4'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -308,6 +317,7 @@ resource Pods_in_failed_state_for_clusterName_CI_4 'Microsoft.Insights/metricAle
 resource Disk_usage_high_for_clusterName_CI_5 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Disk usage high for ${clusterName} CI-5'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -355,6 +365,7 @@ resource Disk_usage_high_for_clusterName_CI_5 'Microsoft.Insights/metricAlerts@2
 resource Nodes_in_not_ready_status_for_clusterName_CI_3 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Nodes in not ready status for ${clusterName} CI-3'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -395,6 +406,7 @@ resource Nodes_in_not_ready_status_for_clusterName_CI_3 'Microsoft.Insights/metr
 resource Containers_getting_OOM_killed_for_clusterName_CI_6 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Containers getting OOM killed for ${clusterName} CI-6'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -442,6 +454,7 @@ resource Containers_getting_OOM_killed_for_clusterName_CI_6 'Microsoft.Insights/
 resource Persistent_volume_usage_high_for_clusterName_CI_18 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Persistent volume usage high for ${clusterName} CI-18'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -489,6 +502,7 @@ resource Persistent_volume_usage_high_for_clusterName_CI_18 'Microsoft.Insights/
 resource Pods_not_in_ready_state_for_clusterName_CI_8 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Pods not in ready state for ${clusterName} CI-8'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -536,6 +550,7 @@ resource Pods_not_in_ready_state_for_clusterName_CI_8 'Microsoft.Insights/metric
 resource Restarting_container_count_for_clusterName_CI_7 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'Restarting container count for ${clusterName} CI-7'
   location: 'global'
+  tags: customsTags
   properties: {
     criteria: {
       allOf: [
@@ -583,6 +598,7 @@ resource Restarting_container_count_for_clusterName_CI_7 'Microsoft.Insights/met
 resource Container_CPU_usage_violates_the_configured_threshold_for_clustername_CI_19 'microsoft.insights/metricAlerts@2018-03-01' = {
   name: 'Container CPU usage violates the configured threshold for ${clusterName} CI-19'
   location: 'global'
+  tags: customsTags
   properties: {
     description: 'This alert monitors container CPU usage. It uses the threshold defined in the config map.'
     severity: alertSeverityNumber
@@ -629,6 +645,7 @@ resource Container_CPU_usage_violates_the_configured_threshold_for_clustername_C
 resource Container_working_set_memory_usage_violates_the_configured_threshold_for_clustername_CI_20 'microsoft.insights/metricAlerts@2018-03-01' = {
   name: 'Container working set memory usage violates the configured threshold for ${clusterName} CI-20'
   location: 'global'
+  tags: customsTags
   properties: {
     description: 'This alert monitors container working set memory usage. It uses the threshold defined in the config map.'
     severity: alertSeverityNumber
@@ -676,6 +693,7 @@ resource Container_working_set_memory_usage_violates_the_configured_threshold_fo
 resource PV_usage_violates_the_configured_threshold_for_clustername_CI_21 'microsoft.insights/metricAlerts@2018-03-01' = {
   name: 'PV usage violates the configured threshold for ${clusterName} CI-21'
   location: 'global'
+  tags: customsTags
   properties: {
     description: 'This alert monitors PV usage. It uses the threshold defined in the config map.'
     severity: alertSeverityNumber
@@ -723,6 +741,7 @@ resource PV_usage_violates_the_configured_threshold_for_clustername_CI_21 'micro
 resource Daily_law_datacap 'Microsoft.Insights/scheduledQueryRules@2022-08-01-preview' = {
   name: 'Daily data cap breached for workspace ${logAnalyticsWorkspaceName} CIQ-1'
   location: logAnalyticsWorkspaceLocation
+  tags: customsTags
   properties: {
     displayName: 'Daily data cap breached for workspace ${logAnalyticsWorkspaceName} CIQ-1'
     description: 'This alert monitors daily data cap defined on a workspace and fires when the daily data cap is breached.'

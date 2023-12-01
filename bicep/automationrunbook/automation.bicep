@@ -4,6 +4,9 @@ param automationAccountName string
 @description('Deployment Location')
 param location string = resourceGroup().location
 
+@description('Custom tags for created resources')
+param customTags object = {}
+
 @description('Used to reference todays date')
 param today string = utcNow('yyyyMMddTHHmmssZ')
 
@@ -115,6 +118,7 @@ var workWeek = {weekDays: [
 resource automationAccount 'Microsoft.Automation/automationAccounts@2022-08-08' = {
   name: automationAccountName
   location: location
+  tags: customTags
   identity: {
     type: 'SystemAssigned'
   }
@@ -154,6 +158,7 @@ resource runbook 'Microsoft.Automation/automationAccounts/runbooks@2022-08-08' =
   parent: automationAccount
   name: !empty(runbookName) ? runbookName : 'armtemplatevalidationissue'
   location: location
+  tags: customTags
   properties: {
     logVerbose: true
     logProgress: true

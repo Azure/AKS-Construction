@@ -1,5 +1,6 @@
 param resourceName string
 param location string = resourceGroup().location
+param customTags object = {}
 
 param networkPluginIsKubenet bool = false
 param aksPrincipleId string = ''
@@ -123,6 +124,7 @@ var routeFwTableName = 'rt-afw-${resourceName}'
 resource vnet_udr 'Microsoft.Network/routeTables@2023-04-01' = if (azureFirewalls) {
   name: routeFwTableName
   location: location
+  tags: customTags
   properties: {
     routes: [
       {
@@ -209,6 +211,7 @@ var vnetName = 'vnet-${resourceName}'
 resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   name: vnetName
   location: location
+  tags: customTags
   properties: {
     addressSpace: {
       addressPrefixes: [
@@ -242,6 +245,7 @@ var privateLinkAcrName = 'pl-acr-${resourceName}'
 resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2023-04-01' = if (!empty(privateLinkAcrId)) {
   name: privateLinkAcrName
   location: location
+  tags: customTags
   properties: {
     customNetworkInterfaceName: 'nic-${privateLinkAcrName}'
     privateLinkServiceConnections: [
@@ -264,12 +268,14 @@ resource privateLinkAcr 'Microsoft.Network/privateEndpoints@2023-04-01' = if (!e
 resource privateDnsAcr 'Microsoft.Network/privateDnsZones@2020-06-01' = if (!empty(privateLinkAcrId))  {
   name: 'privatelink.azurecr.io'
   location: 'global'
+  tags: customTags
 }
 
 var privateDnsAcrLinkName = 'vnet-dnscr-${resourceName}'
 resource privateDnsAcrLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (!empty(privateLinkAcrId))  {
   parent: privateDnsAcr
   name: privateDnsAcrLinkName
+  tags: customTags
   location: 'global'
   properties: {
     registrationEnabled: false
@@ -300,6 +306,7 @@ var privateLinkAkvName = 'pl-akv-${resourceName}'
 resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2023-04-01' = if (!empty(privateLinkAkvId)) {
   name: privateLinkAkvName
   location: location
+  tags: customTags
   properties: {
     customNetworkInterfaceName: 'nic-${privateLinkAkvName}'
     privateLinkServiceConnections: [
@@ -322,6 +329,7 @@ resource privateLinkAkv 'Microsoft.Network/privateEndpoints@2023-04-01' = if (!e
 resource privateDnsAkv 'Microsoft.Network/privateDnsZones@2020-06-01' = if (!empty(privateLinkAkvId))  {
   name: 'privatelink.vaultcore.azure.net'
   location: 'global'
+  tags: customTags
 }
 
 var privateDnsAkvLinkName = 'vnet-dnscr-${resourceName}'
@@ -329,6 +337,7 @@ resource privateDnsAkvLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
   parent: privateDnsAkv
   name: privateDnsAkvLinkName
   location: 'global'
+  tags: customTags
   properties: {
     registrationEnabled: false
     virtualNetwork: {
@@ -364,6 +373,7 @@ param bastionSku string = 'Standard'
 resource bastionPip 'Microsoft.Network/publicIPAddresses@2023-04-01' = if(bastion) {
   name: publicIpAddressName
   location: location
+  tags: customTags
   sku: {
     name: 'Standard'
   }
@@ -376,6 +386,7 @@ resource bastionPip 'Microsoft.Network/publicIPAddresses@2023-04-01' = if(bastio
 resource bastionHost 'Microsoft.Network/bastionHosts@2023-04-01' = if(bastion) {
   name: bastionHostName
   location: location
+  tags: customTags
   sku: {
     name: bastionSku
   }
@@ -407,6 +418,7 @@ param CreateNsgFlowLogs bool = false
 var flowLogStorageName = take(replace(toLower('stflow${resourceName}${uniqueString(resourceGroup().id, resourceName)}'),'-',''),24)
 resource flowLogStor 'Microsoft.Storage/storageAccounts@2023-01-01' = if(CreateNsgFlowLogs && networkSecurityGroups) {
   name: flowLogStorageName
+  tags: customTags
   kind: 'StorageV2'
   sku: {
     name: 'Standard_LRS'
@@ -423,6 +435,7 @@ module nsgAks 'nsg.bicep' = if(networkSecurityGroups) {
   params: {
     location: location
     resourceName: '${aks_subnet_name}-${resourceName}'
+    customTags: customTags
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -438,6 +451,7 @@ module nsgAcrPool 'nsg.bicep' = if(acrPrivatePool && networkSecurityGroups) {
   params: {
     location: location
     resourceName: '${acrpool_subnet_name}-${resourceName}'
+    customTags: customTags
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -453,6 +467,7 @@ module nsgAppGw 'nsg.bicep' = if(ingressApplicationGateway && networkSecurityGro
   params: {
     location: location
     resourceName: '${appgw_subnet_name}-${resourceName}'
+    customTags: customTags
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -474,6 +489,7 @@ module nsgBastion 'nsg.bicep' = if(bastion && networkSecurityGroups) {
   params: {
     location: location
     resourceName: '${bastion_subnet_name}-${resourceName}'
+    customTags: customTags
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -495,6 +511,7 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
   params: {
     location: location
     resourceName: '${private_link_subnet_name}-${resourceName}'
+    customTags: customTags
     workspaceId: !empty(workspaceName) ? log.properties.customerId : ''
     workspaceRegion:  !empty(workspaceName) ? log.location : ''
     workspaceResourceId:  !empty(workspaceName) ? log.id : ''
@@ -508,6 +525,7 @@ module nsgPrivateLinks 'nsg.bicep' = if(privateLinks && networkSecurityGroups) {
 resource natGwIp 'Microsoft.Network/publicIPAddresses@2023-04-01' =  [for i in range(0, natGatewayPublicIps): if(natGateway) {
   name: 'pip-${natGwName}-${i+1}'
   location: location
+  tags: customTags
   sku: {
     name: 'Standard'
   }
@@ -524,6 +542,7 @@ var natGwName = 'ng-${resourceName}'
 resource natGw 'Microsoft.Network/natGateways@2023-04-01' = if(natGateway) {
   name: natGwName
   location: location
+  tags: customTags
   sku: {
     name: 'Standard'
   }

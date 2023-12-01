@@ -1,5 +1,6 @@
 param resourceName string
 param location string = resourceGroup().location
+param customTags object = {}
 param workspaceDiagsId string = ''
 param fwSubnetId string
 param fwManagementSubnetId string = ''
@@ -28,6 +29,7 @@ var managementIpConfig = {
 resource fw_pip 'Microsoft.Network/publicIPAddresses@2023-04-01' = {
   name: firewallPublicIpName
   location: location
+  tags: customTags
   sku: {
     name: 'Standard'
   }
@@ -41,6 +43,7 @@ resource fw_pip 'Microsoft.Network/publicIPAddresses@2023-04-01' = {
 resource fwManagementIp_pip 'Microsoft.Network/publicIPAddresses@2023-04-01' = if(fwSku=='Basic') {
   name: firewallManagementPublicIpName
   location: location
+  tags: customTags
   sku: {
     name: 'Standard'
   }
@@ -94,6 +97,7 @@ var fw_name = 'afw-${resourceName}'
 resource fw 'Microsoft.Network/azureFirewalls@2023-04-01' = {
   name: fw_name
   location: location
+  tags: customTags
   zones: !empty(availabilityZones) ? availabilityZones : []
   properties: {
     sku: {
@@ -125,6 +129,7 @@ resource fw 'Microsoft.Network/azureFirewalls@2023-04-01' = {
 resource fwPolicy 'Microsoft.Network/firewallPolicies@2023-04-01' = {
   name: 'afwp-${resourceName}'
   location: location
+  tags: customTags
   properties: {
     sku: {
       tier: fwSku

@@ -1,5 +1,6 @@
 param name string
 param location string = resourceGroup().location
+param customTags object = {}
 param nsgId string
 param storageId string
 param trafficAnalytics bool
@@ -15,6 +16,7 @@ param workspaceRegion string = resourceGroup().location
 resource networkWatcher 'Microsoft.Network/networkWatchers@2023-04-01' = {
   name: 'NetworkWatcher_${location}'
   location: location
+  tags: customTags
   properties: {}
 }
 
@@ -22,6 +24,7 @@ resource nsgFlowLogs 'Microsoft.Network/networkWatchers/flowLogs@2022-11-01' = {
   name: name
   parent: networkWatcher
   location: location
+  tags: customTags
   properties: {
     targetResourceId: nsgId
     storageId: storageId

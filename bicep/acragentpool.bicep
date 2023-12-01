@@ -1,5 +1,6 @@
 param location string = resourceGroup().location
 param acrName string
+param customTags object = {}
 param acrPoolSubnetId string = ''
 
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing =  {
@@ -9,6 +10,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing =  {
 resource acrPool 'Microsoft.ContainerRegistry/registries/agentPools@2019-06-01-preview' = {
   name: 'private-pool'
   location: location
+  tags: customTags
   parent: acr
   properties: {
     count: 1

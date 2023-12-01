@@ -7,6 +7,9 @@ param location string = resourceGroup().location
 @description('Used to name all resources')
 param resourceName string
 
+@description('Custom tags for created resources')
+param customTags object = {}
+
 @description('Enable support for private links')
 param privateLinks bool = false
 
@@ -30,6 +33,7 @@ var kvIPRules = [for kvIp in keyVaultIPAllowlist: {
 resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
   name: akvName
   location: location
+  tags: customTags
   properties: {
     tenantId: subscription().tenantId
     sku: {
