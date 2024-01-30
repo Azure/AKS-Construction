@@ -5,6 +5,7 @@
     { "key": "UKSouth", "text": "UK South"},
     { "key": "UKWest", "text": "UK West" },
     { "key": "middleeast", "text": "Middle East", "itemType": 2 },
+    { "key": "QatarCentral", "text": "Qatar Central" },
     { "key": "UAENorth", "text": "UAE North" },
     { "key": "america", "text": "North America", "itemType": 2 },
     { "key": "CentralUS", "text": "Central US" },
