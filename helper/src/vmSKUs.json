@@ -1002,6 +1002,193 @@
     "text": "General Purpose V2",
     "itemType": 2,
     "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS11-1_v2",
+    "text": "[Standard_DS11-1_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS11_v2",
+    "text": "[Standard_DS11_v2]: 2 vCPU, 14 RAM, 1023 SSD , 72 cache (8000 IOPS)",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS12-1_v2",
+    "text": "[Standard_DS12-1_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
+    "eph": true,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS12-2_v2",
+    "text": "[Standard_DS12-2_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
+    "eph": true,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS12_v2",
+    "text": "[Standard_DS12_v2]: 4 vCPU, 28 RAM, 1023 SSD , 144 cache (16000 IOPS)",
+    "eph": true,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS13-2_v2",
+    "text": "[Standard_DS13-2_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
+    "eph": true,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS13-4_v2",
+    "text": "[Standard_DS13-4_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
+    "eph": true,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS13_v2",
+    "text": "[Standard_DS13_v2]: 8 vCPU, 56 RAM, 1023 SSD , 288 cache (32000 IOPS)",
+    "eph": true,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS2_v2",
+    "text": "[Standard_DS2_v2]: 2 vCPU, 7 RAM, 1023 SSD , 86 cache (8000 IOPS)",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS3_v2",
+    "text": "[Standard_DS3_v2]: 4 vCPU, 14 RAM, 1023 SSD , 172 cache (16000 IOPS)",
+    "eph": true,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_DS4_v2",
+    "text": "[Standard_DS4_v2]: 8 vCPU, 28 RAM, 1023 SSD , 344 cache (32000 IOPS)",
+    "eph": true,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "standardDDSv4Family",
+    "text": "General Purpose V4",
+    "itemType": 2,
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_D2ds_v4",
+    "text": "[Standard_D2ds_v4]: 2 vCPU, 8 RAM, 1023 SSD , 50 cache (19000 IOPS)",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_D4ds_v4",
+    "text": "[Standard_D4ds_v4]: 4 vCPU, 16 RAM, 1023 SSD , 100 cache (38500 IOPS)",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_D8ds_v4",
+    "text": "[Standard_D8ds_v4]: 8 vCPU, 32 RAM, 1023 SSD , 200 cache (77000 IOPS)",
+    "eph": true,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "standardFSv2Family",
+    "text": "Compute Optimized",
+    "itemType": 2,
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_F2s_v2",
+    "text": "[Standard_F2s_v2]: 2 vCPU, 4 RAM, 1023 SSD , 32 cache (4000 IOPS)",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_F4s_v2",
+    "text": "[Standard_F4s_v2]: 4 vCPU, 8 RAM, 1023 SSD , 64 cache (8000 IOPS)",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_F8s_v2",
+    "text": "[Standard_F8s_v2]: 8 vCPU, 16 RAM, 1023 SSD , 128 cache (16000 IOPS)",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "standardBSFamily",
+    "text": "Burstable (dev/test)",
+    "itemType": 2,
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_B2ms",
+    "text": "[Standard_B2ms]: 2 vCPU, 8 RAM, 1023 SSD ",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_B2s",
+    "text": "[Standard_B2s]: 2 vCPU, 4 RAM, 1023 SSD , 30 cache (1600 IOPS)",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_B4ms",
+    "text": "[Standard_B4ms]: 4 vCPU, 16 RAM, 1023 SSD ",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "Standard_B8ms",
+    "text": "[Standard_B8ms]: 8 vCPU, 32 RAM, 1023 SSD ",
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "gp"
+  },
+  {
+    "key": "standardDCSv3Family",
+    "text": "Confidential v3",
+    "itemType": 2,
+    "eph": false,
+    "location": "QatarCentral",
+    "computeType": "sgx"
+  },
+  {
+    "key": "standardDSv2Family",
+    "text": "General Purpose V2",
+    "itemType": 2,
+    "eph": false,
     "location": "CentralUS",
     "computeType": "gp"
   },
