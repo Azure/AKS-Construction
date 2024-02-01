@@ -57,6 +57,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(cluster.enable_aad && { enable_aad: true, ...(cluster.enableAzureRBAC === false && cluster.aad_tenant_id && { aad_tenant_id: cluster.aad_tenant_id }) }),
     ...(cluster.enable_aad && cluster.AksDisableLocalAccounts !== defaults.cluster.AksDisableLocalAccounts && { AksDisableLocalAccounts: cluster.AksDisableLocalAccounts }),
     ...(cluster.enable_aad && cluster.enableAzureRBAC && { enableAzureRBAC: true, ...(deploy.clusterAdminRole && { adminPrincipalId: "$(az ad signed-in-user show --query id --out tsv)" }) }),
+    ...(addons.useuserassignedidentityforkubelet !=="no") && {KubeletCustomUserIdentity : addons.kubeletCustomUserIdentity, KubeletCustomUserIdentityResourceGroup : addons.kubeletCustomUserIdentityResourceGroup },
     ...(addons.registry !== "none" && {
         registries_sku: addons.registry,
         ...(deploy.acrPushRole && { acrPushRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),

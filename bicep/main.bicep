@@ -1166,6 +1166,15 @@ var systemPoolPresets = {
   }
 }
 
+@description('Enables the use of a customer user-assigned managed identity for the control plane')
+param useuserassignedidentityforkublet bool = false
+
+@description('Enables the use of a customer user-assigned managed identity for the control plane')
+param KubeletCustomUserIdentity string = ''
+
+@description('Enables the use of a customer user-assigned managed identity for the control plane')
+param KubeletCustomUserIdentityResourceGroup string = ''
+
 var systemPoolBase = {
   name:  JustUseSystemPool ? nodePoolName : 'npsystem'
   vmSize: agentVMSize
@@ -1336,6 +1345,11 @@ var aksProperties = union({
   nodeResourceGroupProfile: {
     restrictionLevel: restrictionLevelNodeResourceGroup
   }
+  identityProfile: (useuserassignedidentityforkublet == 'no') ? null : {
+    kubeletidentity: {
+      resourceId : resourceId('${KubeletCustomUserIdentityResourceGroup}','Microsoft.ManagedIdentity/userAssignedIdentities', '${KubeletCustomUserIdentity}')
+    }
+  }
 },
 outboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
@@ -1360,7 +1374,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' = {
     }
   } : {
     type: 'SystemAssigned'
-  }
+   }
   sku: {
     name: 'Base'
     tier: akssku

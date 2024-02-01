@@ -115,7 +115,10 @@
             "automationAccountScheduledStartStop": "",
             "automationTimeZone": "Etc/UTC",
             "automationStartHour": 8,
-            "automationStopHour" : 19
+            "automationStopHour" : 19,
+            "useuserassignedidentityforkubelet" : "no",
+            "kubeletCustomUserIdentity" : "",
+            "kubeletCustomUserIdentityResourceGroup" : ""
         },
         "net": {
             "vnetFirewallManagementSubnetAddressPrefix": "10.240.51.0/26",
