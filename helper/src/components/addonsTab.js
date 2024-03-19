@@ -534,11 +534,43 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray,showPr
 
             <Stack.Item align="start">
                 <Label required={true}>
-                    Workload Identity : Enable Azure Workload Identity on the AKS Cluster
+                    Use a managed identity : Enable Azure Workload Identity on the AKS Cluster
                     (<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster">*preview</a>)
                     (<a target="_new" href="https://github.com/Azure/azure-workload-identity">project</a>)
                 </Label>
                 <Checkbox styles={{ root: { marginLeft: '50px' } }} inputProps={{ "data-testid": "addons-workloadIdentity-Checkbox"}} checked={addons.workloadIdentity} onChange={(ev, v) => {updateFn("workloadIdentity", v);showPreviewModal(ev,"https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster")}} label="Install Workload Identity" />
+
+            </Stack.Item>
+
+            <Separator className="notopmargin" />
+
+            <Stack.Item align="start">
+                <Label required={true}>
+                    Kubelet identity: Allow the Kubelet on each node to run as a user-assigned managed identity.
+                    (<a target="_new" href="https://learn.microsoft.com/en-us/azure/aks/use-managed-identity#bring-your-own-managed-identity">docs</a>)
+                </Label>
+                <MessageBar messageBarType={MessageBarType.info} styles={{ root: { marginBottom: '10px' } }}>
+                        This option is only applicable providing a custom user managed account is also used for the control plane.
+                        Without it, you will see an error similar to "Custom Kubelet Identity Only Supported On User Assigned MSI Cluster".
+                        Select the "Security Principals --&gt; Cluster with additional security controls" option above and this will be enabled automatically.
+                </MessageBar>
+
+                <ChoiceGroup
+                    styles={{ root: { marginLeft: '50px' } }}
+                    selectedKey={addons.useuserassignedidentityforkubelet}
+                    options={[
+                        { key: 'no', text: 'Do not use a custom user-assigned identity for the kubelet' },
+                        { key: 'yesExisting', text: 'Yes, use a pre-existing user-assigned identity for the kubelet.' }
+                    ]}
+                    onChange={(ev, { key }) => updateFn("useuserassignedidentityforkubelet", key)}
+                />
+
+                {addons.useuserassignedidentityforkubelet !== 'no' &&
+                    <>
+                    <TextField label="User Assigned Identity Name" styles={{ root: { marginBottom: '10px', marginLeft: '50px', width: '300px' } }} required placeholder="e.g. aksControl" onChange={(ev, v) => {updateFn("kubeletCustomUserIdentity", v)}} value={addons.kubeletCustomUserIdentity} />
+                    <TextField label="Resource Group Name"              styles={{ root: { marginBottom: '10px', marginLeft: '50px', width: '300px' } }} required placeholder="e.g. akaIdentities" onChange={(ev, v) => {updateFn("kubeletCustomUserIdentityResourceGroup", v)}} value={addons.kubeletCustomUserIdentityResourceGroup} />
+                    </>
+                }
 
             </Stack.Item>
 
