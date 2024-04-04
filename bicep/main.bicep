@@ -851,7 +851,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.27.7'
+param kubernetesVersion string = '1.28.5'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -1110,7 +1110,7 @@ param serviceMeshProfile string = ''
 
 @description('The ingress gateway to use for the Istio service mesh')
 param istioIngressGatewayMode string = ''
-param istioRevision string = 'asm-1-17'
+param istioRevision string = 'asm-1-20'
 
 var serviceMeshProfileObj = {
   istio: {
