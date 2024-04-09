@@ -17,7 +17,7 @@ jobs:
     outputs:
       LatestAkscVersionTag: ${{ steps.AkscTags.outputs.LATEST}}
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4.1.1
         with:
           fetch-depth: 0
 
@@ -106,14 +106,14 @@ jobs:
     env:
       templateRelease: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4.1.1
 
       - name: Job Parameter Checking
         run: |
           echo "GitHub Ref: ${{ github.ref }}"
 
       - name: Azure Login
-        uses: Azure/login@v1.4.6
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -131,7 +131,7 @@ jobs:
           REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
 
       - name: Create GitHub pages release artifact
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: HelperApp
           path: helper/build
@@ -143,7 +143,7 @@ jobs:
     env:
       templateRelease: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
     steps:
-      - uses: actions/download-artifact@v3.0.2
+      - uses: actions/download-artifact@v4.1.4
         with:
           name: HelperApp
           path: helperapp
@@ -167,7 +167,7 @@ jobs:
     env:
       templateRelease: ${{ needs.VerifySoftPossible.outputs.LatestAkscVersionTag }}
     steps:
-      - uses: actions/download-artifact@v3.0.2
+      - uses: actions/download-artifact@v4.1.4
         with:
           name: HelperApp
           path: helperapp

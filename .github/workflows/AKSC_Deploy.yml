@@ -74,7 +74,7 @@ jobs:
       AGNAME: ${{ steps.deployAks.outputs.AGNAME }}
     steps:
       # Login to Azure
-    - uses: azure/login@v1.4.6
+    - uses: azure/login@v2
       name: Initial Login to Azure to Deploy
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -139,7 +139,7 @@ jobs:
         echo "AGNAME=$appGatewayName" >> $GITHUB_OUTPUT
 
       # Re-Login to Azure if we're using the AKS RUN COMMAND
-    - uses: azure/login@v1.4.6
+    - uses: azure/login@v2
       name: Initial Login to Azure to Deploy
       if: inputs.postScriptParams && inputs.postScriptInvokeCommand == true
       with:

@@ -85,7 +85,7 @@ jobs:
         run: az extension add -n log-analytics -y
 
       - name: Azure Login
-        uses: Azure/login@v1.4.6
+        uses: azure/login@v2
         with:
           creds:  ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -138,7 +138,7 @@ jobs:
     if: always() && inputs.AGNAME != ''
     steps:
       - name: Azure Login
-        uses: Azure/login@v1.4.6
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -233,7 +233,7 @@ jobs:
 
       - name: Store any generated debug json files as artifacts
         if: always()
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: Troubleshooting-AGIC
           path: debug*.*
@@ -252,7 +252,7 @@ jobs:
           echo "LA workspace guid is ${{ inputs.LAWGUID }}"
 
       - name: Azure Login
-        uses: Azure/login@v1.4.6
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
@@ -275,7 +275,7 @@ jobs:
 
       - name: Check Run Command
         if: inputs.USERUNCMD == true
-        uses: Azure/cli@v1.0.7
+        uses: Azure/cli@v2
         env:
           AZCLIVERSION: latest
         with:

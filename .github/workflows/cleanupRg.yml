@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
-    - uses: azure/login@v1.4.6
+    - uses: azure/login@v2
       name: Login to Azure
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -44,7 +44,7 @@ jobs:
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
         Install-Module -Name Az.Accounts
         Install-Module -Name Az.Resources
-        
+
     - name: Cleanup
       shell: pwsh
       run: |
@@ -54,13 +54,13 @@ jobs:
         try {
           #Remove all but public ip addresses
           Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -ne "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-          
+
           #Remove public ip addresses
           Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | ? {$_.ResourceType -eq "Microsoft.Network/publicIPAddresses"} | Remove-AzResource -Force
-          
+
           #Final run to clean other dependant resources in parent-child graph
           Get-AzResource -ResourceGroupName $rgToPurge.ResourceGroupName | Remove-AzResource -Force
-          
+
           #Remove unknown/invalid role assignments from rg
           Get-AzRoleAssignment -Scope $rgToPurge.ResourceId | where ObjectType -eq 'Unknown' | Remove-AzRoleAssignment
         }
