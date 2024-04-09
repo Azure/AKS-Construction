@@ -23,7 +23,7 @@ jobs:
       pull-requests: write
 
     steps:
-    - uses: actions/stale@v7.0.0
+    - uses: actions/stale@v9.0.0
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         stale-issue-message: 'Issue smells stale, no activity for 30 days. Stale Label will be removed if the issue is updated, otherwise closed in a month.'

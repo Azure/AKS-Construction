@@ -36,7 +36,7 @@ jobs:
       FILELIST: ${{ steps.getfiles.outputs.FILELIST}}
     steps:
       #Get the code files from the repo
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4.1.1
 
       - name: Job parameter check
         run: |
@@ -63,7 +63,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4.1.1
 
       - name: Job parameter check
         run: |

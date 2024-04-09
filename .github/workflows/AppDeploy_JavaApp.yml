@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: "Ag-${{ inputs.AGNAME}}" #AppGateway doesn't like concurrent updates
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4.1.1
 
       - name: Job parameter inspection
         run: |
@@ -72,7 +72,7 @@ jobs:
           echo "CertManager version is ${{ inputs.CERTMANAGERVERSION }}"
 
       - name: Azure Login
-        uses: Azure/login@v1.4.6
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false

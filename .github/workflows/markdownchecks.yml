@@ -5,14 +5,14 @@ jobs:
   Validation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4.1.1
 
       - name: Typo file contents check
         shell: bash
         run: cat ./.github/workflows_dep/_typos.toml
 
       - name: Check spelling of markdown files
-        uses: crate-ci/typos@v1.12.8
+        uses: crate-ci/typos@v1.20.6
         with:
           files: ./*.md
           config: ./.github/workflows_dep/_typos.toml

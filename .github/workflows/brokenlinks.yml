@@ -12,11 +12,11 @@ jobs:
   repoLinkChecker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4.1.1
 
       - name: Link Checker
         id: lychee
-        uses: lycheeverse/lychee-action@v1.8.0
+        uses: lycheeverse/lychee-action@v1.9.3
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Create Issue From File
         if: steps.lychee.outputs.exit_code != 0
-        uses: peter-evans/create-issue-from-file@v4.0.1
+        uses: peter-evans/create-issue-from-file@v5.0.0
         with:
           title: 'Bot: Broken Links Detected in Repo'
           content-filepath: ./lychee/out.md
@@ -34,7 +34,7 @@ jobs:
   helperLinkChecker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4.1.1
 
       - name: Playwright - Install w/ OS dependencies
         run: |
@@ -61,7 +61,7 @@ jobs:
 
       - name: Link Checker
         id: lychee
-        uses: lycheeverse/lychee-action@v1.8.0
+        uses: lycheeverse/lychee-action@v1.9.3
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -70,7 +70,7 @@ jobs:
 
       - name: Create Issue From File
         if: steps.lychee.outputs.exit_code != 0
-        uses: peter-evans/create-issue-from-file@v4.0.1
+        uses: peter-evans/create-issue-from-file@v5.0.0
         with:
           title: 'Bot: Broken Links Detected in AKSC Helper'
           content-filepath: ./lychee/out.md
