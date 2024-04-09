@@ -2,7 +2,6 @@ name: Release bicep and helper
 
 permissions:
   contents: write
-  metadata: read
   packages: read
 
 on:
