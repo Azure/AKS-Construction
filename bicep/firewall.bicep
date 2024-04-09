@@ -137,7 +137,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2023-04-01' = {
   }
 }
 
-resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
+resource fwpRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2023-04-01' = {
   parent: fwPolicy
   name: 'AKSConstructionRuleGroup'
   properties: {
