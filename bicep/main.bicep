@@ -1344,7 +1344,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 !empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2024-01-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
@@ -1562,7 +1562,7 @@ resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  
   }
 }
 
-resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
+resource sysLog 'Microsoft.Insights/dataCollectionRules@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
   name: 'MSCI-${location}-${aks.name}'
   location: location
   kind: 'Linux'
@@ -1645,7 +1645,7 @@ resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if
   }
 }
 
-resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
+resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
   name: '${aks.name}-${aks_law.name}-association'
   scope: aks
   properties: {
