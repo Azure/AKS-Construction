@@ -1017,11 +1017,6 @@ param serviceCidr string = '172.10.0.0/16'
 @description('The IP address to reserve for DNS')
 param dnsServiceIP string = '172.10.0.10'
 
-@minLength(9)
-@maxLength(18)
-@description('The address range to use for the docker bridge')
-param dockerBridgeCidr string = '172.17.0.1/16'
-
 @description('Enable Microsoft Defender for Containers (preview)')
 param defenderForContainers bool = false
 
@@ -1301,7 +1296,6 @@ var aksProperties = union({
     podCidr: networkPlugin=='kubenet' || networkPluginMode=='Overlay' || cniDynamicIpAllocation ? podCidr : json('null')
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
-    dockerBridgeCidr: dockerBridgeCidr
     outboundType: outboundTrafficType
     ebpfDataplane: networkPlugin=='azure' ? ebpfDataplane : ''
   }
