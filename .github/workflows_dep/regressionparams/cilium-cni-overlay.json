@@ -11,7 +11,7 @@
     "agentVMSize": {
       "value": "Standard_DS3_v2"
     },
-    "ebpfDataplane": {
+    "networkDataplane": {
       "value": "cilium"
     },
     "networkPluginMode": {
