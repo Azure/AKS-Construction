@@ -701,7 +701,7 @@
                 "Overlay"
               ]
             },
-            "ebpfDataplane": {
+            "networkDataplane": {
               "type": "string",
               "defaultValue": "",
               "metadata": {

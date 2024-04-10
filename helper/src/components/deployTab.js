@@ -82,7 +82,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
         ...( addons.logDataCap !== defaults.addons.logDataCap && {logDataCap: addons.logDataCap }),
         ...( addons.createAksMetricAlerts !== defaults.addons.createAksMetricAlerts && {createAksMetricAlerts: addons.createAksMetricAlerts })
        }),
-    ...(addons.networkPolicy !== "none" && !net.ebpfDataplane && { networkPolicy: addons.networkPolicy }),
+    ...(addons.networkPolicy !== "none" && !net.networkDataplane && { networkPolicy: addons.networkPolicy }),
     ...(defaults.addons.serviceMeshProfile !== addons.serviceMeshProfile && {serviceMeshProfile: addons.serviceMeshProfile }),
     ...(addons.azurepolicy !== "none" && { azurepolicy: addons.azurepolicy }),
     ...(addons.azurepolicy !== "none" && addons.azurePolicyInitiative !== defaults.addons.azurePolicyInitiative && { azurePolicyInitiative: addons.azurePolicyInitiative }),
@@ -160,7 +160,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
     ...(defaults.addons.blobCSIDriver !== addons.blobCSIDriver && {blobCSIDriver: addons.blobCSIDriver }),
     ...(defaults.addons.workloadIdentity !== addons.workloadIdentity && {oidcIssuer: true, workloadIdentity: addons.workloadIdentity }),
     ...(net.networkPlugin === 'azure' && {
-      ...(net.ebpfDataplane && {ebpfDataplane: 'cilium'})
+      ...(net.networkDataplane && {networkDataplane: 'cilium'})
     }),
     ...(urlParams.getAll('feature').includes('defender') && cluster.DefenderForContainers !== defaults.cluster.DefenderForContainers && { DefenderForContainers: cluster.DefenderForContainers }),
     ...(addons.monitor === "aci" && {

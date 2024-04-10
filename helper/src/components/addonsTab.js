@@ -365,8 +365,8 @@ export default function ({ tabValues, updateFn, featureFlag, invalidArray,showPr
                     errorMessage={getError(invalidArray, 'networkPolicy')}
                     options={[
                         { "data-testid":'addons-netpolicy-none', key: 'none', text: 'No restrictions, all PODs can access each other' },
-                        { "data-testid":'addons-netpolicy-calico', disabled: net.ebpfDataplane, key: 'calico', text: 'Use Calico to implement intra-cluster traffic restrictions' },
-                        { "data-testid":'addons-netpolicy-azure', disabled: net.ebpfDataplane, key: 'azure', text: 'Use Azure NPM to implement intra-cluster traffic restrictions ' },
+                        { "data-testid":'addons-netpolicy-calico', disabled: net.networkDataplane, key: 'calico', text: 'Use Calico to implement intra-cluster traffic restrictions' },
+                        { "data-testid":'addons-netpolicy-azure', disabled: net.networkDataplane, key: 'azure', text: 'Use Azure NPM to implement intra-cluster traffic restrictions ' },
                         { "data-testid":'addons-netpolicy-cilium', key: 'cilium', text: 'Use Cilium to implement intra-cluster traffic restrictions (requires Cilium backplane for CNI).' }
                     ]}
                     onChange={(ev, { key }) => updateFn("networkPolicy", key)}
