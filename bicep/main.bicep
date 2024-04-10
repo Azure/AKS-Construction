@@ -1327,9 +1327,6 @@ var aksProperties = union({
       enabled: fileCSIDriver
     }
   }
-  nodeResourceGroupProfile: {
-    restrictionLevel: restrictionLevelNodeResourceGroup
-  }
 },
 outboundTrafficType == 'managedNATGateway' ? managedNATGatewayProfile : {},
 defenderForContainers && createLaw ? azureDefenderSecurityProfile : {},
