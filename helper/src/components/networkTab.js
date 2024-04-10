@@ -108,11 +108,11 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                         <Checkbox
                             styles={{ root: { marginLeft: '50px', marginTop: '10px !important' } }}
                             disabled={net.networkPlugin!=='azure' || net.networkPluginMode===false}
-                            checked={net.ebpfDataplane}
-                            onChange={(ev, v) => updateFn("ebpfDataplane", v)}
+                            checked={net.networkDataplane}
+                            onChange={(ev, v) => updateFn("networkDataplane", v)}
                             label="Cilium powered dataplane" />
                             {
-                                net.ebpfDataplane &&
+                                net.networkDataplane &&
                                 (
                                     <PreviewDialog previewLink={"https://learn.microsoft.com/en-us/azure/aks/azure-cni-powered-by-cilium#prerequisites"} />
                                 )

@@ -951,7 +951,7 @@ param networkPluginMode string = ''
   'cilium'
 ])
 @description('Use Cilium dataplane (requires azure networkPlugin)')
-param ebpfDataplane string = ''
+param networkDataplane string = ''
 
 @allowed([
   ''
@@ -1297,7 +1297,7 @@ var aksProperties = union({
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
     outboundType: outboundTrafficType
-    ebpfDataplane: networkPlugin=='azure' ? ebpfDataplane : ''
+    networkDataplane: networkPlugin=='azure' ? networkDataplane : ''
   }
   disableLocalAccounts: AksDisableLocalAccounts && enable_aad
   autoUpgradeProfile: {upgradeChannel: upgradeChannel}
