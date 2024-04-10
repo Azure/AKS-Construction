@@ -6,7 +6,7 @@ param aadUserObjectId string = ''
 
 var rbacClusterAdmin = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b1ff04bb-8a4e-4dc4-8eb5-8693973ce19b')
 
-resource aks 'Microsoft.ContainerService/managedClusters@2022-11-02-preview' existing = {
+resource aks 'Microsoft.ContainerService/managedClusters@2024-01-01' existing = {
   name: aksName
 }
 

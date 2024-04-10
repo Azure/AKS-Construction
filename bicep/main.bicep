@@ -1017,11 +1017,6 @@ param serviceCidr string = '172.10.0.0/16'
 @description('The IP address to reserve for DNS')
 param dnsServiceIP string = '172.10.0.10'
 
-@minLength(9)
-@maxLength(18)
-@description('The address range to use for the docker bridge')
-param dockerBridgeCidr string = '172.17.0.1/16'
-
 @description('Enable Microsoft Defender for Containers (preview)')
 param defenderForContainers bool = false
 
@@ -1301,7 +1296,6 @@ var aksProperties = union({
     podCidr: networkPlugin=='kubenet' || networkPluginMode=='Overlay' || cniDynamicIpAllocation ? podCidr : json('null')
     serviceCidr: serviceCidr
     dnsServiceIP: dnsServiceIP
-    dockerBridgeCidr: dockerBridgeCidr
     outboundType: outboundTrafficType
     networkDataplane: networkPlugin=='azure' ? networkDataplane : ''
   }
@@ -1344,7 +1338,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 !empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2024-01-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
@@ -1562,7 +1556,7 @@ resource AksDiags 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  
   }
 }
 
-resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
+resource sysLog 'Microsoft.Insights/dataCollectionRules@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
   name: 'MSCI-${location}-${aks.name}'
   location: location
   kind: 'Linux'
@@ -1645,7 +1639,7 @@ resource sysLog 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = if
   }
 }
 
-resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2021-09-01-preview' = if (createLaw && omsagent && enableSysLog) {
+resource association 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = if (createLaw && omsagent && enableSysLog) {
   name: '${aks.name}-${aks_law.name}-association'
   scope: aks
   properties: {
