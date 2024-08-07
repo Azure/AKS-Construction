@@ -720,7 +720,7 @@ resource PV_usage_violates_the_configured_threshold_for_clustername_CI_21 'micro
 }
 
 
-resource Daily_law_datacap 'Microsoft.Insights/scheduledQueryRules@2022-08-01-preview' = {
+resource Daily_law_datacap 'Microsoft.Insights/scheduledQueryRules@2023-12-01' = {
   name: 'Daily data cap breached for workspace ${logAnalyticsWorkspaceName} CIQ-1'
   location: logAnalyticsWorkspaceLocation
   properties: {

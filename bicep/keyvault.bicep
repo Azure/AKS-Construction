@@ -27,7 +27,7 @@ var kvIPRules = [for kvIp in keyVaultIPAllowlist: {
   value: kvIp
 }]
 
-resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
+resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: akvName
   location: location
   properties: {

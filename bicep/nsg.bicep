@@ -14,7 +14,7 @@ output nsgId string = nsg.id
 
 param ruleInAllowGwManagement bool = false
 param ruleInGwManagementPort string = '443,65200-65535'
-resource ruleAppGwManagement 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleInAllowGwManagement) {
+resource ruleAppGwManagement 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleInAllowGwManagement) {
   parent: nsg
   name: 'Allow_AppGatewayManagement'
   properties: {
@@ -30,7 +30,7 @@ resource ruleAppGwManagement 'Microsoft.Network/networkSecurityGroups/securityRu
 }
 
 param ruleInAllowAzureLoadBalancer bool = false
-resource ruleAzureLoadBalancer 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if (ruleInAllowAzureLoadBalancer) {
+resource ruleAzureLoadBalancer 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if (ruleInAllowAzureLoadBalancer) {
   parent: nsg
   name: 'Allow_AzureLoadBalancer'
   properties: {
@@ -50,7 +50,7 @@ resource ruleAzureLoadBalancer 'Microsoft.Network/networkSecurityGroups/security
 }
 
 param ruleInDenyInternet bool = false
-resource ruleDenyInternet 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleInDenyInternet) {
+resource ruleDenyInternet 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleInDenyInternet) {
   parent: nsg
   name: 'Deny_AllInboundInternet'
   properties: {
@@ -71,7 +71,7 @@ resource ruleDenyInternet 'Microsoft.Network/networkSecurityGroups/securityRules
 }
 
 param ruleInAllowInternetHttp bool = false
-resource ruleInternetHttp 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleInAllowInternetHttp) {
+resource ruleInternetHttp 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleInAllowInternetHttp) {
   parent: nsg
   name: 'Allow_Internet_Http'
   properties: {
@@ -92,7 +92,7 @@ resource ruleInternetHttp 'Microsoft.Network/networkSecurityGroups/securityRules
 }
 
 param ruleInAllowInternetHttps bool = false
-resource ruleInternetHttps 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleInAllowInternetHttps) {
+resource ruleInternetHttps 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleInAllowInternetHttps) {
   parent: nsg
   name: 'Allow_Internet_Https'
   properties: {
@@ -113,7 +113,7 @@ resource ruleInternetHttps 'Microsoft.Network/networkSecurityGroups/securityRule
 }
 
 param ruleInAllowBastionHostComms bool = false
-resource ruleBastionHost 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleInAllowBastionHostComms) {
+resource ruleBastionHost 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleInAllowBastionHostComms) {
   parent: nsg
   name: 'Allow_Bastion_Host_Communication'
   properties: {
@@ -135,7 +135,7 @@ resource ruleBastionHost 'Microsoft.Network/networkSecurityGroups/securityRules@
 }
 
 param ruleOutAllowBastionComms bool = false
-resource ruleBastionEgressSshRdp 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleOutAllowBastionComms) {
+resource ruleBastionEgressSshRdp 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleOutAllowBastionComms) {
   parent: nsg
   name: 'Allow_SshRdp_Outbound'
   properties: {
@@ -156,7 +156,7 @@ resource ruleBastionEgressSshRdp 'Microsoft.Network/networkSecurityGroups/securi
   }
 }
 
-resource ruleBastionEgressAzure 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleOutAllowBastionComms) {
+resource ruleBastionEgressAzure 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleOutAllowBastionComms) {
   parent: nsg
   name: 'Allow_Azure_Cloud_Outbound'
   properties: {
@@ -176,7 +176,7 @@ resource ruleBastionEgressAzure 'Microsoft.Network/networkSecurityGroups/securit
   }
 }
 
-resource ruleBastionEgressBastionComms 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleOutAllowBastionComms) {
+resource ruleBastionEgressBastionComms 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleOutAllowBastionComms) {
   parent: nsg
   name: 'Allow_Bastion_Communication'
   properties: {
@@ -197,7 +197,7 @@ resource ruleBastionEgressBastionComms 'Microsoft.Network/networkSecurityGroups/
   }
 }
 
-resource ruleBastionEgressSessionInfo 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleOutAllowBastionComms) {
+resource ruleBastionEgressSessionInfo 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleOutAllowBastionComms) {
   parent: nsg
   name: 'Allow_Get_Session_Info'
   properties: {
@@ -218,7 +218,7 @@ resource ruleBastionEgressSessionInfo 'Microsoft.Network/networkSecurityGroups/s
 }
 
 param ruleInDenySsh bool = false
-resource ruleSshIngressDeny 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = if(ruleInDenySsh) {
+resource ruleSshIngressDeny 'Microsoft.Network/networkSecurityGroups/securityRules@2024-01-01' = if(ruleInDenySsh) {
   parent: nsg
   name: 'DenySshInbound'
   properties: {
