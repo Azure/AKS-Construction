@@ -12,7 +12,8 @@
                 "level": "warning"
             },
             "use-recent-api-versions" : {
-                "level": "warning"
+                "level": "warning",
+                "maxAllowedAgeInDays": 0
             },
             "no-hardcoded-location" : {
                 "level": "error"
