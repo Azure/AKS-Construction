@@ -49,7 +49,7 @@
             "agentCount": 3,
             "maxCount": 20,
             "computeType": "gp",
-            "vmSize": "Standard_D4ds_v4",
+            "vmSize": "Standard_D4ds_v5",
             "osDiskSizeGB": 30,
             "osDiskType": "Ephemeral",
             "enable_aad": true,

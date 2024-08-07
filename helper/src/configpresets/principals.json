@@ -455,7 +455,7 @@
                                 "AksPaidSkuForSLA": true,
                                 "availabilityZones": "yes",
                                 "agentCount": 3,
-                                "agentVMSize": "Standard_DS3_v2",
+                                "agentVMSize": "Standard_D4ds_v4",
                                 "osDiskType" : "Ephemeral"
                             },
                             "addons": {

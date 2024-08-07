@@ -27,7 +27,7 @@ module aks '../../bicep/main.bicep' = {
   params: {
     location : location
     resourceName: 'win-aks'
-    agentVMSize: 'Standard_B2ms'
+    agentVMSize: 'Standard_B2s_v2'
     osDiskType: 'Managed'
     enable_aad: true
     enableAzureRBAC : true

@@ -84,7 +84,7 @@
           "agentCount": 1,
           "agentCountMax": 3,
           "networkPolicy": "",
-          "agentVMSize": "Standard_DS3_v2"
+          "agentVMSize": "Standard_D4ds_v4"
         }
       }
     },
@@ -660,7 +660,7 @@
             },
             "agentVMSize": {
               "type": "string",
-              "defaultValue": "Standard_DS3_v2",
+              "defaultValue": "Standard_D4ds_v4",
               "metadata": {
                 "description": "VM SKU"
               }
@@ -1160,7 +1160,7 @@
             "autoScale": "[greater(parameters('agentCountMax'), parameters('agentCount'))]",
             "systemPoolPresets": {
               "CostOptimised": {
-                "vmSize": "Standard_B4ms",
+                "vmSize": "Standard_B4s_v2",
                 "count": 1,
                 "minCount": 1,
                 "maxCount": 3,
@@ -1168,7 +1168,7 @@
                 "availabilityZones": []
               },
               "Standard": {
-                "vmSize": "Standard_DS2_v2",
+                "vmSize": "Standard_D4ds_v4",
                 "count": 3,
                 "minCount": 3,
                 "maxCount": 5,
@@ -1180,7 +1180,7 @@
                 ]
               },
               "HighSpec": {
-                "vmSize": "Standard_D4s_v3",
+                "vmSize": "Standard_D8ds_v4",
                 "count": 3,
                 "minCount": 3,
                 "maxCount": 5,

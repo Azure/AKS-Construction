@@ -6,7 +6,7 @@
         "value": "az-k8s-kmsbyopl"
       },
       "agentVMSize": {
-        "value": "Standard_DS3_v2"
+        "value": "Standard_D4ds_v5"
       },
       "JustUseSystemPool": {
         "value": true

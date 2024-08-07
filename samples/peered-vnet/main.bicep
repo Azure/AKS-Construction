@@ -103,7 +103,7 @@ module gridAks '../../bicep/main.bicep' = {
   params: {
     location : location
     resourceName: gridResourceName
-    agentVMSize: 'Standard_B2ms'
+    agentVMSize: 'Standard_B2s_v2'
     osDiskType: 'Managed'
     enable_aad: true
     enableAzureRBAC : true
@@ -128,7 +128,7 @@ module appAks '../../bicep/main.bicep' = {
   params: {
     location : location
     resourceName: 'app-${resourceName}'
-    agentVMSize: 'Standard_B2ms'
+    agentVMSize: 'Standard_B2s_v2'
     osDiskType: 'Managed'
     enable_aad: true
     enableAzureRBAC : true
@@ -162,7 +162,7 @@ module aksNodePools '../../bicep/aksagentpool.bicep'  = [for pool in extraAksNod
     subnetId: gridVnet.outputs.aksSubnetId
     agentCount: 0
     agentCountMax: 10
-    agentVMSize: 'Standard_B2s'
+    agentVMSize: 'Standard_B2s_v2'
     maxPods: 10
     osDiskType: 'Managed'
     osType: 'Linux'
