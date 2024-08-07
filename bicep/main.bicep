@@ -1375,7 +1375,7 @@ param osSKU string = 'Ubuntu'
 var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
 
 // Default OS Disk Size in GB for Linux is 30, for Windows is 100
-var defaultOsDiskSizeGB = osType == 'Linux' ? 30 : 100
+var defaultOsDiskSizeGB = 128
 
 module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
   name: take('${deployment().name}-userNodePool',64)

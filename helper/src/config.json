@@ -50,7 +50,7 @@
             "maxCount": 20,
             "computeType": "gp",
             "vmSize": "Standard_D4ds_v5",
-            "osDiskSizeGB": 30,
+            "osDiskSizeGB": 128,
             "osDiskType": "Ephemeral",
             "enable_aad": true,
             "AksDisableLocalAccounts": false,
