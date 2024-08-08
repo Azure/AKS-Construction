@@ -2,7 +2,7 @@ param aksName string
 
 param aksFluxAddOnReleaseNamespace string = 'flux-system'
 
-resource aks 'Microsoft.ContainerService/managedClusters@2024-01-01' existing = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' existing = {
   name: aksName
 }
 

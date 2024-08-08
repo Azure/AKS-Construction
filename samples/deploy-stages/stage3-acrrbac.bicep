@@ -6,7 +6,7 @@ param acrName string
 var AcrPullRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var KubeletObjectId = any(aks.properties.identityProfile.kubeletidentity).objectId
 
-resource aks 'Microsoft.ContainerService/managedClusters@2024-01-01' existing = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' existing = {
   name: aksName
 }
 
