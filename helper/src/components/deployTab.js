@@ -118,12 +118,12 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
       ...(cluster.keyVaultKms === "public" && {keyVaultKmsCreate: true, keyVaultKmsOfficerRolePrincipalId: "$(az ad signed-in-user show --query id --out tsv)"}),
       ...(cluster.keyVaultKms === "byoprivate" && cluster.keyVaultKmsByoKeyId !== '' &&  cluster.keyVaultKmsByoRG !== '' && {keyVaultKmsByoKeyId: cluster.keyVaultKmsByoKeyId, keyVaultKmsByoRG: cluster.keyVaultKmsByoRG}),
     }),
-    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'natGateway' && {
+    ...(net.vnet_opt === "default" && net.aksOutboundTrafficType === 'managedNatGateway' && {
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),
       ...(net.natGwIdleTimeout !== defaults.net.natGwIdleTimeout && {natGwIdleTimeout: net.natGwIdleTimeout})
     }),
-    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'natGateway' && {
+    ...(net.vnet_opt === "custom" && net.aksOutboundTrafficType === 'managedNatGateway' && {
       ...({createNatGateway: true}),
       ...(net.aksOutboundTrafficType !== defaults.net.aksOutboundTrafficType && {aksOutboundTrafficType: net.aksOutboundTrafficType}),
       ...(net.natGwIpCount !== defaults.net.natGwIpCount && {natGwIpCount: net.natGwIpCount}),

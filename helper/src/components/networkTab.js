@@ -184,7 +184,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                             data-testid="net-aksEgressType"
                             options={[
                                 { key: 'loadBalancer', text: 'Load Balancer'  },
-                                { key: 'natGateway', text: 'NAT Gateway' },
+                                { key: 'managedNatGateway', text: 'Managed NAT Gateway' },
                                 { key: 'userDefinedRouting', text: 'User Defined Routing'}
                             ]}
                             onChange={(ev, { key }) => updateFn("aksOutboundTrafficType", key)}
@@ -193,7 +193,7 @@ export default function NetworkTab ({ defaults, tabValues, updateFn, invalidArra
                     <Stack.Item>
                         <Checkbox //simple "read-only" checkbox that derives its values from other settings
                             styles={{ root: { marginBottom: '10px' }}}
-                            checked={net.vnet_opt === 'custom' && net.aksOutboundTrafficType === 'natGateway'}
+                            checked={net.vnet_opt === 'custom' && net.aksOutboundTrafficType === 'managedNatGateway'}
                             disabled={true}
                             label="Create NAT Gateway for AKS Subnet (Custom VNet Only)"
                         />
