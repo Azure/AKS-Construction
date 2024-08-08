@@ -1057,7 +1057,7 @@ param AutoscaleProfile object = {
 
 @allowed([
   'loadBalancer'
-  'managedNatGateway'
+  'managedNATGateway'
   'userDefinedRouting'
 ])
 @description('Outbound traffic type for the egress traffic of your cluster')

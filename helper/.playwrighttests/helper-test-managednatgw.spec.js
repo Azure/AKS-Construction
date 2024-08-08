@@ -37,7 +37,7 @@ test('managed-natgw-option-is-now-the-prod-default', async ({ page }) => {
   await page.waitForSelector('[data-testid="deploy-deploycmd"]')
   const clitextbox = await page.$('[data-testid="deploy-deploycmd"]')
   await expect(clitextbox).toBeVisible()
-  await expect(clitextbox).not.toContainText('managedNatGateway')
+  await expect(clitextbox).not.toContainText('managedNATGateway')
 
 });
 
