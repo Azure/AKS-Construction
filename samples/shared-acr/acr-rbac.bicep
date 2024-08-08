@@ -8,7 +8,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' existin
 }
 
 //Create a reference to the existing AKS
-resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' existing = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-11-01' existing = {
   name: aksName
   scope: resourceGroup(aksResourceGroup)
 }

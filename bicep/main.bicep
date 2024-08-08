@@ -1335,7 +1335,7 @@ keyVaultKmsCreateAndPrereqs || !empty(keyVaultKmsByoKeyId) ? azureKeyVaultKms : 
 !empty(serviceMeshProfile) ? { serviceMeshProfile: serviceMeshProfileObj } : {}
 )
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-07-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2023-11-01' = {
   name: 'aks-${resourceName}'
   location: location
   properties: aksProperties
