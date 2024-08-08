@@ -10,7 +10,7 @@ on:
       templateVersion:
         description: 'Template Version'
         required: false
-        default: '0.10.5'
+        default: '0.10.4'
         type: string
       rg:
         description: 'Resource Group name'
