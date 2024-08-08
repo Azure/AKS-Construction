@@ -43,7 +43,7 @@
   "resources": [
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2024-03-01",
       "name": "network",
       "properties": {
         "expressionEvaluationOptions": {
@@ -317,7 +317,7 @@
                     "properties": {
                       "addressPrefix": "0.0.0.0/0",
                       "nextHopType": "VirtualAppliance",
-                      "nextHopIpAddress": "[if(parameters('azureFirewalls'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-calcAzFwIp', deployment().name), 64)), '2022-09-01').outputs.FirewallPrivateIp.value, null())]"
+                      "nextHopIpAddress": "[if(parameters('azureFirewalls'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-calcAzFwIp', deployment().name), 64)), '2024-03-01').outputs.FirewallPrivateIp.value, null())]"
                     }
                   }
                 ]
@@ -355,7 +355,7 @@
                     "[parameters('vnetAddressPrefix')]"
                   ]
                 },
-                "subnets": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
+                "subnets": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/natGateways', variables('natGwName'))]",
@@ -614,7 +614,7 @@
             {
               "condition": "[parameters('azureFirewalls')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-calcAzFwIp', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -661,7 +661,7 @@
             {
               "condition": "[not(empty(parameters('aksPrincipleId')))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-subnetRbac', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -725,7 +725,7 @@
             {
               "condition": "[parameters('networkSecurityGroups')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-nsgAks', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -1132,7 +1132,7 @@
                     {
                       "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                       "resourceGroup": "NetworkWatcherRG",
                       "properties": {
@@ -1288,7 +1288,7 @@
             {
               "condition": "[and(parameters('acrPrivatePool'), parameters('networkSecurityGroups'))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-nsgAcrPool', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -1686,7 +1686,7 @@
                     {
                       "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                       "resourceGroup": "NetworkWatcherRG",
                       "properties": {
@@ -1843,7 +1843,7 @@
             {
               "condition": "[and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups'))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-nsgAppGw', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -2259,7 +2259,7 @@
                     {
                       "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                       "resourceGroup": "NetworkWatcherRG",
                       "properties": {
@@ -2416,7 +2416,7 @@
             {
               "condition": "[and(parameters('bastion'), parameters('networkSecurityGroups'))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-nsgBastion', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -2832,7 +2832,7 @@
                     {
                       "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                       "resourceGroup": "NetworkWatcherRG",
                       "properties": {
@@ -2989,7 +2989,7 @@
             {
               "condition": "[and(parameters('privateLinks'), parameters('networkSecurityGroups'))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-nsgPrivateLinks', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -3387,7 +3387,7 @@
                     {
                       "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                       "resourceGroup": "NetworkWatcherRG",
                       "properties": {
@@ -3545,7 +3545,7 @@
           "outputs": {
             "debugSubnets": {
               "type": "array",
-              "value": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
+              "value": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
             },
             "vnetId": {
               "type": "string",
@@ -3591,7 +3591,7 @@
   "outputs": {
     "aksSubnetId": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2022-09-01').outputs.aksSubnetId.value]"
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2024-03-01').outputs.aksSubnetId.value]"
     }
   }
 }

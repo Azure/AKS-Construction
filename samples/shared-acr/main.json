@@ -27,7 +27,7 @@
   "resources": [
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2024-03-01",
       "name": "[format('acr-rbac-for-aks-{0}', parameters('nameseed'))]",
       "resourceGroup": "[parameters('acrRg')]",
       "properties": {
@@ -40,7 +40,7 @@
             "value": "[parameters('acrName')]"
           },
           "aksName": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'aksconstruction'), '2022-09-01').outputs.aksClusterName.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'aksconstruction'), '2024-03-01').outputs.aksClusterName.value]"
           },
           "aksResourceGroup": {
             "value": "[resourceGroup().name]"
@@ -91,7 +91,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2024-03-01",
       "name": "aksconstruction",
       "properties": {
         "expressionEvaluationOptions": {
@@ -656,7 +656,7 @@
             },
             "nodePoolName": {
               "type": "string",
-              "defaultValue": "npuser01",
+              "defaultValue": "userpool01",
               "metadata": {
                 "description": "Name for user node pool"
               },
@@ -1326,7 +1326,7 @@
                   "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))))]": {}
                 }
               },
-              "properties": "[union(createObject('sku', variables('appGWskuObj'), 'sslPolicy', createObject('policyType', 'Predefined', 'policyName', 'AppGwSslPolicy20170401S'), 'webApplicationFirewallConfiguration', if(variables('appGWenableWafFirewall'), variables('appGwFirewallConfigOwasp'), json('null')), 'gatewayIPConfigurations', createArray(createObject('name', 'besubnet', 'properties', createObject('subnet', createObject('id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))))), 'frontendIPConfigurations', if(empty(parameters('privateIpApplicationGateway')), array(variables('frontendPublicIpConfig')), concat(array(variables('frontendPublicIpConfig')), array(createObject('properties', createObject('privateIPAllocationMethod', 'Static', 'privateIPAddress', parameters('privateIpApplicationGateway'), 'subnet', createObject('id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))), 'name', 'appGatewayPrivateIP')))), 'frontendPorts', createArray(createObject('name', 'appGatewayFrontendPort', 'properties', createObject('port', 80))), 'backendAddressPools', createArray(createObject('name', 'defaultaddresspool')), 'backendHttpSettingsCollection', createArray(createObject('name', 'defaulthttpsetting', 'properties', createObject('port', 80, 'protocol', 'Http', 'cookieBasedAffinity', 'Disabled', 'requestTimeout', 30, 'pickHostNameFromBackendAddress', true()))), 'httpListeners', createArray(createObject('name', 'hlisten', 'properties', createObject('frontendIPConfiguration', createObject('id', if(empty(parameters('privateIpApplicationGateway')), format('{0}/frontendIPConfigurations/appGatewayFrontendIP', variables('appgwResourceId')), format('{0}/frontendIPConfigurations/appGatewayPrivateIP', variables('appgwResourceId')))), 'frontendPort', createObject('id', format('{0}/frontendPorts/appGatewayFrontendPort', variables('appgwResourceId'))), 'protocol', 'Http'))), 'requestRoutingRules', createArray(createObject('name', 'appGwRoutingRuleName', 'properties', createObject('ruleType', 'Basic', 'priority', '1', 'httpListener', createObject('id', format('{0}/httpListeners/hlisten', variables('appgwResourceId'))), 'backendAddressPool', createObject('id', format('{0}/backendAddressPools/defaultaddresspool', variables('appgwResourceId'))), 'backendHttpSettings', createObject('id', format('{0}/backendHttpSettingsCollection/defaulthttpsetting', variables('appgwResourceId'))))))), if(greater(parameters('appGWmaxCount'), 0), createObject('autoscaleConfiguration', createObject('minCapacity', parameters('appGWcount'), 'maxCapacity', parameters('appGWmaxCount'))), createObject()))]",
+              "properties": "[union(createObject('sku', variables('appGWskuObj'), 'sslPolicy', createObject('policyType', 'Predefined', 'policyName', 'AppGwSslPolicy20170401S'), 'webApplicationFirewallConfiguration', if(variables('appGWenableWafFirewall'), variables('appGwFirewallConfigOwasp'), json('null')), 'gatewayIPConfigurations', createArray(createObject('name', 'besubnet', 'properties', createObject('subnet', createObject('id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))))), 'frontendIPConfigurations', if(empty(parameters('privateIpApplicationGateway')), array(variables('frontendPublicIpConfig')), concat(array(variables('frontendPublicIpConfig')), array(createObject('properties', createObject('privateIPAllocationMethod', 'Static', 'privateIPAddress', parameters('privateIpApplicationGateway'), 'subnet', createObject('id', if(parameters('ingressApplicationGateway'), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.appGwSubnetId.value, parameters('byoAGWSubnetId')), ''))), 'name', 'appGatewayPrivateIP')))), 'frontendPorts', createArray(createObject('name', 'appGatewayFrontendPort', 'properties', createObject('port', 80))), 'backendAddressPools', createArray(createObject('name', 'defaultaddresspool')), 'backendHttpSettingsCollection', createArray(createObject('name', 'defaulthttpsetting', 'properties', createObject('port', 80, 'protocol', 'Http', 'cookieBasedAffinity', 'Disabled', 'requestTimeout', 30, 'pickHostNameFromBackendAddress', true()))), 'httpListeners', createArray(createObject('name', 'hlisten', 'properties', createObject('frontendIPConfiguration', createObject('id', if(empty(parameters('privateIpApplicationGateway')), format('{0}/frontendIPConfigurations/appGatewayFrontendIP', variables('appgwResourceId')), format('{0}/frontendIPConfigurations/appGatewayPrivateIP', variables('appgwResourceId')))), 'frontendPort', createObject('id', format('{0}/frontendPorts/appGatewayFrontendPort', variables('appgwResourceId'))), 'protocol', 'Http'))), 'requestRoutingRules', createArray(createObject('name', 'appGwRoutingRuleName', 'properties', createObject('ruleType', 'Basic', 'priority', '1', 'httpListener', createObject('id', format('{0}/httpListeners/hlisten', variables('appgwResourceId'))), 'backendAddressPool', createObject('id', format('{0}/backendAddressPools/defaultaddresspool', variables('appgwResourceId'))), 'backendHttpSettings', createObject('id', format('{0}/backendHttpSettingsCollection/defaulthttpsetting', variables('appgwResourceId'))))))), if(greater(parameters('appGWmaxCount'), 0), createObject('autoscaleConfiguration', createObject('minCapacity', parameters('appGWcount'), 'maxCapacity', parameters('appGWmaxCount'))), createObject()))]",
               "dependsOn": [
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName')))]",
                 "[resourceId('Microsoft.Network/publicIPAddresses', format('pip-agw-{0}', parameters('resourceName')))]",
@@ -1412,7 +1412,7 @@
               "apiVersion": "2023-03-02-preview",
               "name": "[format('aks-{0}', parameters('resourceName'))]",
               "location": "[parameters('location')]",
-              "properties": "[union(createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), variables('aksPrivateDnsZone'), ''), 'enablePrivateClusterPublicFQDN', and(parameters('enablePrivateCluster'), equals(parameters('privateClusterDnsMethod'), 'none')))), 'agentPoolProfiles', if(parameters('JustUseSystemPool'), array(createObject('name', if(parameters('JustUseSystemPool'), parameters('nodePoolName'), 'npsystem'), 'vmSize', parameters('agentVMSize'), 'count', parameters('agentCount'), 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), null()), 'podSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')), null()), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule')))), concat(array(union(createObject('name', if(parameters('JustUseSystemPool'), parameters('nodePoolName'), 'npsystem'), 'vmSize', parameters('agentVMSize'), 'count', parameters('agentCount'), 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), null()), 'podSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')), null()), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), if(and(equals(parameters('SystemPoolType'), 'Custom'), not(equals(parameters('SystemPoolCustomPreset'), createObject()))), parameters('SystemPoolCustomPreset'), variables('systemPoolPresets')[parameters('SystemPoolType')]))))), 'workloadAutoScalerProfile', createObject('keda', createObject('enabled', parameters('kedaAddon'))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'networkPluginMode', if(equals(parameters('networkPlugin'), 'azure'), parameters('networkPluginMode'), ''), 'podCidr', if(or(equals(parameters('networkPlugin'), 'kubenet'), parameters('cniDynamicIpAllocation')), parameters('podCidr'), json('null')), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'outboundType', parameters('aksOutboundTrafficType'), 'ebpfDataplane', if(equals(parameters('networkPlugin'), 'azure'), parameters('ebpfDataplane'), '')), 'disableLocalAccounts', and(parameters('AksDisableLocalAccounts'), parameters('enable_aad')), 'autoUpgradeProfile', createObject('upgradeChannel', parameters('upgradeChannel')), 'addonProfiles', if(not(empty(variables('aks_addons1'))), variables('aks_addons1'), variables('aks_addons')), 'autoScalerProfile', if(variables('autoScale'), parameters('AutoscaleProfile'), createObject()), 'oidcIssuerProfile', createObject('enabled', parameters('oidcIssuer')), 'securityProfile', createObject('workloadIdentity', createObject('enabled', parameters('workloadIdentity'))), 'ingressProfile', createObject('webAppRouting', createObject('enabled', parameters('warIngressNginx'))), 'storageProfile', createObject('blobCSIDriver', createObject('enabled', parameters('blobCSIDriver')), 'diskCSIDriver', createObject('enabled', parameters('diskCSIDriver')), 'fileCSIDriver', createObject('enabled', parameters('fileCSIDriver'))), createObject('restrictionLevel', parameters('restrictionLevelNodeResourceGroup'))), if(equals(parameters('aksOutboundTrafficType'), 'managedNATGateway'), variables('managedNATGatewayProfile'), createObject()), if(and(parameters('defenderForContainers'), variables('createLaw')), variables('azureDefenderSecurityProfile'), createObject()), if(or(variables('keyVaultKmsCreateAndPrereqs'), not(empty(parameters('keyVaultKmsByoKeyId')))), createObject('securityProfile', createObject('azureKeyVaultKms', createObject('enabled', or(variables('keyVaultKmsCreateAndPrereqs'), not(empty(parameters('keyVaultKmsByoKeyId')))), 'keyId', if(variables('keyVaultKmsCreateAndPrereqs'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultKmsKeys-{1}', deployment().name, parameters('resourceName')), 64)), '2022-09-01').outputs.keyVaultKmsKeyUri.value, if(not(empty(parameters('keyVaultKmsByoKeyId'))), parameters('keyVaultKmsByoKeyId'), '')), 'keyVaultNetworkAccess', if(parameters('privateLinks'), 'private', 'public'), 'keyVaultResourceId', if(and(parameters('privateLinks'), not(empty(parameters('keyVaultKmsByoKeyId')))), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('keyVaultKmsByoRG')), 'Microsoft.KeyVault/vaults', variables('keyVaultKmsByoName')), '')))), createObject()), if(not(empty(parameters('managedNodeResourceGroup'))), createObject('nodeResourceGroup', parameters('managedNodeResourceGroup')), createObject()))]",
+              "properties": "[union(createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), variables('aksPrivateDnsZone'), ''), 'enablePrivateClusterPublicFQDN', and(parameters('enablePrivateCluster'), equals(parameters('privateClusterDnsMethod'), 'none')))), 'agentPoolProfiles', if(parameters('JustUseSystemPool'), array(createObject('name', if(parameters('JustUseSystemPool'), parameters('nodePoolName'), 'agentpool'), 'vmSize', parameters('agentVMSize'), 'count', parameters('agentCount'), 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), null()), 'podSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')), null()), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule')))), concat(array(union(createObject('name', if(parameters('JustUseSystemPool'), parameters('nodePoolName'), 'agentpool'), 'vmSize', parameters('agentVMSize'), 'count', parameters('agentCount'), 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), null()), 'podSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')), null()), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), if(and(equals(parameters('SystemPoolType'), 'Custom'), not(equals(parameters('SystemPoolCustomPreset'), createObject()))), parameters('SystemPoolCustomPreset'), variables('systemPoolPresets')[parameters('SystemPoolType')]))))), 'workloadAutoScalerProfile', createObject('keda', createObject('enabled', parameters('kedaAddon'))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'networkPluginMode', if(equals(parameters('networkPlugin'), 'azure'), parameters('networkPluginMode'), ''), 'podCidr', if(or(equals(parameters('networkPlugin'), 'kubenet'), parameters('cniDynamicIpAllocation')), parameters('podCidr'), json('null')), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'outboundType', parameters('aksOutboundTrafficType'), 'ebpfDataplane', if(equals(parameters('networkPlugin'), 'azure'), parameters('ebpfDataplane'), '')), 'disableLocalAccounts', and(parameters('AksDisableLocalAccounts'), parameters('enable_aad')), 'autoUpgradeProfile', createObject('upgradeChannel', parameters('upgradeChannel')), 'addonProfiles', if(not(empty(variables('aks_addons1'))), variables('aks_addons1'), variables('aks_addons')), 'autoScalerProfile', if(variables('autoScale'), parameters('AutoscaleProfile'), createObject()), 'oidcIssuerProfile', createObject('enabled', parameters('oidcIssuer')), 'securityProfile', createObject('workloadIdentity', createObject('enabled', parameters('workloadIdentity'))), 'ingressProfile', createObject('webAppRouting', createObject('enabled', parameters('warIngressNginx'))), 'storageProfile', createObject('blobCSIDriver', createObject('enabled', parameters('blobCSIDriver')), 'diskCSIDriver', createObject('enabled', parameters('diskCSIDriver')), 'fileCSIDriver', createObject('enabled', parameters('fileCSIDriver'))), createObject('restrictionLevel', parameters('restrictionLevelNodeResourceGroup'))), if(equals(parameters('aksOutboundTrafficType'), 'managedNATGateway'), variables('managedNATGatewayProfile'), createObject()), if(and(parameters('defenderForContainers'), variables('createLaw')), variables('azureDefenderSecurityProfile'), createObject()), if(or(variables('keyVaultKmsCreateAndPrereqs'), not(empty(parameters('keyVaultKmsByoKeyId')))), createObject('securityProfile', createObject('azureKeyVaultKms', createObject('enabled', or(variables('keyVaultKmsCreateAndPrereqs'), not(empty(parameters('keyVaultKmsByoKeyId')))), 'keyId', if(variables('keyVaultKmsCreateAndPrereqs'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultKmsKeys-{1}', deployment().name, parameters('resourceName')), 64)), '2024-03-01').outputs.keyVaultKmsKeyUri.value, if(not(empty(parameters('keyVaultKmsByoKeyId'))), parameters('keyVaultKmsByoKeyId'), '')), 'keyVaultNetworkAccess', if(parameters('privateLinks'), 'private', 'public'), 'keyVaultResourceId', if(and(parameters('privateLinks'), not(empty(parameters('keyVaultKmsByoKeyId')))), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('keyVaultKmsByoRG')), 'Microsoft.KeyVault/vaults', variables('keyVaultKmsByoName')), '')))), createObject()), if(not(empty(parameters('managedNodeResourceGroup'))), createObject('nodeResourceGroup', parameters('managedNodeResourceGroup')), createObject()))]",
               "identity": "[if(variables('createAksUai'), createObject('type', 'UserAssigned', 'userAssignedIdentities', createObject(format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-aks-{0}', parameters('resourceName')))), createObject())), if(not(empty(parameters('byoUaiName'))), createObject('type', 'UserAssigned', 'userAssignedIdentities', createObject(format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('byoUaiName'))), createObject())), createObject('type', 'SystemAssigned')))]",
               "sku": {
                 "name": "Base",
@@ -1735,7 +1735,7 @@
             {
               "condition": "[parameters('enableTelemetry')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[variables('telemetryId')]",
               "properties": {
                 "mode": "Incremental",
@@ -1749,7 +1749,7 @@
             {
               "condition": "[and(not(empty(parameters('byoAKSSubnetId'))), variables('createAksUai'))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-addAksNetContributor', deployment().name), 64)]",
               "resourceGroup": "[variables('existingAksVnetRG')]",
               "properties": {
@@ -1851,7 +1851,7 @@
             {
               "condition": "[parameters('custom_vnet')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-network', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -1904,7 +1904,7 @@
                     "value": "[parameters('privateLinkSubnetAddressPrefix')]"
                   },
                   "privateLinkAcrId": "[if(and(parameters('privateLinks'), not(empty(parameters('registries_sku')))), createObject('value', resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))), createObject('value', ''))]",
-                  "privateLinkAkvId": "[if(and(parameters('privateLinks'), parameters('keyVaultCreate')), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2022-09-01').outputs.keyVaultId.value), createObject('value', ''))]",
+                  "privateLinkAkvId": "[if(and(parameters('privateLinks'), parameters('keyVaultCreate')), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2024-03-01').outputs.keyVaultId.value), createObject('value', ''))]",
                   "acrPrivatePool": {
                     "value": "[parameters('acrPrivatePool')]"
                   },
@@ -2176,7 +2176,7 @@
                             "properties": {
                               "addressPrefix": "0.0.0.0/0",
                               "nextHopType": "VirtualAppliance",
-                              "nextHopIpAddress": "[if(parameters('azureFirewalls'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-calcAzFwIp', deployment().name), 64)), '2022-09-01').outputs.FirewallPrivateIp.value, null())]"
+                              "nextHopIpAddress": "[if(parameters('azureFirewalls'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-calcAzFwIp', deployment().name), 64)), '2024-03-01').outputs.FirewallPrivateIp.value, null())]"
                             }
                           }
                         ]
@@ -2214,7 +2214,7 @@
                             "[parameters('vnetAddressPrefix')]"
                           ]
                         },
-                        "subnets": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
+                        "subnets": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
                       },
                       "dependsOn": [
                         "[resourceId('Microsoft.Network/natGateways', variables('natGwName'))]",
@@ -2473,7 +2473,7 @@
                     {
                       "condition": "[parameters('azureFirewalls')]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-calcAzFwIp', deployment().name), 64)]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -2520,7 +2520,7 @@
                     {
                       "condition": "[not(empty(parameters('aksPrincipleId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-subnetRbac', deployment().name), 64)]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -2584,7 +2584,7 @@
                     {
                       "condition": "[parameters('networkSecurityGroups')]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-nsgAks', deployment().name), 64)]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -2991,7 +2991,7 @@
                             {
                               "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                               "type": "Microsoft.Resources/deployments",
-                              "apiVersion": "2022-09-01",
+                              "apiVersion": "2024-03-01",
                               "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                               "resourceGroup": "NetworkWatcherRG",
                               "properties": {
@@ -3147,7 +3147,7 @@
                     {
                       "condition": "[and(parameters('acrPrivatePool'), parameters('networkSecurityGroups'))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-nsgAcrPool', deployment().name), 64)]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -3545,7 +3545,7 @@
                             {
                               "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                               "type": "Microsoft.Resources/deployments",
-                              "apiVersion": "2022-09-01",
+                              "apiVersion": "2024-03-01",
                               "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                               "resourceGroup": "NetworkWatcherRG",
                               "properties": {
@@ -3702,7 +3702,7 @@
                     {
                       "condition": "[and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups'))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-nsgAppGw', deployment().name), 64)]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -4118,7 +4118,7 @@
                             {
                               "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                               "type": "Microsoft.Resources/deployments",
-                              "apiVersion": "2022-09-01",
+                              "apiVersion": "2024-03-01",
                               "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                               "resourceGroup": "NetworkWatcherRG",
                               "properties": {
@@ -4275,7 +4275,7 @@
                     {
                       "condition": "[and(parameters('bastion'), parameters('networkSecurityGroups'))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-nsgBastion', deployment().name), 64)]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -4691,7 +4691,7 @@
                             {
                               "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                               "type": "Microsoft.Resources/deployments",
-                              "apiVersion": "2022-09-01",
+                              "apiVersion": "2024-03-01",
                               "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                               "resourceGroup": "NetworkWatcherRG",
                               "properties": {
@@ -4848,7 +4848,7 @@
                     {
                       "condition": "[and(parameters('privateLinks'), parameters('networkSecurityGroups'))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-nsgPrivateLinks', deployment().name), 64)]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -5246,7 +5246,7 @@
                             {
                               "condition": "[not(empty(parameters('FlowLogStorageAccountId')))]",
                               "type": "Microsoft.Resources/deployments",
-                              "apiVersion": "2022-09-01",
+                              "apiVersion": "2024-03-01",
                               "name": "[take(format('{0}-flow-{1}', deployment().name, variables('nsgName')), 64)]",
                               "resourceGroup": "NetworkWatcherRG",
                               "properties": {
@@ -5404,7 +5404,7 @@
                   "outputs": {
                     "debugSubnets": {
                       "type": "array",
-                      "value": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2022-09-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
+                      "value": "[union(array(if(parameters('networkSecurityGroups'), union(variables('aks_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('aks_baseSubnet'))), if(parameters('cniDynamicIpAllocation'), array(if(parameters('networkSecurityGroups'), union(variables('aks_podSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('aks_podSubnet'))), createArray()), if(parameters('azureFirewalls'), array(variables('fw_subnet')), createArray()), if(parameters('privateLinks'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('private_link_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgPrivateLinks', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('private_link_baseSubnet'))), createArray()), if(parameters('acrPrivatePool'), array(if(and(parameters('privateLinks'), parameters('networkSecurityGroups')), union(variables('acrpool_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAcrPool', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('acrpool_baseSubnet'))), createArray()), if(parameters('bastion'), array(if(and(parameters('bastion'), parameters('networkSecurityGroups')), union(variables('bastion_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgBastion', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('bastion_baseSubnet'))), createArray()), if(parameters('ingressApplicationGateway'), array(if(and(parameters('ingressApplicationGateway'), parameters('networkSecurityGroups')), union(variables('appgw_baseSubnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-nsgAppGw', deployment().name), 64)), '2024-03-01').outputs.nsgSubnetObj.value), variables('appgw_baseSubnet'))), createArray()), if(parameters('azureFirewallsManagementSeperation'), array(variables('fwmgmt_subnet')), createArray()))]"
                     },
                     "vnetId": {
                       "type": "string",
@@ -5455,7 +5455,7 @@
             {
               "condition": "[not(empty(parameters('dnsZoneId')))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-addDnsContributor', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -5466,7 +5466,7 @@
                   "dnsZoneId": {
                     "value": "[parameters('dnsZoneId')]"
                   },
-                  "vnetId": "[if(variables('isDnsZonePrivate'), if(not(empty(parameters('byoAKSSubnetId'))), createObject('value', split(parameters('byoAKSSubnetId'), '/subnets')[0]), if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.vnetId.value), createObject('value', ''))), createObject('value', ''))]",
+                  "vnetId": "[if(variables('isDnsZonePrivate'), if(not(empty(parameters('byoAKSSubnetId'))), createObject('value', split(parameters('byoAKSSubnetId'), '/subnets')[0]), if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.vnetId.value), createObject('value', ''))), createObject('value', ''))]",
                   "principalId": {
                     "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').identityProfile.kubeletidentity.objectId]"
                   }
@@ -5510,7 +5510,7 @@
                     {
                       "condition": "[not(empty(parameters('dnsZoneId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-dns-{1}', deployment().name, variables('dnsZoneName')), 64)]",
                       "resourceGroup": "[variables('dnsZoneRg')]",
                       "properties": {
@@ -5615,7 +5615,7 @@
             {
               "condition": "[parameters('keyVaultCreate')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-keyvaultApps', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -5781,7 +5781,7 @@
             {
               "condition": "[parameters('keyVaultCreate')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-KeyVaultAppsRbac', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -5789,7 +5789,7 @@
                 },
                 "mode": "Incremental",
                 "parameters": {
-                  "keyVaultName": "[if(parameters('keyVaultCreate'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2022-09-01').outputs.keyVaultName.value), createObject('value', ''))]",
+                  "keyVaultName": "[if(parameters('keyVaultCreate'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2024-03-01').outputs.keyVaultName.value), createObject('value', ''))]",
                   "rbacSecretUserSps": {
                     "value": "[union(createArray(if(and(variables('deployAppGw'), parameters('appgwKVIntegration')), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))), '2023-01-31').principalId, '')), createArray(if(parameters('keyVaultAksCSI'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').addonProfiles.azureKeyvaultSecretsProvider.identity.objectId, '')))]"
                   },
@@ -6115,7 +6115,7 @@
             {
               "condition": "[variables('keyVaultKmsCreateAndPrereqs')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-keyvaultKms-{1}', deployment().name, parameters('resourceName')), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -6278,7 +6278,7 @@
             {
               "condition": "[variables('keyVaultKmsCreateAndPrereqs')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-keyvaultKmsRbacs-{1}', deployment().name, parameters('resourceName')), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -6286,7 +6286,7 @@
                 },
                 "mode": "Incremental",
                 "parameters": {
-                  "keyVaultName": "[if(parameters('keyVaultKmsCreate'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultKms-{1}', deployment().name, parameters('resourceName')), 64)), '2022-09-01').outputs.keyVaultName.value), createObject('value', ''))]",
+                  "keyVaultName": "[if(parameters('keyVaultKmsCreate'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultKms-{1}', deployment().name, parameters('resourceName')), 64)), '2024-03-01').outputs.keyVaultName.value), createObject('value', ''))]",
                   "rbacCryptoUserSps": {
                     "value": [
                       "[if(not(empty(parameters('byoUaiName'))), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('byoUaiName')), '2023-01-31').principalId, if(variables('createAksUai'), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-aks-{0}', parameters('resourceName'))), '2023-01-31').principalId, ''))]"
@@ -6616,7 +6616,7 @@
             {
               "condition": "[not(empty(parameters('keyVaultKmsByoKeyId')))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-keyvaultKmsByoRbacs-{1}', deployment().name, parameters('resourceName')), 64)]",
               "resourceGroup": "[parameters('keyVaultKmsByoRG')]",
               "properties": {
@@ -6951,7 +6951,7 @@
             {
               "condition": "[and(variables('keyVaultKmsCreateAndPrereqs'), greater(variables('kmsRbacWaitSeconds'), 0))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-keyvaultKmsRbac-waits-{1}', deployment().name, parameters('resourceName')), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7026,7 +7026,7 @@
             {
               "condition": "[variables('keyVaultKmsCreateAndPrereqs')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-keyvaultKmsKeys-{1}', deployment().name, parameters('resourceName')), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7034,7 +7034,7 @@
                 },
                 "mode": "Incremental",
                 "parameters": {
-                  "keyVaultName": "[if(variables('keyVaultKmsCreateAndPrereqs'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultKms-{1}', deployment().name, parameters('resourceName')), 64)), '2022-09-01').outputs.keyVaultName.value), createObject('value', ''))]"
+                  "keyVaultName": "[if(variables('keyVaultKmsCreateAndPrereqs'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultKms-{1}', deployment().name, parameters('resourceName')), 64)), '2024-03-01').outputs.keyVaultName.value), createObject('value', ''))]"
                 },
                 "template": {
                   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
@@ -7089,7 +7089,7 @@
             {
               "condition": "[and(and(and(parameters('custom_vnet'), not(empty(parameters('registries_sku')))), parameters('privateLinks')), parameters('acrPrivatePool'))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-acrprivatepool', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7100,7 +7100,7 @@
                   "acrName": {
                     "value": "[variables('acrName')]"
                   },
-                  "acrPoolSubnetId": "[if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.acrPoolSubnetId.value), createObject('value', ''))]",
+                  "acrPoolSubnetId": "[if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.acrPoolSubnetId.value), createObject('value', ''))]",
                   "location": {
                     "value": "[parameters('location')]"
                   }
@@ -7152,7 +7152,7 @@
             {
               "condition": "[and(not(empty(parameters('registries_sku'))), not(empty(parameters('imageNames'))))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-AcrImport', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7364,7 +7364,7 @@
             {
               "condition": "[and(parameters('azureFirewalls'), parameters('custom_vnet'))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-firewall', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7379,11 +7379,11 @@
                     "value": "[parameters('location')]"
                   },
                   "workspaceDiagsId": "[if(variables('createLaw'), createObject('value', resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name'))), createObject('value', ''))]",
-                  "fwSubnetId": "[if(and(parameters('azureFirewalls'), parameters('custom_vnet')), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.fwSubnetId.value), createObject('value', ''))]",
+                  "fwSubnetId": "[if(and(parameters('azureFirewalls'), parameters('custom_vnet')), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.fwSubnetId.value), createObject('value', ''))]",
                   "fwSku": {
                     "value": "[parameters('azureFirewallSku')]"
                   },
-                  "fwManagementSubnetId": "[if(and(and(parameters('azureFirewalls'), parameters('custom_vnet')), equals(parameters('azureFirewallSku'), 'Basic')), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.fwMgmtSubnetId.value), createObject('value', ''))]",
+                  "fwManagementSubnetId": "[if(and(and(parameters('azureFirewalls'), parameters('custom_vnet')), equals(parameters('azureFirewallSku'), 'Basic')), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.fwMgmtSubnetId.value), createObject('value', ''))]",
                   "vnetAksSubnetAddressPrefix": {
                     "value": "[parameters('vnetAksSubnetAddressPrefix')]"
                   },
@@ -7669,7 +7669,7 @@
             {
               "condition": "[not(parameters('JustUseSystemPool'))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "userNodePool",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7683,8 +7683,8 @@
                   "PoolName": {
                     "value": "[variables('poolName')]"
                   },
-                  "subnetId": "[if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksSubnetId.value), createObject('value', parameters('byoAKSSubnetId')))]",
-                  "podSubnetID": "[if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')))), if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value), createObject('value', parameters('byoAKSPodSubnetId'))), createObject('value', ''))]",
+                  "subnetId": "[if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksSubnetId.value), createObject('value', parameters('byoAKSSubnetId')))]",
+                  "podSubnetID": "[if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')))), if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.aksPodSubnetId.value), createObject('value', parameters('byoAKSPodSubnetId'))), createObject('value', ''))]",
                   "agentCount": {
                     "value": "[parameters('agentCount')]"
                   },
@@ -7884,7 +7884,7 @@
             {
               "condition": "[and(and(parameters('enablePrivateCluster'), not(empty(parameters('dnsApiPrivateZoneId')))), variables('createAksUai'))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-addPrivateK8sApiDnsContributor', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -7939,7 +7939,7 @@
                     {
                       "condition": "[not(empty(parameters('dnsZoneId')))]",
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2022-09-01",
+                      "apiVersion": "2024-03-01",
                       "name": "[take(format('{0}-dns-{1}', deployment().name, variables('dnsZoneName')), 64)]",
                       "resourceGroup": "[variables('dnsZoneRg')]",
                       "properties": {
@@ -8043,7 +8043,7 @@
             {
               "condition": "[variables('createLaw')]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
+              "apiVersion": "2024-03-01",
               "name": "[take(format('{0}-aksmetricalerts', deployment().name), 64)]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -8890,26 +8890,26 @@
           "outputs": {
             "CustomVnetId": {
               "type": "string",
-              "value": "[if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.vnetId.value, '')]"
+              "value": "[if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.vnetId.value, '')]"
             },
             "CustomVnetPrivateLinkSubnetId": {
               "type": "string",
-              "value": "[if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.privateLinkSubnetId.value, '')]"
+              "value": "[if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.privateLinkSubnetId.value, '')]"
             },
             "keyVaultName": {
               "type": "string",
-              "value": "[if(parameters('keyVaultCreate'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2022-09-01').outputs.keyVaultName.value, '')]"
+              "value": "[if(parameters('keyVaultCreate'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2024-03-01').outputs.keyVaultName.value, '')]"
             },
             "keyVaultId": {
               "type": "string",
-              "value": "[if(parameters('keyVaultCreate'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2022-09-01').outputs.keyVaultId.value, '')]"
+              "value": "[if(parameters('keyVaultCreate'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2024-03-01').outputs.keyVaultId.value, '')]"
             },
             "keyVaultKmsName": {
               "type": "string",
               "metadata": {
                 "description": "The name of the Kms Key Vault"
               },
-              "value": "[if(variables('keyVaultKmsCreateAndPrereqs'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultKms-{1}', deployment().name, parameters('resourceName')), 64)), '2022-09-01').outputs.keyVaultName.value, if(not(empty(parameters('keyVaultKmsByoKeyId'))), variables('keyVaultKmsByoName'), ''))]"
+              "value": "[if(variables('keyVaultKmsCreateAndPrereqs'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultKms-{1}', deployment().name, parameters('resourceName')), 64)), '2024-03-01').outputs.keyVaultName.value, if(not(empty(parameters('keyVaultKmsByoKeyId'))), variables('keyVaultKmsByoName'), ''))]"
             },
             "kmsCreatePrerequisitesMet": {
               "type": "bool",
@@ -8936,7 +8936,7 @@
             },
             "systemNodePoolName": {
               "type": "string",
-              "value": "[if(parameters('JustUseSystemPool'), parameters('nodePoolName'), 'npsystem')]"
+              "value": "[if(parameters('JustUseSystemPool'), parameters('nodePoolName'), 'agentpool')]"
             },
             "aksPrivateDnsZone": {
               "type": "string",
