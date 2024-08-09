@@ -9,7 +9,7 @@
             "value": "priv"
           },
           "agentVMSize": {
-            "value": "Standard_DS3_v2"
+            "value": "Standard_D4ds_v5"
           },
           "agentCountMax": {
               "value": 2
@@ -93,7 +93,7 @@
             "value": true
           },
           "aksOutboundTrafficType" : {
-              "value": "natGateway"
+              "value": "loadBalancer"
           },
           "createNatGateway" : {
               "value": true

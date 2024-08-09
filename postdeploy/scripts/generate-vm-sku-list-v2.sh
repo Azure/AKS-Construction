@@ -66,11 +66,18 @@ for loc in $(echo "${locations}" | jq -r '.[] | @base64'); do
                     name=$(_jq '.name')
                     osSize=$(echo $(_jq) | jq -r     '.capabilities | .[] | select(.name=="OSVhdSizeMB") | .value')
                     ram=$(echo $(_jq) | jq -r        '.capabilities | .[] | select(.name=="MemoryGB") | .value')
-                    cachedSize=$(echo $(_jq) | jq -r '.capabilities | .[] | select(.name=="CachedDiskBytes") | .value')
+                    cacheStorage=$(echo $(_jq) | jq -r '.capabilities | .[] | select(.name=="CachedDiskBytes") | .value')
+                    cacheStorage_GB=$(( cacheStorage/1073741824 ))
+                    tempStorage=$(echo $(_jq) | jq -r '.capabilities | .[] | select(.name=="MaxResourceVolumeMB") | .value')
+                    tempStorage_GB=$(( tempStorage/1024 ))
+                    if [ $cacheStorage_GB -gt $tempStorage_GB ]; then
+                        cacheGB=$cacheStorage_GB
+                    else
+                        cacheGB=$tempStorage_GB
+                    fi
 
                     #Convert to GB
                     osSizeGB=$(( osSize/1024 ))
-                    cacheGB=$(( cachedSize/1073741824 ))
 
                     #Build text property
                     cacheGB=$((cacheGB + 0))
@@ -80,7 +87,7 @@ for loc in $(echo "${locations}" | jq -r '.[] | @base64'); do
                         eph=false
                     else
                         iops=$(echo $(_jq) | jq -r       '.capabilities | .[] | select(.name=="CombinedTempDiskAndCachedIOPS") | .value')
-                        cache=", $cacheGB cache ($iops IOPS)"
+                        cache=", $cacheGB GB cache ($iops IOPS)"
                         if [ $cacheGB -ge $ephMinCacheSizeGB ];
                         then
                             eph=true
@@ -88,7 +95,7 @@ for loc in $(echo "${locations}" | jq -r '.[] | @base64'); do
                             eph=false
                         fi
                     fi
-                    text="[$name]: $cpu vCPU, $ram RAM, $osSizeGB SSD $cache"
+                    text="[$name]: $cpu vCPU, $ram GB RAM, $osSizeGB GB SSD$cache"
 
                     #Create JSON
                     jq -n \
