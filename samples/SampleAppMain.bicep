@@ -50,7 +50,7 @@ var environmentConfigurationMap = {
       networkPolicy: 'azure'
       agentCount:6
       agentCountMax:12
-      agentVMSize: 'Standard_D8s_v4'
+      agentVMSize: 'Standard_D8ds_v4'
     }
   }
   NonProduction: {
@@ -62,7 +62,7 @@ var environmentConfigurationMap = {
       agentCount:1
       agentCountMax:3
       networkPolicy: ''
-      agentVMSize: 'Standard_DS3_v2'
+      agentVMSize: 'Standard_D4ds_v4'
     }
   }
 }

@@ -68,7 +68,7 @@
                                 "AksPaidSkuForSLA" : false,
                                 "agentCount": 1,
                                 "upgradeChannel": "stable",
-                                "vmSize" : "Standard_B2ms",
+                                "vmSize" : "Standard_B2s_v2",
                                 "osDiskType" : "Managed",
                                 "nodepoolName" : "minecraft",
                                 "SystemPoolType" : "none"

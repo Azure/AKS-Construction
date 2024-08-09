@@ -10,7 +10,7 @@
             "value": "az-k8s-def"
           },
           "agentVMSize": {
-            "value": "Standard_DS3_v2"
+            "value": "Standard_D4ds_v5"
           },
           "agentCountMax": {
             "value": 3

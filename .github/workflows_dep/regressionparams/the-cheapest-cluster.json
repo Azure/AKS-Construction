@@ -9,7 +9,7 @@
       "value": 1
     },
     "agentVMSize": {
-      "value": "Standard_B2ms"
+      "value": "Standard_B2s_v2"
     },
     "agentCountMax": {
       "value": 2
