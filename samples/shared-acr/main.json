@@ -1165,11 +1165,13 @@
             "aks_addons1": "[if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', '10.225.0.0/16'))))), variables('aks_addons'))]",
             "aksPrivateDnsZone": "[if(equals(parameters('privateClusterDnsMethod'), 'privateDnsZone'), if(not(empty(parameters('dnsApiPrivateZoneId'))), parameters('dnsApiPrivateZoneId'), 'system'), parameters('privateClusterDnsMethod'))]",
             "managedNATGatewayProfile": {
-              "natGatewayProfile": {
-                "managedOutboundIPProfile": {
-                  "count": "[parameters('natGwIpCount')]"
-                },
-                "idleTimeoutInMinutes": "[parameters('natGwIdleTimeout')]"
+              "networkProfile": {
+                "natGatewayProfile": {
+                  "managedOutboundIPProfile": {
+                    "count": "[parameters('natGwIpCount')]"
+                  },
+                  "idleTimeoutInMinutes": "[parameters('natGwIdleTimeout')]"
+                }
               }
             },
             "azureDefenderSecurityProfile": {
