@@ -851,7 +851,7 @@ output ApplicationGatewayName string = deployAppGw ? appgw.name : ''
 param dnsPrefix string = '${resourceName}-dns'
 
 @description('Kubernetes Version')
-param kubernetesVersion string = '1.28.5'
+param kubernetesVersion string = '1.29.7'
 
 @description('Enable Azure AD integration on AKS')
 param enable_aad bool = false
@@ -904,7 +904,7 @@ param upgradeChannel string = 'none'
 param osDiskType string = 'Ephemeral'
 
 @description('VM SKU')
-param agentVMSize string = 'Standard_DS3_v2'
+param agentVMSize string = 'Standard_D4ds_v5'
 
 @description('Disk size in GB')
 param osDiskSizeGB int = 0
@@ -919,7 +919,7 @@ var autoScale = agentCountMax > agentCount
 @minLength(3)
 @maxLength(12)
 @description('Name for user node pool')
-param nodePoolName string = 'npuser01'
+param nodePoolName string = 'userpool01'
 
 @description('Config the user node pool as a spot instance')
 param nodePoolSpot bool = false
@@ -1128,7 +1128,7 @@ var outboundTrafficType = aksOutboundTrafficType=='natGateway' ? ( custom_vnet ?
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
   CostOptimised : {
-    vmSize: 'Standard_B4ms'
+    vmSize: 'Standard_B4s_v2'
     count: 1
     minCount: 1
     maxCount: 3
@@ -1136,7 +1136,7 @@ var systemPoolPresets = {
     availabilityZones: []
   }
   Standard : {
-    vmSize: 'Standard_DS2_v2'
+    vmSize: 'Standard_D4ds_v5'
     count: 3
     minCount: 3
     maxCount: 5
@@ -1148,7 +1148,7 @@ var systemPoolPresets = {
     ]
   }
   HighSpec : {
-    vmSize: 'Standard_D4s_v3'
+    vmSize: 'Standard_D8ds_v4'
     count: 3
     minCount: 3
     maxCount: 5
@@ -1162,7 +1162,7 @@ var systemPoolPresets = {
 }
 
 var systemPoolBase = {
-  name:  JustUseSystemPool ? nodePoolName : 'npsystem'
+  name:  JustUseSystemPool ? nodePoolName : 'agentpool'
   vmSize: agentVMSize
   count: agentCount
   mode: 'System'
@@ -1183,7 +1183,7 @@ var systemPoolBase = {
 var agentPoolProfiles = JustUseSystemPool ? array(systemPoolBase) : concat(array(union(systemPoolBase, SystemPoolType=='Custom' && SystemPoolCustomPreset != {} ? SystemPoolCustomPreset : systemPoolPresets[SystemPoolType])))
 
 output userNodePoolName string = nodePoolName
-output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'npsystem'
+output systemNodePoolName string = JustUseSystemPool ? nodePoolName : 'agentpool'
 
 var akssku = AksPaidSkuForSLA ? 'Standard' : 'Free'
 
@@ -1244,11 +1244,13 @@ output aksPrivateDnsZoneName string =  enablePrivateCluster && privateClusterDns
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS-Construction/issues/344')
 var managedNATGatewayProfile =  {
-  natGatewayProfile : {
-    managedOutboundIPProfile: {
-      count: natGwIpCount
+  networkProfile: {
+    natGatewayProfile : {
+      managedOutboundIPProfile: {
+        count: natGwIpCount
+      }
+      idleTimeoutInMinutes: natGwIdleTimeout
     }
-    idleTimeoutInMinutes: natGwIdleTimeout
   }
 }
 
@@ -1375,7 +1377,7 @@ param osSKU string = 'Ubuntu'
 var poolName = osType == 'Linux' ? nodePoolName : take(nodePoolName, 6)
 
 // Default OS Disk Size in GB for Linux is 30, for Windows is 100
-var defaultOsDiskSizeGB = osType == 'Linux' ? 30 : 100
+var defaultOsDiskSizeGB = 128
 
 module userNodePool '../bicep/aksagentpool.bicep' = if (!JustUseSystemPool){
   name: take('${deployment().name}-userNodePool',64)
