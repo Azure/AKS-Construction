@@ -9,7 +9,7 @@
       "value": "Standard_D4ds_v5"
     },
     "aksOutboundTrafficType" : {
-      "value": "managedNATGateway"
+      "value": "natGateway"
     },
     "natGwIpCount" : {
       "value": 3

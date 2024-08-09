@@ -39,7 +39,7 @@
             "value": "Standard"
         },
         "aksOutboundTrafficType" : {
-            "value": "loadBalancer"
+            "value": "natGateway"
         }
     }
 }
