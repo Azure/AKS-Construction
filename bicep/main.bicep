@@ -1244,11 +1244,13 @@ output aksPrivateDnsZoneName string =  enablePrivateCluster && privateClusterDns
 
 @description('Needing to seperately declare and union this because of https://github.com/Azure/AKS-Construction/issues/344')
 var managedNATGatewayProfile =  {
-  natGatewayProfile : {
-    managedOutboundIPProfile: {
-      count: natGwIpCount
+  networkProfile: {
+    natGatewayProfile : {
+      managedOutboundIPProfile: {
+        count: natGwIpCount
+      }
+      idleTimeoutInMinutes: natGwIdleTimeout
     }
-    idleTimeoutInMinutes: natGwIdleTimeout
   }
 }
 
