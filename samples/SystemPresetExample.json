@@ -2120,7 +2120,7 @@
                     "aks_subnet_name": "aks-sn",
                     "aks_baseSubnet": {
                       "name": "[variables('aks_subnet_name')]",
-                      "properties": "[union(createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('natGateway'), createObject('natGatewayteObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
+                      "properties": "[union(createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('natGateway'), createObject('natGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
                     },
                     "aks_podSubnet_name": "aks-pods-sn",
                     "aks_podSubnet": {
