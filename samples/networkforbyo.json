@@ -193,7 +193,7 @@
               "type": "string",
               "defaultValue": ""
             },
-            "managedNATGateway": {
+            "natGateway": {
               "type": "bool",
               "defaultValue": false
             },
@@ -287,12 +287,12 @@
             "aks_subnet_name": "aks-sn",
             "aks_baseSubnet": {
               "name": "[variables('aks_subnet_name')]",
-              "properties": "[union(createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('managedNATGateway'), createObject('managedNATGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
+              "properties": "[union(createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('natGateway'), createObject('natGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
             },
             "aks_podSubnet_name": "aks-pods-sn",
             "aks_podSubnet": {
               "name": "[variables('aks_podSubnet_name')]",
-              "properties": "[union(createObject('addressPrefix', parameters('vnetPodAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('managedNATGateway'), createObject('managedNATGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
+              "properties": "[union(createObject('addressPrefix', parameters('vnetPodAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('natGateway'), createObject('natGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
             },
             "vnetName": "[format('vnet-{0}', parameters('resourceName'))]",
             "privateLinkAcrName": "[format('pl-acr-{0}', parameters('resourceName'))]",
@@ -572,7 +572,7 @@
                 "name": "natGwIp",
                 "count": "[length(range(0, parameters('natGatewayPublicIps')))]"
               },
-              "condition": "[parameters('managedNATGateway')]",
+              "condition": "[parameters('natGateway')]",
               "type": "Microsoft.Network/publicIPAddresses",
               "apiVersion": "2021-08-01",
               "name": "[format('pip-{0}-{1}', variables('natGwName'), add(range(0, parameters('natGatewayPublicIps'))[copyIndex()], 1))]",
@@ -586,7 +586,7 @@
               }
             },
             {
-              "condition": "[parameters('managedNATGateway')]",
+              "condition": "[parameters('natGateway')]",
               "type": "Microsoft.Network/natGateways",
               "apiVersion": "2021-08-01",
               "name": "[variables('natGwName')]",

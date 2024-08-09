@@ -1164,14 +1164,14 @@
             "aks_addons": "[union(createObject('azurepolicy', createObject('config', createObject('version', if(not(empty(parameters('azurepolicy'))), 'v2', json('null'))), 'enabled', not(empty(parameters('azurepolicy')))), 'azureKeyvaultSecretsProvider', createObject('config', createObject('enableSecretRotation', 'true', 'rotationPollInterval', parameters('keyVaultAksCSIPollInterval')), 'enabled', parameters('keyVaultAksCSI')), 'openServiceMesh', createObject('enabled', parameters('openServiceMeshAddon'), 'config', createObject()), 'ACCSGXDevicePlugin', createObject('enabled', parameters('sgxPlugin'), 'config', createObject())), if(and(variables('createLaw'), parameters('omsagent')), createObject('omsagent', createObject('enabled', and(variables('createLaw'), parameters('omsagent')), 'config', createObject('logAnalyticsWorkspaceResourceID', if(and(variables('createLaw'), parameters('omsagent')), resourceId('Microsoft.OperationalInsights/workspaces', variables('aks_law_name')), json('null'))))), createObject()))]",
             "aks_addons1": "[if(parameters('ingressApplicationGateway'), union(variables('aks_addons'), if(variables('deployAppGw'), createObject('ingressApplicationGateway', createObject('config', createObject('applicationGatewayId', resourceId('Microsoft.Network/applicationGateways', variables('appgwName'))), 'enabled', true())), createObject('ingressApplicationGateway', createObject('enabled', true(), 'config', createObject('applicationGatewayName', variables('appgwName'), 'subnetCIDR', '10.225.0.0/16'))))), variables('aks_addons'))]",
             "aksPrivateDnsZone": "[if(equals(parameters('privateClusterDnsMethod'), 'privateDnsZone'), if(not(empty(parameters('dnsApiPrivateZoneId'))), parameters('dnsApiPrivateZoneId'), 'system'), parameters('privateClusterDnsMethod'))]",
-            // "managedNATGatewayProfile": {
-            //   "natGatewayProfile": {
-            //     "managedOutboundIPProfile": {
-            //       "count": "[parameters('natGwIpCount')]"
-            //     },
-            //     "idleTimeoutInMinutes": "[parameters('natGwIdleTimeout')]"
-            //   }
-            // },
+            "managedNATGatewayProfile": {
+              "natGatewayProfile": {
+                "managedOutboundIPProfile": {
+                  "count": "[parameters('natGwIpCount')]"
+                },
+                "idleTimeoutInMinutes": "[parameters('natGwIdleTimeout')]"
+              }
+            },
             "azureDefenderSecurityProfile": {
               "securityProfile": {
                 "defender": {
@@ -1931,7 +1931,7 @@
                   "ingressApplicationGatewayPublic": {
                     "value": "[empty(parameters('privateIpApplicationGateway'))]"
                   },
-                  "managedNATGateway": {
+                  "natGateway": {
                     "value": "[parameters('createNatGateway')]"
                   },
                   "natGatewayIdleTimeoutMins": {
@@ -2052,7 +2052,7 @@
                       "type": "string",
                       "defaultValue": ""
                     },
-                    "managedNATGateway": {
+                    "natGateway": {
                       "type": "bool",
                       "defaultValue": false
                     },
@@ -2146,12 +2146,12 @@
                     "aks_subnet_name": "aks-sn",
                     "aks_baseSubnet": {
                       "name": "[variables('aks_subnet_name')]",
-                      "properties": "[union(createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('managedNATGateway'), createObject('managedNATGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
+                      "properties": "[union(createObject('addressPrefix', parameters('vnetAksSubnetAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('natGateway'), createObject('natGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
                     },
                     "aks_podSubnet_name": "aks-pods-sn",
                     "aks_podSubnet": {
                       "name": "[variables('aks_podSubnet_name')]",
-                      "properties": "[union(createObject('addressPrefix', parameters('vnetPodAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('managedNATGateway'), createObject('managedNATGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
+                      "properties": "[union(createObject('addressPrefix', parameters('vnetPodAddressPrefix')), if(parameters('privateLinks'), createObject('privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), createObject()), if(parameters('natGateway'), createObject('natGateway', createObject('id', resourceId('Microsoft.Network/natGateways', variables('natGwName')))), createObject()), if(parameters('azureFirewalls'), createObject('routeTable', createObject('id', resourceId('Microsoft.Network/routeTables', variables('routeFwTableName')))), createObject()))]"
                     },
                     "vnetName": "[format('vnet-{0}', parameters('resourceName'))]",
                     "privateLinkAcrName": "[format('pl-acr-{0}', parameters('resourceName'))]",
@@ -2431,7 +2431,7 @@
                         "name": "natGwIp",
                         "count": "[length(range(0, parameters('natGatewayPublicIps')))]"
                       },
-                      "condition": "[parameters('managedNATGateway')]",
+                      "condition": "[parameters('natGateway')]",
                       "type": "Microsoft.Network/publicIPAddresses",
                       "apiVersion": "2021-08-01",
                       "name": "[format('pip-{0}-{1}', variables('natGwName'), add(range(0, parameters('natGatewayPublicIps'))[copyIndex()], 1))]",
@@ -2445,7 +2445,7 @@
                       }
                     },
                     {
-                      "condition": "[parameters('managedNATGateway')]",
+                      "condition": "[parameters('natGateway')]",
                       "type": "Microsoft.Network/natGateways",
                       "apiVersion": "2021-08-01",
                       "name": "[variables('natGwName')]",

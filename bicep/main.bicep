@@ -1057,7 +1057,7 @@ param AutoscaleProfile object = {
 
 @allowed([
   'loadBalancer'
-  'managedNATGateway'
+  'natGateway'
   'userDefinedRouting'
 ])
 @description('Outbound traffic type for the egress traffic of your cluster')
@@ -1123,7 +1123,7 @@ var serviceMeshProfileObj = {
 }
 
 @description('This resolves the friendly natGateway to the actual outbound traffic type value used by AKS')
-var outboundTrafficType = aksOutboundTrafficType=='managedNATGateway' ? ( custom_vnet ? 'userAssignedNATGateway' : 'managedNATGateway' )  : aksOutboundTrafficType
+var outboundTrafficType = aksOutboundTrafficType=='natGateway' ? ( custom_vnet ? 'userAssignedNATGateway' : 'managedNATGateway' )  : aksOutboundTrafficType
 
 @description('System Pool presets are derived from the recommended system pool specs')
 var systemPoolPresets = {
