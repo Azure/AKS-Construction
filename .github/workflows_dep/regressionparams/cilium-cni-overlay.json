@@ -9,7 +9,7 @@
       "value": "WestCentralUs"
     },
     "agentVMSize": {
-      "value": "Standard_DS3_v2"
+      "value": "Standard_D4ds_v5"
     },
     "networkDataplane": {
       "value": "cilium"

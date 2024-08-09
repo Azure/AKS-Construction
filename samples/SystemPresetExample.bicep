@@ -15,7 +15,7 @@ param env string = 'dev'
 
 var envSystemPoolPresetMap = {
   'dev' : {
-    vmSize: 'Standard_B4ms'
+    vmSize: 'Standard_B4s_v2'
     count: 1
     minCount: 1
     maxCount: 3
@@ -23,7 +23,7 @@ var envSystemPoolPresetMap = {
     availabilityZones: []
   }
   'test' : {
-    vmSize: 'Standard_B4ms'
+    vmSize: 'Standard_B4s_v2'
     count: 2
     minCount: 2
     maxCount: 6

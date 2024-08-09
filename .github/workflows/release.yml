@@ -58,7 +58,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Build VM Sku json file
-        timeout-minutes: 3
+        timeout-minutes: 10
         run: |
           cd postdeploy/scripts
           chmod +x generate-vm-sku-list-v2.sh

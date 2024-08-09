@@ -36,7 +36,7 @@
   "variables": {
     "envSystemPoolPresetMap": {
       "dev": {
-        "vmSize": "Standard_B4ms",
+        "vmSize": "Standard_B4s_v2",
         "count": 1,
         "minCount": 1,
         "maxCount": 3,
@@ -44,7 +44,7 @@
         "availabilityZones": []
       },
       "test": {
-        "vmSize": "Standard_B4ms",
+        "vmSize": "Standard_B4s_v2",
         "count": 2,
         "minCount": 2,
         "maxCount": 6,
@@ -493,7 +493,7 @@
             },
             "kubernetesVersion": {
               "type": "string",
-              "defaultValue": "1.28.5",
+              "defaultValue": "1.29.7",
               "metadata": {
                 "description": "Kubernetes Version"
               }
@@ -602,7 +602,7 @@
             },
             "agentVMSize": {
               "type": "string",
-              "defaultValue": "Standard_DS3_v2",
+              "defaultValue": "Standard_D4ds_v4",
               "metadata": {
                 "description": "VM SKU"
               }
@@ -1102,7 +1102,7 @@
             "autoScale": "[greater(parameters('agentCountMax'), parameters('agentCount'))]",
             "systemPoolPresets": {
               "CostOptimised": {
-                "vmSize": "Standard_B4ms",
+                "vmSize": "Standard_B4s_v2",
                 "count": 1,
                 "minCount": 1,
                 "maxCount": 3,
@@ -1110,7 +1110,7 @@
                 "availabilityZones": []
               },
               "Standard": {
-                "vmSize": "Standard_DS2_v2",
+                "vmSize": "Standard_D4ds_v4",
                 "count": 3,
                 "minCount": 3,
                 "maxCount": 5,
@@ -1122,7 +1122,7 @@
                 ]
               },
               "HighSpec": {
-                "vmSize": "Standard_D4s_v3",
+                "vmSize": "Standard_D8ds_v4",
                 "count": 3,
                 "minCount": 3,
                 "maxCount": 5,
@@ -1243,7 +1243,7 @@
               "properties": {
                 "roleDefinitionId": "[variables('AcrPullRole')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').identityProfile.kubeletidentity.objectId]"
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').identityProfile.kubeletidentity.objectId]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
@@ -1316,7 +1316,7 @@
               "properties": {
                 "roleDefinitionId": "[variables('contributor')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').addonProfiles.ingressApplicationGateway.identity.objectId]"
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.ingressApplicationGateway.identity.objectId]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
@@ -1331,7 +1331,7 @@
               "properties": {
                 "roleDefinitionId": "[variables('reader')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').addonProfiles.ingressApplicationGateway.identity.objectId]"
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.ingressApplicationGateway.identity.objectId]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
@@ -1346,7 +1346,7 @@
               "properties": {
                 "roleDefinitionId": "[variables('managedIdentityOperator')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').addonProfiles.ingressApplicationGateway.identity.objectId]"
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.ingressApplicationGateway.identity.objectId]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
@@ -1656,7 +1656,7 @@
               "name": "[guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'omsagent', variables('MonitoringMetricsPublisherRole'))]",
               "properties": {
                 "roleDefinitionId": "[variables('MonitoringMetricsPublisherRole')]",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').addonProfiles.omsagent.identity.objectId]",
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.omsagent.identity.objectId]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
@@ -5442,7 +5442,7 @@
                   },
                   "vnetId": "[if(variables('isDnsZonePrivate'), if(not(empty(parameters('byoAKSSubnetId'))), createObject('value', split(parameters('byoAKSSubnetId'), '/subnets')[0]), if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2024-03-01').outputs.vnetId.value), createObject('value', ''))), createObject('value', ''))]",
                   "principalId": {
-                    "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').identityProfile.kubeletidentity.objectId]"
+                    "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').identityProfile.kubeletidentity.objectId]"
                   }
                 },
                 "template": {
@@ -5765,7 +5765,7 @@
                 "parameters": {
                   "keyVaultName": "[if(parameters('keyVaultCreate'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2024-03-01').outputs.keyVaultName.value), createObject('value', ''))]",
                   "rbacSecretUserSps": {
-                    "value": "[union(createArray(if(and(variables('deployAppGw'), parameters('appgwKVIntegration')), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))), '2023-01-31').principalId, '')), createArray(if(parameters('keyVaultAksCSI'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').addonProfiles.azureKeyvaultSecretsProvider.identity.objectId, '')))]"
+                    "value": "[union(createArray(if(and(variables('deployAppGw'), parameters('appgwKVIntegration')), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))), '2023-01-31').principalId, '')), createArray(if(parameters('keyVaultAksCSI'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.azureKeyvaultSecretsProvider.identity.objectId, '')))]"
                   },
                   "rbacSecretOfficerSps": "[if(and(not(empty(parameters('keyVaultOfficerRolePrincipalId'))), parameters('automatedDeployment')), createObject('value', variables('keyVaultOfficerRolePrincipalIds')), createObject('value', createArray()))]",
                   "rbacCertOfficerSps": "[if(and(not(empty(parameters('keyVaultOfficerRolePrincipalId'))), parameters('automatedDeployment')), createObject('value', variables('keyVaultOfficerRolePrincipalIds')), createObject('value', createArray()))]",
@@ -7821,7 +7821,7 @@
                   "resources": [
                     {
                       "type": "Microsoft.ContainerService/managedClusters/agentPools",
-                      "apiVersion": "2021-10-01",
+                      "apiVersion": "2024-01-01",
                       "name": "[format('{0}/{1}', parameters('AksName'), parameters('PoolName'))]",
                       "properties": {
                         "mode": "User",
@@ -8918,11 +8918,11 @@
             },
             "privateFQDN": {
               "type": "string",
-              "value": "[if(and(parameters('enablePrivateCluster'), not(equals(parameters('privateClusterDnsMethod'), 'none'))), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').privateFQDN, '')]"
+              "value": "[if(and(parameters('enablePrivateCluster'), not(equals(parameters('privateClusterDnsMethod'), 'none'))), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').privateFQDN, '')]"
             },
             "aksPrivateDnsZoneName": {
               "type": "string",
-              "value": "[if(and(parameters('enablePrivateCluster'), not(equals(parameters('privateClusterDnsMethod'), 'none'))), join(skip(split(reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').privateFQDN, '.'), 1), '.'), '')]"
+              "value": "[if(and(parameters('enablePrivateCluster'), not(equals(parameters('privateClusterDnsMethod'), 'none'))), join(skip(split(reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').privateFQDN, '.'), 1), '.'), '')]"
             },
             "aksClusterName": {
               "type": "string",
@@ -8930,7 +8930,7 @@
             },
             "aksOidcIssuerUrl": {
               "type": "string",
-              "value": "[if(parameters('oidcIssuer'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').oidcIssuerProfile.issuerURL, '')]"
+              "value": "[if(parameters('oidcIssuer'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').oidcIssuerProfile.issuerURL, '')]"
             },
             "aksOidcFedIdentityProperties": {
               "type": "object",
@@ -8938,7 +8938,7 @@
                 "description": "This output can be directly leveraged when creating a ManagedId Federated Identity"
               },
               "value": {
-                "issuer": "[if(parameters('oidcIssuer'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').oidcIssuerProfile.issuerURL, '')]",
+                "issuer": "[if(parameters('oidcIssuer'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').oidcIssuerProfile.issuerURL, '')]",
                 "audiences": [
                   "api://AzureADTokenExchange"
                 ],
@@ -8950,7 +8950,7 @@
               "metadata": {
                 "description": "The name of the managed resource group AKS uses"
               },
-              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-03-02-preview').nodeResourceGroup]"
+              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').nodeResourceGroup]"
             },
             "aksResourceId": {
               "type": "string",
