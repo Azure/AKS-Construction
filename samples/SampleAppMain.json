@@ -1301,7 +1301,7 @@
               "properties": {
                 "roleDefinitionId": "[variables('AcrPullRole')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').identityProfile.kubeletidentity.objectId]"
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').identityProfile.kubeletidentity.objectId]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
@@ -1374,7 +1374,7 @@
               "properties": {
                 "roleDefinitionId": "[variables('contributor')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').addonProfiles.ingressApplicationGateway.identity.objectId]"
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.ingressApplicationGateway.identity.objectId]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
@@ -1389,7 +1389,7 @@
               "properties": {
                 "roleDefinitionId": "[variables('reader')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').addonProfiles.ingressApplicationGateway.identity.objectId]"
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.ingressApplicationGateway.identity.objectId]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]"
@@ -1404,7 +1404,7 @@
               "properties": {
                 "roleDefinitionId": "[variables('managedIdentityOperator')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').addonProfiles.ingressApplicationGateway.identity.objectId]"
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.ingressApplicationGateway.identity.objectId]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName')))]",
@@ -1441,7 +1441,7 @@
             },
             {
               "type": "Microsoft.ContainerService/managedClusters",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-01-01",
               "name": "[format('aks-{0}', parameters('resourceName'))]",
               "location": "[parameters('location')]",
               "properties": "[union(createObject('kubernetesVersion', parameters('kubernetesVersion'), 'enableRBAC', true(), 'dnsPrefix', parameters('dnsPrefix'), 'aadProfile', if(parameters('enable_aad'), createObject('managed', true(), 'enableAzureRBAC', parameters('enableAzureRBAC'), 'tenantID', parameters('aad_tenant_id')), null()), 'apiServerAccessProfile', if(not(empty(parameters('authorizedIPRanges'))), createObject('authorizedIPRanges', parameters('authorizedIPRanges')), createObject('enablePrivateCluster', parameters('enablePrivateCluster'), 'privateDNSZone', if(parameters('enablePrivateCluster'), variables('aksPrivateDnsZone'), ''), 'enablePrivateClusterPublicFQDN', and(parameters('enablePrivateCluster'), equals(parameters('privateClusterDnsMethod'), 'none')))), 'agentPoolProfiles', if(parameters('JustUseSystemPool'), array(createObject('name', if(parameters('JustUseSystemPool'), parameters('nodePoolName'), 'agentpool'), 'vmSize', parameters('agentVMSize'), 'count', parameters('agentCount'), 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), null()), 'podSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')), null()), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule')))), concat(array(union(createObject('name', if(parameters('JustUseSystemPool'), parameters('nodePoolName'), 'agentpool'), 'vmSize', parameters('agentVMSize'), 'count', parameters('agentCount'), 'mode', 'System', 'osType', 'Linux', 'maxPods', 30, 'type', 'VirtualMachineScaleSets', 'vnetSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksSubnetId.value, parameters('byoAKSSubnetId')), null()), 'podSubnetID', if(not(empty(if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')))), if(parameters('custom_vnet'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.aksPodSubnetId.value, parameters('byoAKSPodSubnetId')), null()), 'upgradeSettings', createObject('maxSurge', '33%'), 'nodeTaints', createArray(if(parameters('JustUseSystemPool'), '', 'CriticalAddonsOnly=true:NoSchedule'))), if(and(equals(parameters('SystemPoolType'), 'Custom'), not(equals(parameters('SystemPoolCustomPreset'), createObject()))), parameters('SystemPoolCustomPreset'), variables('systemPoolPresets')[parameters('SystemPoolType')]))))), 'workloadAutoScalerProfile', createObject('keda', createObject('enabled', parameters('kedaAddon'))), 'networkProfile', createObject('loadBalancerSku', 'standard', 'networkPlugin', parameters('networkPlugin'), 'networkPolicy', parameters('networkPolicy'), 'networkPluginMode', if(equals(parameters('networkPlugin'), 'azure'), parameters('networkPluginMode'), ''), 'podCidr', if(or(equals(parameters('networkPlugin'), 'kubenet'), parameters('cniDynamicIpAllocation')), parameters('podCidr'), json('null')), 'serviceCidr', parameters('serviceCidr'), 'dnsServiceIP', parameters('dnsServiceIP'), 'outboundType', parameters('aksOutboundTrafficType'), 'ebpfDataplane', if(equals(parameters('networkPlugin'), 'azure'), parameters('ebpfDataplane'), '')), 'disableLocalAccounts', and(parameters('AksDisableLocalAccounts'), parameters('enable_aad')), 'autoUpgradeProfile', createObject('upgradeChannel', parameters('upgradeChannel')), 'addonProfiles', if(not(empty(variables('aks_addons1'))), variables('aks_addons1'), variables('aks_addons')), 'autoScalerProfile', if(variables('autoScale'), parameters('AutoscaleProfile'), createObject()), 'oidcIssuerProfile', createObject('enabled', parameters('oidcIssuer')), 'securityProfile', createObject('workloadIdentity', createObject('enabled', parameters('workloadIdentity'))), 'ingressProfile', createObject('webAppRouting', createObject('enabled', parameters('warIngressNginx'))), 'storageProfile', createObject('blobCSIDriver', createObject('enabled', parameters('blobCSIDriver')), 'diskCSIDriver', createObject('enabled', parameters('diskCSIDriver')), 'fileCSIDriver', createObject('enabled', parameters('fileCSIDriver'))), createObject('restrictionLevel', parameters('restrictionLevelNodeResourceGroup'))), if(equals(parameters('aksOutboundTrafficType'), 'managedNATGateway'), variables('managedNATGatewayProfile'), createObject()), if(and(parameters('defenderForContainers'), variables('createLaw')), variables('azureDefenderSecurityProfile'), createObject()), if(or(variables('keyVaultKmsCreateAndPrereqs'), not(empty(parameters('keyVaultKmsByoKeyId')))), createObject('securityProfile', createObject('azureKeyVaultKms', createObject('enabled', or(variables('keyVaultKmsCreateAndPrereqs'), not(empty(parameters('keyVaultKmsByoKeyId')))), 'keyId', if(variables('keyVaultKmsCreateAndPrereqs'), reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultKmsKeys-{1}', deployment().name, parameters('resourceName')), 64)), '2022-09-01').outputs.keyVaultKmsKeyUri.value, if(not(empty(parameters('keyVaultKmsByoKeyId'))), parameters('keyVaultKmsByoKeyId'), '')), 'keyVaultNetworkAccess', if(parameters('privateLinks'), 'private', 'public'), 'keyVaultResourceId', if(and(parameters('privateLinks'), not(empty(parameters('keyVaultKmsByoKeyId')))), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('keyVaultKmsByoRG')), 'Microsoft.KeyVault/vaults', variables('keyVaultKmsByoName')), '')))), createObject()), if(not(empty(parameters('managedNodeResourceGroup'))), createObject('nodeResourceGroup', parameters('managedNodeResourceGroup')), createObject()))]",
@@ -1714,7 +1714,7 @@
               "name": "[guid(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), 'omsagent', variables('MonitoringMetricsPublisherRole'))]",
               "properties": {
                 "roleDefinitionId": "[variables('MonitoringMetricsPublisherRole')]",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').addonProfiles.omsagent.identity.objectId]",
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.omsagent.identity.objectId]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
@@ -5500,7 +5500,7 @@
                   },
                   "vnetId": "[if(variables('isDnsZonePrivate'), if(not(empty(parameters('byoAKSSubnetId'))), createObject('value', split(parameters('byoAKSSubnetId'), '/subnets')[0]), if(parameters('custom_vnet'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-network', deployment().name), 64)), '2022-09-01').outputs.vnetId.value), createObject('value', ''))), createObject('value', ''))]",
                   "principalId": {
-                    "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').identityProfile.kubeletidentity.objectId]"
+                    "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').identityProfile.kubeletidentity.objectId]"
                   }
                 },
                 "template": {
@@ -5823,7 +5823,7 @@
                 "parameters": {
                   "keyVaultName": "[if(parameters('keyVaultCreate'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', take(format('{0}-keyvaultApps', deployment().name), 64)), '2022-09-01').outputs.keyVaultName.value), createObject('value', ''))]",
                   "rbacSecretUserSps": {
-                    "value": "[union(createArray(if(and(variables('deployAppGw'), parameters('appgwKVIntegration')), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))), '2023-01-31').principalId, '')), createArray(if(parameters('keyVaultAksCSI'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').addonProfiles.azureKeyvaultSecretsProvider.identity.objectId, '')))]"
+                    "value": "[union(createArray(if(and(variables('deployAppGw'), parameters('appgwKVIntegration')), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-appgw-{0}', parameters('resourceName'))), '2023-01-31').principalId, '')), createArray(if(parameters('keyVaultAksCSI'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').addonProfiles.azureKeyvaultSecretsProvider.identity.objectId, '')))]"
                   },
                   "rbacSecretOfficerSps": "[if(and(not(empty(parameters('keyVaultOfficerRolePrincipalId'))), parameters('automatedDeployment')), createObject('value', variables('keyVaultOfficerRolePrincipalIds')), createObject('value', createArray()))]",
                   "rbacCertOfficerSps": "[if(and(not(empty(parameters('keyVaultOfficerRolePrincipalId'))), parameters('automatedDeployment')), createObject('value', variables('keyVaultOfficerRolePrincipalIds')), createObject('value', createArray()))]",
@@ -7879,7 +7879,7 @@
                   "resources": [
                     {
                       "type": "Microsoft.ContainerService/managedClusters/agentPools",
-                      "apiVersion": "2023-11-01",
+                      "apiVersion": "2024-01-01",
                       "name": "[format('{0}/{1}', parameters('AksName'), parameters('PoolName'))]",
                       "properties": {
                         "mode": "User",
@@ -8976,11 +8976,11 @@
             },
             "privateFQDN": {
               "type": "string",
-              "value": "[if(and(parameters('enablePrivateCluster'), not(equals(parameters('privateClusterDnsMethod'), 'none'))), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').privateFQDN, '')]"
+              "value": "[if(and(parameters('enablePrivateCluster'), not(equals(parameters('privateClusterDnsMethod'), 'none'))), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').privateFQDN, '')]"
             },
             "aksPrivateDnsZoneName": {
               "type": "string",
-              "value": "[if(and(parameters('enablePrivateCluster'), not(equals(parameters('privateClusterDnsMethod'), 'none'))), join(skip(split(reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').privateFQDN, '.'), 1), '.'), '')]"
+              "value": "[if(and(parameters('enablePrivateCluster'), not(equals(parameters('privateClusterDnsMethod'), 'none'))), join(skip(split(reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').privateFQDN, '.'), 1), '.'), '')]"
             },
             "aksClusterName": {
               "type": "string",
@@ -8988,7 +8988,7 @@
             },
             "aksOidcIssuerUrl": {
               "type": "string",
-              "value": "[if(parameters('oidcIssuer'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').oidcIssuerProfile.issuerURL, '')]"
+              "value": "[if(parameters('oidcIssuer'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').oidcIssuerProfile.issuerURL, '')]"
             },
             "aksOidcFedIdentityProperties": {
               "type": "object",
@@ -8996,7 +8996,7 @@
                 "description": "This output can be directly leveraged when creating a ManagedId Federated Identity"
               },
               "value": {
-                "issuer": "[if(parameters('oidcIssuer'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').oidcIssuerProfile.issuerURL, '')]",
+                "issuer": "[if(parameters('oidcIssuer'), reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').oidcIssuerProfile.issuerURL, '')]",
                 "audiences": [
                   "api://AzureADTokenExchange"
                 ],
@@ -9008,7 +9008,7 @@
               "metadata": {
                 "description": "The name of the managed resource group AKS uses"
               },
-              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').nodeResourceGroup]"
+              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').nodeResourceGroup]"
             },
             "aksResourceId": {
               "type": "string",

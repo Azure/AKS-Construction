@@ -1269,7 +1269,7 @@
               "properties": {
                 "roleDefinitionId": "[variables('AcrPullRole')]",
                 "principalType": "ServicePrincipal",
-                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2023-11-01').identityProfile.kubeletidentity.objectId]"
+                "principalId": "[reference(resourceId('Microsoft.ContainerService/managedClusters', format('aks-{0}', parameters('resourceName'))), '2024-01-01').identityProfile.kubeletidentity.objectId]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
