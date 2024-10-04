@@ -309,7 +309,7 @@ export default function DeployTab({ defaults, updateFn, tabValues, invalidArray,
 
   const post_deployPScmd =  `\n\n# Deploy charts into cluster\n` +
     (deploy.selectedTemplate === "local" ? ` .${ cluster.apisecurity === "private" ? '' : '/postdeploy/scripts'}/postdeploy.ps1 ` : `& $([scriptblock]::Create((New-Object Net.WebClient).DownloadString("${deployRelease.postPS_url}")))`) +
-    (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : ` -releace_version="${deployRelease.base_download_url}"`) +
+    (deploy.selectedTemplate === 'local' ? (cluster.apisecurity === "private" ? '-r .' : '') : ` -release_version="${deployRelease.base_download_url}"`) +
     Object.keys(post_params).map(k => {
       const val = post_params[k]
       const targetVal = Array.isArray(val) ? JSON.stringify(JSON.stringify(val)) : val
