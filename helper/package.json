@@ -7,7 +7,7 @@
     "@fluentui/azure-themes": "^8.5.30",
     "@fluentui/react": "^8.103.2",
     "@microsoft/applicationinsights-web": "^2.8.9",
-    "@playwright/test": "^1.28.1",
+    "@playwright/test": "^1.56.1",
     "playwright-expect": "^0.1.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
