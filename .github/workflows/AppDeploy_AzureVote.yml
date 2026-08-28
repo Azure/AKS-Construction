@@ -70,7 +70,7 @@ jobs:
       AKSNAME: "${{ inputs.AKSNAME}}"
       RG: "${{ inputs.RG }}"
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Job parameter inspection
         run: |
@@ -79,7 +79,7 @@ jobs:
           echo "AKS name is ${{ inputs.AKSNAME }}"
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -271,7 +271,7 @@ jobs:
 
       - name: Store any generated debug files as artifacts
         if: always()
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: DebugFiles
           path: debug*.json

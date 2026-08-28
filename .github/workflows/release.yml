@@ -46,14 +46,14 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Web App
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Job Parameter Checking
         run: |
           echo "GitHub Ref: ${{ github.ref }}"
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -71,7 +71,7 @@ jobs:
           REACT_APP_APPINSIGHTS_KEY=${{ secrets.REACT_APP_APPINSIGHTS_KEY}} REACT_APP_TEMPLATERELEASE="${{env.templateRelease}}"  npm run build
 
       - name: Create GitHub pages release artifact
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: HelperApp
           path: helper/build
@@ -81,7 +81,7 @@ jobs:
     name: Create GitHub Release (bicep)
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Check that the GitHub release does not already exist
         run: |
@@ -116,7 +116,7 @@ jobs:
           /home/runner/.azure/bin/bicep build bicep/main.bicep --outdir $compiledir
 
       - name: Create Bicep release artifact
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: CompiledBicep
           path: bicep/compiled/main.json
@@ -142,7 +142,7 @@ jobs:
     name: Add extra release file-artifacts
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Verify File
         run: cat ${{ matrix.files }}
@@ -166,7 +166,7 @@ jobs:
     name: Create extra bicep artifacts
     if: ${{ github.event.inputs.createRelease == 'true' }}
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Set better name of artifact
         id: artifactName
@@ -214,20 +214,20 @@ jobs:
     if: ${{ always() }}
     needs: [BuildWebApp , CreateRelease, CreateExtraBicepArtifacts, TestWebApp]
     steps:
-      - uses: actions/download-artifact@v4.1.4
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: HelperApp
           path: helperapp
 
       #Although we don't need this artifact, if it's missing then we can abort this job
-      - uses: actions/download-artifact@v4.1.4
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         if: ${{ github.event.inputs.createRelease == 'true' }}
         with:
           name: CompiledBicep
           path: compilebicep
 
       - name: Deploy to GitHub Pages Canary
-        uses: crazy-max/ghaction-github-pages@v4.0.0
+        uses: crazy-max/ghaction-github-pages@c05ee637ec73429400a359430db8e5629f3f2564 # v4.0.0
         with:
           target_branch: gh-pages-canary
           commit_message: Pages Release. Canary ${{env.templateRelease}}
@@ -243,20 +243,20 @@ jobs:
     environment: UI-Deploy-Manual-Approval
     needs: [BuildWebApp , CreateRelease, DeployWebAppToCanary]
     steps:
-      - uses: actions/download-artifact@v4.1.4
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: HelperApp
           path: helperapp
 
       #Although we don't need this artifact, if it's missing then we can abort this job
-      - uses: actions/download-artifact@v4.1.4
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         if: ${{ github.event.inputs.createRelease == 'true' }}
         with:
           name: CompiledBicep
           path: compilebicep
 
       - name: Deploy to GitHub Pages Prod
-        uses: crazy-max/ghaction-github-pages@v4.0.0
+        uses: crazy-max/ghaction-github-pages@c05ee637ec73429400a359430db8e5629f3f2564 # v4.0.0
         with:
           target_branch: gh-pages
           commit_message: Pages Release. Prod ${{env.templateRelease}}

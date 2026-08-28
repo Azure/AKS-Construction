@@ -36,7 +36,7 @@ jobs:
       FILELIST: ${{ steps.getfiles.outputs.FILELIST}}
     steps:
       #Get the code files from the repo
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Job parameter check
         run: |
@@ -63,7 +63,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Job parameter check
         run: |
@@ -122,7 +122,7 @@ jobs:
           $params | ConvertTo-Json -Depth 4 | Out-File "${{ env.ParamDir }}${{ matrix.files }}"
 
       - name: Azure Login
-        uses: Azure/login@v2
+        uses: Azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -130,7 +130,7 @@ jobs:
           allow-no-subscriptions: false
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -140,7 +140,7 @@ jobs:
       - name: WhatIf Infrastructure deployment
         if: steps.paramfile.outputs.DOPSRULE == 'true'
         continue-on-error: ${{ secrets.ISAZCLIWHATIFUNRELIABLE == 'true' }}
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -152,7 +152,7 @@ jobs:
       # https://azure.github.io/PSRule.Rules.Azure/
       - name: PSRule - Analyze Azure parameter file
         if: steps.paramfile.outputs.DOPSRULE == 'true'
-        uses: microsoft/ps-rule@v2.9.0
+        uses: microsoft/ps-rule@46451b8f5258c41beb5ae69ed7190ccbba84112c # v2.9.0
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.Azure'
@@ -162,7 +162,7 @@ jobs:
 
       - name: PSRule - Analyze Azure parameter file including Preview feature rulesets
         if: steps.paramfile.outputs.DOPSRULE == 'true'
-        uses: microsoft/ps-rule@v2.9.0
+        uses: microsoft/ps-rule@46451b8f5258c41beb5ae69ed7190ccbba84112c # v2.9.0
         continue-on-error: true #Preview feature checking means we need to suppress errors
         with:
           modules: 'PSRule.Rules.Azure'

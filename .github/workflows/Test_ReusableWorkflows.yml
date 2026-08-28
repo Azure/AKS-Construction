@@ -63,7 +63,7 @@ jobs:
   Post-Deploy:
     needs: [SetupWF]
     if: false
-    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@0.4.3
+    uses: azure/aks-construction/.github/workflows/PostDeploy.yml@1ec463b5598b05cd6561aeef9aad15f499582030 # 0.4.3
     with:
       RG: ${{ needs.SetupWF.outputs.RG }}
       AKSNAME: aks-Byo
@@ -76,7 +76,7 @@ jobs:
   byo-cluster:
     if: false
     needs: [SetupWF]
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.3
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@1ec463b5598b05cd6561aeef9aad15f499582030 # 0.4.3
     with:
       RG: ${{ needs.SetupWF.outputs.RG }}
       AKSNAME: aks-Byo
@@ -100,7 +100,7 @@ jobs:
         run: mkdir jsonout
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
@@ -177,7 +177,7 @@ jobs:
 
       - name: Save Json output as Artifact
         if: always()
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: Json out
           path: jsonout/*.json
@@ -185,7 +185,7 @@ jobs:
   deploy-azure-vote-app-lb:
     #needs: test-run-cmd
     if: false
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.3
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@1ec463b5598b05cd6561aeef9aad15f499582030 # 0.4.3
     with:
       RG: Automation-Actions-AksDeployCI #$RG
       AKSNAME: aks-Byo
@@ -201,7 +201,7 @@ jobs:
   deploy-azure-vote-app-ing:
     #needs: test-run-cmd
     if: false
-    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@0.4.3
+    uses: azure/aks-construction/.github/workflows/AppDeploy_AzureVote.yml@1ec463b5598b05cd6561aeef9aad15f499582030 # 0.4.3
     with:
       RG: Automation-Actions-AksDeployCI
       AKSNAME: aks-Priva
@@ -227,7 +227,7 @@ jobs:
 
     name: Create extra bicep artifacts
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Set better name of artifact
         id: artifactName
@@ -281,7 +281,7 @@ jobs:
 
     name: Add extra release file-artifacts
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Verify File
         run: cat ${{ matrix.files }}

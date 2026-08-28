@@ -43,7 +43,7 @@ jobs:
       RG: "${{ inputs.RG }}"
       AKSNAME: "${{ inputs.AKSNAME }}"
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Script file download
 
       - name: Job parameter inspection
@@ -53,7 +53,7 @@ jobs:
           echo "CertManager version is ${{ inputs.CERTMANAGERVERSION }}"
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: false
