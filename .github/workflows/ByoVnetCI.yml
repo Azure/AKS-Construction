@@ -95,13 +95,13 @@ jobs:
     needs: [Validation]
     if:  github.event_name != 'pull_request' || github.event.inputs.doWellArchitected == 'true' ||  contains( github.event.pull_request.labels.*.name, 'test-deploy-byoconfig')
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       # PSRule does this cool thing where it traverse the parameter file through to the arm template
       # PSRule performs IaC recommendations of the template.
       # https://azure.github.io/PSRule.Rules.Azure/
       - name: PSRule for Azure - Well Architected
-        uses: microsoft/ps-rule@v2.7.0
+        uses: microsoft/ps-rule@1570d7788f7aaa44c3375a6f52ee9404c694fc91 # v2.7.0
         #uses: microsoft/ps-rule@main
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
@@ -112,7 +112,7 @@ jobs:
       # In addition to the Well Architected analysis, we can also leverage the CAF rules
       # Run analysis against PSRule for Cloud Adoption Framework
       - name: PSRule for CAF
-        uses: microsoft/ps-rule@v2.7.0
+        uses: microsoft/ps-rule@1570d7788f7aaa44c3375a6f52ee9404c694fc91 # v2.7.0
         continue-on-error: true #Setting this whilst PSRule gets bedded in, in this project
         with:
           modules: 'PSRule.Rules.CAF'
@@ -148,7 +148,7 @@ jobs:
       PARAMOVERRIDES: ${{ steps.imperitiveparams.outputs.PARAMOVERRIDES}} #This won't work if the string includes any SECRETS!!!
       PARAMOVERRIDESNOSECRETS: ${{ steps.imperitiveparams.outputs.PARAMOVERRIDESNOSECRETS}}
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Job parameter check
         run: |
@@ -212,7 +212,7 @@ jobs:
             echo "NEWRESNAME=$NEWRESNAME" >> $GITHUB_OUTPUT
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -232,7 +232,7 @@ jobs:
         if: github.event.inputs.doVerifySteps == 'true'
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -288,7 +288,7 @@ jobs:
           }
 
       - name: Create Parameter file imperative override string
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         id: imperitiveparams
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
@@ -304,7 +304,7 @@ jobs:
             echo "PARAMOVERRIDESNOSECRETS=$PARAMOVERRIDESNOSECRETS" >> $GITHUB_OUTPUT
 
       - name: Validate Infrastructure deployment
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         with:
@@ -319,7 +319,7 @@ jobs:
             az deployment group validate -f bicep/main.bicep -g $RG -p ${{ env.ParamFilePath }} -p $PARAMS --verbose
 
       - name: What If (GA edge Az cli version) (has issues)
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         id: edgeWhatIf
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
@@ -346,7 +346,7 @@ jobs:
             echo "edgeSuccess=true" >> $GITHUB_OUTPUT
 
       - name: What If (No Secrets param string, used for Cost Estimate)
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         env:
           RG: ${{ steps.params.outputs.RESOURCEGROUP }}
         continue-on-error: true
@@ -367,7 +367,7 @@ jobs:
             cat $WHATIFPATH
 
       - name: What If (workaround task)
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         continue-on-error: true #Setting to true due to bug in the AzureCLI https://github.com/Azure/azure-cli/issues/19850
         if: steps.edgeWhatIf.outputs.edgeSuccess != 'true'
         env:
@@ -481,7 +481,7 @@ jobs:
 
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/develop' || contains( github.event.pull_request.labels.*.name, 'test-deploy-byoconfig')
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Job parameter check
         if: github.event.inputs.doDebugSteps == 'true'
@@ -505,7 +505,7 @@ jobs:
           }
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -516,7 +516,7 @@ jobs:
 
       - name: Deploy Infrastructure
         id: deployAks
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
           inlineScript: |
@@ -550,7 +550,7 @@ jobs:
 
 
       - name: Enable AGIC Addon
-        uses: Azure/cli@v2
+        uses: Azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2.2.0
         if: ${{ needs.Deploy.outputs.AGNAME}} != ''
         with:
           azcliversion: ${{ env.AZCLIVERSION }}
@@ -676,7 +676,7 @@ jobs:
   SmokeTest_JavaApp-certmgr:
     needs: [Deploy, ReusableWF, Post-Deploy]
     #uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@gb-workflow-bumps
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.5
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@57dd8b4cbfffcb24246250c6da79e5d6ff0dbbf1 # 0.9.5
     with:
       #ENVIRONMENT: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       REPOREF: "0.9.5"
@@ -700,7 +700,7 @@ jobs:
 
   SmokeTest_JavaApp-appgw:
     needs: [Deploy, ReusableWF, Post-Deploy, SmokeTest_JavaApp-certmgr]
-    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@0.9.5
+    uses: azure-samples/java-aks-keyvault-tls/.github/workflows/deployapp.yml@57dd8b4cbfffcb24246250c6da79e5d6ff0dbbf1 # 0.9.5
     with:
       #ENVIRONMENT: ${{ needs.ReusableWF.outputs.ENVIRONMENT }}
       REPOREF: "0.9.5"
@@ -728,7 +728,7 @@ jobs:
     env:
       RG: ${{ needs.Validation.outputs.RESOURCEGROUP }}
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Param check
         if: github.event.inputs.doDebugSteps == 'true'
@@ -740,7 +740,7 @@ jobs:
           echo "AKS name is ${{ needs.Deploy.outputs.AKSNAME }}"
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
